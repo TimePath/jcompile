@@ -484,6 +484,7 @@ Do : 'do';
 Else : 'else';
 Enum : 'enum';
 Extern : 'extern';
+False : 'false';
 Float : 'float';
 For : 'for';
 Goto : 'goto';
@@ -499,6 +500,7 @@ Static : 'static';
 String : 'string';
 Struct : 'struct';
 Switch : 'switch';
+True : 'true';
 Typedef : 'typedef';
 Union : 'union';
 Unsigned : 'unsigned';
@@ -563,6 +565,7 @@ NotEqual : '!=';
 
 Dot : '.';
 Ellipsis : '...';
+Sharp : '#';
 
 Identifier
     :   IdentifierNondigit
@@ -599,10 +602,24 @@ HexQuad
     ;
 
 Constant
-    :   IntegerConstant
+    :   BooleanConstant
+    |   BuiltinConstant
+    |   IntegerConstant
     |   FloatingConstant
     //|   EnumerationConstant
     |   VectorConstant
+    ;
+
+fragment
+BooleanConstant
+    :   'true'
+    |   'false'
+    ;
+
+fragment
+BuiltinConstant
+    : '#' (IntegerConstant
+    | FloatingConstant)
     ;
 
 fragment
@@ -684,7 +701,7 @@ HexadecimalFloatingConstant
 fragment
 FractionalConstant
     :   DigitSequence? '.' DigitSequence
-    |   DigitSequence '.'
+    |   DigitSequence
     ;
 
 fragment
