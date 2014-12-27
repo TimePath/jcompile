@@ -26,6 +26,22 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/*
+    TODO: GMQCC parity
+
+    builtin.qc
+    dots.qc
+    enum.qc
+    exprforbuiltins.qc
+    goto.qc
+    pops.qc
+    state.qc
+    ternary.qc
+    utf8.qc
+    varargs.qc
+    vec_ops.qc
+*/
+
 grammar QC;
 
 primaryExpression
@@ -78,7 +94,7 @@ unaryExpression
     |   '++' unaryExpression
     |   '--' unaryExpression
     |   unaryOperator castExpression
-    |   'sizeof' unaryExpression
+    |   ('sizeof' | '_length') unaryExpression
     |   'sizeof' '(' typeName ')'
     ;
 
@@ -209,6 +225,10 @@ storageClassSpecifier
     ;
 
 typeSpecifier
+    :   pointer? directTypeSpecifier
+    ;
+
+directTypeSpecifier
     :   ('void'
     |   'bool'
     |   'char'
@@ -290,7 +310,7 @@ functionSpecifier
     ;
 
 declarator
-    :   pointer? directDeclarator
+    :   directDeclarator
     ;
 
 directDeclarator
@@ -311,8 +331,8 @@ nestedParenthesesBlock
     ;
 
 pointer
-    :   '*' typeQualifierList?
-    |   '*' typeQualifierList? pointer
+    :   '.'
+    |   '.' pointer
     ;
 
 typeQualifierList
