@@ -1,0 +1,44 @@
+apply plugin: 'groovy'
+
+version = '0.1'
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.3.6'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+buildscript {
+    repositories {
+        maven {
+            name 'JFrog OSS snapshot repo'
+            url  'https://oss.jfrog.org/oss-snapshot-local/'
+        }
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+    }
+}
+
+apply plugin: 'me.champeau.gradle.antlr4'
+
+String pkg = "com.timepath.quakec"
+antlr4.extraArgs = ["-package",  pkg]
+antlr4.output = file("$buildDir/generated-src/${pkg.replace(".", "/")}")
+
+// make the Groovy compile task depend on the antlr4 task
+compileGroovy.dependsOn antlr4
+
+// add the generated source files to the list of java sources
+sourceSets.main.java.srcDirs += antlr4.output
+
+// add antlr4 to classpath
+configurations {
+    compile.extendsFrom antlr4
+}
