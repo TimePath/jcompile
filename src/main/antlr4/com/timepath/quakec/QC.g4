@@ -457,8 +457,8 @@ statement
     ;
 
 labeledStatement
-    :   Identifier ':' blockItem
-    |   ':' Identifier blockItem
+    :   Identifier ':' blockItem?
+    |   ':' Identifier blockItem?
     |   'case' constantExpression ':' blockItem
     |   'default' ':' blockItem
     ;
