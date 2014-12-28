@@ -63,7 +63,7 @@ externalDeclaration
     ;
 
 functionDefinition
-    :   declarationSpecifiers? declarator declarationList? compoundStatement
+    :   declarationSpecifiers? declarator declarationList? '='? compoundStatement
     ;
 
 declarationList
@@ -245,6 +245,8 @@ storageClassSpecifier
     |   'extern'
     |   'static'
     |   'auto'
+    |   'signed'
+    |   'unsigned'
     ;
 
 typeSpecifier
@@ -260,8 +262,7 @@ directTypeSpecifier
     |   'float'
     |   'vector'
     |   'string'
-    |   'signed'
-    |   'unsigned')
+    |   'entity') ('(' parameterTypeList? ')')?
     |   structOrUnionSpecifier
     |   enumSpecifier
     |   typedefName
@@ -356,6 +357,7 @@ typeQualifierList
 
 parameterTypeList
     :   parameterList (',' '...')?
+    |   '...'
     ;
 
 parameterList
@@ -492,6 +494,7 @@ Continue : 'continue';
 Default : 'default';
 Do : 'do';
 Else : 'else';
+Entity : 'entity';
 Enum : 'enum';
 Extern : 'extern';
 False : 'false';
@@ -817,7 +820,7 @@ Whitespace
     ;
 
 Newline
-    :   '\r'? '\n'?
+    :   '\r'? '\n'
         -> skip
     ;
 
