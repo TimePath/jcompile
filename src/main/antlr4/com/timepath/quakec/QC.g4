@@ -174,25 +174,25 @@ postfixExpression
     |   postfixExpression '[' expression ']'
     |   postfixExpression '(' argumentExpressionList? ')'
     |   postfixExpression '.' Identifier
-    |   postfixExpression '.' fieldExpression
+    |   postfixExpression '.' '(' expression ')'
     |   postfixExpression '++'
     |   postfixExpression '--'
-    |   '(' typeName ')' '{' initializerList '}'
-    |   '(' typeName ')' '{' initializerList ',' '}'
+    |   '(' typeName ')' '{' initializerList ','? '}'
     ;
 
 argumentExpressionList
     :   assignmentExpression (',' assignmentExpression)*
     ;
 
-fieldExpression
-    :   '(' (Identifier
-    |   postfixExpression '.' (Identifier | fieldExpression)) ')'
-    ;
-
 primaryExpression
     :   Identifier
     |   Constant
+    |   '...' // varargs access
+    // FIXME: hardcoded
+    |   'true'
+    |   'false'
+    |   'float'
+    |   'string'
     |   StringLiteral+
     |   '(' expression ')'
     |   genericSelection
@@ -230,6 +230,19 @@ declarationSpecifier
     |   typeSpecifier
     |   typeQualifier
     |   functionSpecifier
+    |   '[[' attributeList ']]'
+    ;
+
+attributeList
+    :   attribute (',' attribute)*
+    ;
+
+attribute
+    :   'noreturn'
+    |   'inline'
+    |   'eraseable'
+    |   'accumulate'
+    |   'last'
     ;
 
 initDeclaratorList
@@ -356,8 +369,13 @@ typeQualifierList
     ;
 
 parameterTypeList
-    :   parameterList (',' '...')?
-    |   '...'
+    :   parameterList (',' parameterVarargs)?
+    |   parameterVarargs
+    ;
+
+parameterVarargs
+    :   declarationSpecifiers? '...' Identifier?
+    |
     ;
 
 parameterList
@@ -439,9 +457,10 @@ statement
     ;
 
 labeledStatement
-    :   Identifier ':' statement
-    |   'case' constantExpression ':' statement
-    |   'default' ':' statement
+    :   Identifier ':' blockItem
+    |   ':' Identifier blockItem
+    |   'case' constantExpression ':' blockItem
+    |   'default' ':' blockItem
     ;
 
 compoundStatement
@@ -637,6 +656,7 @@ Constant
     |   IntegerConstant
     |   FloatingConstant
     //|   EnumerationConstant
+    |   '\'' SChar '\''
     |   VectorConstant
     ;
 
