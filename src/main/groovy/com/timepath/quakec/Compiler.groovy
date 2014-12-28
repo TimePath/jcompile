@@ -7,9 +7,15 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
 
 import javax.annotation.Nonnull
+import javax.swing.JOptionPane
+import javax.swing.JScrollPane
+import javax.swing.JTextArea
+import java.awt.Dimension
 
 @CompileStatic
 class Compiler {
+
+    static boolean debug = false
 
     static main(String[] args) {
         def now = new Date()
@@ -72,9 +78,20 @@ class Compiler {
         return includes
     }
 
+    static Reader preview(Reader reader) {
+        if (debug) {
+            def area = new JTextArea()
+            area.text = reader.readLines().join('\n')
+            def pane = new JScrollPane(area)
+            pane.setPreferredSize([500, 500] as Dimension)
+            JOptionPane.showMessageDialog(null, pane)
+        }
+        return reader
+    }
+
     static def parse(Preprocessor pp, File f) {
         println f.absolutePath
-        def input = new ANTLRInputStream(new CppReader(pp))
+        def input = new ANTLRInputStream(preview(new CppReader(pp)))
         input.name = f.name
         QCLexer lexer = new QCLexer(input)
         CommonTokenStream tokens = new CommonTokenStream(lexer)
