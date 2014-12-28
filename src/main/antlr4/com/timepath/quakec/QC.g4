@@ -29,17 +29,15 @@
 /*
     TODO: GMQCC parity
 
-    builtin.qc
     dots.qc
     enum.qc
-    exprforbuiltins.qc
     goto.qc
     pops.qc
     state.qc
     ternary.qc
-    utf8.qc
-    varargs.qc
     vec_ops.qc
+
+    allow keywords as identifiers
 */
 
 grammar QC;
@@ -73,16 +71,28 @@ declarationList
 //// expressions
 
 expression
-    :   assignmentExpression (',' assignmentExpression)*
+    // flat:
+    //:   assignmentExpression (',' assignmentExpression)*
+    :   assignmentExpression
+    |   expression ',' assignmentExpression
     ;
 
 assignmentExpression
     :   constantExpression
-    |   unaryExpression assignmentOperator assignmentExpression
-    ;
-
-assignmentOperator
-    :   '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|='
+    |   unaryExpression
+        ( '='
+        | '*='
+        | '/='
+        | '%='
+        | '+='
+        | '-='
+        | '<<='
+        | '>>='
+        | '&='
+        | '^='
+        | '|='
+        )
+        assignmentExpression
     ;
 
 constantExpression
@@ -120,35 +130,27 @@ andExpression
 
 equalityExpression
     :   relationalExpression
-    |   equalityExpression '==' relationalExpression
-    |   equalityExpression '!=' relationalExpression
+    |   equalityExpression ('==' | '!=') relationalExpression
     ;
 
 relationalExpression
     :   shiftExpression
-    |   relationalExpression '<' shiftExpression
-    |   relationalExpression '>' shiftExpression
-    |   relationalExpression '<=' shiftExpression
-    |   relationalExpression '>=' shiftExpression
+    |   relationalExpression ('<' | '>' | '<=' | '>=') shiftExpression
     ;
 
 shiftExpression
     :   additiveExpression
-    |   shiftExpression '<<' additiveExpression
-    |   shiftExpression '>>' additiveExpression
+    |   shiftExpression ('<<' | '>>') additiveExpression
     ;
 
 additiveExpression
     :   multiplicativeExpression
-    |   additiveExpression '+' multiplicativeExpression
-    |   additiveExpression '-' multiplicativeExpression
+    |   additiveExpression ('+' | '-') multiplicativeExpression
     ;
 
 multiplicativeExpression
     :   castExpression
-    |   multiplicativeExpression '*' castExpression
-    |   multiplicativeExpression '/' castExpression
-    |   multiplicativeExpression '%' castExpression
+    |   multiplicativeExpression ('*' | '/' | '%') castExpression
     ;
 
 castExpression
@@ -158,25 +160,19 @@ castExpression
 
 unaryExpression
     :   postfixExpression
-    |   '++' unaryExpression
-    |   '--' unaryExpression
-    |   unaryOperator castExpression
+    |   ('++' | '--') unaryExpression
+    |   ('+' | '-' | '~' | '!') unaryExpression
     |   ('sizeof' | '_length') unaryExpression
     |   'sizeof' '(' typeName ')'
     ;
 
-unaryOperator
-    :   '&' | '*' | '+' | '-' | '~' | '!'
-    ;
-
 postfixExpression
     :   primaryExpression
-    |   postfixExpression '[' expression ']'
     |   postfixExpression '(' argumentExpressionList? ')'
+    |   postfixExpression '[' expression ']'
     |   postfixExpression '.' Identifier
     |   postfixExpression '.' '(' expression ')'
-    |   postfixExpression '++'
-    |   postfixExpression '--'
+    |   postfixExpression ('++' | '--')
     |   '(' typeName ')' '{' initializerList ','? '}'
     ;
 
@@ -230,7 +226,7 @@ declarationSpecifier
     |   typeSpecifier
     |   typeQualifier
     |   functionSpecifier
-    |   '[[' attributeList ']]'
+    |   '[' '[' attributeList ']' ']'
     ;
 
 attributeList
