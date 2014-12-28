@@ -271,7 +271,7 @@ directTypeSpecifier
     |   'float'
     |   'vector'
     |   'string'
-    |   'entity') ('(' parameterTypeList? ')')?
+    |   'entity') ('(' parameterTypeList ')')?
     |   structOrUnionSpecifier
     |   enumSpecifier
     |   typedefName
@@ -375,7 +375,7 @@ parameterVarargs
     ;
 
 parameterList
-    :   parameterDeclaration (',' parameterDeclaration)*
+    :   (parameterDeclaration (',' parameterDeclaration)*)?
     ;
 
 parameterDeclaration
@@ -402,12 +402,12 @@ directAbstractDeclarator
     |   '[' 'static' typeQualifierList? assignmentExpression ']'
     |   '[' typeQualifierList 'static' assignmentExpression ']'
     |   '[' '*' ']'
-    |   '(' parameterTypeList? ')'
+    |   '(' parameterTypeList ')'
     |   directAbstractDeclarator '[' typeQualifierList? assignmentExpression? ']'
     |   directAbstractDeclarator '[' 'static' typeQualifierList? assignmentExpression ']'
     |   directAbstractDeclarator '[' typeQualifierList 'static' assignmentExpression ']'
     |   directAbstractDeclarator '[' '*' ']'
-    |   directAbstractDeclarator '(' parameterTypeList? ')'
+    |   directAbstractDeclarator '(' parameterTypeList ')'
     ;
 
 typedefName
