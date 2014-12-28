@@ -3,11 +3,8 @@ package com.timepath.quakec
 import groovy.transform.CompileStatic
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CharStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.misc.Interval
-import org.antlr.v4.runtime.tree.Trees
 
 import javax.annotation.Nonnull
 
@@ -17,14 +14,15 @@ class Compiler {
     static main(String[] args) {
         def now = new Date()
         def data = "${System.properties["user.home"]}/IdeaProjects/xonotic/data/xonotic-data.pk3dir"
-        def defs = ['server': 'SVQC', 'client': 'CSQC', 'menu': 'MENUQC']
+        def defs = ['menu': 'MENUQC', 'client': 'CSQC', 'server': 'SVQC']
         for (project in defs.keySet()) {
             def pp = createPreprocessor(now)
             pp.addMacro(defs[project])
-            includeAll "${data}/qcsrc/${project}/progs.src" as File, { File file ->
+            def includes = includeAll("${data}/qcsrc/${project}/progs.src" as File)
+            for (File file in includes) {
                 pp.addInput(new FileLexerSource(file))
+                parse(pp, file)
             }
-            parse(pp)
             pp.macros[defs[project]] = (Macro) null
         }
     }
@@ -64,16 +62,20 @@ class Compiler {
         return pp
     }
 
-    static def includeAll(File progs, Closure<?> include) {
+    static LinkedList<File> includeAll(File progs) {
+        LinkedList<File> includes = []
         for (line in progs.readLines().drop(1)) {
             def name = line.replaceFirst($/\s*//.*/$, '')
             def file = new File(progs.parent, name)
-            if (name && file.exists()) include(file)
+            if (name && file.exists()) includes.add(file)
         }
+        return includes
     }
 
-    static def parse(Preprocessor pp) {
-        CharStream input = new ANTLRInputStream(new CppReader(pp))
+    static def parse(Preprocessor pp, File f) {
+        println f.absolutePath
+        def input = new ANTLRInputStream(new CppReader(pp))
+        input.name = f.name
         QCLexer lexer = new QCLexer(input)
         CommonTokenStream tokens = new CommonTokenStream(lexer)
         QCParser parser = new QCParser(tokens)
@@ -88,8 +90,8 @@ class Compiler {
             tree = parser.compilationUnit()  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-        ('out1' as File).text = Trees.toStringTree(tree)
-        ('out2' as File).text = input.getText(Interval.of(parser.context.start.startIndex, parser.context.stop.stopIndex))
+//        ('out1' as File).text = Trees.toStringTree(tree)
+//        ('out2' as File).text = input.getText(Interval.of(parser.context.start.startIndex, parser.context.stop.stopIndex))
     }
 
 }
