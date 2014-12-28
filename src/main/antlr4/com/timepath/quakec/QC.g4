@@ -746,13 +746,13 @@ FloatingSuffix
 
 fragment
 VectorConstant
-    :   '\'' VectorComponent Whitespace VectorComponent Whitespace VectorComponent '\''
+    :   '\'' Whitespace? VectorComponent Whitespace VectorComponent Whitespace VectorComponent Whitespace? '\''
     ;
 
 fragment
 VectorComponent
-    :   IntegerConstant
-    |   FloatingConstant
+    :   Sign? (IntegerConstant
+    |   FloatingConstant)
     ;
 
 StringLiteral
@@ -776,6 +776,7 @@ EscapeSequence
     |   OctalEscapeSequence
     |   HexadecimalEscapeSequence
     |   UniversalCharacterName
+    |   GMQCCEscapeSequence
     ;
 
 fragment
@@ -791,6 +792,11 @@ OctalEscapeSequence
 fragment
 HexadecimalEscapeSequence
     :   '\\x' HexadecimalDigit+
+    ;
+
+fragment
+GMQCCEscapeSequence
+    :   '\\{' 'x'? DecimalConstant+ '}'
     ;
 
 //// ignore
