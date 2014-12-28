@@ -63,8 +63,8 @@ class Compiler {
         pp.listener = new DefaultPreprocessorListener()
 
         pp.addMacro("__JCPP__")
-        pp.addMacro("__DATE__", now.format('MMM dd yyyy'))
-        pp.addMacro("__TIME__", now.format('hh:mm:ss'))
+        pp.addMacro("__DATE__", now.format('"MMM dd yyyy"'))
+        pp.addMacro("__TIME__", now.format('"hh:mm:ss"'))
         return pp
     }
 
