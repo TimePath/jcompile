@@ -206,6 +206,11 @@ genericAssociation
     :   (typeName | 'default')? ':' assignmentExpression
     ;
 
+staticAssertDeclaration
+    :   '_Static_assert' '(' constantExpression ',' StringLiteral+ ')' ';'
+    |   'assert' constantExpression (':' StringLiteral+)? ';'
+    ;
+
 //// declarations
 
 declaration
@@ -229,26 +234,6 @@ declarationSpecifier
     |   '[' '[' attributeList ']' ']'
     ;
 
-attributeList
-    :   attribute (',' attribute)*
-    ;
-
-attribute
-    :   'noreturn'
-    |   'inline'
-    |   'eraseable'
-    |   'accumulate'
-    |   'last'
-    ;
-
-initDeclaratorList
-    :   initDeclarator (',' initDeclarator)*
-    ;
-
-initDeclarator
-    :   declarator ('=' initializer)?
-    ;
-
 storageClassSpecifier
     :   'typedef'
     |   'extern'
@@ -260,6 +245,10 @@ storageClassSpecifier
 
 typeSpecifier
     :   pointer? directTypeSpecifier
+    ;
+
+pointer
+    :  '.'+
     ;
 
 directTypeSpecifier
@@ -326,14 +315,28 @@ enumerationConstant
     :   Identifier
     ;
 
-typeQualifier
-    :   'const'
-    |   'var'
+typedefName
+    :   Identifier
     ;
 
-functionSpecifier
-    :   ('inline'
-    |   '_Noreturn')
+attributeList
+    :   attribute (',' attribute)*
+    ;
+
+attribute
+    :   'noreturn'
+    |   'inline'
+    |   'eraseable'
+    |   'accumulate'
+    |   'last'
+    ;
+
+initDeclaratorList
+    :   initDeclarator (',' initDeclarator)*
+    ;
+
+initDeclarator
+    :   declarator ('=' initializer)?
     ;
 
 declarator
@@ -343,25 +346,18 @@ declarator
 directDeclarator
     :   Identifier
     |   '(' declarator ')'
-    |   directDeclarator '[' typeQualifierList? assignmentExpression? ']'
-    |   directDeclarator '[' 'static' typeQualifierList? assignmentExpression ']'
-    |   directDeclarator '[' typeQualifierList 'static' assignmentExpression ']'
-    |   directDeclarator '[' typeQualifierList? '*' ']'
+    |   directDeclarator '[' assignmentExpression? ']'
     |   directDeclarator '(' parameterTypeList ')'
-    |   directDeclarator '(' identifierList? ')'
     ;
 
-nestedParenthesesBlock
-    :   (~('(' | ')')
-    |   '(' nestedParenthesesBlock ')')*
+abstractDeclarator
+    :   directAbstractDeclarator
     ;
 
-pointer
-    :  '.'+
-    ;
-
-typeQualifierList
-    :   typeQualifier+
+directAbstractDeclarator
+    :   '(' abstractDeclarator ')'
+    |   directAbstractDeclarator '[' assignmentExpression? ']'
+    |   directAbstractDeclarator '(' parameterTypeList ')'
     ;
 
 parameterTypeList
@@ -369,49 +365,17 @@ parameterTypeList
     |   parameterVarargs
     ;
 
-parameterVarargs
-    :   declarationSpecifiers? '...' Identifier?
-    |
-    ;
-
 parameterList
     :   (parameterDeclaration (',' parameterDeclaration)*)?
+    ;
+
+parameterVarargs
+    :   declarationSpecifiers? '...' Identifier?
     ;
 
 parameterDeclaration
     :   declarationSpecifiers declarator
     |   declarationSpecifiers2 abstractDeclarator?
-    ;
-
-identifierList
-    :   Identifier (',' Identifier)*
-    ;
-
-typeName
-    :   specifierQualifierList abstractDeclarator?
-    ;
-
-abstractDeclarator
-    :   pointer
-    |   pointer? directAbstractDeclarator
-    ;
-
-directAbstractDeclarator
-    :   '(' abstractDeclarator ')'
-    |   '[' typeQualifierList? assignmentExpression? ']'
-    |   '[' 'static' typeQualifierList? assignmentExpression ']'
-    |   '[' typeQualifierList 'static' assignmentExpression ']'
-    |   '[' '*' ']'
-    |   '(' parameterTypeList ')'
-    |   directAbstractDeclarator '[' typeQualifierList? assignmentExpression? ']'
-    |   directAbstractDeclarator '[' 'static' typeQualifierList? assignmentExpression ']'
-    |   directAbstractDeclarator '[' typeQualifierList 'static' assignmentExpression ']'
-    |   directAbstractDeclarator '[' '*' ']'
-    |   directAbstractDeclarator '(' parameterTypeList ')'
-    ;
-
-typedefName
-    :   Identifier
     ;
 
 initializer
@@ -437,8 +401,18 @@ designator
     |   '.' Identifier
     ;
 
-staticAssertDeclaration
-    :   '_Static_assert' '(' constantExpression ',' StringLiteral+ ')' ';'
+typeQualifier
+    :   'const'
+    |   'var'
+    ;
+
+functionSpecifier
+    :   ('inline'
+    |   '_Noreturn')
+    ;
+
+typeName
+    :   specifierQualifierList abstractDeclarator?
     ;
 
 //// statements
@@ -537,6 +511,7 @@ Vector : 'vector';
 Void : 'void';
 While : 'while';
 
+Assert : 'assert';
 Generic : '_Generic';
 Noreturn : '_Noreturn';
 StaticAssert : '_Static_assert';
