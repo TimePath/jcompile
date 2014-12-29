@@ -324,11 +324,9 @@ attributeList
     ;
 
 attribute
-    :   'noreturn'
-    |   'inline'
-    |   'eraseable'
-    |   'accumulate'
-    |   'last'
+    :   ~(',' | '[' | ']') // relaxed def for "identifier or reserved word"
+        ('(' argumentExpressionList? ')')?
+    |   // empty
     ;
 
 initDeclaratorList
