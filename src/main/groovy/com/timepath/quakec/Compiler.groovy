@@ -5,6 +5,9 @@ import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
+import org.antlr.v4.runtime.misc.Interval
+import org.antlr.v4.runtime.tree.ParseTreeWalker
+import org.antlr.v4.runtime.tree.Trees
 
 import javax.annotation.Nonnull
 import javax.swing.JOptionPane
@@ -107,8 +110,13 @@ class Compiler {
             tree = parser.compilationUnit()  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-//        ('out1' as File).text = Trees.toStringTree(tree)
-//        ('out2' as File).text = input.getText(Interval.of(parser.context.start.startIndex, parser.context.stop.stopIndex))
+        new File('out', f.canonicalPath).with {
+            parentFile.mkdirs()
+            def listener = new TreePrinterListener(parser);
+            ParseTreeWalker.DEFAULT.walk(listener, tree);
+            def formatted = listener.toString();
+            text = formatted
+        }
     }
 
 }
