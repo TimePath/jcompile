@@ -5,39 +5,32 @@ import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.misc.Interval
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import org.antlr.v4.runtime.tree.Trees
 
 import javax.annotation.Nonnull
-import javax.swing.JOptionPane
-import javax.swing.JScrollPane
-import javax.swing.JTextArea
-import java.awt.Dimension
+import javax.swing.*
+import java.awt.*
+import java.util.List
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.TimeUnit
 
 @CompileStatic
 class Compiler {
 
-    static boolean debug = false
-
-    static main(String[] args) {
-        def now = new Date()
+    static void main(String[] args) {
+        def start = new Date()
         def data = "${System.properties["user.home"]}/IdeaProjects/xonotic/data/xonotic-data.pk3dir"
         def defs = ['menu': 'MENUQC', 'client': 'CSQC', 'server': 'SVQC']
         for (project in defs.keySet()) {
-            def pp = createPreprocessor(now)
-            pp.addMacro(defs[project])
-            def includes = includeAll("${data}/qcsrc/${project}/progs.src" as File)
-            for (File file in includes) {
-                pp.addInput(new FileLexerSource(file))
-                parse(pp, file)
-            }
-            pp.macros[defs[project]] = (Macro) null
+            new Compiler().compile("${data}/qcsrc/${project}/progs.src" as File, defs[project])
         }
+        println "Total time: ${(new Date().time - start.time) / 1000} seconds"
     }
 
-    static Preprocessor createPreprocessor(Date now = new Date()) {
-        def pp = new Preprocessor() {
+    private static Preprocessor createPreprocessor(Date now = new Date()) {
+        new Preprocessor() {
             @Override
             Token token() throws IOException, LexerException {
                 def t
@@ -54,46 +47,53 @@ class Compiler {
 
             @Override
             protected void pragma(@Nonnull Token name, @Nonnull List<Token> value) throws IOException, LexerException {
-                if ("noref".equals(name.text)) {
-                    return
-                }
+                if ("noref".equals(name.text)) return
                 super.pragma(name, value)
             }
+        }.with {
+            it.addWarnings(EnumSet.allOf(Warning))
+            it.listener = new DefaultPreprocessorListener()
+            it.addMacro("__JCPP__")
+            it.addMacro("__DATE__", now.format('"MMM dd yyyy"'))
+            it.addMacro("__TIME__", now.format('"hh:mm:ss"'))
+            it
         }
-
-        pp.addWarnings(EnumSet.allOf(Warning))
-
-        pp.listener = new DefaultPreprocessorListener()
-
-        pp.addMacro("__JCPP__")
-        pp.addMacro("__DATE__", now.format('"MMM dd yyyy"'))
-        pp.addMacro("__TIME__", now.format('"hh:mm:ss"'))
-        return pp
     }
 
-    static LinkedList<File> includeAll(File progs) {
-        LinkedList<File> includes = []
-        for (line in progs.readLines().drop(1)) {
-            def name = line.replaceFirst($/\s*//.*/$, '')
+    private static Collection<File> includeAll(File progs) {
+        progs.readLines().drop(1).findResults {
+            def name = it.replaceFirst($/\s*//.*/$, '')
             def file = new File(progs.parent, name)
-            if (name && file.exists()) includes.add(file)
+            (name && file.exists()) ? file : null
         }
-        return includes
     }
 
-    static Reader preview(Reader reader) {
-        if (debug) {
-            def area = new JTextArea()
-            area.text = reader.readLines().join('\n')
-            def pane = new JScrollPane(area)
-            pane.setPreferredSize([500, 500] as Dimension)
-            JOptionPane.showMessageDialog(null, pane)
-        }
-        return reader
+    boolean debug = false
+
+    private ThreadFactory threadFactory = new ThreadFactory() {
+        private ThreadFactory delegate = Executors.defaultThreadFactory()
+
+        @Override
+        Thread newThread(Runnable r) { this.delegate.newThread(r).with { daemon = true; it } }
     }
 
-    static def parse(Preprocessor pp, File f) {
-        println f.absolutePath
+    private ExecutorService pool = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), threadFactory)
+
+    def compile(File progs, String define) {
+        def start = new Date()
+        def pp = createPreprocessor(start)
+        pp.addMacro(define)
+        def includes = includeAll(progs)
+        for (File file in includes) {
+            pp.addInput(new FileLexerSource(file))
+            parse(pp, file)
+        }
+        pool.shutdown()
+        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        println "Project time: ${(new Date().time - start.time) / 1000} seconds"
+    }
+
+    private parse(Preprocessor pp, File f) {
         def input = new ANTLRInputStream(preview(new CppReader(pp)))
         input.name = f.name
         QCLexer lexer = new QCLexer(input)
@@ -110,13 +110,27 @@ class Compiler {
             tree = parser.compilationUnit()  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-        new File('out', f.canonicalPath).with {
-            parentFile.mkdirs()
+        pool.submit {
+            println f.canonicalPath
             def listener = new TreePrinterListener(parser);
             ParseTreeWalker.DEFAULT.walk(listener, tree);
             def formatted = listener.toString();
-            text = formatted
+            new File('out', f.canonicalPath).with {
+                parentFile.mkdirs()
+                text = formatted
+            }
         }
+    }
+
+    private Reader preview(Reader reader) {
+        if (this.debug) {
+            def area = new JTextArea()
+            area.text = reader.readLines().join('\n')
+            def pane = new JScrollPane(area)
+            pane.setPreferredSize([500, 500] as Dimension)
+            JOptionPane.showMessageDialog(null, pane)
+        }
+        return reader
     }
 
 }

@@ -1,5 +1,6 @@
 package com.timepath.quakec
 
+import groovy.transform.CompileStatic
 import org.antlr.v4.runtime.Parser
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Utils
@@ -8,6 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTreeListener
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.antlr.v4.runtime.tree.Trees
 
+@CompileStatic
 class TreePrinterListener implements ParseTreeListener {
     private final List<String> ruleNames
     private final StringBuilder builder = new StringBuilder()
