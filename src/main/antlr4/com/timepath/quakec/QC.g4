@@ -185,8 +185,6 @@ primaryExpression
     |   Constant
     |   '...' // varargs access
     // FIXME: hardcoded
-    |   'true'
-    |   'false'
     |   'float'
     |   'string'
     |   StringLiteral+
@@ -484,7 +482,6 @@ Else : 'else';
 Entity : 'entity';
 Enum : 'enum';
 Extern : 'extern';
-False : 'false';
 Float : 'float';
 For : 'for';
 Goto : 'goto';
@@ -500,7 +497,6 @@ Static : 'static';
 String : 'string';
 Struct : 'struct';
 Switch : 'switch';
-True : 'true';
 Typedef : 'typedef';
 Union : 'union';
 Unsigned : 'unsigned';
@@ -620,19 +616,12 @@ UniversalCharacterName
 //// constants
 
 Constant
-    :   BooleanConstant
-    |   BuiltinConstant
+    :   BuiltinConstant
     |   IntegerConstant
     |   FloatingConstant
     //|   EnumerationConstant
     |   '\'' SChar '\''
     |   VectorConstant
-    ;
-
-fragment
-BooleanConstant
-    :   'true'
-    |   'false'
     ;
 
 fragment
