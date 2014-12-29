@@ -100,7 +100,8 @@ constantExpression
     ;
 
 conditionalExpression
-    :   logicalOrExpression ('?' expression ':' conditionalExpression)?
+    :   logicalOrExpression
+    |   logicalOrExpression '?' expression ':' expression
     ;
 
 logicalOrExpression
