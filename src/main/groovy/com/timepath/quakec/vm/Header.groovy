@@ -9,7 +9,7 @@ class Header {
 
     int version, crc, entityCount
 
-    Section statements, globalDefs, fieldDefs, functions, stringData, globaldata
+    Section statements, globalDefs, fieldDefs, functions, stringData, globalData
 
     def Header(Loader l) {
         version = l.readInt()
@@ -20,7 +20,7 @@ class Header {
         fieldDefs = new Section(l)
         functions = new Section(l)
         stringData = new Section(l)
-        globaldata = new Section(l)
+        globalData = new Section(l)
 
         entityCount = l.readInt()
     }

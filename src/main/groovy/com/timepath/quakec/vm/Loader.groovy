@@ -2,6 +2,9 @@ package com.timepath.quakec.vm
 
 import groovy.transform.CompileStatic
 
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+
 @CompileStatic
 class Loader {
 
@@ -11,6 +14,7 @@ class Loader {
     List<Definition> fieldDefs
     List<Function> functions
     LinkedHashMap<Integer, String> stringData
+    ByteBuffer globalData
 
     @Delegate
     private BinaryReader d
@@ -73,6 +77,12 @@ class Loader {
                 stroff += s.length() + 1
             }
             ret
+        }()
+        globalData = {
+            offset = h.globalData.offset
+            def bytes = new byte[h.globalData.count * 4]
+            read(bytes)
+            ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         }()
     }
 

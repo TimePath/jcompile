@@ -2,16 +2,28 @@ package com.timepath.quakec.vm
 
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
-import groovy.transform.TupleConstructor
+
+import java.nio.ByteBuffer
 
 @CompileStatic
 @ToString
-@TupleConstructor
 class Statement {
-    short op, a, b, c
+    Instruction op
+    short a, b, c
 
-    int exec(int fp) {
-        Instruction.from(op)(this)
-        return fp + 1
+    Statement(short op, short a, short b, short c) {
+        this.op = Instruction.from(op)
+        this.a = a
+        this.b = b
+        this.c = c
+    }
+
+    int call(Loader data) {
+        op.call(this, data)
+    }
+
+    @Override
+    String toString() {
+        op.toString(this)
     }
 }
