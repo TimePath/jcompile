@@ -19,8 +19,8 @@ class Program {
     }
 
     void exec(Function start) {
-        LinkedList<Function> stack = []
-        LinkedList<Integer> fpstack = []
+        Stack<Function> stack = []
+        Stack<Integer> fpstack = []
         int fp = -1
         def push = { Function fn ->
             stack << fn
@@ -31,6 +31,7 @@ class Program {
         push start
 
         while (stack) {
+            def name = stack[-1].name;
             Statement stmt = data.statements[fp]
             println stmt
             def ret = stmt(data)
