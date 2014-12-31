@@ -1,6 +1,5 @@
 package com.timepath.quakec.vm
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 import java.nio.FloatBuffer
@@ -88,18 +87,9 @@ enum Instruction {
                         && f.get(it.a + 2) == f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
-    EQ_STR({ Statement it -> [it.c, '=', it.a, '==', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    EQ_ENT({ Statement it -> [it.c, '=', it.a, '==', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    EQ_FNC({ Statement it -> [it.c, '=', it.a, '==', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    EQ_STR({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
+    EQ_ENT({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
+    EQ_FNC({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
 
     NE_FLO({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -113,18 +103,9 @@ enum Instruction {
                         || f.get(it.a + 2) != f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
-    NE_STR({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    NE_ENT({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    NE_FNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    NE_STR({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
+    NE_ENT({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
+    NE_FNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
 
     LE({ Statement it -> [it.c, '=', it.a, '<=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -149,45 +130,24 @@ enum Instruction {
 
     LOAD_FLO({ Statement it ->
         "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
     LOAD_VEC({ Statement it ->
         "LOAD_V (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
     LOAD_STR({ Statement it ->
         "LOAD_S (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
     LOAD_ENT({ Statement it ->
         "LOAD_E (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
     LOAD_FLD({ Statement it ->
         "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
     LOAD_FNC({ Statement it ->
         "LOAD_M (\$${it.a}[\$${it.c}] = \$${it.a})"
-    },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    }, { 1 }),
 
-    LOAD_ADDRESS({ Statement it -> ["ILLEGAL"] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    LOAD_ADDRESS({ Statement it -> ["ILLEGAL"] }, { 1 }),
 
     STORE_FLO({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -222,30 +182,12 @@ enum Instruction {
                 1
             }),
 
-    STOREP_FLO({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    STOREP_VEC({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    STOREP_STR({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    STOREP_ENT({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    STOREP_FLD({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    STOREP_FNC({ Statement it -> [it.b, '=', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    STOREP_FLO({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_VEC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_STR({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_ENT({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_FLD({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_FNC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
 
     RETURN({ Statement it -> [it.a, ',', it.b, ',', it.c] },
             { Statement it, FloatBuffer f, IntBuffer i -> 0 }),
@@ -262,73 +204,34 @@ enum Instruction {
                         && !f.get(it.a + 2)) ? 1 : 0)
                 1
             }),
-    NOT_STR({ Statement it -> ['!', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    NOT_ENT({ Statement it -> ['!', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    NOT_FNC({ Statement it -> ['!', it.a] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    NOT_STR({ Statement it -> ['!', it.a] }, { 1 }),
+    NOT_ENT({ Statement it -> ['!', it.a] }, { 1 }),
+    NOT_FNC({ Statement it -> ['!', it.a] }, { 1 }),
 
     IF({ Statement it -> ['if', it.a, 'then jmp rel', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
-                1 + (f.get(it.a) ? (int) it.b : 0)
+                (f.get(it.a) ? (int) it.b : 1)
             }),
     IFNOT({ Statement it -> ['if not', it.a, 'then jmp rel', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
-                1 + (!f.get(it.a) ? (int) it.b : 0)
+                (!f.get(it.a) ? (int) it.b : 1)
             }),
 
-    CALL0({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL1({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL2({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL3({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL4({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL5({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL6({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL7({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-    CALL8({ Statement it -> [it.a, '(...)'] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    CALL0({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL1({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL2({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL3({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL4({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL5({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL6({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL7({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL8({ Statement it -> [it.a, '(...)'] }, { 1 }),
 
-    STATE({ Statement it -> ["ILLEGAL"] },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
+    STATE({ Statement it -> ["ILLEGAL"] }, { 1 }),
 
     GOTO({ Statement it -> ['jmp rel', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
-                1 + it.a
+                it.a
             }),
 
     AND({ Statement it -> [it.a, '&&', it.b] },
