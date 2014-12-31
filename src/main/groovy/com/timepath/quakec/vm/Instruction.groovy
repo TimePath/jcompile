@@ -241,12 +241,12 @@ enum Instruction {
                 it.a
             }),
 
-    AND({ Statement it -> [it.a, '&&', it.b] },
+    AND({ Statement it -> [it.c, '=', it.a, '&&', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) && f.get(it.b)) ? 1 : 0)
                 1
             }),
-    OR({ Statement it -> [it.a, '||', it.b] },
+    OR({ Statement it -> [it.c, '=', it.a, '||', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) || f.get(it.b)) ? 1 : 0)
                 1
