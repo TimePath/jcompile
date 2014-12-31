@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
 
 @CompileStatic
 class Loader {
@@ -14,7 +16,8 @@ class Loader {
     List<Definition> fieldDefs
     List<Function> functions
     LinkedHashMap<Integer, String> stringData
-    ByteBuffer globalData
+    IntBuffer globalIntData
+    FloatBuffer globalFloatData
 
     @Delegate
     private BinaryReader d
@@ -78,12 +81,14 @@ class Loader {
             }
             ret
         }()
-        globalData = {
+        def globalData = {
             offset = h.globalData.offset
             def bytes = new byte[h.globalData.count * 4]
             read(bytes)
             ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         }()
+        globalIntData = globalData.asIntBuffer()
+        globalFloatData = globalData.asFloatBuffer()
     }
 
     private <T> List<T> iterData(Header.Section section, Closure<T> closure) {

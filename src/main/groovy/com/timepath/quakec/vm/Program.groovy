@@ -49,9 +49,13 @@ class Program {
                 case Instruction.CALL6:
                 case Instruction.CALL7:
                 case Instruction.CALL8:
-                    def i = data.globalData.getInt((int) stmt.a)
-                    def fn = data.functions[i]
-                    push fn
+                    def function = data.functions[data.globalIntData.get(stmt.a)]
+                    def i = function.firstStatement
+                    if (i < 0) {
+                        println "Bultin #${-i}"
+                    } else {
+                        push function
+                    }
                     break
             }
         }
