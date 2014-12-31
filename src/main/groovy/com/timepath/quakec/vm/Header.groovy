@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.ToString
 
 @CompileStatic
-@ToString
+@ToString(includeNames = true)
 class Header {
 
     int version, crc, entityCount
@@ -25,7 +25,7 @@ class Header {
         entityCount = l.readInt()
     }
 
-    @ToString
+    @ToString(includeNames = true)
     class Section {
 
         int offset, count

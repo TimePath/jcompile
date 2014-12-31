@@ -1,25 +1,25 @@
 package com.timepath.quakec.vm
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
-import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 @CompileStatic
 enum Instruction {
-    DONE({ Statement it -> "DONE (\$${it.a}, \$${it.b}, \$${it.c})" },
+    DONE({ Statement it -> [it.a, ',', it.b, ',', it.c] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(OFS_RETURN, f.get(it.a))
                 0
             }),
 
-    MUL_FLO({ Statement it -> "MUL_F (\$${it.c} = \$${it.a} * \$${it.b})" },
+    MUL_FLO({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) * f.get(it.b)))
                 1
             }),
-    MUL_VEC({ Statement it -> "MUL_V (\$${it.c} = \$${it.a} * \$${it.b})" },
+    MUL_VEC({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (
                         f.get(it.a + 0) * f.get(it.b + 0)
@@ -29,14 +29,14 @@ enum Instruction {
                 1
             }),
 
-    MUL_FLO_VEC({ Statement it -> "MUL_FV (\$${it.c} = \$${it.a} * \$${it.b})" },
+    MUL_FLO_VEC({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a) * f.get(it.b + 0)))
                 f.put(it.c + 1, (float) (f.get(it.a) * f.get(it.b + 1)))
                 f.put(it.c + 2, (float) (f.get(it.a) * f.get(it.b + 2)))
                 1
             }),
-    MUL_VEC_FLO({ Statement it -> "MUL_VF (\$${it.c} = \$${it.a} * \$${it.b})" },
+    MUL_VEC_FLO({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a + 0) * f.get(it.b)))
                 f.put(it.c + 1, (float) (f.get(it.a + 1) * f.get(it.b)))
@@ -44,18 +44,18 @@ enum Instruction {
                 1
             }),
 
-    DIV_FLO({ Statement it -> "DIV_F (\$${it.c} = \$${it.a} / \$${it.b})" },
+    DIV_FLO({ Statement it -> [it.c, '=', it.a, '/', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) / f.get(it.b)))
                 1
             }),
 
-    ADD_FLO({ Statement it -> "ADD_F (\$${it.c} = \$${it.a} + \$${it.b})" },
+    ADD_FLO({ Statement it -> [it.c, '=', it.a, '+', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) + f.get(it.b)))
                 1
             }),
-    ADD_VEC({ Statement it -> "ADD_V (\$${it.c} = \$${it.a} + \$${it.b})" },
+    ADD_VEC({ Statement it -> [it.c, '=', it.a, '+', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a + 0) + f.get(it.b + 0)))
                 f.put(it.c + 1, (float) (f.get(it.a + 1) + f.get(it.b + 1)))
@@ -63,12 +63,12 @@ enum Instruction {
                 1
             }),
 
-    SUB_FLO({ Statement it -> "SUB_F (\$${it.c} = \$${it.a} - \$${it.b})" },
+    SUB_FLO({ Statement it -> [it.c, '=', it.a, '-', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) - f.get(it.b)))
                 1
             }),
-    SUB_VEC({ Statement it -> "SUB_V (\$${it.c} = \$${it.a} - \$${it.b})" },
+    SUB_VEC({ Statement it -> [it.c, '=', it.a, '-', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a + 0) - f.get(it.b + 0)))
                 f.put(it.c + 1, (float) (f.get(it.a + 1) - f.get(it.b + 1)))
@@ -76,266 +76,278 @@ enum Instruction {
                 1
             }),
 
-    EQ_FLO({ Statement it -> "EQ_F (\$${it.c} = \$${it.a} == \$${it.b})" },
+    EQ_FLO({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) == f.get(it.b) ? 1 : 0))
                 1
             }),
-    EQ_VEC({ Statement it -> "EQ_V (\$${it.c} = \$${it.a} == \$${it.b})" },
+    EQ_VEC({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a + 0) == f.get(it.b + 0)
                         && f.get(it.a + 1) == f.get(it.b + 1)
                         && f.get(it.a + 2) == f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
-    EQ_STR({ Statement it -> "EQ_S (\$${it.c} = \$${it.a} == \$${it.b})" },
+    EQ_STR({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    EQ_ENT({ Statement it -> "EQ_E (\$${it.c} = \$${it.a} == \$${it.b})" },
+    EQ_ENT({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    EQ_FNC({ Statement it -> "EQ_M (\$${it.c} = \$${it.a} == \$${it.b})" },
+    EQ_FNC({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    NE_FLO({ Statement it -> "NE_F (\$${it.c} = \$${it.a} != \$${it.b})" },
+    NE_FLO({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) != f.get(it.b) ? 1 : 0))
                 1
             }),
-    NE_VEC({ Statement it -> "NE_V (\$${it.c} = \$${it.a} != \$${it.b})" },
+    NE_VEC({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a + 0) != f.get(it.b + 0)
                         || f.get(it.a + 1) != f.get(it.b + 1)
                         || f.get(it.a + 2) != f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
-    NE_STR({ Statement it -> "NE_S (\$${it.c} = \$${it.a} != \$${it.b})" },
+    NE_STR({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    NE_ENT({ Statement it -> "NE_E (\$${it.c} = \$${it.a} != \$${it.b})" },
+    NE_ENT({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    NE_FNC({ Statement it -> "NE_M (\$${it.c} = \$${it.a} != \$${it.b})" },
+    NE_FNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    LE({ Statement it -> "LE (\$${it.c} = \$${it.a} <= \$${it.b})" },
+    LE({ Statement it -> [it.c, '=', it.a, '<=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) <= f.get(it.b) ? 1 : 0))
                 1
             }),
-    GE({ Statement it -> "GE (\$${it.c} = \$${it.a} => \$${it.b})" },
+    GE({ Statement it -> [it.c, '=', it.a, '>=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) >= f.get(it.b) ? 1 : 0))
                 1
             }),
-    LT({ Statement it -> "LT (\$${it.c} = \$${it.a} < \$${it.b})" },
+    LT({ Statement it -> [it.c, '=', it.a, '<', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) < f.get(it.b) ? 1 : 0))
                 1
             }),
-    GT({ Statement it -> "GT (\$${it.c} = \$${it.a} > \$${it.b})" },
+    GT({ Statement it -> [it.c, '=', it.a, '>', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) > f.get(it.b) ? 1 : 0))
                 1
             }),
 
-    LOAD_FLO({ Statement it -> "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_FLO({ Statement it ->
+        "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    LOAD_VEC({ Statement it -> "LOAD_V (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_VEC({ Statement it ->
+        "LOAD_V (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    LOAD_STR({ Statement it -> "LOAD_S (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_STR({ Statement it ->
+        "LOAD_S (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    LOAD_ENT({ Statement it -> "LOAD_E (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_ENT({ Statement it ->
+        "LOAD_E (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    LOAD_FLD({ Statement it -> "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_FLD({ Statement it ->
+        "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    LOAD_FNC({ Statement it -> "LOAD_M (\$${it.a}[\$${it.c}] = \$${it.a})" },
+    LOAD_FNC({ Statement it ->
+        "LOAD_M (\$${it.a}[\$${it.c}] = \$${it.a})"
+    },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    LOAD_ADDRESS({ Statement it -> "LOAD_ADDRESS (ILLEGAL)" },
+    LOAD_ADDRESS({ Statement it -> ["ILLEGAL"] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    STORE_FLO({ Statement it -> "STORE_F (\$${it.b} = \$${it.a})" },
+    STORE_FLO({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_VEC({ Statement it -> "STORE_V (\$${it.b} = \$${it.a})" },
+    STORE_VEC({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b + 0, f.get(it.a + 0))
                 f.put(it.b + 1, f.get(it.a + 1))
                 f.put(it.b + 2, f.get(it.a + 2))
                 1
             }),
-    STORE_STR({ Statement it -> "STORE_S (\$${it.b} = \$${it.a})" },
+    STORE_STR({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_ENT({ Statement it -> "STORE_E (\$${it.b} = \$${it.a})" },
+    STORE_ENT({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_FLD({ Statement it -> "STORE_F (\$${it.b} = \$${it.a})" },
+    STORE_FLD({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_FNC({ Statement it -> "STORE_M (\$${it.b} = \$${it.a})" },
+    STORE_FNC({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
 
-    STOREP_FLO({ Statement it -> "STOREP_F (\$${it.b} = \$${it.a})" },
+    STOREP_FLO({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    STOREP_VEC({ Statement it -> "STOREP_V (\$${it.b} = \$${it.a})" },
+    STOREP_VEC({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    STOREP_STR({ Statement it -> "STOREP_S (\$${it.b} = \$${it.a})" },
+    STOREP_STR({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    STOREP_ENT({ Statement it -> "STOREP_E (\$${it.b} = \$${it.a})" },
+    STOREP_ENT({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    STOREP_FLD({ Statement it -> "STOREP_F (\$${it.b} = \$${it.a})" },
+    STOREP_FLD({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    STOREP_FNC({ Statement it -> "STOREP_M (\$${it.b} = \$${it.a})" },
+    STOREP_FNC({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    RETURN({ Statement it -> "RETURN (\$${it.a}, \$${it.b}, \$${it.c})" },
+    RETURN({ Statement it -> [it.a, ',', it.b, ',', it.c] },
             { Statement it, FloatBuffer f, IntBuffer i -> 0 }),
 
-    NOT_FLO({ Statement it -> "NOT_F (!\$${it.a})" },
+    NOT_FLO({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, !f.get(it.a) ? 1 : 0)
                 1
             }),
-    NOT_VEC({ Statement it -> "NOT_V (!\$${it.a})" },
+    NOT_VEC({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (!f.get(it.a + 0)
                         && !f.get(it.a + 1)
                         && !f.get(it.a + 2)) ? 1 : 0)
                 1
             }),
-    NOT_STR({ Statement it -> "NOT_S (!\$${it.a})" },
+    NOT_STR({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    NOT_ENT({ Statement it -> "NOT_E (!\$${it.a})" },
+    NOT_ENT({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    NOT_FNC({ Statement it -> "NOT_M (!\$${it.a})" },
+    NOT_FNC({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    IF({ Statement it -> "IF (if (\$${it.a}) then goto +\$${it.b})" },
+    IF({ Statement it -> ['if', it.a, 'then jmp rel', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1 + (f.get(it.a) ? (int) it.b : 0)
             }),
-    IFNOT({ Statement it -> "IFNOT (if (!\$${it.a} then goto +\$${it.b})" },
+    IFNOT({ Statement it -> ['if not', it.a, 'then jmp rel', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1 + (!f.get(it.a) ? (int) it.b : 0)
             }),
 
-    CALL0({ Statement it -> "CALL0 (\$${it.a}(...))" },
+    CALL0({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL1({ Statement it -> "CALL1 (\$${it.a}(...))" },
+    CALL1({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL2({ Statement it -> "CALL2 (\$${it.a}(...))" },
+    CALL2({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL3({ Statement it -> "CALL3 (\$${it.a}(...))" },
+    CALL3({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL4({ Statement it -> "CALL4 (\$${it.a}(...))" },
+    CALL4({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL5({ Statement it -> "CALL5 (\$${it.a}(...))" },
+    CALL5({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL6({ Statement it -> "CALL6 (\$${it.a}(...))" },
+    CALL6({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL7({ Statement it -> "CALL7 (\$${it.a}(...))" },
+    CALL7({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
-    CALL8({ Statement it -> "CALL8 (\$${it.a}(...))" },
-            { Statement it, FloatBuffer f, IntBuffer i ->
-                1
-            }),
-
-    STATE({ Statement it -> "STATE (ILLEGAL)" },
+    CALL8({ Statement it -> [it.a, '(...)'] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1
             }),
 
-    GOTO({ Statement it -> "GOTO (goto +\$${it.a})" },
+    STATE({ Statement it -> ["ILLEGAL"] },
+            { Statement it, FloatBuffer f, IntBuffer i ->
+                1
+            }),
+
+    GOTO({ Statement it -> ['jmp rel', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 1 + it.a
             }),
 
-    AND({ Statement it -> "AND (\$${it.a} && \$${it.b})" },
+    AND({ Statement it -> [it.a, '&&', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) && f.get(it.b)) ? 1 : 0)
                 1
             }),
-    OR({ Statement it -> "OR (\$${it.a} || \$${it.b})" },
+    OR({ Statement it -> [it.a, '||', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) || f.get(it.b)) ? 1 : 0)
                 1
             }),
 
-    BITAND({ Statement it -> "BITAND (\$${it.c} = \$${it.a} & \$${it.b})" },
+    BITAND({ Statement it -> [it.c, '=', it.a, '&', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) & f.get(it.b)))
                 1
             }),
-    BITOR({ Statement it -> "BITOR (\$${it.c} = \$${it.a} | \$${it.b})" },
+    BITOR({ Statement it -> [it.c, '=', it.a, '|', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) | f.get(it.b)))
                 1
@@ -351,7 +363,7 @@ enum Instruction {
     static int OFS_PARM6 = 22;
     static int OFS_PARM7 = 25;
 
-    private Closure<String> stringify
+    private Closure<List> stringify
     private Closure<Integer> action
 
     Instruction(Closure stringify, Closure<Integer> action) {
@@ -367,7 +379,22 @@ enum Instruction {
         action(s, data.globalFloatData, data.globalIntData)
     }
 
-    String toString(Statement s) {
-        stringify(s)
+    String toString(Statement s, Loader data) {
+        def template = stringify(s)
+        int col = 9
+        def each = template.collect {
+            if (it instanceof Short) {
+                def val
+                try {
+                    val = data.globalFloatData.get((int) it)
+                } catch (ignored) {
+                    val = '?'
+                }
+                return "\$$it ($val)"
+            } else {
+                return it
+            }
+        }
+        "${this.name()}${' ' * (col - name().length())}\t(${each.join(' ')})"
     }
 }

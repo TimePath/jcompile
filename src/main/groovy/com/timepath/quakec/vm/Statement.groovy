@@ -18,12 +18,14 @@ class Statement {
         this.c = c
     }
 
+    Loader loader
+
     int call(Loader data) {
         op.call(this, data)
     }
 
     @Override
     String toString() {
-        op.toString(this)
+        op.toString(this, loader)
     }
 }

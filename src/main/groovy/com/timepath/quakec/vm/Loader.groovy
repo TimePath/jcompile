@@ -31,7 +31,7 @@ class Loader {
                     readShort(),
                     readShort(),
                     readShort()
-            )
+            ).with { loader = this; it }
         }
         globalDefs = iterData(h.globalDefs) {
             new Definition(

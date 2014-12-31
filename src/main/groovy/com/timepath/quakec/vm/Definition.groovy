@@ -5,7 +5,6 @@ import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
 @CompileStatic
-@ToString
 @TupleConstructor(excludes = 'loader')
 class Definition {
     short type, offset
@@ -15,5 +14,15 @@ class Definition {
 
     public String getName() {
         loader.strings[this.nameOffset]
+    }
+
+    @Override
+    public String toString() {
+        return """\
+Definition{
+    type=$type,
+    offset=$offset,
+    name=$name
+}"""
     }
 }

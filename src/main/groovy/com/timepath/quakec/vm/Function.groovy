@@ -5,7 +5,6 @@ import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
 @CompileStatic
-@ToString
 @TupleConstructor(excludes = 'loader')
 class Function {
     int firstStatement, firstLocal, numLocals, profiling, nameOffset, fileNameOffset, numParams
@@ -15,5 +14,24 @@ class Function {
 
     public String getName() {
         loader.strings[this.nameOffset]
+    }
+
+    public String getFileName() {
+        loader.strings[this.fileNameOffset]
+    }
+
+    @Override
+    public String toString() {
+        return """\
+Function{
+    firstStatement=$firstStatement,
+    firstLocal=$firstLocal,
+    numLocals=$numLocals,
+    profiling=$profiling,
+    name=$name,
+    fileName=$fileName,
+    numParams=$numParams,
+    sizeof=${Arrays.toString(sizeof)}
+}"""
     }
 }
