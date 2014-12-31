@@ -90,11 +90,13 @@ class Program {
     }
 
     class Builtin {
+        private String name
         private List<Class> parameterTypes
         private Class varargsType
         private Closure callback
 
-        Builtin(List<Class> parameterTypes, Class varargsType, Closure callback) {
+        Builtin(String name, List<Class> parameterTypes, Class varargsType, Closure callback) {
+            this.name = name
             this.parameterTypes = parameterTypes
             this.varargsType = varargsType
             this.callback = callback
@@ -118,24 +120,25 @@ class Program {
             }
             Object[] args = parameterTypes.collect { Class it -> read(it) }
             Object[] varargs = ((parameterTypes.size()..<parameterCount).collect { read(varargsType) })
-            callback(*(args + varargs))
+            def objects = args + varargs
+            println """$name(${objects.collect({
+                it.class == String ? "\"${Utils.escapeWhitespace(it, false)}\"" : it
+            }).join(', ')})"""
+            callback(*objects)
         }
 
     }
 
     Map<Integer, Builtin> builtins = [
-            (1): new Builtin([], String, { String[] args ->
-                def s = args.join('')
-                println "print(\"${Utils.escapeWhitespace(s, false)}\");"
-                s
+            (1): new Builtin('print', [], String, { String[] args ->
+                args.join('')
             }),
-            (2): new Builtin([Float], null, { float arg ->
-                println "ftos(${arg});"
+            (2): new Builtin('ftos', [Float], null, { float arg ->
+                arg as String
             })
     ]
 
     def builtin(int id, int parameterCount) {
-        println "Bultin #${id}"
         def builtin = builtins.get(id)
         def ret = builtin.call(parameterCount)
         if (!ret) return
