@@ -15,7 +15,7 @@ class Loader {
     List<Definition> globalDefs
     List<Definition> fieldDefs
     List<Function> functions
-    LinkedHashMap<Integer, String> stringData
+    StringManager strings
     IntBuffer globalIntData
     FloatBuffer globalFloatData
 
@@ -60,7 +60,7 @@ class Loader {
                      readByte(), readByte(), readByte(), readByte()] as byte[]
             ).with { loader = this; it }
         }
-        stringData = {
+        def stringData = {
             List<String> list = []
             def sb = new StringBuilder()
             offset = h.stringData.offset
@@ -89,6 +89,7 @@ class Loader {
         }()
         globalIntData = globalData.asIntBuffer()
         globalFloatData = globalData.asFloatBuffer()
+        strings = new StringManager(stringData, h.stringData.count)
     }
 
     private <T> List<T> iterData(Header.Section section, Closure<T> closure) {

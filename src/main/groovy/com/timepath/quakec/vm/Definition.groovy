@@ -14,6 +14,6 @@ class Definition {
     Loader loader
 
     public String getName() {
-        loader.stringData.get(this.nameOffset)
+        loader.strings[this.nameOffset]
     }
 }

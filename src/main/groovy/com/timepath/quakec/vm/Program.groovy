@@ -1,6 +1,7 @@
 package com.timepath.quakec.vm
 
 import groovy.transform.CompileStatic
+import org.antlr.v4.runtime.misc.Utils
 
 @CompileStatic
 class Program {
@@ -52,7 +53,7 @@ class Program {
                     def function = data.functions[data.globalIntData.get(stmt.a)]
                     def i = function.firstStatement
                     if (i < 0) {
-                        println "Bultin #${-i}"
+                        builtin(-i)
                     } else {
                         push function
                     }
@@ -60,6 +61,27 @@ class Program {
             }
         }
     }
+
+    Map<Integer, Closure<Float>> builtins = [(1): { String arg0 ->
+        println "print(\"${Utils.escapeWhitespace(arg0, false)}\");"
+        1
+    }]
+
+    def builtin(int id) {
+        println "Bultin #${id}"
+        def builtin = builtins.get(id)
+        def offset = Instruction.OFS_PARM0
+        def getFloat = { int i -> data.globalFloatData.get(i) }
+        def getString = { int i -> data.strings[data.globalIntData.get(i)] }
+        def args = builtin.parameterTypes.collect {
+            def ret = it == float ? getFloat(-3 + (offset += 3))
+                    : it == String ? getString(-3 + (offset += 3))
+                    : null
+            ret
+        }
+        builtin.call(args)
+    }
+
 
     public static void main(String[] args) {
         def data = "${System.properties["user.home"]}/IdeaProjects/xonotic/gmqcc"
