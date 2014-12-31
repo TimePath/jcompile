@@ -87,6 +87,7 @@ enum Instruction {
                         && f.get(it.a + 2) == f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
+    // TODO
     EQ_STR({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
     EQ_ENT({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
     EQ_FNC({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
@@ -103,6 +104,7 @@ enum Instruction {
                         || f.get(it.a + 2) != f.get(it.b + 2)) ? 1 : 0)
                 1
             }),
+    // TODO
     NE_STR({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
     NE_ENT({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
     NE_FNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
@@ -128,24 +130,13 @@ enum Instruction {
                 1
             }),
 
-    LOAD_FLO({ Statement it ->
-        "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
-    LOAD_VEC({ Statement it ->
-        "LOAD_V (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
-    LOAD_STR({ Statement it ->
-        "LOAD_S (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
-    LOAD_ENT({ Statement it ->
-        "LOAD_E (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
-    LOAD_FLD({ Statement it ->
-        "LOAD_F (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
-    LOAD_FNC({ Statement it ->
-        "LOAD_M (\$${it.a}[\$${it.c}] = \$${it.a})"
-    }, { 1 }),
+    // TODO
+    LOAD_FLO({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_VEC({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_STR({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_ENT({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_FLD({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_FNC({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
 
     LOAD_ADDRESS({ Statement it -> ["ILLEGAL"] }, { 1 }),
 
@@ -182,6 +173,7 @@ enum Instruction {
                 1
             }),
 
+    // TODO
     STOREP_FLO({ Statement it -> [it.b, '=', it.a] }, { 1 }),
     STOREP_VEC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
     STOREP_STR({ Statement it -> [it.b, '=', it.a] }, { 1 }),
@@ -190,7 +182,10 @@ enum Instruction {
     STOREP_FNC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
 
     RETURN({ Statement it -> [it.a, ',', it.b, ',', it.c] },
-            { Statement it, FloatBuffer f, IntBuffer i -> 0 }),
+            { Statement it, FloatBuffer f, IntBuffer i ->
+                f.put(OFS_RETURN, f.get(it.a))
+                0
+            }),
 
     NOT_FLO({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -204,6 +199,7 @@ enum Instruction {
                         && !f.get(it.a + 2)) ? 1 : 0)
                 1
             }),
+    // TODO
     NOT_STR({ Statement it -> ['!', it.a] }, { 1 }),
     NOT_ENT({ Statement it -> ['!', it.a] }, { 1 }),
     NOT_FNC({ Statement it -> ['!', it.a] }, { 1 }),
