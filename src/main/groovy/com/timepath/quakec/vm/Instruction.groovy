@@ -9,11 +9,13 @@ import java.nio.IntBuffer
 enum Instruction {
     DONE({ Statement it -> [it.a, ',', it.b, ',', it.c] },
             { Statement it, FloatBuffer f, IntBuffer i ->
-                f.put(OFS_RETURN, f.get(it.a))
+                f.put(OFS_RETURN + 0, f.get(it.a + 0))
+                f.put(OFS_RETURN + 1, f.get(it.a + 1))
+                f.put(OFS_RETURN + 2, f.get(it.a + 2))
                 0
             }),
 
-    MUL_FLO({ Statement it -> [it.c, '=', it.a, '*', it.b] },
+    MUL_FLOAT({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) * f.get(it.b)))
                 1
@@ -28,14 +30,14 @@ enum Instruction {
                 1
             }),
 
-    MUL_FLO_VEC({ Statement it -> [it.c, '=', it.a, '*', it.b] },
+    MUL_FLOAT_VEC({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a) * f.get(it.b + 0)))
                 f.put(it.c + 1, (float) (f.get(it.a) * f.get(it.b + 1)))
                 f.put(it.c + 2, (float) (f.get(it.a) * f.get(it.b + 2)))
                 1
             }),
-    MUL_VEC_FLO({ Statement it -> [it.c, '=', it.a, '*', it.b] },
+    MUL_VEC_FLOAT({ Statement it -> [it.c, '=', it.a, '*', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c + 0, (float) (f.get(it.a + 0) * f.get(it.b)))
                 f.put(it.c + 1, (float) (f.get(it.a + 1) * f.get(it.b)))
@@ -43,13 +45,13 @@ enum Instruction {
                 1
             }),
 
-    DIV_FLO({ Statement it -> [it.c, '=', it.a, '/', it.b] },
+    DIV_FLOAT({ Statement it -> [it.c, '=', it.a, '/', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) / f.get(it.b)))
                 1
             }),
 
-    ADD_FLO({ Statement it -> [it.c, '=', it.a, '+', it.b] },
+    ADD_FLOAT({ Statement it -> [it.c, '=', it.a, '+', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) + f.get(it.b)))
                 1
@@ -62,7 +64,7 @@ enum Instruction {
                 1
             }),
 
-    SUB_FLO({ Statement it -> [it.c, '=', it.a, '-', it.b] },
+    SUB_FLOAT({ Statement it -> [it.c, '=', it.a, '-', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (float) (f.get(it.a) - f.get(it.b)))
                 1
@@ -75,7 +77,7 @@ enum Instruction {
                 1
             }),
 
-    EQ_FLO({ Statement it -> [it.c, '=', it.a, '==', it.b] },
+    EQ_FLOAT({ Statement it -> [it.c, '=', it.a, '==', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) == f.get(it.b) ? 1 : 0))
                 1
@@ -90,9 +92,9 @@ enum Instruction {
     // TODO
     EQ_STR({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
     EQ_ENT({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
-    EQ_FNC({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
+    EQ_FUNC({ Statement it -> [it.c, '=', it.a, '==', it.b] }, { 1 }),
 
-    NE_FLO({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
+    NE_FLOAT({ Statement it -> [it.c, '=', it.a, '!=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.c, (f.get(it.a) != f.get(it.b) ? 1 : 0))
                 1
@@ -107,7 +109,7 @@ enum Instruction {
     // TODO
     NE_STR({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
     NE_ENT({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
-    NE_FNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
+    NE_FUNC({ Statement it -> [it.c, '=', it.a, '!=', it.b] }, { 1 }),
 
     LE({ Statement it -> [it.c, '=', it.a, '<=', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -131,16 +133,16 @@ enum Instruction {
             }),
 
     // TODO
-    LOAD_FLO({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_FLOAT({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
     LOAD_VEC({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
     LOAD_STR({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
     LOAD_ENT({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
-    LOAD_FLD({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
-    LOAD_FNC({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_FIELD({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
+    LOAD_FUNC({ Statement it -> [it.a, '->', it.c, '=', it.a] }, { 1 }),
 
-    LOAD_ADDRESS({ Statement it -> ["ILLEGAL"] }, { 1 }),
+    ADDRESS({ Statement it -> ["ILLEGAL"] }, { 1 }),
 
-    STORE_FLO({ Statement it -> [it.b, '=', it.a] },
+    STORE_FLOAT({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
@@ -162,24 +164,24 @@ enum Instruction {
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_FLD({ Statement it -> [it.b, '=', it.a] },
+    STORE_FIELD({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
-    STORE_FNC({ Statement it -> [it.b, '=', it.a] },
+    STORE_FUNC({ Statement it -> [it.b, '=', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, f.get(it.a))
                 1
             }),
 
     // TODO
-    STOREP_FLO({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_FLOAT({ Statement it -> [it.b, '=', it.a] }, { 1 }),
     STOREP_VEC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
     STOREP_STR({ Statement it -> [it.b, '=', it.a] }, { 1 }),
     STOREP_ENT({ Statement it -> [it.b, '=', it.a] }, { 1 }),
-    STOREP_FLD({ Statement it -> [it.b, '=', it.a] }, { 1 }),
-    STOREP_FNC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_FIELD({ Statement it -> [it.b, '=', it.a] }, { 1 }),
+    STOREP_FUNC({ Statement it -> [it.b, '=', it.a] }, { 1 }),
 
     RETURN({ Statement it -> [it.a, ',', it.b, ',', it.c] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -187,7 +189,7 @@ enum Instruction {
                 0
             }),
 
-    NOT_FLO({ Statement it -> ['!', it.a] },
+    NOT_FLOAT({ Statement it -> ['!', it.a] },
             { Statement it, FloatBuffer f, IntBuffer i ->
                 f.put(it.b, !f.get(it.a) ? 1 : 0)
                 1
@@ -202,7 +204,7 @@ enum Instruction {
     // TODO
     NOT_STR({ Statement it -> ['!', it.a] }, { 1 }),
     NOT_ENT({ Statement it -> ['!', it.a] }, { 1 }),
-    NOT_FNC({ Statement it -> ['!', it.a] }, { 1 }),
+    NOT_FUNC({ Statement it -> ['!', it.a] }, { 1 }),
 
     IF({ Statement it -> ['if', it.a, 'then jmp rel', it.b] },
             { Statement it, FloatBuffer f, IntBuffer i ->
@@ -213,15 +215,24 @@ enum Instruction {
                 (!f.get(it.a) ? (int) it.b : 1)
             }),
 
-    CALL0({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL1({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL2({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL3({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL4({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL5({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL6({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL7({ Statement it -> [it.a, '(...)'] }, { 1 }),
-    CALL8({ Statement it -> [it.a, '(...)'] }, { 1 }),
+    CALL0({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL1({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL2({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL3({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL4({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL5({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL6({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL7({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
+    CALL8({ Statement it -> [it.a, '(...)'] },
+            { Statement it, FloatBuffer f, IntBuffer i -> 1 }),
 
     STATE({ Statement it -> ["ILLEGAL"] }, { 1 }),
 
@@ -280,7 +291,7 @@ enum Instruction {
 
     String toString(Statement s, Loader data) {
         def template = stringify(s)
-        int col = 9
+        int col = 11
         def each = template.collect {
             if (it instanceof Short) {
                 def val
