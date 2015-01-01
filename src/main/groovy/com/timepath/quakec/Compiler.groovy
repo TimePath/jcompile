@@ -82,18 +82,19 @@ class Compiler {
         def pool = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), threadFactory)
         def includes = includeAll(progs)
         for (File file in includes) {
+            println file.canonicalPath
             pp.addInput(new FileLexerSource(file))
 
             def stream = new ANTLRInputStream(preview(new CppReader(pp)))
             stream.name = file.name
-            parse(stream, pool.&submit)
+            parse(stream, pool.&submit, file)
         }
         pool.shutdown()
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         println "Project time: ${(new Date().time - start.time) / 1000} seconds"
     }
 
-    def parse(ANTLRInputStream input, Closure exec = { Closure it -> it() }) {
+    def parse(ANTLRInputStream input, Closure exec = { Closure it -> it() }, File file = null) {
         QCLexer lexer = new QCLexer(input)
         CommonTokenStream tokens = new CommonTokenStream(lexer)
         QCParser parser = new QCParser(tokens)
@@ -108,16 +109,16 @@ class Compiler {
             tree = parser.compilationUnit()  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-//        pool.submit {
-//            println f.canonicalPath
-//            def listener = new TreePrinterListener(parser);
-//            ParseTreeWalker.DEFAULT.walk(listener, tree);
-//            def formatted = listener.toString();
-//            new File('out', f.canonicalPath).with {
-//                parentFile.mkdirs()
-//                text = formatted
-//            }
-//        }
+        if (file)
+            exec {
+                def listener = new TreePrinterListener(parser);
+                ParseTreeWalker.DEFAULT.walk(listener, tree);
+                def formatted = listener.toString();
+                new File('out', file.canonicalPath).with {
+                    parentFile.mkdirs()
+                    text = formatted
+                }
+            }
         exec {
             def listener = new ScopeCollector();
             ParseTreeWalker.DEFAULT.walk(listener, tree);

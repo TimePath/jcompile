@@ -31,6 +31,8 @@ class ScopeCollector extends QCBaseListener {
             if (parent) parent.child = this
         }
 
+        boolean warned
+
         void declare(String name) {
             def s = this
             for (; s; s = s.parent) {
@@ -39,6 +41,10 @@ class ScopeCollector extends QCBaseListener {
                     declaration.refine()
                     return
                 }
+            }
+            if (parent && declarationMap.size() > 10 && !warned) {
+                println 'Scope size exceeds 10'
+                warned = true
             }
             declarationMap[name] = new Declaration(name)
         }
@@ -63,6 +69,11 @@ class ScopeCollector extends QCBaseListener {
     @Override
     void enterCompoundStatement(@NotNull QCParser.CompoundStatementContext ctx) {
         push()
+        def size = ctx.blockItemList().blockItem().size()
+        def n = 100
+        if (size > n) {
+            println "Statement count exceeds $n ($size) in ${functionStack.peek()}"
+        }
     }
 
     @Override
@@ -70,9 +81,18 @@ class ScopeCollector extends QCBaseListener {
         pop()
     }
 
+    private Stack<String> functionStack = new Stack<>()
+
     @Override
     void enterFunctionDefinition(@NotNull QCParser.FunctionDefinitionContext ctx) {
-        scope.declare(ctx.declarator().text)
+        def text = ctx.declarator().text
+        functionStack.push(text)
+        scope.declare(text)
+    }
+
+    @Override
+    void exitFunctionDefinition(@NotNull QCParser.FunctionDefinitionContext ctx) {
+        functionStack.pop()
     }
 
     @Override
