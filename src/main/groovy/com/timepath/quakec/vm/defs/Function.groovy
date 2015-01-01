@@ -1,7 +1,6 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.defs
 
 import groovy.transform.CompileStatic
-import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
 @CompileStatic
@@ -10,14 +9,14 @@ class Function {
     int firstStatement, firstLocal, numLocals, profiling, nameOffset, fileNameOffset, numParams
     byte[] sizeof
 
-    Loader loader
+    ProgramData data
 
     public String getName() {
-        loader.strings[this.nameOffset]
+        data.strings[this.nameOffset]
     }
 
     public String getFileName() {
-        loader.strings[this.fileNameOffset]
+        data.strings[this.fileNameOffset]
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.timepath.quakec.vm
 
+import com.timepath.quakec.vm.defs.ProgramData
+import com.timepath.quakec.vm.defs.Statement
 import groovy.transform.CompileStatic
 
 import java.nio.FloatBuffer
@@ -285,11 +287,11 @@ enum Instruction {
         values()[i]
     }
 
-    int call(Statement s, Loader data) {
+    int call(Statement s, ProgramData data) {
         action(s, data.globalFloatData, data.globalIntData)
     }
 
-    String toString(Statement s, Loader data) {
+    String toString(Statement s, ProgramData data) {
         def template = stringify(s)
         int col = 11
         def each = template.collect {

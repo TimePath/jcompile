@@ -1,7 +1,6 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.defs
 
 import groovy.transform.CompileStatic
-import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
 @CompileStatic
@@ -10,10 +9,10 @@ class Definition {
     short type, offset
     int nameOffset
 
-    Loader loader
+    ProgramData data
 
     public String getName() {
-        loader.strings[this.nameOffset]
+        data.strings[this.nameOffset]
     }
 
     @Override

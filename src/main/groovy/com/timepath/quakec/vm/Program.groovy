@@ -1,5 +1,8 @@
 package com.timepath.quakec.vm
 
+import com.timepath.quakec.vm.defs.Function
+import com.timepath.quakec.vm.defs.ProgramData
+import com.timepath.quakec.vm.defs.Statement
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.TupleConstructor
@@ -8,9 +11,9 @@ import org.antlr.v4.runtime.misc.Utils
 @CompileStatic
 class Program {
 
-    private Loader data
+    private ProgramData data
 
-    Program(Loader data) {
+    Program(ProgramData data) {
         this.data = data
     }
 
@@ -157,7 +160,7 @@ class Program {
 
     public static void main(String[] args) {
         def data = "${System.properties["user.home"]}/IdeaProjects/xonotic/gmqcc"
-        new Program(new Loader("${data}/progs.dat" as File)).exec()
+        new Program(new ProgramDataLoader("${data}/progs.dat" as File).load()).exec()
     }
 
 }

@@ -1,9 +1,9 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.defs
 
+import com.timepath.quakec.vm.Instruction
+import com.timepath.quakec.vm.defs.ProgramData
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
-
-import java.nio.ByteBuffer
 
 @CompileStatic
 @ToString
@@ -18,9 +18,9 @@ class Statement {
         this.c = c
     }
 
-    Loader loader
+    ProgramData loader
 
-    int call(Loader data) {
+    int call(ProgramData data) {
         op.call(this, data)
     }
 
