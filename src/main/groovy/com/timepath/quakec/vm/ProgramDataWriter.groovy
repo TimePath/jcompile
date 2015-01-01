@@ -1,5 +1,6 @@
 package com.timepath.quakec.vm
 
+import com.timepath.quakec.vm.defs.Header
 import com.timepath.quakec.vm.defs.ProgramData
 import groovy.transform.CompileStatic
 
@@ -13,7 +14,21 @@ class ProgramDataWriter {
     }
 
     def write(ProgramData ret) {
-        ret.header.write(f)
+        def writeSection = { Header.Section it ->
+            f.writeInt(it.offset)
+            f.writeInt(it.count)
+        }
+        def h = ret.header
+        f.writeInt h.version
+        f.writeInt h.crc
+        writeSection h.statements
+        writeSection h.globalDefs
+        writeSection h.fieldDefs
+        writeSection h.functions
+        writeSection h.stringData
+        writeSection h.globalData
+        f.writeInt h.entityCount
+
         f.offset = ret.header.statements.offset
         for (it in ret.statements) {
             f.writeShort it.op.ordinal() as short

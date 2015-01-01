@@ -1,10 +1,6 @@
 package com.timepath.quakec.vm
 
-import com.timepath.quakec.vm.defs.Definition
-import com.timepath.quakec.vm.defs.Function
-import com.timepath.quakec.vm.defs.Header
-import com.timepath.quakec.vm.defs.ProgramData
-import com.timepath.quakec.vm.defs.Statement
+import com.timepath.quakec.vm.defs.*
 import groovy.transform.CompileStatic
 
 import java.nio.ByteBuffer
@@ -21,15 +17,34 @@ class ProgramDataReader {
 
     ProgramData read() {
         def ret = new ProgramData()
-
-        ret.header = new Header(f)
+        ret.header = {
+            new Header().with {
+                def readSection = {
+                    new Header.Section().with {
+                        offset = f.readInt()
+                        count = f.readInt()
+                        it
+                    }
+                }
+                version = f.readInt()
+                crc = f.readInt()
+                statements = readSection()
+                globalDefs = readSection()
+                fieldDefs = readSection()
+                functions = readSection()
+                stringData = readSection()
+                globalData = readSection()
+                entityCount = f.readInt()
+                it
+            }
+        }()
         ret.statements = iterData(ret.header.statements) {
             new Statement(
                     f.readShort(),
                     f.readShort(),
                     f.readShort(),
                     f.readShort()
-            ).with { loader = ret; it }
+            ).with { data = ret; it }
         }
         ret.globalDefs = iterData(ret.header.globalDefs) {
             new Definition(
@@ -58,7 +73,7 @@ class ProgramDataReader {
                      f.readByte(), f.readByte(), f.readByte(), f.readByte()] as byte[]
             ).with { data = ret; it }
         }
-        def stringData = {
+        ret.strings = new StringManager({
             List<String> list = []
             def sb = new StringBuilder()
             f.offset = ret.header.stringData.offset
@@ -78,15 +93,13 @@ class ProgramDataReader {
                 stroff += s.length() + 1
             }
             strings
-        }()
-        def globalData = {
+        }(), ret.header.stringData.count)
+        ret.globalData = {
             f.offset = ret.header.globalData.offset
             def bytes = new byte[ret.header.globalData.count * 4]
             f.read(bytes)
             ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         }()
-        ret.globalData = globalData
-        ret.strings = new StringManager(stringData, ret.header.stringData.count)
         return ret
     }
 
