@@ -1,5 +1,8 @@
 package com.timepath.quakec.vm
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class StringManager {
 
     private LinkedHashMap<Integer, String> constant
