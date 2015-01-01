@@ -3,13 +3,16 @@ apply plugin: 'groovy'
 version = '0.1'
 
 repositories {
-    jcenter()
     mavenCentral()
+    mavenLocal()
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
 }
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.3.6'
-    compile 'org.anarres:jcpp:1.4.7'
+    compile 'org.anarres:jcpp:1.4.8-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
