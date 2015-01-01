@@ -265,15 +265,15 @@ enum Instruction {
                 1
             })
 
-    static int OFS_RETURN = 1;
-    static int OFS_PARM0 = 4;
-    static int OFS_PARM1 = 7;
-    static int OFS_PARM2 = 10;
-    static int OFS_PARM3 = 13;
-    static int OFS_PARM4 = 16;
-    static int OFS_PARM5 = 19;
-    static int OFS_PARM6 = 22;
-    static int OFS_PARM7 = 25;
+    static int OFS_RETURN = 1
+    static int OFS_PARM0 = 4
+    static int OFS_PARM1 = 7
+    static int OFS_PARM2 = 10
+    static int OFS_PARM3 = 13
+    static int OFS_PARM4 = 16
+    static int OFS_PARM5 = 19
+    static int OFS_PARM6 = 22
+    static int OFS_PARM7 = 25
 
     private Closure<List> stringify
     private Closure<Integer> action

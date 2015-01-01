@@ -37,10 +37,10 @@ class Program {
         def push = { Function it ->
             stack << new Frame(sp, stmt, fn)
 
-            def k = it.firstLocal;
+            def k = it.firstLocal
             for (int i = 0; i < it.numParams; i++) {
                 for (int j = 0; j < it.sizeof[i]; j++) {
-                    data.globalIntData.put(k++, data.globalIntData.get(Instruction.OFS_PARM0 + (3 * i) + j));
+                    data.globalIntData.put(k++, data.globalIntData.get(Instruction.OFS_PARM0 + (3 * i) + j))
                 }
             }
 
@@ -61,7 +61,7 @@ class Program {
         push start
 
         while (stack) {
-            def name = fn.name;
+            def name = fn.name
             Statement s = data.statements[stmt]
             println s
             def ret = s(data)

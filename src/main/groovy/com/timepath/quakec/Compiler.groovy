@@ -128,7 +128,7 @@ class Compiler {
     ProgramData compile() {
         def data = new ProgramData()
         def exec = debugThreads ? Executors.newSingleThreadExecutor()
-                : Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), new DaemonThreadFactory());
+                : Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), new DaemonThreadFactory())
         for (Include include in includes) {
             println include.path
             preprocessor.addInput(include.source)
@@ -137,21 +137,21 @@ class Compiler {
             def tree = parse(stream)
             def walker = ParseTreeWalker.DEFAULT
             exec.submit {
-                def listener = new TreePrinterListener(parser);
-                walker.walk(listener, tree);
-                def formatted = listener.toString();
+                def listener = new TreePrinterListener(parser)
+                walker.walk(listener, tree)
+                def formatted = listener.toString()
                 new File('out', include.path).with {
                     parentFile.mkdirs()
                     text = formatted
                 }
             }
             exec.submit {
-                def listener = new ScopeCollector();
-                walker.walk(listener, tree);
+                def listener = new ScopeCollector()
+                walker.walk(listener, tree)
             }
         }
         exec.shutdown()
-        exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
         return data
     }
 
