@@ -11,7 +11,6 @@ import javax.annotation.Nonnull
 import javax.swing.*
 import java.awt.*
 import java.util.List
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
@@ -70,32 +69,31 @@ class Compiler {
 
     boolean debug = false
 
-    private ThreadFactory threadFactory = new ThreadFactory() {
-        private ThreadFactory delegate = Executors.defaultThreadFactory()
-
-        @Override
-        Thread newThread(Runnable r) { this.delegate.newThread(r).with { daemon = true; it } }
-    }
-
-    private ExecutorService pool = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), threadFactory)
-
     def compile(File progs, String define) {
         def start = new Date()
         def pp = createPreprocessor(start)
         pp.addMacro(define)
+        def threadFactory = new ThreadFactory() {
+            private ThreadFactory delegate = Executors.defaultThreadFactory()
+
+            @Override
+            Thread newThread(Runnable r) { this.delegate.newThread(r).with { daemon = true; it } }
+        }
+        def pool = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors(), threadFactory)
         def includes = includeAll(progs)
         for (File file in includes) {
             pp.addInput(new FileLexerSource(file))
-            parse(pp, file)
+
+            def stream = new ANTLRInputStream(preview(new CppReader(pp)))
+            stream.name = file.name
+            parse(stream, pool.&submit)
         }
         pool.shutdown()
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         println "Project time: ${(new Date().time - start.time) / 1000} seconds"
     }
 
-    private parse(Preprocessor pp, File f) {
-        def input = new ANTLRInputStream(preview(new CppReader(pp)))
-        input.name = f.name
+    def parse(ANTLRInputStream input, Closure exec = { Closure it -> it() }) {
         QCLexer lexer = new QCLexer(input)
         CommonTokenStream tokens = new CommonTokenStream(lexer)
         QCParser parser = new QCParser(tokens)
@@ -110,15 +108,19 @@ class Compiler {
             tree = parser.compilationUnit()  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-        pool.submit {
-            println f.canonicalPath
-            def listener = new TreePrinterListener(parser);
+//        pool.submit {
+//            println f.canonicalPath
+//            def listener = new TreePrinterListener(parser);
+//            ParseTreeWalker.DEFAULT.walk(listener, tree);
+//            def formatted = listener.toString();
+//            new File('out', f.canonicalPath).with {
+//                parentFile.mkdirs()
+//                text = formatted
+//            }
+//        }
+        exec {
+            def listener = new ScopeCollector();
             ParseTreeWalker.DEFAULT.walk(listener, tree);
-            def formatted = listener.toString();
-            new File('out', f.canonicalPath).with {
-                parentFile.mkdirs()
-                text = formatted
-            }
         }
     }
 

@@ -213,7 +213,7 @@ staticAssertDeclaration
 //// declarations
 
 declaration
-    :   declarationSpecifiers initDeclaratorList? ';'
+    :   declarationSpecifiers initDeclaratorList ';'
     |   staticAssertDeclaration
     ;
 
@@ -337,14 +337,10 @@ initDeclarator
     ;
 
 declarator
-    :   directDeclarator
-    ;
-
-directDeclarator
     :   Identifier
     |   '(' declarator ')'
-    |   directDeclarator '[' assignmentExpression? ']'
-    |   directDeclarator '(' parameterTypeList ')'
+    |   declarator '[' assignmentExpression? ']'
+    |   declarator '(' parameterTypeList ')'
     ;
 
 abstractDeclarator
