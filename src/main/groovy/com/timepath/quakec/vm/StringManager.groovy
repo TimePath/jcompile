@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class StringManager {
 
-    private LinkedHashMap<Integer, String> constant
+    LinkedHashMap<Integer, String> constant
     private int constantSize
     private ArrayList<String> temp = []
     private ArrayList<String> zone = []

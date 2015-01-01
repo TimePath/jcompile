@@ -11,58 +11,58 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @CompileStatic
-class ProgramDataLoader {
+class ProgramDataReader {
 
-    BinaryReader r
+    RandomAccessFile f
 
-    ProgramDataLoader(File file) {
-        r = new BinaryReader(new RandomAccessFile(file, "r"))
+    ProgramDataReader(File file) {
+        f = new RandomAccessFile(file, 'r')
     }
 
-    ProgramData load() {
+    ProgramData read() {
         def ret = new ProgramData()
 
-        ret.header = new Header(r)
+        ret.header = new Header(f)
         ret.statements = iterData(ret.header.statements) {
             new Statement(
-                    r.readShort(),
-                    r.readShort(),
-                    r.readShort(),
-                    r.readShort()
+                    f.readShort(),
+                    f.readShort(),
+                    f.readShort(),
+                    f.readShort()
             ).with { loader = ret; it }
         }
         ret.globalDefs = iterData(ret.header.globalDefs) {
             new Definition(
-                    r.readShort(),
-                    r.readShort(),
-                    r.readInt()
+                    f.readShort(),
+                    f.readShort(),
+                    f.readInt()
             ).with { data = ret; it }
         }
         ret.fieldDefs = iterData(ret.header.fieldDefs) {
             new Definition(
-                    r.readShort(),
-                    r.readShort(),
-                    r.readInt()
+                    f.readShort(),
+                    f.readShort(),
+                    f.readInt()
             ).with { data = ret; it }
         }
         ret.functions = iterData(ret.header.functions) {
             new Function(
-                    r.readInt(),
-                    r.readInt(),
-                    r.readInt(),
-                    r.readInt(),
-                    r.readInt(),
-                    r.readInt(),
-                    r.readInt(),
-                    [r.readByte(), r.readByte(), r.readByte(), r.readByte(),
-                     r.readByte(), r.readByte(), r.readByte(), r.readByte()] as byte[]
+                    f.readInt(),
+                    f.readInt(),
+                    f.readInt(),
+                    f.readInt(),
+                    f.readInt(),
+                    f.readInt(),
+                    f.readInt(),
+                    [f.readByte(), f.readByte(), f.readByte(), f.readByte(),
+                     f.readByte(), f.readByte(), f.readByte(), f.readByte()] as byte[]
             ).with { data = ret; it }
         }
         def stringData = {
             List<String> list = []
             def sb = new StringBuilder()
-            r.offset = ret.header.stringData.offset
-            for (int c; (c = r.readByte()) != -1;) {
+            f.offset = ret.header.stringData.offset
+            for (int c; (c = f.readByte()) != -1;) {
                 if (!c) {
                     list << sb.toString()
                     sb.length = 0
@@ -80,9 +80,9 @@ class ProgramDataLoader {
             strings
         }()
         def globalData = {
-            r.offset = ret.header.globalData.offset
+            f.offset = ret.header.globalData.offset
             def bytes = new byte[ret.header.globalData.count * 4]
-            r.read(bytes)
+            f.read(bytes)
             ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         }()
         ret.globalData = globalData
@@ -92,7 +92,7 @@ class ProgramDataLoader {
 
     private <T> List<T> iterData(Header.Section section, Closure<T> closure) {
         def ret = []
-        r.offset = section.offset
+        f.offset = section.offset
         section.count.times {
             ret << closure()
         }

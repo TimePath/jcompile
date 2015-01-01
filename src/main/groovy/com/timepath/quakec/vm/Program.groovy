@@ -160,7 +160,7 @@ class Program {
 
     public static void main(String[] args) {
         def data = "${System.properties["user.home"]}/IdeaProjects/xonotic/gmqcc"
-        new Program(new ProgramDataLoader("${data}/progs.dat" as File).load()).exec()
+        new Program(new ProgramDataReader("${data}/progs.dat" as File).read()).exec()
     }
 
 }

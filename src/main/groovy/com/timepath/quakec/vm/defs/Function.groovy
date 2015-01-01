@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.TupleConstructor
 
 @CompileStatic
-@TupleConstructor(excludes = 'loader')
+@TupleConstructor(excludes = 'data')
 class Function {
     int firstStatement, firstLocal, numLocals, profiling, nameOffset, fileNameOffset, numParams
     byte[] sizeof
