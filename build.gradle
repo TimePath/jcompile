@@ -13,6 +13,7 @@ repositories {
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.3.6'
     compile 'org.anarres:jcpp:1.4.8-SNAPSHOT'
+    compile 'com.intellij:annotations:12.0'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.3-SNAPSHOT"
 }
 

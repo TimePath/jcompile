@@ -1,13 +1,15 @@
 package com.timepath.quakec
 
 import org.antlr.v4.runtime.ANTLRInputStream
+import org.intellij.lang.annotations.Language
 import spock.lang.Specification
 
 class CompilerTest extends Specification {
-    def "Compiles"() {
-        setup:
-        def compile = { String it -> new Compiler().parse(new ANTLRInputStream(it)) }
+    static def compile(@Language("QuakeC") String it) {
+        new Compiler().parse(new ANTLRInputStream(it))
+    }
 
+    def "Compiles"() {
         when:
         compile """\
 void main() {
