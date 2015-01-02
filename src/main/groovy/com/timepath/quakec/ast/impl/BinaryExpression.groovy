@@ -2,6 +2,7 @@ package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.Expression as rvalue
 import com.timepath.quakec.ast.GenerationContext
+import com.timepath.quakec.ast.IR
 import com.timepath.quakec.ast.impl.ReferenceExpression as lvalue
 import com.timepath.quakec.vm.Instruction
 import groovy.transform.InheritConstructors
@@ -17,11 +18,11 @@ abstract class BinaryExpression<L extends rvalue, R extends rvalue> implements r
     String getText() { "(${left.text} $op ${right.text})" }
 
     @Override
-    def generate(GenerationContext ctx) {
+    IR[] generate(GenerationContext ctx) {
         def genL = left.generate(ctx)
         def genR = right.generate(ctx)
-        def allocate = ctx.allocate("${left.text} $op ${right.text}")
-        [instr, genL, genR, allocate, allocate]
+        def allocate = ctx.registry.put(null, null)
+        genL + genR + new IR(instr, (int[]) [genL[-1].ret, genR[-1].ret, allocate], allocate, "${left.text} $op ${right.text}")
     }
     @Lazy
     abstract String op
@@ -34,12 +35,11 @@ abstract class BinaryExpression<L extends rvalue, R extends rvalue> implements r
 
         Instruction getInstr() { Instruction.STORE_FLOAT }
 
-        def generate(GenerationContext ctx) {
+        IR[] generate(GenerationContext ctx) {
             // left = right
             def genL = left.generate(ctx)
             def genR = right.generate(ctx)
-            def allocate = ctx.allocate("${left.text} $op ${right.text}")
-            [instr, genR, genL, allocate]
+            genL + genR + new IR(instr, (int[]) [genR[-1].ret, genL[-1].ret], genL[-1].ret, "=")
         }
     }
 

@@ -283,7 +283,7 @@ enum Instruction {
         this.action = action
     }
 
-    static Instruction from(short i) {
+    static Instruction from(int i) {
         values()[i]
     }
 

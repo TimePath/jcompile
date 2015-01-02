@@ -1,14 +1,21 @@
 package com.timepath.quakec.ast.impl
 
-import com.timepath.quakec.ast.Type
-import groovy.transform.TupleConstructor
+import com.timepath.quakec.ast.GenerationContext
+import com.timepath.quakec.ast.IR
 
-@TupleConstructor
 class DeclarationExpression extends ReferenceExpression {
 
-    Type type
-    String id
+    DeclarationExpression(String id) {
+        this.id = id
+    }
 
     @Override
-    String getText() { "$type $id" }
+    String getText() { "$id" }
+
+    @Override
+    IR[] generate(GenerationContext ctx) {
+        if (super.generate(ctx)) return
+        def global = ctx.registry.put(this.id, null)
+        new IR(ret: global, dummy: true)
+    }
 }
