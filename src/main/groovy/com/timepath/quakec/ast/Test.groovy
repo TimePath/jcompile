@@ -38,3 +38,31 @@ def root = new BlockStatement(
         )
 )
 println root.text
+println '======='
+
+def asm = root.generate(new GenerationContext())
+println asm
+
+
+def unwrap(asm) {
+    def flat = []
+    def inner = []
+    asm.each {
+        if (it instanceof List) {
+            def ret = it[-1]
+            if (it.size() > 1) {
+                flat.addAll(unwrap(it))
+            }
+            inner << ret
+        } else {
+            inner << it
+        }
+    }
+    flat << inner
+    flat
+}
+
+def flat = unwrap(asm)
+flat.each { println it }
+
+println 'done'

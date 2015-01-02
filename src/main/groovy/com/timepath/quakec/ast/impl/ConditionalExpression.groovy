@@ -20,8 +20,5 @@ class ConditionalExpression implements Expression {
     boolean hasSideEffects() { false }
 
     @Override
-    def generate() { null }
-
-    @Override
     String getText() { "(${test.text} ? ${yes.text} : ${no.text})" }
 }

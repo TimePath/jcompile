@@ -124,9 +124,11 @@ class Program {
             Object[] args = parameterTypes.collect { Class it -> read(it) }
             Object[] varargs = ((parameterTypes.size()..<parameterCount).collect { read(varargsType) })
             def objects = args + varargs
-            println """$name(${objects.collect({
-                it.class == String ? "\"${Utils.escapeWhitespace(it, false)}\"" : it
-            }).join(', ')})"""
+            println """$name(${
+                objects.collect({
+                    it.class == String ? "\"${Utils.escapeWhitespace(it, false)}\"" : it
+                }).join(', ')
+            })"""
             callback(*objects)
         }
 

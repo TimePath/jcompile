@@ -1,6 +1,7 @@
 package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.Expression
+import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.Value
 import groovy.transform.TupleConstructor
 
@@ -15,9 +16,6 @@ class FunctionCall implements Expression {
 
     @Override
     boolean hasSideEffects() { false }
-
-    @Override
-    def generate() { null }
 
     @Override
     String getText() { "${function.text}(${args*.text.join(', ')})" }
