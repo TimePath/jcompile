@@ -26,6 +26,13 @@ class GenerationContext {
             values[i] = value
             return lookup[reverse[i] = name] = i
         }
+
+        @Override
+        String toString() {
+            reverse.collect {
+                """\$${it.key}\t${it.value}\t${values[it.key]}"""
+            }.join('\n')
+        }
     }
 
     Registry registry = new Registry()

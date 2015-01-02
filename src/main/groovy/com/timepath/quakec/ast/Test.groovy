@@ -34,10 +34,7 @@ println root.text
 println '======='
 def ctx = new GenerationContext()
 def asm = root.generate(ctx)
-def r = ctx.registry
-r.reverse.each {
-    println """\$${it.key}\t${it.value}\t${r.values[it.key]}"""
-}
+println ctx.registry
 println '======='
 println asm
 asm.each {
