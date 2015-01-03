@@ -37,6 +37,10 @@ class Program {
         def push = { Function it ->
             stack << new Frame(sp, stmt, fn)
 
+            // TODO: Store locals to support recursion
+
+            // Copy parameters
+
             def k = it.firstLocal
             for (int i = 0; i < it.numParams; i++) {
                 for (int j = 0; j < it.sizeof[i]; j++) {
@@ -51,7 +55,7 @@ class Program {
         def pop = { ->
             Frame it = stack.pop()
 
-            // TODO: copy locals back to prev
+            // TODO: Pop locals
 
             sp = it.sp
             stmt = it.stmt
