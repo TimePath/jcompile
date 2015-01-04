@@ -1,6 +1,17 @@
-apply plugin: 'groovy'
+import groovy.io.FileType
 
 version = '0.1'
+
+apply plugin: 'java'
+
+configurations {
+    antlr4
+}
+
+ext.antlr = [
+        output : "${buildDir}/generated-src/antlr4",
+        version: '4.3'
+]
 
 repositories {
     mavenCentral()
@@ -8,42 +19,75 @@ repositories {
     maven {
         url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
+    maven {
+        url "http://repository.jetbrains.com/all"
+    }
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.3.6'
+    antlr4 "org.antlr:antlr4:${antlr.version}"
+    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.10.195'
+    compile "org.antlr:antlr4-runtime:${antlr.version}"
     compile 'org.anarres:jcpp:1.4.8-SNAPSHOT'
     compile 'com.intellij:annotations:12.0'
-    testCompile "org.spockframework:spock-core:1.0-groovy-2.3-SNAPSHOT"
+    testCompile 'org.jetbrains.spek:spek:0.1.145'
 }
 
 buildscript {
     repositories {
         maven {
             name 'JFrog OSS snapshot repo'
-            url  'https://oss.jfrog.org/oss-snapshot-local/'
+            url 'https://oss.jfrog.org/oss-snapshot-local/'
         }
         jcenter()
     }
 
     dependencies {
-        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.10.195'
     }
 }
 
-apply plugin: 'me.champeau.gradle.antlr4'
+task compileAntlr() {
+    description = 'Generates Java sources from ANTLR4 grammars.'
+    mkdir antlr.output
 
-String pkg = "com.timepath.quakec"
-antlr4.extraArgs = ["-package",  pkg]
-antlr4.output = file("$buildDir/generated-src/${pkg.replace(".", "/")}")
+    Map<String, List<String>> files = [:].withDefault { [] }
+    def base = new File(projectDir, '/src/main/antlr4');
+    base.eachFileRecurse(FileType.FILES) {
+        if (!it.name.endsWith('.g4')) return
+        def pkg = base.toURI().relativize(it.parentFile.toURI()).toString().replaceAll('/$', '').replace(File.separator, '.')
+        files[pkg] << it.toString().replace(base.toString() + '/', '')
+    }
+    files.each { pkg, grammars ->
+        doLast {
+            javaexec {
+                classpath configurations.all
+                workingDir = base.toString()
+                println 'found ' + grammars
+                main = 'org.antlr.v4.Tool'
+                args = ["-o", "${antlr.output}", "-package", pkg, grammars].flatten()
+            }
+        }
+    }
+}
 
-// make the Groovy compile task depend on the antlr4 task
-compileGroovy.dependsOn antlr4
+apply plugin: 'kotlin'
 
-// add the generated source files to the list of java sources
-sourceSets.main.java.srcDirs += antlr4.output
+compileJava {
+    dependsOn 'compileAntlr'
+    dependsOn.remove 'compileKotlin'
+    source antlr.output
+}
 
-// add antlr4 to classpath
-configurations {
-    compile.extendsFrom antlr4
+compileKotlin {
+    dependsOn 'compileJava'
+    source antlr.output
+}
+
+compileTestKotlin {
+    source "${projectDir}/src/main/kotlin"
+}
+
+clean {
+    delete antlr.output
 }
