@@ -282,12 +282,22 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     fun invoke(s: Statement, data: ProgramData): Int = action(s, data.globalFloatData, data.globalIntData)
 
-    fun toString(s: Statement, data: ProgramData?) = "${this.name()}${" " * (11 - name().length())}\t(${stringify(s).map {
-        when (it) {
-            is Number -> "\$$it (${data?.globalFloatData?.get(it as Int) ?: "?"})"
-            else -> it
+    fun toString(s: Statement, data: ProgramData?): String {
+        val get = {(it: Int) ->
+            try {
+                data?.globalFloatData?.get(it)
+            } catch (e: IndexOutOfBoundsException) {
+                null
+            }
         }
-    }.joinToString(" ")})"
+        val stringified = stringify(s).map {
+            when (it) {
+                !is Int -> it
+                else -> "\$$it (${get(it) ?: "?"})"
+            }
+        }
+        return "${this.name()}${" " * (11 - name().length())}\t(${stringified.joinToString(" ")})"
+    }
 
 }
 

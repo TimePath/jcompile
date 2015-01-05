@@ -9,13 +9,13 @@ class Function(val firstStatement: Int,
                val numParams: Int,
                val sizeof: ByteArray) {
 
-    val data: ProgramData? = null
+    var data: ProgramData? = null
 
     val name: String
-        get() = data!!.strings!![this.nameOffset]
+        get() = data?.strings!![this.nameOffset]
 
     val fileName: String
-        get() = data!!.strings!![this.fileNameOffset]
+        get() = data?.strings!![this.fileNameOffset]
 
     override fun toString(): String = """Function {
     firstStatement=${firstStatement},

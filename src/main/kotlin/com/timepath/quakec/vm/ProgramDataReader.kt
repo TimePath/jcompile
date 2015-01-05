@@ -36,7 +36,7 @@ class ProgramDataReader(file: File) {
                 globalData = readSection(),
                 entityCount = f.readInt()
         )
-        return ProgramData(
+        val ret = ProgramData(
                 header = header,
                 statements = iterData(header.statements) {
                     Statement(
@@ -106,6 +106,11 @@ class ProgramDataReader(file: File) {
                     ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
                 }()
         )
+        ret.statements?.forEach { it.data = ret }
+        ret.globalDefs?.forEach { it.data = ret }
+        ret.fieldDefs?.forEach { it.data = ret }
+        ret.functions?.forEach { it.data = ret }
+        return ret
     }
 
 }

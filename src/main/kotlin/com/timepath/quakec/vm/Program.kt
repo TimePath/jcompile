@@ -15,7 +15,7 @@ public class Program(val data: ProgramData?) {
 
     data class Frame(val sp: Int,
                      val stmt: Int,
-                     val fn: Function)
+                     val fn: Function?)
 
     fun exec(start: Function) {
         val stack = Stack <Frame> ()
@@ -23,7 +23,7 @@ public class Program(val data: ProgramData?) {
         var stmt = -1
         var fn: Function? = null
         val push = {(it: Function) ->
-            stack add Frame(sp, stmt, fn!!)
+            stack add Frame(sp, stmt, fn)
 
             // TODO: Store locals to support recursion
 
