@@ -88,17 +88,18 @@ public class Program(val data: ProgramData?) {
             var offset = Instruction.OFS_PARM0
             val getFloat = {(i: Int) -> data!!.globalFloatData.get(i) }
             val getString = {(i: Int) -> data!!.strings!![data.globalIntData.get(i)] }
+            [suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
             val read = {(it: Any) ->
                 when (it) {
-                    is Float -> {
+                    java.lang.Float.TYPE -> {
                         offset += 3
                         getFloat(offset - 3)
                     }
-                    is String -> {
+                    javaClass<java.lang.String>() -> {
                         offset += 3
                         getString(offset - 3)
                     }
-                    else -> null
+                    else -> it
                 }
             }
             val args: MutableList<*> = ArrayList(parameterCount)
