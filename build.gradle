@@ -1,17 +1,25 @@
-import groovy.io.FileType
-
 version = '0.1'
 
-apply plugin: 'java'
+buildscript {
 
-configurations {
-    antlr4
+    ext.versions = [
+            antlr               : '4.3',
+            jcpp                : '1.4.8-SNAPSHOT',
+            jetbrainsAnnotations: '12.0',
+            kotlin              : '0.10.195',
+            spek                : '0.1.145'
+    ]
+
+    repositories {
+        mavenLocal()
+        // kotlin plugin
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+    }
 }
-
-ext.antlr = [
-        output : "${buildDir}/generated-src/antlr4",
-        version: '4.3'
-]
 
 repositories {
     mavenLocal()
@@ -27,34 +35,16 @@ repositories {
     }
 }
 
-dependencies {
-    antlr4 "org.antlr:antlr4:${antlr.version}"
-    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.10.195'
-    compile "org.antlr:antlr4-runtime:${antlr.version}"
-    compile 'org.anarres:jcpp:1.4.8-SNAPSHOT'
-    compile 'com.intellij:annotations:12.0'
-    testCompile 'org.jetbrains.spek:spek:0.1.145'
-}
-
-buildscript {
-    repositories {
-        mavenLocal()
-        // kotlin plugin
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.10.195'
-    }
-}
-
+configurations { antlr4 }
+ext.antlr = [output: "${buildDir}/generated-src/antlr4"]
 task compileAntlr() {
     description = 'Generates Java sources from ANTLR4 grammars.'
+    def output = "${buildDir}/generated-src/antlr4"
     mkdir antlr.output
 
     Map<String, List<String>> files = [:].withDefault { [] }
     def base = new File(projectDir, '/src/main/antlr4');
-    base.eachFileRecurse(FileType.FILES) {
+    base.eachFileRecurse(groovy.io.FileType.FILES) {
         if (!it.name.endsWith('.g4')) return
         def pkg = base.toURI().relativize(it.parentFile.toURI()).toString().replaceAll('/$', '').replace(File.separator, '.')
         files[pkg] << it.toString().replace(base.toString() + '/', '')
@@ -66,13 +56,22 @@ task compileAntlr() {
                 workingDir = base.toString()
                 println 'found ' + grammars
                 main = 'org.antlr.v4.Tool'
-                args = ["-o", "${antlr.output}", "-package", pkg, grammars].flatten()
+                args = ["-o", output, "-package", pkg, grammars].flatten()
             }
         }
     }
 }
 
 apply plugin: 'kotlin'
+
+dependencies {
+    antlr4 "org.antlr:antlr4:${versions.antlr}"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+    compile "org.antlr:antlr4-runtime:${versions.antlr}"
+    compile "org.anarres:jcpp:${versions.jcpp}"
+    compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
+    testCompile "org.jetbrains.spek:spek:${versions.spek}"
+}
 
 compileJava {
     dependsOn 'compileAntlr'
@@ -82,13 +81,8 @@ compileJava {
 
 compileKotlin {
     dependsOn 'compileJava'
-    source antlr.output
 }
 
 compileTestKotlin {
     source "${projectDir}/src/main/kotlin"
-}
-
-clean {
-    delete antlr.output
 }
