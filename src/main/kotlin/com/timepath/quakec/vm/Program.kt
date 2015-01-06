@@ -77,24 +77,25 @@ public class Program(val data: ProgramData?) {
     }
 
     inner class Builtin(val name: String,
-                        val parameterTypes: Array<Class<*>>,
-                        val varargsType: Class<*>?,
-                        val callback: (args: List<*>) -> Any) {
+                        val parameterTypes: Array<Class<*>> = array(),
+                        val varargsType: Class<*>? = null,
+                        val callback: (args: List<*>) -> Any = {}) {
 
         fun call(parameterCount: Int): Any {
             var offset = Instruction.OFS_PARAM(0)
             val getFloat = {(i: Int) -> data!!.globalFloatData.get(i) }
             val getString = {(i: Int) -> data!!.strings!![data.globalIntData.get(i)] }
-            [suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
             val read = {(it: Any) ->
                 when (it) {
-                    java.lang.Float.TYPE -> {
+                    javaClass<Float>() -> {
+                        val i = offset
                         offset += 3
-                        getFloat(offset - 3)
+                        getFloat(i)
                     }
-                    javaClass<java.lang.String>() -> {
+                    javaClass<String>() -> {
+                        val i = offset
                         offset += 3
-                        getString(offset - 3)
+                        getString(i)
                     }
                     else -> it
                 }
@@ -121,7 +122,7 @@ public class Program(val data: ProgramData?) {
                     parameterTypes = array(),
                     varargsType = javaClass<String>(),
                     callback = {
-                        it.map { it.toString() }.join("")
+                        println(it.map { it.toString() }.join(""))
                     }
             ),
             2 to Builtin(
@@ -129,7 +130,95 @@ public class Program(val data: ProgramData?) {
                     parameterTypes = array(javaClass<Float>()),
                     varargsType = null,
                     callback = {
-                        it[0].toString()
+                        val f = it[0] as Float
+                        f.toString()
+                    }
+            ),
+            3 to Builtin(
+                    name = "spawn"
+            ),
+            4 to Builtin(
+                    name = "kill"
+            ),
+            5 to Builtin(
+                    name = "vtos"
+            ),
+            6 to Builtin(
+                    name = "error"
+            ),
+            7 to Builtin(
+                    name = "vlen"
+            ),
+            8 to Builtin(
+                    name = "etos"
+            ),
+            9 to Builtin(
+                    name = "stof",
+                    parameterTypes = array(javaClass<String>()),
+                    varargsType = null,
+                    callback = {
+                        val s = it[0] as String
+                        s.toFloat()
+                    }
+            ),
+            10 to Builtin(
+                    name = "strcat",
+                    parameterTypes = array(),
+                    varargsType = javaClass<String>(),
+                    callback = {
+                        it.map { it.toString() }.join("")
+                    }
+            ),
+            11 to Builtin(
+                    name = "strcmp",
+                    parameterTypes = array(javaClass<String>(), javaClass<String>(), javaClass<Float>()),
+                    varargsType = null,
+                    callback = {
+                        val first = (it[0] as String).iterator()
+                        val second = (it[1] as String).iterator()
+                        var size = if (it.size() == 3) it[2] as Int else -1
+                        var ret = 0
+                        while (size-- != 0 && (first.hasNext() || second.hasNext())) {
+                            ret = 0
+                            if (first.hasNext())
+                                ret += first.next()
+                            if (second.hasNext())
+                                ret -= second.next()
+                            if (ret != 0)
+                                break
+                        }
+                        ret
+                    }
+            ),
+            12 to Builtin(
+                    name = "normalize"
+            ),
+            13 to Builtin(
+                    name = "sqrt",
+                    parameterTypes = array(javaClass<Float>()),
+                    varargsType = null,
+                    callback = {
+                        val n = it[0] as Float
+                        Math.sqrt(n.toDouble()).toFloat()
+                    }
+            ),
+            14 to Builtin(
+                    name = "floor",
+                    parameterTypes = array(javaClass<Float>()),
+                    varargsType = null,
+                    callback = {
+                        val n = it[0] as Float
+                        Math.floor(n.toDouble()).toFloat()
+                    }
+            ),
+            15 to Builtin(
+                    name = "pow",
+                    parameterTypes = array(javaClass<Float>(), javaClass<Float>()),
+                    varargsType = null,
+                    callback = {
+                        val base = it[0] as Float
+                        val exponent = it[1] as Float
+                        Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
                     }
             )
     )
