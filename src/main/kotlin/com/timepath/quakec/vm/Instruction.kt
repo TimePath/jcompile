@@ -4,88 +4,89 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import com.timepath.quakec.times
 
+fun FloatBuffer.set(index: Int, value: Float) = this.put(index, value)
+fun Boolean.toFloat(): Float = if (this) 1f else 0f
+
 enum class Instruction(val stringify: (Statement) -> Array<Any>,
                        val action: (Statement, FloatBuffer, IntBuffer) -> Int) {
 
     DONE : Instruction({ it -> array(it.a, ",", it.b, ",", it.c) },
             { it, f, i ->
-                f.put(OFS_PARAM(-1) + 0, f.get(it.a + 0))
-                f.put(OFS_PARAM(-1) + 1, f.get(it.a + 1))
-                f.put(OFS_PARAM(-1) + 2, f.get(it.a + 2))
+                f[OFS_PARAM(-1) + 0] = f[it.a + 0]
+                f[OFS_PARAM(-1) + 1] = f[it.a + 1]
+                f[OFS_PARAM(-1) + 2] = f[it.a + 2]
                 0
             })
     MUL_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "*", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a) * f.get(it.b)))
+                f[it.c] = (f[it.a] * f[it.b])
                 1
             })
     MUL_VEC : Instruction({ it -> array(it.c, "=", it.a, "*", it.b) },
             { it, f, i ->
-                f.put(it.c, (
-                        f.get(it.a + 0) * f.get(it.b + 0)
-                                + f.get(it.a + 1) * f.get(it.b + 1)
-                                + f.get(it.a + 2) * f.get(it.b + 2)
-                        ))
+                f[it.c] = (f[it.a + 0] * f[it.b + 0]
+                        + f[it.a + 1] * f[it.b + 1]
+                        + f[it.a + 2] * f[it.b + 2])
                 1
             })
 
     MUL_FLOAT_VEC : Instruction({ it -> array(it.c, "=", it.a, "*", it.b) },
             { it, f, i ->
-                f.put(it.c + 0, (f.get(it.a) * f.get(it.b + 0)))
-                f.put(it.c + 1, (f.get(it.a) * f.get(it.b + 1)))
-                f.put(it.c + 2, (f.get(it.a) * f.get(it.b + 2)))
+                f[it.c + 0] = (f[it.a] * f[it.b + 0])
+                f[it.c + 1] = (f[it.a] * f[it.b + 1])
+                f[it.c + 2] = (f[it.a] * f[it.b + 2])
                 1
             })
     MUL_VEC_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "*", it.b) },
             { it, f, i ->
-                f.put(it.c + 0, (f.get(it.a + 0) * f.get(it.b)))
-                f.put(it.c + 1, (f.get(it.a + 1) * f.get(it.b)))
-                f.put(it.c + 2, (f.get(it.a + 2) * f.get(it.b)))
+                f[it.c + 0] = (f[it.a + 0] * f[it.b])
+                f[it.c + 1] = (f[it.a + 1] * f[it.b])
+                f[it.c + 2] = (f[it.a + 2] * f[it.b])
                 1
             })
 
     DIV_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "/", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a) / f.get(it.b)))
+                f[it.c] = (f[it.a] / f[it.b])
                 1
             })
 
     ADD_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "+", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a) + f.get(it.b)))
+                f[it.c] = (f[it.a] + f[it.b])
                 1
             })
     ADD_VEC : Instruction({ it -> array(it.c, "=", it.a, "+", it.b) },
             { it, f, i ->
-                f.put(it.c + 0, (f.get(it.a + 0) + f.get(it.b + 0)))
-                f.put(it.c + 1, (f.get(it.a + 1) + f.get(it.b + 1)))
-                f.put(it.c + 2, (f.get(it.a + 2) + f.get(it.b + 2)))
+                f[it.c + 0] = (f[it.a + 0] + f[it.b + 0])
+                f[it.c + 1] = (f[it.a + 1] + f[it.b + 1])
+                f[it.c + 2] = (f[it.a + 2] + f[it.b + 2])
                 1
             })
 
     SUB_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "-", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a) - f.get(it.b)))
+                f[it.c] = (f[it.a] - f[it.b])
                 1
             })
     SUB_VEC : Instruction({ it -> array(it.c, "=", it.a, "-", it.b) },
             { it, f, i ->
-                f.put(it.c + 0, (f.get(it.a + 0) - f.get(it.b + 0)))
-                f.put(it.c + 1, (f.get(it.a + 1) - f.get(it.b + 1)))
-                f.put(it.c + 2, (f.get(it.a + 2) - f.get(it.b + 2)))
+                f[it.c + 0] = (f[it.a + 0] - f[it.b + 0])
+                f[it.c + 1] = (f[it.a + 1] - f[it.b + 1])
+                f[it.c + 2] = (f[it.a + 2] - f[it.b + 2])
                 1
             })
 
     EQ_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "==", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) == f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] == f[it.b]).toFloat()
                 1
             })
     EQ_VEC : Instruction({ it -> array(it.c, "=", it.a, "==", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a + 0) == f.get(it.b + 0)
-                        && f.get(it.a + 1) == f.get(it.b + 1)
-                        && f.get(it.a + 2) == f.get(it.b + 2)) 1f else 0f)
+                f[it.c] = (f[it.a + 0] == f[it.b + 0]
+                        && f[it.a + 1] == f[it.b + 1]
+                        && f[it.a + 2] == f[it.b + 2]).toFloat()
                 1
             })
     // TODO
@@ -95,14 +96,14 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     NE_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "!=", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) != f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] != f[it.b]).toFloat()
                 1
             })
     NE_VEC : Instruction({ it -> array(it.c, "=", it.a, "!=", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a + 0) != f.get(it.b + 0)
-                        || f.get(it.a + 1) != f.get(it.b + 1)
-                        || f.get(it.a + 2) != f.get(it.b + 2)) 1f else 0f)
+                f[it.c] = (f[it.a + 0] != f[it.b + 0]
+                        || f[it.a + 1] != f[it.b + 1]
+                        || f[it.a + 2] != f[it.b + 2]).toFloat()
                 1
             })
     // TODO
@@ -112,22 +113,22 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     LE : Instruction({ it -> array(it.c, "=", it.a, "<=", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) <= f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] <= f[it.b]).toFloat()
                 1
             })
     GE : Instruction({ it -> array(it.c, "=", it.a, ">=", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) >= f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] >= f[it.b]).toFloat()
                 1
             })
     LT : Instruction({ it -> array(it.c, "=", it.a, "<", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) < f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] < f[it.b]).toFloat()
                 1
             })
     GT : Instruction({ it -> array(it.c, "=", it.a, ">", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) > f.get(it.b)) 1f else 0f)
+                f[it.c] = (f[it.a] > f[it.b]).toFloat()
                 1
             })
 
@@ -143,34 +144,34 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     STORE_FLOAT : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b, f.get(it.a))
+                f[it.b] = f[it.a]
                 1
             })
     STORE_VEC : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b + 0, f.get(it.a + 0))
-                f.put(it.b + 1, f.get(it.a + 1))
-                f.put(it.b + 2, f.get(it.a + 2))
+                f[it.b + 0] = f[it.a + 0]
+                f[it.b + 1] = f[it.a + 1]
+                f[it.b + 2] = f[it.a + 2]
                 1
             })
     STORE_STR : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b, f.get(it.a))
+                f[it.b] = f[it.a]
                 1
             })
     STORE_ENT : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b, f.get(it.a))
+                f[it.b] = f[it.a]
                 1
             })
     STORE_FIELD : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b, f.get(it.a))
+                f[it.b] = f[it.a]
                 1
             })
     STORE_FUNC : Instruction({ it -> array(it.b, "=", it.a) },
             { it, f, i ->
-                f.put(it.b, f.get(it.a))
+                f[it.b] = f[it.a]
                 1
             })
 
@@ -184,20 +185,20 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     RETURN : Instruction({ it -> array(it.a, ",", it.b, ",", it.c) },
             { it, f, i ->
-                f.put(OFS_PARAM(-1), f.get(it.a))
+                f[OFS_PARAM(-1)] = f[it.a]
                 0
             })
 
     NOT_FLOAT : Instruction({ it -> array("!", it.a) },
             { it, f, i ->
-                f.put(it.b, if (f.get(it.a) == 0f) 1f else 0f)
+                f[it.b] = (f[it.a] == 0f).toFloat()
                 1
             })
     NOT_VEC : Instruction({ it -> array("!", it.a) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a + 0) == 0f
-                        && f.get(it.a + 1) == 0f
-                        && f.get(it.a + 2) == 0f) 1f else 0f)
+                f[it.c] = (f[it.a + 0] == 0f
+                        && f[it.a + 1] == 0f
+                        && f[it.a + 2] == 0f).toFloat()
                 1
             })
     // TODO
@@ -207,11 +208,11 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     IF : Instruction({ it -> array("if", it.a, "then jmp rel", it.b) },
             { it, f, i ->
-                (if (f.get(it.a) != 0f) it.b else 1)
+                (if (f[it.a] != 0f) it.b else 1)
             })
     IFNOT : Instruction({ it -> array("if not", it.a, "then jmp rel", it.b) },
             { it, f, i ->
-                (if (f.get(it.a) == 0f) it.b else 1)
+                (if (f[it.a] == 0f) it.b else 1)
             })
 
     CALL0 : Instruction({ it -> array(it.a, "(...)") },
@@ -242,23 +243,23 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     AND : Instruction({ it -> array(it.c, "=", it.a, "&&", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) != 0f && f.get(it.b) != 0f) 1f else 0f)
+                f[it.c] = (f[it.a] != 0f && f[it.b] != 0f).toFloat()
                 1
             })
     OR : Instruction({ it -> array(it.c, "=", it.a, "||", it.b) },
             { it, f, i ->
-                f.put(it.c, if (f.get(it.a) != 0f || f.get(it.b) != 0f) 1f else 0f)
+                f[it.c] = (f[it.a] != 0f || f[it.b] != 0f).toFloat()
                 1
             })
 
     BITAND : Instruction({ it -> array(it.c, "=", it.a, "&", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a).toInt() and f.get(it.b).toInt()).toFloat())
+                f[it.c] = (f[it.a].toInt() and f[it.b].toInt()).toFloat()
                 1
             })
     BITOR : Instruction({ it -> array(it.c, "=", it.a, "|", it.b) },
             { it, f, i ->
-                f.put(it.c, (f.get(it.a).toInt() or f.get(it.b).toInt()).toFloat())
+                f[it.c] = (f[it.a].toInt() or f[it.b].toInt()).toFloat()
                 1
             })
 
