@@ -79,9 +79,9 @@ public class Program(val data: ProgramData?) {
     inner class Builtin(val name: String,
                         val parameterTypes: Array<Class<*>>,
                         val varargsType: Class<*>?,
-                        val callback: (args: List<*>) -> Unit) {
+                        val callback: (args: List<*>) -> Any) {
 
-        fun call(parameterCount: Int): Any? {
+        fun call(parameterCount: Int): Any {
             var offset = Instruction.OFS_PARAM(0)
             val getFloat = {(i: Int) -> data!!.globalFloatData.get(i) }
             val getString = {(i: Int) -> data!!.strings!![data.globalIntData.get(i)] }
@@ -139,10 +139,14 @@ public class Program(val data: ProgramData?) {
         val ret = builtin?.call(parameterCount)
         if (ret == null) return
 
+        data!!
         when (ret) {
-            is Float -> data!!.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
+            is Float -> {
+                data.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
+            }
             is String -> {
-                // TODO: make temp string
+                data.strings!!
+                data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(ret))
             }
         }
     }

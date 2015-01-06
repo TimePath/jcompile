@@ -12,23 +12,53 @@ class StringManager(
          */
         val constantSize: Int) {
 
-    val temp: List<String> = ArrayList(512)
-    val zone: List<String> = ArrayList(512)
+    val temp: MutableList<String> = ArrayList(512)
+    val zone: MutableList<String?> = ArrayList(512)
 
-    fun get(index: Int): String {
+    fun get(index: Int): String? {
         if (index >= 0) {
             if (index < constantSize)
                 return constant[index]!!
             val zoneIndex = index - constantSize
             if (zoneIndex < zone.size())
-                return zone[zoneIndex]
+                return zone[zoneIndex]!!
         } else {
             val tempIndex = index.inv()
             if (tempIndex < temp.size()) {
-                return temp.get(tempIndex)
+                return temp[tempIndex]
             }
         }
-        return ""
+        return null
     }
+
+    fun zone(string: String): Int {
+        // avoid shuffling by reusing
+        zone.forEachIndexed { i, it ->
+            if (it == null) {
+                zone[i] = string
+                return constantSize + i
+            }
+        }
+        val size = zone.size()
+        zone.add(string)
+        return constantSize + size
+    }
+
+    fun unzone(index: Int): Boolean {
+        if (index < constantSize) return false
+        val zoneIndex = index - constantSize
+        if (zoneIndex >= zone.size()) return false
+        if (zone[zoneIndex] == null) return false
+        zone[zoneIndex] = null
+        return true
+    }
+
+    fun tempString(string: String): Int {
+        val size = temp.size()
+        temp.add(string)
+        return size.inv()
+    }
+
+    fun clearTempStrings() = temp.clear()
 
 }

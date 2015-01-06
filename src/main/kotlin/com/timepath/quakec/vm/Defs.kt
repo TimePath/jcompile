@@ -28,7 +28,7 @@ class Definition(val type: Short,
 
     var data: ProgramData? = null
 
-    val name: String
+    val name: String?
         get() = data?.strings!![nameOffset]
 
     override fun toString(): String = """Definition {
@@ -50,10 +50,10 @@ class Function(val firstStatement: Int,
 
     var data: ProgramData? = null
 
-    val name: String
+    val name: String?
         get() = data?.strings!![this.nameOffset]
 
-    val fileName: String
+    val fileName: String?
         get() = data?.strings!![this.fileNameOffset]
 
     override fun toString(): String = """Function {
