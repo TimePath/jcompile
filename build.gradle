@@ -1,7 +1,6 @@
 version = '0.1'
 
 buildscript {
-
     ext.versions = [
             antlr               : '4.3',
             jcpp                : '1.4.8-SNAPSHOT',
@@ -12,7 +11,6 @@ buildscript {
 
     repositories {
         mavenLocal()
-        // kotlin plugin
         mavenCentral()
     }
 
@@ -23,66 +21,20 @@ buildscript {
 
 repositories {
     mavenLocal()
-    // antlr
     mavenCentral()
-    // jcpp
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
-    }
-    // spek
+    // jcpp, spek
     maven {
         url "http://repository.jetbrains.com/all"
-    }
-}
-
-configurations { antlr4 }
-ext.antlr = [output: "${buildDir}/generated-src/antlr4"]
-task compileAntlr() {
-    description = 'Generates Java sources from ANTLR4 grammars.'
-    def output = "${buildDir}/generated-src/antlr4"
-    mkdir antlr.output
-
-    Map<String, List<String>> files = [:].withDefault { [] }
-    def base = new File(projectDir, '/src/main/antlr4');
-    base.eachFileRecurse(groovy.io.FileType.FILES) {
-        if (!it.name.endsWith('.g4')) return
-        def pkg = base.toURI().relativize(it.parentFile.toURI()).toString().replaceAll('/$', '').replace(File.separator, '.')
-        files[pkg] << it.toString().replace(base.toString() + '/', '')
-    }
-    files.each { pkg, grammars ->
-        doLast {
-            javaexec {
-                classpath configurations.all
-                workingDir = base.toString()
-                println 'found ' + grammars
-                main = 'org.antlr.v4.Tool'
-                args = ["-o", output, "-package", pkg, grammars].flatten()
-            }
-        }
     }
 }
 
 apply plugin: 'kotlin'
 
 dependencies {
-    antlr4 "org.antlr:antlr4:${versions.antlr}"
+    compile project(':grammar')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-    compile "org.antlr:antlr4-runtime:${versions.antlr}"
     compile "org.anarres:jcpp:${versions.jcpp}"
+    compile "org.antlr:antlr4-runtime:${versions.antlr}"
     compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
     testCompile "org.jetbrains.spek:spek:${versions.spek}"
-}
-
-compileJava {
-    dependsOn 'compileAntlr'
-    dependsOn.remove 'compileKotlin'
-    source antlr.output
-}
-
-compileKotlin {
-    dependsOn 'compileJava'
-}
-
-compileTestKotlin {
-    source "${projectDir}/src/main/kotlin"
 }

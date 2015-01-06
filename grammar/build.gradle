@@ -1,0 +1,32 @@
+apply plugin: 'java'
+
+buildscript {
+    repositories {
+        mavenLocal()
+        // antlr4 plugin
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.antlr:antlr4-runtime:${versions.antlr}"
+}
+
+apply plugin: 'me.champeau.gradle.antlr4'
+
+// FIXME: autodetect
+String pkg = "com.timepath.quakec"
+antlr4.extraArgs = ["-package", pkg]
+antlr4.output = file("${buildDir}/generated-src/${pkg.replace(".", "/")}")
+
+sourceSets.main.java.srcDirs += antlr4.output
+compileJava.dependsOn antlr4

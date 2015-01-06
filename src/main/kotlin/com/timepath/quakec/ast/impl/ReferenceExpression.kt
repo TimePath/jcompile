@@ -3,7 +3,6 @@ package com.timepath.quakec.ast.impl
 import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
-import java.util.Arrays
 
 open class ReferenceExpression(val id: String) : Expression {
 

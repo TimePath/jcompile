@@ -4,9 +4,6 @@ import org.jetbrains.spek.api.Spek
 import com.timepath.quakec.vm.ProgramDataReader
 import com.timepath.quakec.vm.ProgramDataWriter
 import java.io.File
-import kotlin.test.assertEquals
-import org.jetbrains.spek.console.findClassesInClassPath
-import java.io.FileInputStream
 import java.util.Arrays
 import kotlin.test.assertTrue
 
