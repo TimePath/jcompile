@@ -30,6 +30,15 @@ repositories {
 
 apply plugin: 'kotlin'
 
+sourceSets {
+    main {
+        java { srcDirs = [] }
+    }
+    test {
+        java { srcDirs = [] }
+    }
+}
+
 dependencies {
     compile project(':grammar')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"

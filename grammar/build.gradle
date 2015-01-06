@@ -23,10 +23,31 @@ dependencies {
 
 apply plugin: 'me.champeau.gradle.antlr4'
 
+sourceSets {
+    generated {
+        java { srcDirs = ['src/generated/java']}
+    }
+    main {
+        java { srcDirs = []}
+        compileClasspath += generated.output
+        runtimeClasspath += generated.output
+    }
+    test {
+        java { srcDirs = [] }
+    }
+}
+
+configurations {
+    generatedCompile.extendsFrom compile
+}
+
+jar {
+    from sourceSets.generated.output
+}
+
 // FIXME: autodetect
 String pkg = "com.timepath.quakec"
 antlr4.extraArgs = ["-package", pkg]
-antlr4.output = file("${buildDir}/generated-src/${pkg.replace(".", "/")}")
+antlr4.output = file("${projectDir}/src/generated/java/${pkg.replace('.', '/')}")
 
-sourceSets.main.java.srcDirs += antlr4.output
-compileJava.dependsOn antlr4
+compileGeneratedJava.dependsOn antlr4
