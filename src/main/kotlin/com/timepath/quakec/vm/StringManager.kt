@@ -1,17 +1,24 @@
 package com.timepath.quakec.vm
 
 import java.util.ArrayList
-import java.util.LinkedHashMap
 
-class StringManager(val constant: LinkedHashMap<Int, String>, val constantSize: Int) {
+class StringManager(
+        /**
+         * Map of addresses to strings
+         */
+        val constant: Map<Int, String>,
+        /**
+         * The largest constant key + its length
+         */
+        val constantSize: Int) {
 
-    val temp: ArrayList <String> = ArrayList(512)
-    val zone: ArrayList <String> = ArrayList(512)
+    val temp: List<String> = ArrayList(512)
+    val zone: List<String> = ArrayList(512)
 
     fun get(index: Int): String {
         if (index >= 0) {
             if (index < constantSize)
-                return constant[index]
+                return constant[index]!!
             val zoneIndex = index - constantSize
             if (zoneIndex < zone.size())
                 return zone[zoneIndex]

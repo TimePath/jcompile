@@ -4,7 +4,6 @@ import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
 import com.timepath.quakec.ast.Type
-import java.util.LinkedList
 
 /**
  * Replaced with a number during compilation

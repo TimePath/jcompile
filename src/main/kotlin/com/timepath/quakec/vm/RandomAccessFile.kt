@@ -2,15 +2,15 @@ package com.timepath.quakec.vm
 
 import java.io.File
 
-class RandomAccessFile(file: File, mode: String = "rw") {
+class RandomAccessFile(file: File, mode: String) {
 
     val raf = java.io.RandomAccessFile(file, mode)
 
-    private fun _read(n: Int): Long {
+    private private fun _read(n: Int): Long {
         var ret = 0
-        for (i in 0..n - 1) {
+        (0..n - 1).forEach {
             val b = raf.read()
-            ret = ret or ((b and 0xFF) shl (8 * i))
+            ret = ret or ((b and 0xFF) shl (8 * it))
         }
         return ret.toLong()
     }
@@ -48,11 +48,7 @@ class RandomAccessFile(file: File, mode: String = "rw") {
         writeByte(0)
     }
 
-    fun _write(n: Int, v: Int) {
-        for (i in 0..n - 1) {
-            raf.write(((v.toLong() ushr (i * 8)) and 255).toInt())
-        }
-    }
+    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { raf.write(((v.toLong() ushr (it * 8)) and 255).toInt()) }
 
     fun write(b: ByteArray) = raf.write(b)
 

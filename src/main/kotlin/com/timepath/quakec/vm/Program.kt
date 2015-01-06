@@ -1,8 +1,5 @@
 package com.timepath.quakec.vm
 
-import com.timepath.quakec.vm.defs.Function
-import com.timepath.quakec.vm.defs.ProgramData
-
 import java.io.File
 import java.util.*
 import org.antlr.v4.runtime.misc.Utils
@@ -32,7 +29,7 @@ public class Program(val data: ProgramData?) {
             var k = it.firstLocal
             for (i in 0..it.numParams - 1) {
                 for (j in 0..it.sizeof[i] - 1) {
-                    data!!.globalIntData.put(k++, data.globalIntData.get(Instruction.OFS_PARM0 + (3 * i) + j))
+                    data!!.globalIntData.put(k++, data.globalIntData.get(Instruction.OFS_PARAM(i) + j))
                 }
             }
 
@@ -85,7 +82,7 @@ public class Program(val data: ProgramData?) {
                         val callback: (args: List<*>) -> Unit) {
 
         fun call(parameterCount: Int): Any? {
-            var offset = Instruction.OFS_PARM0
+            var offset = Instruction.OFS_PARAM(0)
             val getFloat = {(i: Int) -> data!!.globalFloatData.get(i) }
             val getString = {(i: Int) -> data!!.strings!![data.globalIntData.get(i)] }
             [suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
@@ -143,7 +140,7 @@ public class Program(val data: ProgramData?) {
         if (ret == null) return
 
         when (ret) {
-            is Float -> data!!.globalFloatData.put(Instruction.OFS_RETURN, ret)
+            is Float -> data!!.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
             is String -> {
                 // TODO: make temp string
             }

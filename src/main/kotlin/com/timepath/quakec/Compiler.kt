@@ -1,6 +1,5 @@
 package com.timepath.quakec
 
-import com.timepath.quakec.vm.defs.ProgramData
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
@@ -16,6 +15,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.util.EnumSet
 import java.util.LinkedList
 import java.awt.Dimension
+import com.timepath.quakec.vm.ProgramData
 
 public class Compiler {
 
@@ -53,6 +53,11 @@ public class Compiler {
         preprocessor.addMacro(name, value)
         return this
     }
+
+    fun Include(file: File): Include = Include(file.name, file.canonicalPath, FileLexerSource(file))
+    fun Include(input: String, name: String): Include = Include(name, name, StringLexerSource(input))
+
+    data class Include(val name: String, val path: String, val source: Source)
 
     val includes = LinkedList<Include>()
 

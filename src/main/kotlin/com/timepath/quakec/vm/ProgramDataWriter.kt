@@ -1,71 +1,70 @@
 package com.timepath.quakec.vm
 
-import com.timepath.quakec.vm.defs.*
-
 import java.io.File
+import com.timepath.quakec.vm.ProgramData.Header.Section
 
 class ProgramDataWriter(file: File) {
 
-    val f = RandomAccessFile(file)
+    val raf = RandomAccessFile(file, "rw")
 
-    fun writeSection(it: Header.Section) {
-        f.writeInt(it.offset)
-        f.writeInt(it.count)
+    private fun writeSection(it: Section) {
+        raf.writeInt(it.offset)
+        raf.writeInt(it.count)
     }
 
     fun write(ret: ProgramData) {
         val h = ret.header!!
-        f.writeInt(h.version)
-        f.writeInt(h.crc)
+        raf.writeInt(h.version)
+        raf.writeInt(h.crc)
         writeSection(h.statements)
         writeSection(h.globalDefs)
         writeSection(h.fieldDefs)
         writeSection(h.functions)
         writeSection(h.stringData)
         writeSection(h.globalData)
-        f.writeInt(h.entityCount)
+        raf.writeInt(h.entityCount)
 
-        f.offset = ret.header.statements.offset.toLong()
+        raf.offset = ret.header.statements.offset.toLong()
         for (it in ret.statements!!) {
-            f.writeShort(it.op.ordinal())
-            f.writeShort(it.a)
-            f.writeShort(it.b)
-            f.writeShort(it.c)
+            raf.writeShort(it.op.ordinal())
+            raf.writeShort(it.a)
+            raf.writeShort(it.b)
+            raf.writeShort(it.c)
         }
 
-        f.offset = ret.header.globalDefs.offset.toLong()
+        raf.offset = ret.header.globalDefs.offset.toLong()
         for (it in ret.globalDefs!!) {
-            f.writeShort(it.type.toInt())
-            f.writeShort(it.offset.toInt())
-            f.writeInt(it.nameOffset)
+            raf.writeShort(it.type.toInt())
+            raf.writeShort(it.offset.toInt())
+            raf.writeInt(it.nameOffset)
         }
 
-        f.offset = ret.header.fieldDefs.offset.toLong()
+        raf.offset = ret.header.fieldDefs.offset.toLong()
         for (it in ret.fieldDefs!!) {
-            f.writeShort(it.type.toInt())
-            f.writeShort(it.offset.toInt())
-            f.writeInt(it.nameOffset)
+            raf.writeShort(it.type.toInt())
+            raf.writeShort(it.offset.toInt())
+            raf.writeInt(it.nameOffset)
         }
 
-        f.offset = ret.header.functions.offset.toLong()
+        raf.offset = ret.header.functions.offset.toLong()
         for (it in ret.functions!!) {
-            f.writeInt(it.firstStatement)
-            f.writeInt(it.firstLocal)
-            f.writeInt(it.numLocals)
-            f.writeInt(it.profiling)
-            f.writeInt(it.nameOffset)
-            f.writeInt(it.fileNameOffset)
-            f.writeInt(it.numParams)
-            f.write(it.sizeof)
+            raf.writeInt(it.firstStatement)
+            raf.writeInt(it.firstLocal)
+            raf.writeInt(it.numLocals)
+            raf.writeInt(it.profiling)
+            raf.writeInt(it.nameOffset)
+            raf.writeInt(it.fileNameOffset)
+            raf.writeInt(it.numParams)
+            raf.write(it.sizeof)
         }
 
         for ((key, value) in ret.strings!!.constant.entrySet()) {
-            f.offset = ret.header.stringData.offset.toLong() + key
-            f.writeString(value)
+            raf.offset = ret.header.stringData.offset.toLong() + key
+            raf.writeString(value)
         }
 
-        f.offset = ret.header.globalData.offset.toLong()
-        f.write(ret.globalData!!.array())
+        raf.offset = ret.header.globalData.offset.toLong()
+        raf.write(ret.globalData!!.array())
     }
 
 }

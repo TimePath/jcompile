@@ -1,9 +1,7 @@
 package com.timepath.quakec.vm
 
-import com.timepath.quakec.vm.defs.Statement
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import com.timepath.quakec.vm.defs.ProgramData
 import com.timepath.quakec.times
 
 enum class Instruction(val stringify: (Statement) -> Array<Any>,
@@ -11,9 +9,9 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     DONE : Instruction({ it -> array(it.a, ",", it.b, ",", it.c) },
             { it, f, i ->
-                f.put(OFS_RETURN + 0, f.get(it.a + 0))
-                f.put(OFS_RETURN + 1, f.get(it.a + 1))
-                f.put(OFS_RETURN + 2, f.get(it.a + 2))
+                f.put(OFS_PARAM(-1) + 0, f.get(it.a + 0))
+                f.put(OFS_PARAM(-1) + 1, f.get(it.a + 1))
+                f.put(OFS_PARAM(-1) + 2, f.get(it.a + 2))
                 0
             })
     MUL_FLOAT : Instruction({ it -> array(it.c, "=", it.a, "*", it.b) },
@@ -186,7 +184,7 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     RETURN : Instruction({ it -> array(it.a, ",", it.b, ",", it.c) },
             { it, f, i ->
-                f.put(OFS_RETURN, f.get(it.a))
+                f.put(OFS_PARAM(-1), f.get(it.a))
                 0
             })
 
@@ -266,15 +264,14 @@ enum class Instruction(val stringify: (Statement) -> Array<Any>,
 
     class object {
 
-        val OFS_RETURN = 1
-        val OFS_PARM0 = 4
-        val OFS_PARM1 = 7
-        val OFS_PARM2 = 10
-        val OFS_PARM3 = 13
-        val OFS_PARM4 = 16
-        val OFS_PARM5 = 19
-        val OFS_PARM6 = 22
-        val OFS_PARM7 = 25
+        /**
+         * RETURN = 1, n = -1
+         * PARAM0 = 4, n = 0
+         * PARAM1 = 7
+         * ...
+         * PARMA7 = 25
+         */
+        fun OFS_PARAM(n: Int) = 4 + n * 3
 
         fun from(i: Int) = Instruction.values()[i]
 

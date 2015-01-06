@@ -14,11 +14,14 @@ ext.antlr = [
 ]
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    // antlr
+    mavenCentral()
+    // jcpp
     maven {
         url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
+    // spek
     maven {
         url "http://repository.jetbrains.com/all"
     }
@@ -35,11 +38,9 @@ dependencies {
 
 buildscript {
     repositories {
-        maven {
-            name 'JFrog OSS snapshot repo'
-            url 'https://oss.jfrog.org/oss-snapshot-local/'
-        }
-        jcenter()
+        mavenLocal()
+        // kotlin plugin
+        mavenCentral()
     }
 
     dependencies {

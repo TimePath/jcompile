@@ -2,7 +2,6 @@ package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
-import java.util.LinkedList
 
 class DeclarationExpression(id: String) : ReferenceExpression(id) {
 

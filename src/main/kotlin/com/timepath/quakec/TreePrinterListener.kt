@@ -1,6 +1,5 @@
 package com.timepath.quakec
 
-import org.antlr.v4.runtime.Parser
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Utils
 import org.antlr.v4.runtime.tree.ErrorNode

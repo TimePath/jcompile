@@ -2,8 +2,8 @@ package com.timepath.quakec
 
 import org.jetbrains.spek.api.Spek
 import com.timepath.quakec.vm.Program
-import com.timepath.quakec.vm.defs.ProgramData
 import org.intellij.lang.annotations.Language
+import com.timepath.quakec.vm.ProgramData
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
     return Compiler()

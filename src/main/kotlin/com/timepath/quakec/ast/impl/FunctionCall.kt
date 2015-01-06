@@ -18,12 +18,12 @@ class FunctionCall(val function: Expression? = null,
         }
         var i = 0
         val prepare: List<IR> = args.map {
-            val param = Instruction.OFS_PARM0 + (3 * i++)
+            val param = Instruction.OFS_PARAM(i)
             IR(Instruction.STORE_FLOAT, array(it[-1].ret, param), param)
         }
         return (args.flatMap { it }
                 + prepare
-                + listOf(IR(instr(i), array(function!!.generate(ctx)[-1].ret), Instruction.OFS_RETURN))
+                + listOf(IR(instr(i), array(function!!.generate(ctx)[-1].ret), Instruction.OFS_PARAM(-1)))
                 )
     }
 
