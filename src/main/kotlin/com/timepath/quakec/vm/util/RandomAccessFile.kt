@@ -1,6 +1,7 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.util
 
 import java.io.File
+import java.lang
 
 class RandomAccessFile(file: File, mode: String) {
 
@@ -39,9 +40,9 @@ class RandomAccessFile(file: File, mode: String) {
 
     fun readLong(): Long = _read(8)
 
-    fun readFloat(): Float = java.lang.Float.intBitsToFloat(readInt())
+    fun readFloat(): Float = lang.Float.intBitsToFloat(readInt())
 
-    fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
+    fun readDouble(): Double = lang.Double.longBitsToDouble(readLong())
 
     fun writeString(s: String) {
         raf.writeBytes(s)

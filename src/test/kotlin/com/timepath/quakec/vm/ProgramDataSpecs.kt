@@ -1,8 +1,8 @@
 package com.timepath.quakec.vm.defs
 
 import org.jetbrains.spek.api.Spek
-import com.timepath.quakec.vm.ProgramDataReader
-import com.timepath.quakec.vm.ProgramDataWriter
+import com.timepath.quakec.vm.util.ProgramDataReader
+import com.timepath.quakec.vm.util.ProgramDataWriter
 import java.io.File
 import java.util.Arrays
 import kotlin.test.assertTrue

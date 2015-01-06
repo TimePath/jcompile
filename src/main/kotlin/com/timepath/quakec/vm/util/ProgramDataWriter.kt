@@ -1,13 +1,14 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.util
 
 import java.io.File
-import com.timepath.quakec.vm.ProgramData.Header.Section
+import com.timepath.quakec.vm.ProgramData
+import com.timepath.quakec.vm
 
 class ProgramDataWriter(file: File) {
 
     val raf = RandomAccessFile(file, "rw")
 
-    private fun writeSection(it: Section) {
+    private fun writeSection(it: ProgramData.Header.Section) {
         raf.writeInt(it.offset)
         raf.writeInt(it.count)
     }

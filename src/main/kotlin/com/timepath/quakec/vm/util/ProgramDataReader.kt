@@ -1,18 +1,21 @@
-package com.timepath.quakec.vm
+package com.timepath.quakec.vm.util
 
 import java.io.File
+import com.timepath.quakec.vm
+import com.timepath.quakec.vm.ProgramData
 import java.util.ArrayList
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import com.timepath.quakec.vm.Definition
+import com.timepath.quakec.vm.Function
 import java.util.LinkedHashMap
-import com.timepath.quakec.vm.ProgramData.Header.Section
-import com.timepath.quakec.vm.ProgramData.Header
+import com.timepath.quakec.vm.StringManager
+import java.nio.ByteOrder
+import java.nio.ByteBuffer
 
 class ProgramDataReader(file: File) {
 
-    val raf: RandomAccessFile = RandomAccessFile(file, "r")
+    val raf = RandomAccessFile(file, "r")
 
-    private fun <T> iterData(section: Section, action: () -> T): MutableList<T> {
+    private fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
         val ret = ArrayList<T>(section.count)
         raf.offset = section.offset.toLong()
         for (i in 0..section.count - 1) {
@@ -21,10 +24,10 @@ class ProgramDataReader(file: File) {
         return ret
     }
 
-    private fun readSection(): Section = Section(offset = raf.readInt(), count = raf.readInt())
+    private fun readSection(): ProgramData.Header.Section = ProgramData.Header.Section(offset = raf.readInt(), count = raf.readInt())
 
     fun read(): ProgramData {
-        val header = Header(
+        val header = ProgramData.Header(
                 version = raf.readInt(),
                 crc = raf.readInt(),
                 statements = readSection(),
@@ -38,7 +41,7 @@ class ProgramDataReader(file: File) {
         val ret = ProgramData(
                 header = header,
                 statements = iterData(header.statements) {
-                    Statement(
+                    vm.Statement(
                             raf.readShort(),
                             raf.readShort(),
                             raf.readShort(),
