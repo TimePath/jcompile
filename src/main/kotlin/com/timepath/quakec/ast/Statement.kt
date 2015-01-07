@@ -16,11 +16,6 @@ abstract class Statement {
 
     open val children: MutableList<Statement> = ArrayList()
 
-    /**
-     * @return Nested lists, the last argument of which is an rvalue and is removed
-     */
-    open fun generate(ctx: GenerationContext): List<IR> = LinkedList()
-
     fun initChild<T : Statement>(elem: T, configure: (T.() -> Unit)? = null): T {
         if (configure != null)
             elem.configure()

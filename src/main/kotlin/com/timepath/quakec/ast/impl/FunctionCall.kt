@@ -15,20 +15,4 @@ class FunctionCall(val function: Expression? = null) : Expression() {
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to function)
 
-    override fun generate(ctx: GenerationContext): List<IR> {
-        val args = args.map { it.generate(ctx) }
-        val instr = {(i: Int) ->
-            Instruction.from(Instruction.CALL0.ordinal() + i)
-        }
-        var i = 0
-        val prepare: List<IR> = args.map {
-            val param = Instruction.OFS_PARAM(i)
-            IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param)
-        }
-        return (args.flatMap { it }
-                + prepare
-                + listOf(IR(instr(i), array(function!!.generate(ctx).last().ret), Instruction.OFS_PARAM(-1)))
-                )
-    }
-
 }

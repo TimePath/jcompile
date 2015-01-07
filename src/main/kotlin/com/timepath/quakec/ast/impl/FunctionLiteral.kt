@@ -19,10 +19,4 @@ class FunctionLiteral(val name: String? = null,
                 "returnType" to returnType,
                 "args" to Arrays.toString(argTypes))
 
-    override fun generate(ctx: GenerationContext): List<IR> {
-        if (name!! in ctx.registry) return super.generate(ctx)
-        val global = ctx.registry.register(name)
-        return (block!!.generate(ctx) + IR(ret = global, dummy = true))
-    }
-
 }

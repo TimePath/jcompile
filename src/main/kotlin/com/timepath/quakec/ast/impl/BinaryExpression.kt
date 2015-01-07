@@ -20,23 +20,9 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
     override val children: MutableList<Statement>
         get() = arrayListOf(left, right)
 
-    override fun generate(ctx: GenerationContext): List<IR> {
-        val genL = left.generate(ctx)
-        val genR = right.generate(ctx)
-        val allocate = ctx.registry.register(null)
-        return genL + genR + IR(instr, array(genL.last().ret, genR.last().ret, allocate), allocate, "${left} $op ${right}")
-    }
-
     class Assign(left: lvalue, right: rvalue) : BinaryExpression<lvalue, rvalue>(left, right) {
         override val instr = Instruction.STORE_FLOAT
         override val op = "="
-
-        override fun generate(ctx: GenerationContext): List<IR> {
-            // left = right
-            val genL = left.generate(ctx)
-            val genR = right.generate(ctx)
-            return genL + genR + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, "=")
-        }
     }
 
     class Add(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {

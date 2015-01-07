@@ -32,9 +32,11 @@ fun main(args: Array<String>) {
         }
     }
     println(root)
+
+    val ctx = GenerationContext(root)
+    val asm = ctx.generate()
+
     println("=======")
-    val ctx = GenerationContext()
-    val asm = root.generate(ctx)
     println(ctx.registry)
     println("=======")
     println(asm)
