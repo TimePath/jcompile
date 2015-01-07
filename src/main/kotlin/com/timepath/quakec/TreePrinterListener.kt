@@ -10,7 +10,16 @@ import org.antlr.v4.runtime.tree.Trees
 class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
 
     val sb = StringBuilder()
+    var levelString = ""
     var level = 0
+        set(value: Int) {
+            val tab = "  "
+            val diff = value - $level
+            if (diff > 0)
+                levelString += tab * diff
+            else
+                levelString = levelString.substring(0, tab.length() * value)
+        }
 
     override fun visitTerminal(node: TerminalNode) {
         if (sb.length() > 0) {
@@ -30,7 +39,7 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
         }
 
         if (ctx.getChildCount() > 0) {
-            if (level++ > 0) sb.append("\n" + ("  " * level))
+            if (level++ > 0) sb.append("\n" + levelString)
             sb.append("(")
         }
 
@@ -47,7 +56,8 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
     override fun exitEveryRule(ctx: ParserRuleContext) {
         if (ctx.getChildCount() > 0) {
             sb.append(")")
-            sb.append("\n" + ("  " * --level))
+            level--
+            sb.append("\n" + levelString)
         }
     }
 
