@@ -1,7 +1,6 @@
 package com.timepath.quakec.ast
 
 import java.util.ArrayList
-import com.timepath.quakec.ast.impl.BlockStatement
 import com.timepath.quakec.ast.impl.FunctionLiteral
 import com.timepath.quakec.ast.impl.FunctionCall
 import com.timepath.quakec.ast.impl.ReturnStatement
@@ -44,13 +43,15 @@ abstract class Statement {
         return builder.toString()
     }
 
-    override fun toString(): String {
+    fun toStringRecursive(): String {
         val builder = StringBuilder()
         render(builder, "")
         return builder.toString()
     }
 
 }
+
+class BlockStatement : Statement()
 
 fun ast(configure: BlockStatement.() -> Unit): BlockStatement {
     val block = BlockStatement()

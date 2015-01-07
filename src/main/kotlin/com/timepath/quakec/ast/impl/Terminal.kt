@@ -21,6 +21,7 @@ class ConstantExpression(any: Any) : Expression() {
     override fun evaluate(): Value = value
 
     override fun toString(): String = value.toString()
+
 }
 
 open class ReferenceExpression(val id: String) : Expression() {

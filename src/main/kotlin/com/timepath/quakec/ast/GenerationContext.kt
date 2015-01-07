@@ -1,7 +1,6 @@
 package com.timepath.quakec.ast
 
 import java.util.LinkedHashMap
-import com.timepath.quakec.ast.impl.BlockStatement
 import com.timepath.quakec.ast.impl.FunctionLiteral
 import java.util.Stack
 import com.timepath.quakec.ast.impl.FunctionCall
@@ -154,7 +153,7 @@ class GenerationContext(val root: BlockStatement) {
                 val genL = left.generate()
                 val genR = right.generate()
                 return (genL + genR
-                        + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, "${left} = ${right}"))
+                        + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, this.toString()))
             }
             is BinaryExpression<*, *> -> {
                 // ast:
@@ -165,7 +164,7 @@ class GenerationContext(val root: BlockStatement) {
                 val genR = right.generate()
                 val global = registry.register(null)
                 return (genL + genR
-                        + IR(instr, array(genL.last().ret, genR.last().ret, global), global, "${left} $op ${right}"))
+                        + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
             }
             is FunctionCall -> {
                 val args = args.map { it.generate() }
@@ -175,7 +174,7 @@ class GenerationContext(val root: BlockStatement) {
                 var i = 0
                 val prepare: List<IR> = args.map {
                     val param = Instruction.OFS_PARAM(i++)
-                    IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param)
+                    IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
                 }
                 return (args.flatMap { it }
                         + prepare

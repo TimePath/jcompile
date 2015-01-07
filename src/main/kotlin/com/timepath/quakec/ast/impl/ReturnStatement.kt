@@ -11,7 +11,4 @@ import com.timepath.quakec.ast.Expression
  */
 class ReturnStatement(val returnValue: Expression?) : Statement() {
 
-    override val attributes: Map<String, Any>
-        get() = mapOf()
-
 }

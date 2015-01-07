@@ -6,9 +6,13 @@ import com.timepath.quakec.vm.Instruction
 class IR(val instr: Instruction? = null,
          val args: Array<Int> = array(),
          val ret: Int = 0,
-         val name: String = "",
+         val name: String? = null,
          val dummy: Boolean = false) {
 
-    override fun toString() = "IR { $instr(${args.map { '$' + it.toString() }.join(", ")}) -> \$$ret ${"/* ${Utils.escapeWhitespace(name, false)} */"} }"
+    override fun toString(): String {
+        val csv = args.map { '$' + it.toString() }.join(", ")
+        val comment = if (name != null) " /* ${Utils.escapeWhitespace(name, false)} */" else ""
+        return "$instr($csv)$comment"
+    }
 
 }

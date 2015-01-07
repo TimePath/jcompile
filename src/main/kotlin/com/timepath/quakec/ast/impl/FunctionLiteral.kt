@@ -16,7 +16,7 @@ class FunctionLiteral(val id: String? = null,
 
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id,
-                "returnType" to returnType,
+                "type" to returnType,
                 "args" to Arrays.toString(argTypes))
 
 }

@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
             ret()
         }
     }
-    println(root)
+    println(root.toStringRecursive())
 
     println("=======")
 

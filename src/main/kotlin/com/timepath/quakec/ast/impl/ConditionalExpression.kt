@@ -8,9 +8,6 @@ class ConditionalExpression(val test: Expression,
                             val yes: Expression,
                             val no: Expression) : Expression() {
 
-    override val attributes: Map<String, Any>
-        get() = mapOf()
-
     override val children: MutableList<Statement>
         get() = arrayListOf(test, yes, no)
 

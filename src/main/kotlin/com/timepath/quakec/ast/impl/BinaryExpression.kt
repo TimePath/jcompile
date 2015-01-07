@@ -14,11 +14,10 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
     abstract val instr: Instruction
     abstract val op: String
 
-    override val attributes: Map<String, Any>
-        get() = mapOf()
-
     override val children: MutableList<Statement>
         get() = arrayListOf(left, right)
+
+    override fun toString(): String = "($left $op $right)"
 
     class Assign(left: lvalue, right: rvalue) : BinaryExpression<lvalue, rvalue>(left, right) {
         override val instr = Instruction.STORE_FLOAT
