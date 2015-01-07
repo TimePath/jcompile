@@ -22,32 +22,26 @@ abstract class Statement {
         return elem
     }
 
-    private fun render(sb: StringBuilder, indent: String) {
+    private fun render(sb: StringBuilder = StringBuilder(), indent: String = ""): StringBuilder {
         val name = this.javaClass.getSimpleName()
+        sb.append("${indent}<${name}")
+        for ((k, v) in attributes) {
+            sb.append(" ${k}=\"${v}\"")
+        }
         if (children.isEmpty()) {
-            sb.append("${indent}<${name}${renderAttributes()}/>\n")
+            sb.append("/>\n")
         } else {
-            sb.append("${indent}<$name${renderAttributes()}>\n")
+            sb.append(">\n")
+            val nextIndent = indent + "\t"
             for (c in children) {
-                c.render(sb, indent + "\t")
+                c.render(sb, nextIndent)
             }
             sb.append("${indent}</${name}>\n")
         }
+        return sb
     }
 
-    private fun renderAttributes(): String? {
-        val builder = StringBuilder()
-        for ((k, v) in attributes) {
-            builder.append(" ${k}=\"${v}\"")
-        }
-        return builder.toString()
-    }
-
-    fun toStringRecursive(): String {
-        val builder = StringBuilder()
-        render(builder, "")
-        return builder.toString()
-    }
+    fun toStringRecursive(): String = render().toString()
 
 }
 
