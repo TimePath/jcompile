@@ -4,7 +4,7 @@ import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
 
-open class ReferenceExpression(val id: String) : Expression {
+open class ReferenceExpression(val id: String) : Expression() {
 
     override val text: String = id
 

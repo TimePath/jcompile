@@ -1,42 +1,37 @@
 package com.timepath.quakec.ast
 
-import com.timepath.quakec.ast.impl.BlockStatement
-import com.timepath.quakec.ast.impl.FunctionLiteral
-import com.timepath.quakec.ast.impl.FunctionCall
-import com.timepath.quakec.ast.impl.ConstantExpression
 import com.timepath.quakec.ast.impl.BinaryExpression
-import com.timepath.quakec.ast.impl.ReturnStatement
-import com.timepath.quakec.ast.impl.ReferenceExpression
 
 fun main(args: Array<String>) {
-    val root = BlockStatement(// root scope
-            FunctionLiteral(
-                    "test",
-                    Type.Void,
-                    array(),
-                    BlockStatement(
-                            FunctionCall(
-                                    ConstantExpression(-1), // print
-                                    BinaryExpression.Add(
-                                            ConstantExpression(1),
-                                            ConstantExpression(2)
-                                    )
-                            ),
-                            ReturnStatement()
-                    )
-            ),
-            FunctionLiteral(
-                    "main",
-                    Type.Void,
-                    array(),
-                    BlockStatement(
-                            FunctionCall(
-                                    ReferenceExpression("test")
-                            ),
-                            ReturnStatement()
-                    )
-            )
-    )
+
+    val root = ast {
+        val print = const(-1)
+        func(Type.Void, "test", array()) {
+            call(print) {
+                arg(BinaryExpression.Add(
+                        const(1),
+                        const(2)
+                ))
+                arg(BinaryExpression.Add(
+                        const(3),
+                        const(4)
+                ))
+                arg(BinaryExpression.Add(
+                        BinaryExpression.Add(
+                                const(1),
+                                const(2)
+                        ),
+                        const(4)
+                ))
+            }
+            ret()
+        }
+        func(Type.Void, "main", array()) {
+            call(ref("test"))
+            ret()
+        }
+    }
+    println(root)
     println(root.text)
     println("=======")
     val ctx = GenerationContext()

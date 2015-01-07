@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.misc.Utils
 
 import com.timepath.quakec.vm.Instruction
 
-class ConstantExpression(val value: Any? = null) : Expression {
+class ConstantExpression(val value: Any?) : Expression() {
 
     override fun evaluate(): Value = ((value) as Value)
 
@@ -22,5 +22,5 @@ class ConstantExpression(val value: Any? = null) : Expression {
     }
 
     override val text: String
-        get() = Utils.escapeWhitespace(value as String, false)
+        get() = Utils.escapeWhitespace(value.toString(), false)
 }

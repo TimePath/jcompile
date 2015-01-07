@@ -5,7 +5,7 @@ import com.timepath.quakec.ast.Value
 
 class ConditionalExpression(val test: Expression,
                             val yes: Expression,
-                            val no: Expression) : Expression {
+                            val no: Expression) : Expression() {
 
     override fun evaluate(): Value? {
         val result = test.evaluate()

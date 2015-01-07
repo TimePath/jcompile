@@ -11,7 +11,7 @@ import com.timepath.quakec.ast.Type
 class FunctionLiteral(val name: String? = null,
                       val returnType: Type? = null,
                       val argTypes: Array<Type>? = null,
-                      val block: BlockStatement? = null) : Expression {
+                      var block: BlockStatement? = null) : Expression() {
 
     override val text: String
         get() = "${returnType}(${argTypes!!.map { it.toString() }.join(", ")}) ${block!!.text}"

@@ -8,7 +8,7 @@ import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.ast.Expression
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
-                                                                val right: R) : rvalue {
+                                                                val right: R) : rvalue() {
 
     abstract val instr: Instruction
     abstract val op: String
@@ -19,7 +19,7 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
         val genL = left.generate(ctx)
         val genR = right.generate(ctx)
         val allocate = ctx.registry.register(null)
-        return genL + genR + IR(instr, array(genL[-1].ret, genR[-1].ret, allocate), allocate, "${left.text} $op ${right.text}")
+        return genL + genR + IR(instr, array(genL.last().ret, genR.last().ret, allocate), allocate, "${left.text} $op ${right.text}")
     }
 
     class Assign(left: lvalue, right: rvalue) : BinaryExpression<lvalue, rvalue>(left, right) {
@@ -30,7 +30,7 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
             // left = right
             val genL = left.generate(ctx)
             val genR = right.generate(ctx)
-            return genL + genR + IR(instr, array(genR[-1].ret, genL[-1].ret), genL[-1].ret, "=")
+            return genL + genR + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, "=")
         }
     }
 
