@@ -12,8 +12,8 @@ class FunctionCall(val function: Expression? = null) : Expression() {
         children.filterIsInstance<Expression>()
     }
 
-    override val text: String
-        get() = "#${function!!.text}(${args.map { it.text }.join(", ")})"
+    override val attributes: Map<String, Any?>
+        get() = mapOf("id" to function)
 
     override fun generate(ctx: GenerationContext): List<IR> {
         val args = args.map { it.generate(ctx) }

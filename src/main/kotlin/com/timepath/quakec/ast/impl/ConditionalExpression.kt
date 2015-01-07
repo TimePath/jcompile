@@ -2,10 +2,17 @@ package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.Value
+import com.timepath.quakec.ast.Statement
 
 class ConditionalExpression(val test: Expression,
                             val yes: Expression,
                             val no: Expression) : Expression() {
+
+    override val attributes: Map<String, Any>
+        get() = mapOf()
+
+    override val children: MutableList<Statement>
+        get() = arrayListOf(test, yes, no)
 
     override fun evaluate(): Value? {
         val result = test.evaluate()
@@ -13,6 +20,4 @@ class ConditionalExpression(val test: Expression,
         return if (result.toBoolean()) yes.evaluate() else no.evaluate()
     }
 
-    override val text: String
-        get() = "(${test.text} ? ${yes.text} : ${no.text})"
 }

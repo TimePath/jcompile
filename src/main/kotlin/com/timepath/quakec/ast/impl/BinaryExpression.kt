@@ -6,6 +6,7 @@ import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
 import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.ast.Expression
+import com.timepath.quakec.ast.Statement
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
                                                                 val right: R) : rvalue() {
@@ -13,13 +14,17 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
     abstract val instr: Instruction
     abstract val op: String
 
-    override val text: String = "(${left.text} $op ${right.text})"
+    override val attributes: Map<String, Any>
+        get() = mapOf()
+
+    override val children: MutableList<Statement>
+        get() = arrayListOf(left, right)
 
     override fun generate(ctx: GenerationContext): List<IR> {
         val genL = left.generate(ctx)
         val genR = right.generate(ctx)
         val allocate = ctx.registry.register(null)
-        return genL + genR + IR(instr, array(genL.last().ret, genR.last().ret, allocate), allocate, "${left.text} $op ${right.text}")
+        return genL + genR + IR(instr, array(genL.last().ret, genR.last().ret, allocate), allocate, "${left} $op ${right}")
     }
 
     class Assign(left: lvalue, right: rvalue) : BinaryExpression<lvalue, rvalue>(left, right) {

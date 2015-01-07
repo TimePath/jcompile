@@ -10,14 +10,16 @@ import com.timepath.quakec.ast.impl.ConstantExpression
 import com.timepath.quakec.ast.impl.ReferenceExpression
 
 abstract class Statement {
+
+    open val attributes: Map<String, Any?>
+        get() = mapOf()
+
+    open val children: MutableList<Statement> = ArrayList()
+
     /**
      * @return Nested lists, the last argument of which is an rvalue and is removed
      */
     open fun generate(ctx: GenerationContext): List<IR> = LinkedList()
-
-    abstract val text: String
-
-    val children: MutableList<Statement> = ArrayList()
 
     fun initChild<T : Statement>(elem: T, configure: (T.() -> Unit)? = null): T {
         if (configure != null)
@@ -26,17 +28,25 @@ abstract class Statement {
         return elem
     }
 
-    fun render(sb: StringBuilder, indent: String) {
+    private fun render(sb: StringBuilder, indent: String) {
         val name = this.javaClass.getSimpleName()
         if (children.isEmpty()) {
-            sb.append("${indent}<${name}/>\n")
+            sb.append("${indent}<${name}${renderAttributes()}/>\n")
         } else {
-            sb.append("${indent}<$name>\n")
+            sb.append("${indent}<$name${renderAttributes()}>\n")
             for (c in children) {
                 c.render(sb, indent + "\t")
             }
             sb.append("${indent}</${name}>\n")
         }
+    }
+
+    private fun renderAttributes(): String? {
+        val builder = StringBuilder()
+        for ((k, v) in attributes) {
+            builder.append(" ${k}=\"${v}\"")
+        }
+        return builder.toString()
     }
 
     override fun toString(): String {
@@ -57,7 +67,7 @@ fun BlockStatement.block(configure: (BlockStatement.() -> Unit)? = null): BlockS
     return initChild(BlockStatement(), configure)
 }
 
-fun BlockStatement.const(value: Any?): ConstantExpression {
+fun BlockStatement.const(value: Any): ConstantExpression {
     return ConstantExpression(value)
 }
 

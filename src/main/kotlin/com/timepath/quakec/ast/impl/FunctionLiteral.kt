@@ -4,6 +4,7 @@ import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.IR
 import com.timepath.quakec.ast.Type
+import java.util.Arrays
 
 /**
  * Replaced with a number during compilation
@@ -13,8 +14,10 @@ class FunctionLiteral(val name: String? = null,
                       val argTypes: Array<Type>? = null,
                       var block: BlockStatement? = null) : Expression() {
 
-    override val text: String
-        get() = "${returnType}(${argTypes!!.map { it.toString() }.join(", ")}) ${block!!.text}"
+    override val attributes: Map<String, Any?>
+        get() = mapOf("id" to name,
+                "returnType" to returnType,
+                "args" to Arrays.toString(argTypes))
 
     override fun generate(ctx: GenerationContext): List<IR> {
         if (name!! in ctx.registry) return super.generate(ctx)

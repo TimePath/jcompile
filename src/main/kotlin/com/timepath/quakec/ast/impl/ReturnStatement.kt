@@ -11,8 +11,8 @@ import com.timepath.quakec.ast.Expression
  */
 class ReturnStatement(val returnValue: Expression?) : Statement() {
 
-    override val text: String
-        get() = "return '\$1 \$2 \$3'"
+    override val attributes: Map<String, Any>
+        get() = mapOf()
 
     override fun generate(ctx: GenerationContext): List<IR> {
         return listOf(IR(Instruction.RETURN, array(0, 0, 0), 0))
