@@ -67,11 +67,16 @@ abstract class Expression : Statement() {
     open fun hasSideEffects(): Boolean = false
 }
 
-class BlockStatement : Statement()
+class BlockStatement(vararg args: Statement) : Statement() {
+    {
+        children.addAll(args)
+    }
+}
 
-fun ast(configure: BlockStatement.() -> Unit): BlockStatement {
+fun ast(configure: (BlockStatement.() -> Unit)? = null): BlockStatement {
     val block = BlockStatement()
-    block.configure()
+    if (configure != null)
+        block.configure()
     return block
 }
 

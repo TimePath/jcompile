@@ -444,8 +444,8 @@ expressionStatement
     ;
 
 selectionStatement
-    :   'if' 'not'? '(' expression ')' statement ('else' statement)?
-    |   'switch' '(' expression ')' statement
+    :   'if' 'not'? '(' expression ')' statement ('else' statement)?    #ifStatement
+    |   'switch' '(' expression ')' statement                           #switchStatement
     ;
 
 iterationStatement

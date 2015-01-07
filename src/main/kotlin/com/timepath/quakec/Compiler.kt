@@ -16,6 +16,8 @@ import java.util.EnumSet
 import java.util.LinkedList
 import java.awt.Dimension
 import com.timepath.quakec.vm.ProgramData
+import org.antlr.v4.runtime.tree.ParseTreeVisitor
+import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor
 
 public class Compiler {
 
@@ -124,14 +126,18 @@ public class Compiler {
             exec.submit {
                 val listener = TreePrinterListener(rules!!)
                 walker.walk(listener, tree)
-                File("out", include.path).let {
+                File("out", include.path + ".lisp").let {
                     it.getParentFile().mkdirs()
                     it.writeText(listener.toString())
                 }
             }
             exec.submit {
-                val listener = ScopeCollector()
-                walker.walk(listener, tree)
+                val listener = ASTTransform()
+                listener.visit(tree)
+                File("out", include.path + ".xml").let {
+                    it.getParentFile().mkdirs()
+                    it.writeText(listener.toString())
+                }
             }
         }
         exec.shutdown()

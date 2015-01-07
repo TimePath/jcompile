@@ -2,6 +2,8 @@ package com.timepath.quakec.ast
 
 import com.timepath.quakec.ast.impl.BinaryExpression
 import com.timepath.quakec.ast.impl.DeclarationExpression
+import com.timepath.quakec.ast.impl.ConditionalExpression
+import com.timepath.quakec.ast.impl.ConstantExpression
 
 fun main(args: Array<String>) {
 
@@ -9,6 +11,20 @@ fun main(args: Array<String>) {
         val print = const(-1)
         func(Type.Void, "test", array()) {
             def("asd")
+            this.children.add(
+                    ConditionalExpression(
+                            ConstantExpression(1),
+                            DeclarationExpression("yay")
+                    )
+            )
+            this.children.add(
+                    ConditionalExpression(
+                            ConstantExpression(2),
+                            BlockStatement(
+                                    DeclarationExpression("yay2")
+                            )
+                    )
+            )
             call(print) {
                 arg(BinaryExpression.Add(
                         ref("asd"),
