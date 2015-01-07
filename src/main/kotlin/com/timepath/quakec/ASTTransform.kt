@@ -8,55 +8,92 @@ import com.timepath.quakec.ast.Type
 import com.timepath.quakec.ast.impl.DeclarationExpression
 import com.timepath.quakec.ast.impl.ConditionalExpression
 import com.timepath.quakec.ast.impl.ConstantExpression
+import com.timepath.quakec.ast.Expression
+import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.ast.impl.ReturnStatement
 
-class ASTTransform : QCBaseVisitor<Unit>() {
+class ASTTransform : QCBaseVisitor<Statement?>() {
 
     val stack = Stack<Statement>()
     val root = push(BlockStatement())
 
-    fun add(s: Statement) {
-        stack.peek().children.add(s)
-    }
+    fun add(s: Statement) = stack.peek().children.add(s)
 
     fun push(s: Statement): Statement {
         if (stack.size() > 0)
             add(s)
-        stack.push(s)
-        return s
+        return stack.push(s)
     }
 
-    fun pop() {
-        stack.pop()
+    fun pop(): Statement = stack.pop()
+
+    private fun debug(ctx: ParserRuleContext) {
+        val token = ctx.start
+        val source = token.getTokenSource()
+
+        val line = token.getLine()
+        val col = token.getCharPositionInLine()
+        val file = source.getSourceName()
+        println("I: {$token} $line,$col $file")
     }
 
-    override fun toString(): String {
-        return root.toStringRecursive()
+    override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext): Statement {
+        super.visitCompilationUnit(ctx)
+        return root
     }
 
-    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext) {
+    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext): Statement {
         push(BlockStatement())
         super.visitCompoundStatement(ctx)
-        pop()
+        return pop()
     }
 
-    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext) {
+    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): Statement {
         val id = ctx.declarator().getText()
         val functionLiteral = FunctionLiteral(id, Type.Void, array())
         push(functionLiteral)
         super.visitChildren(ctx.compoundStatement())
-        pop()
+        return pop()
     }
 
-    override fun visitDeclaration(ctx: QCParser.DeclarationContext) {
+    override fun visitDeclaration(ctx: QCParser.DeclarationContext): Statement? {
         val declarations = ctx.initDeclaratorList().initDeclarator()
         declarations.forEach {
             val id = it.declarator().getText()
             add(DeclarationExpression(id))
         }
         super.visitDeclaration(ctx)
+        return null
     }
 
-    override fun visitIfStatement(ctx: QCParser.IfStatementContext) {
+    override fun visitJumpStatement(ctx: QCParser.JumpStatementContext): Statement? {
+        val expr = ctx.expression()
+        if (expr != null) {
+            return ReturnStatement(visitExpression(expr) as Expression)
+        }
+        return ReturnStatement(null) // TODO: break, continue
+    }
+
+    override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext): Statement? {
+        val expr = ctx.expression()
+        if (expr != null) {
+            return visitExpression(expr)
+        }
+        // redundant semicolon
+        return null
+    }
+
+    override fun visitExpression(ctx: QCParser.ExpressionContext): Statement {
+        // TODO
+        return ConstantExpression(ctx)
+    }
+
+    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): Statement? {
+        // TODO
+        return ConstantExpression(ctx)
+    }
+
+    override fun visitIfStatement(ctx: QCParser.IfStatementContext): Statement {
         val get = {(i: Int) -> ctx.statement()[i] }
         val test = ctx.expression()
         val yes = get(0)
@@ -64,19 +101,13 @@ class ASTTransform : QCBaseVisitor<Unit>() {
             1 -> null
             else -> get(1)
         }
-        // TODO: return Statement instead of Unit
-        val yesExpr = ConstantExpression(yes)
-        val noExpr = if (no != null) ConstantExpression(no) else null
-        val conditionalExpression = ConditionalExpression(ConstantExpression(test), yesExpr, noExpr)
-        push(conditionalExpression)
-        push(yesExpr)
-        yes.accept(this)
-        pop()
-        if (noExpr != null) {
-            push(noExpr)
-            no?.accept(this)
-            pop()
-        }
-        pop()
+        stack.push(BlockStatement())
+        val testExpr = test.accept(this)!!
+        val yesExpr = yes.accept(this)!!
+        val noExpr = no?.accept(this)
+        stack.pop()
+        val conditionalExpression = ConditionalExpression(testExpr as Expression, yesExpr, noExpr)
+        add(conditionalExpression)
+        return conditionalExpression
     }
 }

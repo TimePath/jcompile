@@ -16,8 +16,6 @@ import java.util.EnumSet
 import java.util.LinkedList
 import java.awt.Dimension
 import com.timepath.quakec.vm.ProgramData
-import org.antlr.v4.runtime.tree.ParseTreeVisitor
-import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor
 
 public class Compiler {
 
@@ -120,7 +118,7 @@ public class Compiler {
             println(include.path)
             preprocessor.addInput(include.source)
             val stream = ANTLRInputStream(preview(CppReader(preprocessor)))
-            stream.name = include.name
+            stream.name = include.path
             val tree = parse(stream)
             val walker = ParseTreeWalker.DEFAULT
             exec.submit {
@@ -131,12 +129,18 @@ public class Compiler {
                     it.writeText(listener.toString())
                 }
             }
-            exec.submit {
-                val listener = ASTTransform()
-                listener.visit(tree)
-                File("out", include.path + ".xml").let {
-                    it.getParentFile().mkdirs()
-                    it.writeText(listener.toString())
+            exec.submit {(): Unit ->
+                try {
+                    val statement = tree.accept(ASTTransform())
+                    File("out", include.path + ".xml").let {
+                        it.getParentFile().mkdirs()
+                        if (statement != null) {
+                            val s = statement.toStringRecursive()
+                            it.writeText(s)
+                        }
+                    }
+                } catch (e: Throwable) {
+                    e.printStackTrace()
                 }
             }
         }
