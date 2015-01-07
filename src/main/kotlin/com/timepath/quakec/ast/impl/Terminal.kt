@@ -31,3 +31,5 @@ open class ReferenceExpression(val id: String) : Expression() {
     override fun toString(): String = id
 
 }
+
+class DeclarationExpression(id: String) : ReferenceExpression(id)

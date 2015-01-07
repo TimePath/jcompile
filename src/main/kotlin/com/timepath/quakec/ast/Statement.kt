@@ -1,6 +1,5 @@
 package com.timepath.quakec.ast
 
-import java.util.LinkedList
 import java.util.ArrayList
 import com.timepath.quakec.ast.impl.BlockStatement
 import com.timepath.quakec.ast.impl.FunctionLiteral
@@ -8,6 +7,7 @@ import com.timepath.quakec.ast.impl.FunctionCall
 import com.timepath.quakec.ast.impl.ReturnStatement
 import com.timepath.quakec.ast.impl.ConstantExpression
 import com.timepath.quakec.ast.impl.ReferenceExpression
+import com.timepath.quakec.ast.impl.DeclarationExpression
 
 abstract class Statement {
 
@@ -66,18 +66,23 @@ fun BlockStatement.const(value: Any): ConstantExpression {
     return ConstantExpression(value)
 }
 
+fun BlockStatement.def(name: String): DeclarationExpression {
+    return initChild(DeclarationExpression(name))
+}
+
 fun BlockStatement.ref(id: String): ReferenceExpression {
     return ReferenceExpression(id)
 }
 
 fun BlockStatement.func(returnType: Type, name: String, argTypes: Array<Type>,
                         configure: (BlockStatement.() -> Unit)? = null): FunctionLiteral {
-    val functionLiteral = FunctionLiteral(name, returnType, argTypes)
-    initChild(functionLiteral)
-    val block = BlockStatement()
-    functionLiteral.initChild(block, configure)
-    functionLiteral.block = block
+    val functionLiteral = initChild(FunctionLiteral(name, returnType, argTypes))
+    functionLiteral.initChild(BlockStatement(), configure)
     return functionLiteral
+}
+
+fun BlockStatement.ret(returnValue: Expression? = null): ReturnStatement {
+    return initChild(ReturnStatement(returnValue))
 }
 
 fun BlockStatement.call(function: Expression, configure: (FunctionCall.() -> Unit)? = null): FunctionCall {
@@ -86,8 +91,4 @@ fun BlockStatement.call(function: Expression, configure: (FunctionCall.() -> Uni
 
 fun FunctionCall.arg(expr: Expression): Expression {
     return initChild(expr)
-}
-
-fun BlockStatement.ret(returnValue: Expression? = null): ReturnStatement {
-    return initChild(ReturnStatement(returnValue))
 }
