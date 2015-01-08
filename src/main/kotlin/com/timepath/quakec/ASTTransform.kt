@@ -14,6 +14,7 @@ import com.timepath.quakec.ast.impl.BinaryExpression
 import com.timepath.quakec.ast.impl.ConditionalExpression
 import com.timepath.quakec.ast.impl.ConstantExpression
 import com.timepath.quakec.ast.impl.FunctionCall
+import org.antlr.v4.runtime.tree.TerminalNode
 
 class ASTTransform : QCBaseVisitor<Statement?>() {
 
@@ -129,7 +130,7 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
             val right = visit(ctx.assignmentExpression())
             val ref = left as ReferenceExpression
             val value = right as Expression
-            val assign = { (value: Expression): Expression ->
+            val assign = {(value: Expression): Expression ->
                 BinaryExpression.Assign(ref, value)
             }
             return when (ctx.op.getType()) {
@@ -327,6 +328,14 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
         val text = ctx.getText()
         return when {
             ctx.Identifier() != null -> ReferenceExpression(text)
+            ctx.StringLiteral().isNotEmpty() -> {
+                val concat = ctx.StringLiteral()
+                        .fold("", {(ret: String, string: TerminalNode) ->
+                            val s = string.getText()
+                            ret + s.substring(1, s.length() - 1)
+                        })
+                ConstantExpression(concat)
+            }
             else -> ConstantExpression(text)
         }
     }
