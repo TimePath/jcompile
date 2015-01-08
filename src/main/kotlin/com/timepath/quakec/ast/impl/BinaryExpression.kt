@@ -54,6 +54,11 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
         override val op = "!="
     }
 
+    class BitXor(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.NE_FLOAT // TODO
+        override val op = "^"
+    }
+
     class Lt(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.LT
         override val op = "<"

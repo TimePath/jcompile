@@ -1,16 +1,18 @@
 package com.timepath.quakec
 
-import java.util.Stack
-import com.timepath.quakec.ast.BlockStatement
 import com.timepath.quakec.ast.Statement
-import com.timepath.quakec.ast.impl.FunctionLiteral
+import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.ast.BlockStatement
+import com.timepath.quakec.ast.Expression
+import java.util.Stack
 import com.timepath.quakec.ast.Type
+import com.timepath.quakec.ast.impl.FunctionLiteral
 import com.timepath.quakec.ast.impl.DeclarationExpression
+import com.timepath.quakec.ast.impl.ReturnStatement
+import com.timepath.quakec.ast.impl.ReferenceExpression
+import com.timepath.quakec.ast.impl.BinaryExpression
 import com.timepath.quakec.ast.impl.ConditionalExpression
 import com.timepath.quakec.ast.impl.ConstantExpression
-import com.timepath.quakec.ast.Expression
-import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.quakec.ast.impl.ReturnStatement
 
 class ASTTransform : QCBaseVisitor<Statement?>() {
 
@@ -93,14 +95,150 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
         return null
     }
 
-    override fun visitExpression(ctx: QCParser.ExpressionContext): Statement {
-        // TODO
+    val QCParser.AssignmentExpressionContext.terminal: Boolean get() = assignmentExpression() != null
+
+    override fun visitAssignmentExpression(ctx: QCParser.AssignmentExpressionContext): Statement? {
+        if (ctx.terminal) {
+            // TODO
+            val left = ReferenceExpression("TODO: lvalue")
+            val right = visit(ctx.assignmentExpression())
+            return BinaryExpression.Assign(left, right as Expression)
+        }
+        return super.visitAssignmentExpression(ctx)
+    }
+
+    val QCParser.ConditionalExpressionContext.terminal: Boolean get() = expression().size() > 1
+
+    override fun visitConditionalExpression(ctx: QCParser.ConditionalExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val condition = visit(ctx.logicalOrExpression())
+            val yes = visit(ctx.expression(0))
+            val no = visit(ctx.expression(1))
+            return ConditionalExpression(condition as Expression, yes!!, no)
+        }
+        return super.visitConditionalExpression(ctx)
+    }
+
+    val QCParser.LogicalOrExpressionContext.terminal: Boolean get() = logicalOrExpression() != null
+
+    override fun visitLogicalOrExpression(ctx: QCParser.LogicalOrExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.logicalOrExpression())
+            val right = visit(ctx.logicalAndExpression())
+            return BinaryExpression.Or(left as Expression, right as Expression)
+        }
+        return super.visitLogicalOrExpression(ctx)
+    }
+
+    val QCParser.LogicalAndExpressionContext.terminal: Boolean get() = logicalAndExpression() != null
+
+    override fun visitLogicalAndExpression(ctx: QCParser.LogicalAndExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.logicalAndExpression())
+            val right = visit(ctx.inclusiveOrExpression())
+            return BinaryExpression.And(left as Expression, right as Expression)
+        }
+        return super.visitLogicalAndExpression(ctx)
+    }
+
+    val QCParser.InclusiveOrExpressionContext.terminal: Boolean get() = inclusiveOrExpression() != null
+
+    override fun visitInclusiveOrExpression(ctx: QCParser.InclusiveOrExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.inclusiveOrExpression())
+            val right = visit(ctx.exclusiveOrExpression())
+            return BinaryExpression.BitOr(left as Expression, right as Expression)
+        }
+        return super.visitInclusiveOrExpression(ctx)
+    }
+
+    val QCParser.ExclusiveOrExpressionContext.terminal: Boolean get() = exclusiveOrExpression() != null
+
+    override fun visitExclusiveOrExpression(ctx: QCParser.ExclusiveOrExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.exclusiveOrExpression())
+            val right = visit(ctx.andExpression())
+            return BinaryExpression.BitXor(left as Expression, right as Expression)
+        }
+        return super.visitExclusiveOrExpression(ctx)
+    }
+
+    val QCParser.AndExpressionContext.terminal: Boolean get() = andExpression() != null
+
+    override fun visitAndExpression(ctx: QCParser.AndExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.andExpression())
+            val right = visit(ctx.equalityExpression())
+            return BinaryExpression.BitAnd(left as Expression, right as Expression)
+        }
+        return super.visitAndExpression(ctx)
+    }
+
+    val QCParser.EqualityExpressionContext.terminal: Boolean get() = equalityExpression() != null
+
+    override fun visitEqualityExpression(ctx: QCParser.EqualityExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.equalityExpression())
+            val right = visit(ctx.relationalExpression())
+            // TODO
+            return BinaryExpression.Eq(left as Expression, right as Expression)
+        }
+        return super.visitEqualityExpression(ctx)
+    }
+
+    val QCParser.RelationalExpressionContext.terminal: Boolean get() = relationalExpression() != null
+
+    override fun visitRelationalExpression(ctx: QCParser.RelationalExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.relationalExpression())
+            val right = visit(ctx.shiftExpression())
+            // TODO
+            return BinaryExpression.Le(left as Expression, right as Expression)
+        }
+        return super.visitRelationalExpression(ctx)
+    }
+
+    val QCParser.ShiftExpressionContext.terminal: Boolean get() = shiftExpression() != null
+
+    override fun visitShiftExpression(ctx: QCParser.ShiftExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.shiftExpression())
+            val right = visit(ctx.additiveExpression())
+            // TODO
+            return BinaryExpression.Mul(left as Expression, right as Expression)
+        }
+        return super.visitShiftExpression(ctx)
+    }
+
+    val QCParser.AdditiveExpressionContext.terminal: Boolean get() = additiveExpression() != null
+
+    override fun visitAdditiveExpression(ctx: QCParser.AdditiveExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.additiveExpression())
+            val right = visit(ctx.multiplicativeExpression())
+            // TODO
+            return BinaryExpression.Add(left as Expression, right as Expression)
+        }
+        return super.visitAdditiveExpression(ctx)
+    }
+
+    val QCParser.MultiplicativeExpressionContext.terminal: Boolean get() = multiplicativeExpression() != null
+
+    override fun visitMultiplicativeExpression(ctx: QCParser.MultiplicativeExpressionContext): Statement? {
+//        if (ctx.terminal) {
+            // TODO
+            return ReferenceExpression("TODO: Unary")
+//        }
+//        return super.visitMultiplicativeExpression(ctx)
+    }
+
+    override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): Statement {
         return ConstantExpression(ctx)
     }
 
     override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): Statement? {
         // TODO
-        return ConstantExpression(ctx)
+        return ConstantExpression("TODO: Iteration")
     }
 
     override fun visitIfStatement(ctx: QCParser.IfStatementContext): Statement {
