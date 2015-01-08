@@ -168,13 +168,13 @@ unaryExpression
     ;
 
 postfixExpression
-    :   primaryExpression
-    |   postfixExpression '(' argumentExpressionList? ')'
-    |   postfixExpression '[' expression ']'
-    |   postfixExpression '.' Identifier
-    |   postfixExpression '.' '(' expression ')'
-    |   postfixExpression ('++' | '--')
-    |   '(' typeName ')' '{' initializerList ','? '}'
+    :   primaryExpression                                   #postfixPrimary
+    |   postfixExpression '(' argumentExpressionList? ')'   #postfixCall
+    |   postfixExpression '[' expression ']'                #postfixIndex
+    |   postfixExpression '.' Identifier                    #postfixField
+    |   postfixExpression '.' '(' expression ')'            #postfixAddress
+    |   postfixExpression ('++' | '--')                     #postfixIncr
+    |   '(' typeName ')' '{' initializerList ','? '}'       #postfixInit
     ;
 
 argumentExpressionList

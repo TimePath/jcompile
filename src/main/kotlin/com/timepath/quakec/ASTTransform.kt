@@ -13,6 +13,7 @@ import com.timepath.quakec.ast.impl.ReferenceExpression
 import com.timepath.quakec.ast.impl.BinaryExpression
 import com.timepath.quakec.ast.impl.ConditionalExpression
 import com.timepath.quakec.ast.impl.ConstantExpression
+import com.timepath.quakec.ast.impl.FunctionCall
 
 class ASTTransform : QCBaseVisitor<Statement?>() {
 
@@ -86,6 +87,31 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
         return ReturnStatement(null) // TODO: break, continue
     }
 
+    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): Statement? {
+        // TODO
+        return ConstantExpression("TODO: Iteration")
+    }
+
+    override fun visitIfStatement(ctx: QCParser.IfStatementContext): Statement {
+        val get = {(i: Int) -> ctx.statement()[i] }
+        val test = ctx.expression()
+        val yes = get(0)
+        val no = when (ctx.statement().size()) {
+            1 -> null
+            else -> get(1)
+        }
+        val s = stack.size()
+        stack.push(BlockStatement())
+        val testExpr = test.accept(this)!!
+        val yesExpr = yes.accept(this)!!
+        val noExpr = no?.accept(this)
+        while (stack.size() > s)
+            stack.pop()
+        val conditionalExpression = ConditionalExpression(testExpr as Expression, yesExpr, noExpr)
+        add(conditionalExpression)
+        return conditionalExpression
+    }
+
     override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext): Statement? {
         val expr = ctx.expression()
         if (expr != null) {
@@ -107,7 +133,7 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
         return super.visitAssignmentExpression(ctx)
     }
 
-    val QCParser.ConditionalExpressionContext.terminal: Boolean get() = expression().size() > 1
+    val QCParser.ConditionalExpressionContext.terminal: Boolean get() = expression().isNotEmpty()
 
     override fun visitConditionalExpression(ctx: QCParser.ConditionalExpressionContext): Statement? {
         if (ctx.terminal) {
@@ -225,39 +251,62 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
     val QCParser.MultiplicativeExpressionContext.terminal: Boolean get() = multiplicativeExpression() != null
 
     override fun visitMultiplicativeExpression(ctx: QCParser.MultiplicativeExpressionContext): Statement? {
-//        if (ctx.terminal) {
+        if (ctx.terminal) {
+            val left = visit(ctx.multiplicativeExpression())
+            val right = visit(ctx.castExpression())
             // TODO
-            return ReferenceExpression("TODO: Unary")
-//        }
-//        return super.visitMultiplicativeExpression(ctx)
+            return BinaryExpression.Mul(left as Expression, right as Expression)
+        }
+        return super.visitMultiplicativeExpression(ctx)
+    }
+
+    val QCParser.CastExpressionContext.terminal: Boolean get() = castExpression() != null
+
+    override fun visitCastExpression(ctx: QCParser.CastExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.castExpression())
+            val right = visit(ctx.typeName())
+            // TODO
+            //            return BinaryExpression.Cast(left as Expression, right as Expression)
+            return left
+        }
+        return super.visitCastExpression(ctx)
+    }
+
+    val QCParser.UnaryExpressionContext.terminal: Boolean get() = unaryExpression() != null
+
+    override fun visitUnaryExpression(ctx: QCParser.UnaryExpressionContext): Statement? {
+        if (ctx.terminal) {
+            val left = visit(ctx.unaryExpression())
+            // TODO
+            return left
+        }
+        val typeName = ctx.typeName()
+        if (typeName != null) {
+            return ReferenceExpression("TODO: sizeof(${typeName.getText()})")
+        }
+        return super.visitUnaryExpression(ctx)
+    }
+
+    override fun visitPostfixPrimary(ctx: QCParser.PostfixPrimaryContext): Statement? {
+        val left = visit(ctx.primaryExpression())
+        return left
+    }
+
+    override fun visitPostfixCall(ctx: QCParser.PostfixCallContext): Statement? {
+        val left = visit(ctx.postfixExpression())
+        val functionCall = FunctionCall(left as Expression)
+        val right = ctx.argumentExpressionList()
+                ?.assignmentExpression()
+                ?.map { visit(it) }
+                ?.filterNotNull()
+        if (right != null) {
+            functionCall.children.addAll(right)
+        }
+        return functionCall
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): Statement {
-        return ConstantExpression(ctx)
-    }
-
-    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): Statement? {
-        // TODO
-        return ConstantExpression("TODO: Iteration")
-    }
-
-    override fun visitIfStatement(ctx: QCParser.IfStatementContext): Statement {
-        val get = {(i: Int) -> ctx.statement()[i] }
-        val test = ctx.expression()
-        val yes = get(0)
-        val no = when (ctx.statement().size()) {
-            1 -> null
-            else -> get(1)
-        }
-        val s = stack.size()
-        stack.push(BlockStatement())
-        val testExpr = test.accept(this)!!
-        val yesExpr = yes.accept(this)!!
-        val noExpr = no?.accept(this)
-        while (stack.size() > s)
-            stack.pop()
-        val conditionalExpression = ConditionalExpression(testExpr as Expression, yesExpr, noExpr)
-        add(conditionalExpression)
-        return conditionalExpression
+        return ConstantExpression(ctx.getText())
     }
 }
