@@ -42,10 +42,20 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
         return root
     }
 
-    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext): Statement {
+    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext): Statement? {
         push(BlockStatement())
         super.visitCompoundStatement(ctx)
         return pop()
+    }
+
+    override fun visitBlockItemList(ctx: QCParser.BlockItemListContext): Statement? {
+        ctx.children?.forEach {
+            val statement = it.accept(this)
+            if (statement != null && statement !is BlockStatement) {
+                add(statement)
+            }
+        }
+        return null
     }
 
     override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): Statement {
@@ -101,11 +111,13 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
             1 -> null
             else -> get(1)
         }
+        val s = stack.size()
         stack.push(BlockStatement())
         val testExpr = test.accept(this)!!
         val yesExpr = yes.accept(this)!!
         val noExpr = no?.accept(this)
-        stack.pop()
+        while (stack.size() > s)
+            stack.pop()
         val conditionalExpression = ConditionalExpression(testExpr as Expression, yesExpr, noExpr)
         add(conditionalExpression)
         return conditionalExpression
