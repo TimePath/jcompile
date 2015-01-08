@@ -128,11 +128,15 @@ public class Compiler {
             val tree = parse(stream)
             val walker = ParseTreeWalker.DEFAULT
             exec.submit {
-                val listener = TreePrinterListener(rules!!)
-                walker.walk(listener, tree)
-                File("out", include.path + ".lisp").let {
-                    it.getParentFile().mkdirs()
-                    it.writeText(listener.toString())
+                try {
+                    val listener = TreePrinterListener(rules!!)
+                    walker.walk(listener, tree)
+                    File("out", include.path + ".lisp").let {
+                        it.getParentFile().mkdirs()
+                        it.writeText(listener.toString())
+                    }
+                } catch (e: Throwable) {
+                    e.printStackTrace()
                 }
             }
             exec.submit {(): Unit ->
