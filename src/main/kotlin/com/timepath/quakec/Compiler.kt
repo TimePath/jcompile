@@ -16,6 +16,7 @@ import java.util.EnumSet
 import java.util.LinkedList
 import java.awt.Dimension
 import com.timepath.quakec.vm.ProgramData
+import com.timepath.quakec.Compiler.Include
 
 public class Compiler {
 
@@ -63,6 +64,11 @@ public class Compiler {
 
     public fun include(input: String, name: String): Compiler {
         includes.add(Include(input, name))
+        return this
+    }
+
+    public fun include(file: File): Compiler {
+        includes.add(Include(file))
         return this
     }
 
@@ -151,20 +157,42 @@ public class Compiler {
 }
 
 fun main(args: Array<String>) {
-    val start = Date()
-    val data = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/data/xonotic-data.pk3dir"
-    val defs = linkedMapOf(
-            "menu" to "MENUQC",
-            "client" to "CSQC",
-            "server" to "SVQC"
-    )
-    defs.keySet().forEach { project ->
-        val part = Date()
-        Compiler()
-                .includeFrom(File("$data/qcsrc/$project/progs.src"))
-                .define(defs[project])
-                .compile()
-        println("Project time: ${(Date().getTime() - part.getTime()).toDouble() / 1000} seconds")
+    val time = {(name: String, action: () -> Unit) ->
+        val start = Date()
+        action()
+        println("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
     }
-    println("Total time: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
+    val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
+    time("Total time") {
+        val defs = linkedMapOf(
+                "menu" to "MENUQC",
+                "client" to "CSQC",
+                "server" to "SVQC"
+        )
+        defs.keySet().forEach { project ->
+            time("Project time") {
+                Compiler()
+                        .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/$project/progs.src"))
+                        .define(defs[project])
+                        .compile()
+            }
+        }
+    }
+    time("GMQCC tests") {
+        val gmqcc = Compiler()
+                .define("GMQCC")
+                .define("__STD_GMQCC__")
+        gmqcc.preprocessor.addFeatures(
+                Feature.DIGRAPHS,
+                Feature.TRIGRAPHS
+        )
+        val include = {(filter: (file: File) -> Boolean) ->
+            File(xonotic, "gmqcc/tests").listFiles(filter)?.forEach {
+                gmqcc.include(it)
+            }
+        }
+        include { it.name.endsWith(".qh") }
+        include { it.name.endsWith(".qc") }
+        gmqcc.compile()
+    }
 }
