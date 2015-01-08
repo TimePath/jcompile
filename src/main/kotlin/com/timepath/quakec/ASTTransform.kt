@@ -125,10 +125,27 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
 
     override fun visitAssignmentExpression(ctx: QCParser.AssignmentExpressionContext): Statement? {
         if (ctx.terminal) {
-            // TODO
-            val left = ReferenceExpression("TODO: lvalue")
+            val left = visit(ctx.unaryExpression())
             val right = visit(ctx.assignmentExpression())
-            return BinaryExpression.Assign(left, right as Expression)
+            val ref = left as ReferenceExpression
+            val value = right as Expression
+            val assign = { (value: Expression): Expression ->
+                BinaryExpression.Assign(ref, value)
+            }
+            return when (ctx.op.getType()) {
+                QCParser.Assign -> assign(value)
+                QCParser.OrAssign -> assign(BinaryExpression.BitOr(ref, value))
+                QCParser.XorAssign -> assign(BinaryExpression.BitXor(ref, value))
+                QCParser.AndAssign -> assign(BinaryExpression.BitAnd(ref, value))
+                QCParser.LeftShiftAssign -> assign(BinaryExpression.Lsh(ref, value))
+                QCParser.RightShiftAssign -> assign(BinaryExpression.Rsh(ref, value))
+                QCParser.PlusAssign -> assign(BinaryExpression.Add(ref, value))
+                QCParser.MinusAssign -> assign(BinaryExpression.Sub(ref, value))
+                QCParser.StarAssign -> assign(BinaryExpression.Mul(ref, value))
+                QCParser.DivAssign -> assign(BinaryExpression.Div(ref, value))
+                QCParser.ModAssign -> assign(BinaryExpression.Mod(ref, value))
+                else -> null
+            }
         }
         return super.visitAssignmentExpression(ctx)
     }
@@ -307,6 +324,10 @@ class ASTTransform : QCBaseVisitor<Statement?>() {
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): Statement {
-        return ConstantExpression(ctx.getText())
+        val text = ctx.getText()
+        return when {
+            ctx.Identifier() != null -> ReferenceExpression(text)
+            else -> ConstantExpression(text)
+        }
     }
 }

@@ -24,24 +24,29 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
         override val op = "="
     }
 
-    class Add(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.ADD_FLOAT
-        override val op = "+"
+    class Or(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.OR
+        override val op = "||"
     }
 
-    class Sub(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.SUB_FLOAT
-        override val op = "-"
+    class And(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.AND
+        override val op = "&&"
     }
 
-    class Mul(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.MUL_FLOAT
-        override val op = "*"
+    class BitOr(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.BITOR
+        override val op = "|"
     }
 
-    class Div(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.DIV_FLOAT
-        override val op = "/"
+    class BitXor(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.NE_FLOAT // TODO
+        override val op = "^"
+    }
+
+    class BitAnd(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.BITAND
+        override val op = "&"
     }
 
     class Eq(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
@@ -54,9 +59,14 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
         override val op = "!="
     }
 
-    class BitXor(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.NE_FLOAT // TODO
-        override val op = "^"
+    class Lsh(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.ADD_FLOAT // TODO
+        override val op = "<<"
+    }
+
+    class Rsh(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.ADD_FLOAT // TODO
+        override val op = ">>"
     }
 
     class Lt(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
@@ -79,23 +89,28 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
         override val op = ">="
     }
 
-    class And(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.AND
-        override val op = "&&"
+    class Add(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.ADD_FLOAT
+        override val op = "+"
     }
 
-    class BitAnd(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.BITAND
-        override val op = "&"
+    class Sub(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.SUB_FLOAT
+        override val op = "-"
     }
 
-    class Or(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.OR
-        override val op = "||"
+    class Mul(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.MUL_FLOAT
+        override val op = "*"
     }
 
-    class BitOr(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
-        override val instr = Instruction.BITOR
-        override val op = "|"
+    class Div(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.DIV_FLOAT
+        override val op = "/"
+    }
+
+    class Mod(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.DIV_FLOAT // TODO
+        override val op = "%"
     }
 }

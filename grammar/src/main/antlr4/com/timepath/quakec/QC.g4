@@ -80,7 +80,7 @@ expression
 assignmentExpression
     :   constantExpression
     |   unaryExpression
-        ( '='
+        op=( '='
         | '*='
         | '/='
         | '%='
