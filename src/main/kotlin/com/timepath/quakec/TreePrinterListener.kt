@@ -14,11 +14,13 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
     var level = 0
         set(value: Int) {
             val tab = "  "
-            val diff = value - $level
+            val diff = value// - $level
             if (diff > 0)
                 levelString += tab * diff
-            else
-                levelString = levelString.substring(0, tab.length() * value)
+            else {
+                val end = levelString.length() + tab.length() * diff
+                levelString = levelString.substring(0, end)
+            }
         }
 
     override fun visitTerminal(node: TerminalNode) {
