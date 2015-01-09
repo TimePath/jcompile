@@ -20,6 +20,7 @@ import com.timepath.quakec.Compiler.Include
 import com.timepath.quakec.ast.GenerationContext
 import com.timepath.quakec.ast.BlockStatement
 import com.timepath.quakec.ast.Statement
+import com.timepath.quakec.ast.impl.DeclarationExpression
 
 public class Compiler {
 
@@ -128,7 +129,7 @@ public class Compiler {
             Executors.newSingleThreadExecutor()
         else
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
-        val roots = linkedListOf<Statement>()
+        val roots = linkedListOf<List<Statement>>()
         includes.forEach { include ->
             println(include.path)
             preprocessor.addInput(include.source)
@@ -157,7 +158,7 @@ public class Compiler {
                         it.writeText(s)
                     }
 //                    synchronized(roots) {
-                        roots.addAll(root.children)
+                        roots.add(root.children)
 //                    }
                 } catch (e: Throwable) {
                     e.printStackTrace()
@@ -166,7 +167,7 @@ public class Compiler {
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
-        val ctx = GenerationContext(roots)
+        val ctx = GenerationContext(roots.flatMap { it })
         val asm = ctx.generate()
         File("out", "asm").let {
             it.getParentFile().mkdirs()
@@ -174,6 +175,14 @@ public class Compiler {
                 if (!ir.dummy)
                     it.appendText(ir.toString() + '\n')
             }
+        }
+        File("out", "unit.xml").let {
+            it.getParentFile().mkdirs()
+
+            val s = BlockStatement(includes.zip(roots).flatMap {
+                listOf(DeclarationExpression("__FILE__ = ${it.first.path}")) + it.second
+            }).toStringRecursive()
+            it.writeText(s)
         }
         return data
     }

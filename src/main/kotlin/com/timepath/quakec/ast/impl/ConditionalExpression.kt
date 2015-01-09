@@ -25,4 +25,6 @@ class ConditionalExpression(val test: Expression,
         return if (result.toBoolean()) eval(yes) else eval(no)
     }
 
+    override fun toString(): String = "($test ? $yes : $no)"
+
 }

@@ -17,4 +17,6 @@ class FunctionCall(val function: Expression? = null, newChildren: List<Statement
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to function)
 
+    override fun toString(): String = "$function(${args.joinToString(", ")})"
+
 }
