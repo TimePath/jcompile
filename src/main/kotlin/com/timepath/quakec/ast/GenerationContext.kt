@@ -108,10 +108,13 @@ class GenerationContext(val roots: List<Statement>) {
     private fun Statement.enter() {
         println ("${"> > " repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
         when (this) {
-            is BlockStatement -> {
-                registry.push()
+            is FunctionLiteral -> {
+                if (id != null && id in registry) {
+                    warn("redefining $id")
+                }
             }
             is DeclarationExpression -> {
+                // do nothing
             }
             is ReferenceExpression -> {
                 if (id !in registry) {
@@ -122,46 +125,45 @@ class GenerationContext(val roots: List<Statement>) {
     }
 
     private fun Statement.exit() {
-        println ("${" < <" repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
         when (this) {
             is BlockStatement -> {
                 registry.pop()
             }
             is FunctionLiteral -> {
-                if (id != null && id in registry) {
-                    warn("redefining $id")
-                }
+                registry.pop()
             }
         }
+        println ("${" < <" repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
     }
 
     private fun Statement.generate(): List<IR> {
         this.enter()
-        when (this) {
+        val ret: List<IR> = when (this) {
             is BlockStatement -> {
-                return children.flatMap {
+                registry.push()
+                children.flatMap {
                     it.generate()
                 }
             }
             is FunctionLiteral -> {
                 val global = registry.register(id)
-                return (children.flatMap { it.generate() }
+                registry.push()
+                (children.flatMap { it.generate() }
                         + IR(ret = global, dummy = true))
             }
             is ConstantExpression -> {
                 val global = registry.register(null, value)
-                return listOf(
+                listOf(
                         IR(ret = global, dummy = true))
             }
             is DeclarationExpression -> {
                 val global = registry.register(id)
-                return listOf(
+                listOf(
                         IR(ret = global, dummy = true))
             }
             is ReferenceExpression -> {
                 val global = registry[id]!!
-                return listOf(
-                        IR(ret = global, dummy = true))
+                listOf(IR(ret = global, dummy = true))
             }
             is BinaryExpression.Assign -> {
                 // ast:
@@ -170,7 +172,7 @@ class GenerationContext(val roots: List<Statement>) {
                 // b (=) a
                 val genL = left.generate()
                 val genR = right.generate()
-                return (genL + genR
+                (genL + genR
                         + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, this.toString()))
             }
             is BinaryExpression<*, *> -> {
@@ -181,12 +183,12 @@ class GenerationContext(val roots: List<Statement>) {
                 val genL = left.generate()
                 val genR = right.generate()
                 val global = registry.register(null)
-                return (genL + genR
+                (genL + genR
                         + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
             }
             is ConditionalExpression -> {
                 // TODO
-                return test.generate()
+                test.generate()
             }
             is FunctionCall -> {
                 val args = args.map { it.generate() }
@@ -198,18 +200,19 @@ class GenerationContext(val roots: List<Statement>) {
                     val param = Instruction.OFS_PARAM(i++)
                     IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
                 }
-                return (args.flatMap { it }
+                (args.flatMap { it }
                         + prepare
                         + listOf(IR(instr(i), array(function!!.generate().last().ret), Instruction.OFS_PARAM(-1)))
                         )
             }
             is ReturnStatement -> {
-                return listOf(
+                listOf(
                         IR(Instruction.RETURN, array(0, 0, 0), 0))
             }
+            else -> emptyList()
         }
         this.exit()
-        return emptyList()
+        return ret
     }
 
 }
