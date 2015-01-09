@@ -214,6 +214,7 @@ staticAssertDeclaration
 
 declaration
     :   declarationSpecifiers initDeclaratorList ';'
+    |   enumSpecifier
     |   staticAssertDeclaration
     ;
 
@@ -298,7 +299,7 @@ structDeclarator
     ;
 
 enumSpecifier
-    :   'enum' Identifier? '{' enumeratorList ','? '}'
+    :   'enum' Identifier? (':' enumType=Identifier)? '{' enumeratorList ','? '}'
     |   'enum' Identifier
     ;
 
