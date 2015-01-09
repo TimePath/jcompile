@@ -17,6 +17,9 @@ import java.util.LinkedList
 import java.awt.Dimension
 import com.timepath.quakec.vm.ProgramData
 import com.timepath.quakec.Compiler.Include
+import com.timepath.quakec.ast.GenerationContext
+import com.timepath.quakec.ast.BlockStatement
+import com.timepath.quakec.ast.Statement
 
 public class Compiler {
 
@@ -120,6 +123,7 @@ public class Compiler {
             Executors.newSingleThreadExecutor()
         else
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
+        val roots = linkedListOf<Statement>()
         includes.forEach { include ->
             println(include.path)
             preprocessor.addInput(include.source)
@@ -139,15 +143,16 @@ public class Compiler {
                     e.printStackTrace()
                 }
             }
-            exec.submit {(): Unit ->
+            exec.submit {
                 try {
-                    val statement = tree.accept(ASTTransform())
+                    val root = tree.accept(ASTTransform())[0]
                     File("out", include.path + ".xml").let {
                         it.getParentFile().mkdirs()
-                        if (statement != null) {
-                            val s = statement.toStringRecursive()
-                            it.writeText(s)
-                        }
+                        val s = root.toStringRecursive()
+                        it.writeText(s)
+                    }
+                    synchronized(roots) {
+                        roots.add(root)
                     }
                 } catch (e: Throwable) {
                     e.printStackTrace()
@@ -156,6 +161,15 @@ public class Compiler {
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
+        val ctx = GenerationContext(roots)
+        val asm = ctx.generate()
+        File("out", "asm").let {
+            it.getParentFile().mkdirs()
+            asm.forEach { ir ->
+                if (!ir.dummy)
+                    it.appendText(ir.toString() + '\n')
+            }
+        }
         return data
     }
 }

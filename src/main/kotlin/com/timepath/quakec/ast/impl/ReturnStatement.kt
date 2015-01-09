@@ -1,9 +1,6 @@
 package com.timepath.quakec.ast.impl
 
-import com.timepath.quakec.ast.GenerationContext
-import com.timepath.quakec.ast.IR
 import com.timepath.quakec.ast.Statement
-import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.ast.Expression
 
 /**

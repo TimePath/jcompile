@@ -12,8 +12,7 @@ import com.timepath.quakec.ast.impl.ReturnStatement
 import com.timepath.quakec.ast.impl.DeclarationExpression
 import java.util.HashMap
 
-
-class GenerationContext(val root: BlockStatement) {
+class GenerationContext(val roots: List<Statement>) {
 
     val registry: Registry = Registry()
 
@@ -76,7 +75,7 @@ class GenerationContext(val root: BlockStatement) {
     }
 
     fun generate(): List<IR> {
-        return root.generate()
+        return BlockStatement(roots).generate()
     }
 
     private fun error(msg: String) {
@@ -187,7 +186,7 @@ class GenerationContext(val root: BlockStatement) {
             }
         }
         this.exit()
-        return listOf()
+        return emptyList()
     }
 
 }

@@ -2,11 +2,8 @@ package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.Expression as rvalue
 import com.timepath.quakec.ast.impl.ReferenceExpression as lvalue
-import com.timepath.quakec.ast.GenerationContext
-import com.timepath.quakec.ast.IR
 import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.ast.Statement
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
                                                                 val right: R) : rvalue() {
@@ -14,8 +11,10 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
     abstract val instr: Instruction
     abstract val op: String
 
-    override val children: MutableList<Statement>
-        get() = arrayListOf(left, right)
+    {
+        mutableChildren.add(left)
+        mutableChildren.add(right)
+    }
 
     override fun toString(): String = "($left $op $right)"
 

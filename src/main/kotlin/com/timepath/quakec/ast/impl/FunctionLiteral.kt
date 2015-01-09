@@ -1,8 +1,6 @@
 package com.timepath.quakec.ast.impl
 
 import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.ast.GenerationContext
-import com.timepath.quakec.ast.IR
 import com.timepath.quakec.ast.Type
 import java.util.Arrays
 import com.timepath.quakec.ast.Statement
@@ -12,7 +10,12 @@ import com.timepath.quakec.ast.Statement
  */
 class FunctionLiteral(val id: String? = null,
                       val returnType: Type? = null,
-                      val argTypes: Array<Type>? = null) : Expression() {
+                      val argTypes: Array<Type>? = null,
+                      newChildren: List<Statement> = emptyList()) : Expression() {
+
+    {
+        mutableChildren.addAll(newChildren)
+    }
 
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id,

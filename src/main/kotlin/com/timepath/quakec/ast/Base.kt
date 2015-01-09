@@ -1,25 +1,32 @@
 package com.timepath.quakec.ast
 
-import java.util.ArrayList
 import com.timepath.quakec.ast.impl.FunctionLiteral
 import com.timepath.quakec.ast.impl.FunctionCall
 import com.timepath.quakec.ast.impl.ReturnStatement
 import com.timepath.quakec.ast.impl.ConstantExpression
 import com.timepath.quakec.ast.impl.ReferenceExpression
 import com.timepath.quakec.ast.impl.DeclarationExpression
+import java.util.ArrayList
 
 abstract class Statement {
 
     open val attributes: Map<String, Any?>
         get() = mapOf()
 
-    open val children: MutableList<Statement> = ArrayList()
+    protected val mutableChildren: MutableList<Statement> = ArrayList()
+
+    val children: List<Statement>
+        get() = mutableChildren
 
     fun initChild<T : Statement>(elem: T, configure: (T.() -> Unit)? = null): T {
         if (configure != null)
             elem.configure()
-        children.add(elem)
+        add(elem)
         return elem
+    }
+
+    fun add(s: Statement) {
+        mutableChildren.add(s)
     }
 
     private fun render(sb: StringBuilder = StringBuilder(), indent: String = ""): StringBuilder {
@@ -61,11 +68,13 @@ abstract class Expression : Statement() {
     open fun hasSideEffects(): Boolean = false
 }
 
-class BlockStatement(vararg args: Statement) : Statement() {
+class BlockStatement(newChildren: List<Statement> = emptyList()) : Statement() {
     {
-        children.addAll(args)
+        mutableChildren.addAll(newChildren)
     }
 }
+
+fun BlockStatement(vararg children: Statement) = BlockStatement(children.toList())
 
 fun ast(configure: (BlockStatement.() -> Unit)? = null): BlockStatement {
     val block = BlockStatement()

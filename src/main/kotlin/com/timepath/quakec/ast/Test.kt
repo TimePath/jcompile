@@ -11,13 +11,13 @@ fun main(args: Array<String>) {
         val print = const(-1)
         func(Type.Void, "test", array()) {
             def("asd")
-            this.children.add(
+            add(
                     ConditionalExpression(
                             ConstantExpression(1),
                             DeclarationExpression("yay")
                     )
             )
-            this.children.add(
+            add(
                     ConditionalExpression(
                             ConstantExpression(2),
                             BlockStatement(
@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
 
     println("=======")
 
-    val ctx = GenerationContext(root)
+    val ctx = GenerationContext(root.children)
     val asm = ctx.generate()
 
     println("=======")

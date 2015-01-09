@@ -3,20 +3,18 @@ package com.timepath.quakec.ast.impl
 import com.timepath.quakec.ast.Expression
 import com.timepath.quakec.ast.Value
 import com.timepath.quakec.ast.Statement
-import java.util.ArrayList
 
 class ConditionalExpression(val test: Expression,
                             val yes: Statement,
                             val no: Statement? = null) : Expression() {
 
-    override val children: MutableList<Statement>
-        get() {
-            val list: ArrayList<Statement> = arrayListOf(test, yes)
-            if (no != null) {
-                list.add(no)
-            }
-            return list
+    {
+        mutableChildren.add(test)
+        mutableChildren.add(yes)
+        if (no != null) {
+            mutableChildren.add(no)
         }
+    }
 
     override fun evaluate(): Value? {
         val result = test.evaluate()
