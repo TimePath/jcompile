@@ -63,7 +63,14 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val paramId = it.declarator()?.getText()
             if (paramId != null) DeclarationExpression(paramId) else null
         }.filterNotNull()
-        return listOf(FunctionLiteral(id, Type.Void, array(), params + visitChildren(ctx.compoundStatement())))
+
+        val varargId = ctx.declarator()?.parameterTypeList()?.parameterVarargs()?.Identifier()
+        val vararg: List<Statement> = if (varargId != null) {
+            listOf(DeclarationExpression(varargId.getText()))
+        } else {
+            emptyList()
+        }
+        return listOf(FunctionLiteral(id, Type.Void, array(), params + vararg + visitChildren(ctx.compoundStatement())))
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Statement> {
