@@ -33,7 +33,9 @@ abstract class Statement {
         val name = this.javaClass.getSimpleName()
         sb.append("${indent}<${name}")
         for ((k, v) in attributes) {
-            sb.append(" ${k}=\"${v.toString().replace("\"", "&quot;")}\"")
+            sb.append(" ${k}=\"${v.toString()
+                    .replace("&", "&amp;")
+                    .replace("\"", "&quot;")}\"")
         }
         if (children.isEmpty()) {
             sb.append("/>\n")
