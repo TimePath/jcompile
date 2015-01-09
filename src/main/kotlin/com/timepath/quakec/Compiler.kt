@@ -70,6 +70,11 @@ public class Compiler {
         return this
     }
 
+    {
+        val predefs = this.javaClass.getResourceAsStream("/predefs.qc")
+        includes.add(Include("predefs.qc", "<predefs>", InputLexerSource(predefs)))
+    }
+
     public fun include(file: File): Compiler {
         includes.add(Include(file))
         return this
