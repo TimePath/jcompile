@@ -74,7 +74,14 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Statement> {
-        val declarations = ctx.initDeclaratorList().initDeclarator()
+        val declarations = ctx.initDeclaratorList()?.initDeclarator()
+        if (declarations == null) {
+            val enum = ctx.enumSpecifier()
+            return enum.enumeratorList().enumerator().map {
+                val id = it.enumerationConstant().getText()
+                DeclarationExpression(id)
+            }
+        }
         return declarations.map {
             var declarator = it.declarator()
             while (declarator.declarator() != null) {
