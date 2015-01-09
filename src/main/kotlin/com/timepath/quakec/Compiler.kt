@@ -219,7 +219,9 @@ fun main(args: Array<String>) {
                 Feature.TRIGRAPHS
         )
         val include = {(filter: (file: File) -> Boolean) ->
-            File(xonotic, "gmqcc/tests").listFiles(filter)?.forEach {
+            val files = File(xonotic, "gmqcc/tests").listFiles(filter)
+            files?.sort()
+            files?.forEach {
                 gmqcc.include(it)
             }
         }
