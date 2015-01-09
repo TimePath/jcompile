@@ -12,6 +12,7 @@ import com.timepath.quakec.ast.impl.ReturnStatement
 import com.timepath.quakec.ast.impl.DeclarationExpression
 import java.util.HashMap
 import java.util.regex.Pattern
+import com.timepath.quakec.ast.impl.ConditionalExpression
 
 class GenerationContext(val roots: List<Statement>) {
 
@@ -182,6 +183,10 @@ class GenerationContext(val roots: List<Statement>) {
                 val global = registry.register(null)
                 return (genL + genR
                         + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
+            }
+            is ConditionalExpression -> {
+                // TODO
+                return test.generate()
             }
             is FunctionCall -> {
                 val args = args.map { it.generate() }

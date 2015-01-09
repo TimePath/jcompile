@@ -85,6 +85,12 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         }
     }
 
+    override fun visitLabeledStatement(ctx: QCParser.LabeledStatementContext): List<Statement> {
+        val id = ctx.Identifier()?.getText()
+        // TODO: custom node
+        return if (id != null) listOf(DeclarationExpression(id)) else emptyList()
+    }
+
     override fun visitJumpStatement(ctx: QCParser.JumpStatementContext): List<Statement> {
         // TODO: break, continue
         val expr = ctx.expression()
