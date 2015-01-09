@@ -11,6 +11,7 @@ import com.timepath.quakec.ast.impl.ReferenceExpression
 import com.timepath.quakec.ast.impl.ReturnStatement
 import com.timepath.quakec.ast.impl.DeclarationExpression
 import java.util.HashMap
+import java.util.regex.Pattern
 
 class GenerationContext(val roots: List<Statement>) {
 
@@ -27,9 +28,21 @@ class GenerationContext(val roots: List<Statement>) {
 
         inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
 
+        fun vecName(name: String): String? {
+            val vec = Pattern.compile("(.+)_[xyz]$")
+            val matcher = vec.matcher(name)
+            if (matcher.matches()) {
+                return matcher.group(1)
+            }
+            return null
+        }
+
         fun contains(name: String): Boolean {
             all {
                 if (it.lookup.containsKey(name)) {
+                    return true
+                }
+                if (it.lookup.containsKey(vecName(name))) {
                     return true
                 }
             }
@@ -41,6 +54,10 @@ class GenerationContext(val roots: List<Statement>) {
                 val i = it.lookup[name]
                 if (i != null) {
                     return i
+                }
+                val j = it.lookup[vecName(name)]
+                if (j != null) {
+                    return j
                 }
             }
             return null
@@ -70,6 +87,7 @@ class GenerationContext(val roots: List<Statement>) {
 
         {
             push()
+            register("_")
         }
 
     }

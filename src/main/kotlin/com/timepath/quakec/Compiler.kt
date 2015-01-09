@@ -143,7 +143,7 @@ public class Compiler {
                     e.printStackTrace()
                 }
             }
-            exec.submit {
+//            exec.submit {
                 try {
                     val root = tree.accept(ASTTransform())[0]
                     File("out", include.path + ".xml").let {
@@ -151,13 +151,13 @@ public class Compiler {
                         val s = root.toStringRecursive()
                         it.writeText(s)
                     }
-                    synchronized(roots) {
-                        roots.add(root)
-                    }
+//                    synchronized(roots) {
+                        roots.addAll(root.children)
+//                    }
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }
-            }
+//            }
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
