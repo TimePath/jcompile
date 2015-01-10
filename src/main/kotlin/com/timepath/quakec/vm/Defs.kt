@@ -76,6 +76,8 @@ data class ProgramData(val header: Header? = null,
                        val strings: StringManager? = null,
                        val globalData: ByteBuffer? = null) {
 
+    val entities = EntityManager(this)
+
     data class Header(
             /**
              * Latest version: 6

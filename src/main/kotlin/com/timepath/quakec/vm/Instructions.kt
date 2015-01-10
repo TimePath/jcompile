@@ -4,19 +4,22 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 fun FloatBuffer.set(index: Int, value: Float) = this.put(index, value)
+fun IntBuffer.set(index: Int, value: Int) = this.put(index, value)
+fun Float.not(): Boolean = this == 0f
+fun Int.not(): Boolean = this == 0
 fun Boolean.toFloat(): Float = if (this) 1f else 0f
 
 enum class Instruction {
 
     protected open fun stringify(it: Statement): Array<Any> = array("ILLEGAL")
-    protected open fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+    protected open fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
     }
 
     protected open fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 1
 
     DONE {
         override fun stringify(it: Statement): Array<Any> = array(it.a, ",", it.b, ",", it.c)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[OFS_PARAM(-1) + 0] = f[it.a + 0]
             f[OFS_PARAM(-1) + 1] = f[it.a + 1]
             f[OFS_PARAM(-1) + 2] = f[it.a + 2]
@@ -27,13 +30,13 @@ enum class Instruction {
 
     MUL_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] * f[it.b])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = f[it.a] * f[it.b]
         }
     }
     MUL_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a + 0] * f[it.b + 0]
                     + f[it.a + 1] * f[it.b + 1]
                     + f[it.a + 2] * f[it.b + 2])
@@ -41,173 +44,203 @@ enum class Instruction {
     }
     MUL_FLOAT_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c + 0] = (f[it.a] * f[it.b + 0])
-            f[it.c + 1] = (f[it.a] * f[it.b + 1])
-            f[it.c + 2] = (f[it.a] * f[it.b + 2])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c + 0] = f[it.a] * f[it.b + 0]
+            f[it.c + 1] = f[it.a] * f[it.b + 1]
+            f[it.c + 2] = f[it.a] * f[it.b + 2]
         }
     }
     MUL_VEC_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c + 0] = (f[it.a + 0] * f[it.b])
-            f[it.c + 1] = (f[it.a + 1] * f[it.b])
-            f[it.c + 2] = (f[it.a + 2] * f[it.b])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c + 0] = f[it.a + 0] * f[it.b]
+            f[it.c + 1] = f[it.a + 1] * f[it.b]
+            f[it.c + 2] = f[it.a + 2] * f[it.b]
         }
     }
     DIV_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "/", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] / f[it.b])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = f[it.a] / f[it.b]
         }
     }
 
     ADD_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "+", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] + f[it.b])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = f[it.a] + f[it.b]
         }
     }
     ADD_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "+", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c + 0] = (f[it.a + 0] + f[it.b + 0])
-            f[it.c + 1] = (f[it.a + 1] + f[it.b + 1])
-            f[it.c + 2] = (f[it.a + 2] + f[it.b + 2])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c + 0] = f[it.a + 0] + f[it.b + 0]
+            f[it.c + 1] = f[it.a + 1] + f[it.b + 1]
+            f[it.c + 2] = f[it.a + 2] + f[it.b + 2]
         }
     }
     SUB_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "-", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] - f[it.b])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = f[it.a] - f[it.b]
         }
     }
     SUB_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "-", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c + 0] = (f[it.a + 0] - f[it.b + 0])
-            f[it.c + 1] = (f[it.a + 1] - f[it.b + 1])
-            f[it.c + 2] = (f[it.a + 2] - f[it.b + 2])
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c + 0] = f[it.a + 0] - f[it.b + 0]
+            f[it.c + 1] = f[it.a + 1] - f[it.b + 1]
+            f[it.c + 2] = f[it.a + 2] - f[it.b + 2]
         }
     }
 
     EQ_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "==", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] == f[it.b]).toFloat()
         }
     }
     EQ_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "==", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a + 0] == f[it.b + 0]
                     && f[it.a + 1] == f[it.b + 1]
                     && f[it.a + 2] == f[it.b + 2]).toFloat()
         }
     }
-    // TODO
     EQ_STR {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "==", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (s[it.a] == s[it.b]).toFloat()
+        }
     }
-    // TODO
     EQ_ENT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "==", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (i[it.a] == i[it.b]).toFloat()
+        }
     }
-    // TODO
     EQ_FUNC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "==", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (i[it.a] == i[it.b]).toFloat()
+        }
     }
 
     NE_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "!=", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] != f[it.b]).toFloat()
         }
     }
     NE_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "!=", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a + 0] != f[it.b + 0]
                     || f[it.a + 1] != f[it.b + 1]
                     || f[it.a + 2] != f[it.b + 2]).toFloat()
         }
     }
-    // TODO
     NE_STR {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "!=", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (s[it.a] != s[it.b]).toFloat()
+        }
     }
-    // TODO
     NE_ENT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "!=", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (i[it.a] != i[it.b]).toFloat()
+        }
     }
-    // TODO
     NE_FUNC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "!=", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (i[it.a] != i[it.b]).toFloat()
+        }
     }
 
     LE {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "<=", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] <= f[it.b]).toFloat()
         }
     }
     GE {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, ">=", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] >= f[it.b]).toFloat()
         }
     }
     LT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "<", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] < f[it.b]).toFloat()
         }
     }
     GT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, ">", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a] > f[it.b]).toFloat()
         }
     }
 
-    // TODO
     LOAD_FLOAT {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = e.readFloat(i[it.a], i[it.b])
+        }
     }
-    // TODO
     LOAD_VEC {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            val vec = e.readVector(i[it.a], i[it.b])
+            f[it.c + 0] = vec[0]
+            f[it.c + 1] = vec[1]
+            f[it.c + 2] = vec[2]
+        }
     }
-    // TODO
     LOAD_STR {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            i[it.c] = e.readInt(i[it.a], i[it.b])
+        }
     }
-    // TODO
     LOAD_ENT {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            i[it.c] = e.readInt(i[it.a], i[it.b])
+        }
     }
-    // TODO
     LOAD_FIELD {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            i[it.c] = e.readInt(i[it.a], i[it.b])
+        }
     }
-    // TODO
     LOAD_FUNC {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "->", it.c, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            i[it.c] = e.readInt(i[it.a], i[it.b])
+        }
     }
 
     ADDRESS {
-        override fun stringify(it: Statement): Array<Any> = array("ILLEGAL")
+        override fun stringify(it: Statement): Array<Any> = array(it.c, "=", "&", it.a, "->", it.b)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            i[it.c] = e.getAddress(i[it.a], i[it.b])
+        }
     }
 
     STORE_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = f[it.a]
         }
     }
     STORE_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b + 0] = f[it.a + 0]
             f[it.b + 1] = f[it.a + 1]
             f[it.b + 2] = f[it.a + 2]
@@ -215,53 +248,73 @@ enum class Instruction {
     }
     STORE_STR {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = f[it.a]
         }
     }
     STORE_ENT {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = f[it.a]
         }
     }
     STORE_FIELD {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = f[it.a]
         }
     }
     STORE_FUNC {
         override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = f[it.a]
         }
     }
 
-    // TODO
     STOREP_FLOAT {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            e.writeFloat(i[it.b], f[it.a])
+        }
     }
     STOREP_VEC {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            val vec = array(f[it.a + 0], f[it.a + 1], f[it.a + 2])
+            e.writeVector(i[it.b], vec)
+        }
     }
     STOREP_STR {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            e.writeInt(i[it.b], f[it.a])
+        }
     }
     STOREP_ENT {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            e.writeInt(i[it.b], f[it.a])
+        }
     }
     STOREP_FIELD {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            e.writeInt(i[it.b], f[it.a])
+        }
     }
     STOREP_FUNC {
-        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("*", it.b, "=", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            e.writeInt(i[it.b], f[it.a])
+        }
     }
 
     RETURN {
         override fun stringify(it: Statement): Array<Any> = array(it.a, ",", it.b, ",", it.c)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[OFS_PARAM(-1)] = f[it.a]
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[OFS_PARAM(-1) + 0] = f[it.a + 0]
+            f[OFS_PARAM(-1) + 1] = f[it.a + 1]
+            f[OFS_PARAM(-1) + 2] = f[it.a + 2]
         }
 
         override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 0
@@ -269,36 +322,44 @@ enum class Instruction {
 
     NOT_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array("!", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.b] = (f[it.a] == 0f).toFloat()
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.b] = (!f[it.a]).toFloat()
         }
     }
     NOT_VEC {
         override fun stringify(it: Statement): Array<Any> = array("!", it.a)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a + 0] == 0f
-                    && f[it.a + 1] == 0f
-                    && f[it.a + 2] == 0f).toFloat()
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!f[it.a + 0]
+                    && !f[it.a + 1]
+                    && !f[it.a + 2]).toFloat()
         }
     }
-    // TODO
     NOT_STR {
         override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!i[it.a]).toFloat()
+        }
     }
     NOT_ENT {
         override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!i[it.a]).toFloat()
+        }
     }
     NOT_FUNC {
         override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!i[it.a]).toFloat()
+        }
     }
 
     IF {
         override fun stringify(it: Statement): Array<Any> = array("if", it.a, "then jmp rel", it.b)
-        override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = (if (f[it.a] != 0f) it.b else 1)
+        override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = (if (!!f[it.a]) it.b else 1)
     }
     IFNOT {
         override fun stringify(it: Statement): Array<Any> = array("if not", it.a, "then jmp rel", it.b)
-        override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = (if (f[it.a] == 0f) it.b else 1)
+        override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = (if (!f[it.a]) it.b else 1)
     }
 
     CALL0 {
@@ -340,26 +401,26 @@ enum class Instruction {
 
     AND {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "&&", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] != 0f && f[it.b] != 0f).toFloat()
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!!f[it.a] && !!f[it.b]).toFloat()
         }
     }
     OR {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "||", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
-            f[it.c] = (f[it.a] != 0f || f[it.b] != 0f).toFloat()
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
+            f[it.c] = (!!f[it.a] || !!f[it.b]).toFloat()
         }
     }
 
     BITAND {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "&", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a].toInt() and f[it.b].toInt()).toFloat()
         }
     }
     BITOR {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "|", it.b)
-        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+        override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (f[it.a].toInt() or f[it.b].toInt()).toFloat()
         }
     }
@@ -379,9 +440,13 @@ enum class Instruction {
 
     }
 
-    fun invoke(s: Statement, data: ProgramData): Int {
-        action(s, data.globalFloatData, data.globalIntData)
-        return advance(s, data.globalFloatData, data.globalIntData)
+    fun invoke(it: Statement, data: ProgramData): Int {
+        val f = data.globalFloatData
+        val i = data.globalIntData
+        val s = data.strings!!
+        val e = data.entities
+        action(it, f, i, s, e)
+        return advance(it, f, i)
     }
 
     fun toString(s: Statement, data: ProgramData?): String {
@@ -395,10 +460,10 @@ enum class Instruction {
         val stringified = stringify(s).map {
             when (it) {
                 !is Int -> it
-                else -> "\$$it (${get(it) ?: "?"}}"
+                else -> "\$$it (${get(it) ?: "?"})"
             }
         }
-        return "${this.name()}${" ".repeat(11 - name().length())}\t(${stringified.joinToString(" ")}}"
+        return "${this.name()}${" ".repeat(13 - name().length())}\t(${stringified.joinToString(" ")}}"
     }
 
 }

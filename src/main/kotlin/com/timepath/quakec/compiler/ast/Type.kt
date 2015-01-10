@@ -4,8 +4,11 @@ import com.timepath.quakec.vm.Instruction
 
 enum class Type {
     Void
-    Float
     String
+    Float
+    Vector
+    Entity
+    Field
     Function
 
     class object {

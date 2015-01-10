@@ -16,7 +16,7 @@ public class Program(val data: ProgramData?) {
                      val fn: Function?)
 
     fun exec(start: Function) {
-        val stack = Stack <Frame> ()
+        val stack = Stack<Frame>()
         var sp = -1
         var stmt = -1
         var fn: Function? = null
@@ -123,7 +123,7 @@ public class Program(val data: ProgramData?) {
                     parameterTypes = array(),
                     varargsType = javaClass<String>(),
                     callback = {
-                        println(it.map { it.toString() }.join(""))
+                        System.err.print(it.map { it.toString() }.join(""))
                     }
             ),
             2 to Builtin(
