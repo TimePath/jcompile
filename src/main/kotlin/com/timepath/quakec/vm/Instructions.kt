@@ -391,7 +391,10 @@ enum class Instruction {
     }
 
     STATE {
-        override fun stringify(it: Statement): Array<Any> = array("ILLEGAL")
+        override fun stringify(it: Statement): Array<Any> = array(
+                "self.nextthink", "=", "time + 0.1", ";",
+                "self.frame", "=", it.a, ";", // f[it.a]
+                "self.think", "=", it.b) // i[it.b]
     }
 
     GOTO {
