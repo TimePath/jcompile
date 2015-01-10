@@ -22,7 +22,7 @@ class ProgramDataWriter(file: File) {
         writeSection(h.functions)
         writeSection(h.stringData)
         writeSection(h.globalData)
-        raf.writeInt(h.entityCount)
+        raf.writeInt(h.entityFields)
 
         raf.offset = ret.header.statements.offset.toLong()
         for (it in ret.statements!!) {

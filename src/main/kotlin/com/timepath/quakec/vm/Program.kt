@@ -120,7 +120,6 @@ public class Program(val data: ProgramData?) {
     val builtins: Map<Int, Builtin> = mapOf(
             1 to Builtin(
                     name = "print",
-                    parameterTypes = array(),
                     varargsType = javaClass<String>(),
                     callback = {
                         System.err.print(it.map { it.toString() }.join(""))
@@ -129,17 +128,26 @@ public class Program(val data: ProgramData?) {
             2 to Builtin(
                     name = "ftos",
                     parameterTypes = array(javaClass<Float>()),
-                    varargsType = null,
                     callback = {
                         val f = it[0] as Float
                         f.toString()
                     }
             ),
             3 to Builtin(
-                    name = "spawn"
+                    name = "spawn",
+                    callback = {
+                        val entityManager = this.data!!.entities
+                        entityManager.spawn()
+                    }
             ),
             4 to Builtin(
-                    name = "kill"
+                    name = "kill",
+                    parameterTypes = array(javaClass<Float>()),
+                    callback = {
+                        val e = it[0] as Int
+                        val entityManager = this.data!!.entities
+                        entityManager.kill(e)
+                    }
             ),
             5 to Builtin(
                     name = "vtos"
@@ -156,7 +164,6 @@ public class Program(val data: ProgramData?) {
             9 to Builtin(
                     name = "stof",
                     parameterTypes = array(javaClass<String>()),
-                    varargsType = null,
                     callback = {
                         val s = it[0] as String
                         s.toFloat()
@@ -164,7 +171,6 @@ public class Program(val data: ProgramData?) {
             ),
             10 to Builtin(
                     name = "strcat",
-                    parameterTypes = array(),
                     varargsType = javaClass<String>(),
                     callback = {
                         it.map { it.toString() }.join("")
@@ -173,7 +179,6 @@ public class Program(val data: ProgramData?) {
             11 to Builtin(
                     name = "strcmp",
                     parameterTypes = array(javaClass<String>(), javaClass<String>(), javaClass<Float>()),
-                    varargsType = null,
                     callback = {
                         val first = (it[0] as String).iterator()
                         val second = (it[1] as String).iterator()
@@ -197,7 +202,6 @@ public class Program(val data: ProgramData?) {
             13 to Builtin(
                     name = "sqrt",
                     parameterTypes = array(javaClass<Float>()),
-                    varargsType = null,
                     callback = {
                         val n = it[0] as Float
                         Math.sqrt(n.toDouble()).toFloat()
@@ -206,7 +210,6 @@ public class Program(val data: ProgramData?) {
             14 to Builtin(
                     name = "floor",
                     parameterTypes = array(javaClass<Float>()),
-                    varargsType = null,
                     callback = {
                         val n = it[0] as Float
                         Math.floor(n.toDouble()).toFloat()
@@ -215,7 +218,6 @@ public class Program(val data: ProgramData?) {
             15 to Builtin(
                     name = "pow",
                     parameterTypes = array(javaClass<Float>(), javaClass<Float>()),
-                    varargsType = null,
                     callback = {
                         val base = it[0] as Float
                         val exponent = it[1] as Float

@@ -93,7 +93,10 @@ data class ProgramData(val header: Header? = null,
             val functions: Section,
             val stringData: Section,
             val globalData: Section,
-            val entityCount: Int) {
+            /**
+             * Number of fields per entity
+             */
+            val entityFields: Int) {
 
         data class Section(
                 /**

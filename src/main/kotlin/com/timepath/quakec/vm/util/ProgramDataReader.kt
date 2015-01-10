@@ -32,7 +32,7 @@ class ProgramDataReader(file: File) {
                 functions = readSection(),
                 stringData = readSection(),
                 globalData = readSection(),
-                entityCount = raf.readInt()
+                entityFields = raf.readInt()
         )
         val ret = ProgramData(
                 header = header,

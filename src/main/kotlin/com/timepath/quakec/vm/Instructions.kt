@@ -194,10 +194,10 @@ enum class Instruction {
     LOAD_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "->", it.b)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            val vec = e.readVector(i[it.a], i[it.b])
-            f[it.c + 0] = vec[0]
-            f[it.c + 1] = vec[1]
-            f[it.c + 2] = vec[2]
+            val (x, y, z) = e.readVector(i[it.a], i[it.b])
+            f[it.c + 0] = x
+            f[it.c + 1] = y
+            f[it.c + 2] = z
         }
     }
     LOAD_STR {
