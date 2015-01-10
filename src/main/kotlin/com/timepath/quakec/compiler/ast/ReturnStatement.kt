@@ -1,7 +1,4 @@
-package com.timepath.quakec.ast.impl
-
-import com.timepath.quakec.ast.Statement
-import com.timepath.quakec.ast.Expression
+package com.timepath.quakec.compiler.ast
 
 /**
  * Return can be assigned to, and has a constant address

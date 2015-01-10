@@ -1,11 +1,8 @@
-package com.timepath.quakec
+package com.timepath.quakec.compiler.test
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Utils
-import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.ParseTreeListener
-import org.antlr.v4.runtime.tree.TerminalNode
-import org.antlr.v4.runtime.tree.Trees
+import org.antlr.v4.runtime.tree.*
 
 class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
 
@@ -16,7 +13,7 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
             val tab = "  "
             val diff = value// - $level
             if (diff > 0)
-                levelString += tab * diff
+                levelString += tab.repeat(diff)
             else {
                 val end = levelString.length() + tab.length() * diff
                 levelString = levelString.substring(0, end)

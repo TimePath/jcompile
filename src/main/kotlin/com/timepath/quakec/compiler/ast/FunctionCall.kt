@@ -1,8 +1,6 @@
-package com.timepath.quakec.ast.impl
+package com.timepath.quakec.compiler.ast
 
-import com.timepath.quakec.ast.Expression
 import kotlin.properties.Delegates
-import com.timepath.quakec.ast.Statement
 
 class FunctionCall(val function: Expression? = null, newChildren: List<Statement> = emptyList()) : Expression() {
 

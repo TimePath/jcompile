@@ -1,8 +1,7 @@
 package com.timepath.quakec.vm.util
 
 import java.io.File
-import com.timepath.quakec.vm.ProgramData
-import com.timepath.quakec.vm
+import com.timepath.quakec.vm.*
 
 class ProgramDataWriter(file: File) {
 

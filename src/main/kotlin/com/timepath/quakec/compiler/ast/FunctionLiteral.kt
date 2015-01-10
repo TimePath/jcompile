@@ -1,9 +1,6 @@
-package com.timepath.quakec.ast.impl
+package com.timepath.quakec.compiler.ast
 
-import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.ast.Type
 import java.util.Arrays
-import com.timepath.quakec.ast.Statement
 
 /**
  * Replaced with a number during compilation

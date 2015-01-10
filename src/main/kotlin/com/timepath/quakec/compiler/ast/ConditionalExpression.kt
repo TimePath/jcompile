@@ -1,8 +1,4 @@
-package com.timepath.quakec.ast.impl
-
-import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.ast.Value
-import com.timepath.quakec.ast.Statement
+package com.timepath.quakec.compiler.ast
 
 class ConditionalExpression(val test: Expression,
                             val yes: Statement,

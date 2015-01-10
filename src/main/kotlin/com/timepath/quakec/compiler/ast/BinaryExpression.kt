@@ -1,9 +1,8 @@
-package com.timepath.quakec.ast.impl
+package com.timepath.quakec.compiler.ast
 
-import com.timepath.quakec.ast.Expression as rvalue
-import com.timepath.quakec.ast.impl.ReferenceExpression as lvalue
+import com.timepath.quakec.compiler.ast.Expression as rvalue
+import com.timepath.quakec.compiler.ast.ReferenceExpression as lvalue
 import com.timepath.quakec.vm.Instruction
-import com.timepath.quakec.ast.Expression
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
                                                                 val right: R) : rvalue() {

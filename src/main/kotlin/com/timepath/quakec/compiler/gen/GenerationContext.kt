@@ -1,18 +1,11 @@
-package com.timepath.quakec.ast
+package com.timepath.quakec.compiler.gen
 
-import java.util.LinkedHashMap
-import com.timepath.quakec.ast.impl.FunctionLiteral
-import java.util.Stack
-import com.timepath.quakec.ast.impl.FunctionCall
-import com.timepath.quakec.vm.Instruction
-import com.timepath.quakec.ast.impl.ConstantExpression
-import com.timepath.quakec.ast.impl.BinaryExpression
-import com.timepath.quakec.ast.impl.ReferenceExpression
-import com.timepath.quakec.ast.impl.ReturnStatement
-import com.timepath.quakec.ast.impl.DeclarationExpression
 import java.util.HashMap
+import java.util.LinkedHashMap
+import java.util.Stack
 import java.util.regex.Pattern
-import com.timepath.quakec.ast.impl.ConditionalExpression
+import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.vm.Instruction
 
 class GenerationContext(val roots: List<Statement>) {
 

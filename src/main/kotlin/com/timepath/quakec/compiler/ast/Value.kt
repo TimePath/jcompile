@@ -1,4 +1,4 @@
-package com.timepath.quakec.ast
+package com.timepath.quakec.compiler.ast
 
 import org.antlr.v4.runtime.misc.Utils
 

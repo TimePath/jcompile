@@ -1,9 +1,7 @@
-package com.timepath.quakec.ast
+package com.timepath.quakec.compiler.test
 
-import com.timepath.quakec.ast.impl.BinaryExpression
-import com.timepath.quakec.ast.impl.DeclarationExpression
-import com.timepath.quakec.ast.impl.ConditionalExpression
-import com.timepath.quakec.ast.impl.ConstantExpression
+import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.compiler.gen.GenerationContext
 
 fun main(args: Array<String>) {
 

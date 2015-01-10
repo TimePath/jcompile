@@ -1,26 +1,26 @@
-package com.timepath.quakec
+package com.timepath.quakec.compiler
 
-import org.anarres.cpp.*
-import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.tree.ParseTree
-import javax.swing.*
 import java.io.File
 import java.io.Reader
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.Date
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.util.EnumSet
 import java.util.LinkedList
 import java.awt.Dimension
+import javax.swing.*
+import com.timepath.quakec.QCLexer
+import com.timepath.quakec.QCParser
+import com.timepath.quakec.compiler.gen.GenerationContext
+import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.compiler.test.TreePrinterListener
 import com.timepath.quakec.vm.ProgramData
-import com.timepath.quakec.Compiler.Include
-import com.timepath.quakec.ast.GenerationContext
-import com.timepath.quakec.ast.BlockStatement
-import com.timepath.quakec.ast.Statement
-import com.timepath.quakec.ast.impl.DeclarationExpression
+import org.anarres.cpp.*
+import org.antlr.v4.runtime.ANTLRInputStream
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.atn.PredictionMode
+import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 public class Compiler {
 
@@ -149,21 +149,21 @@ public class Compiler {
                     e.printStackTrace()
                 }
             }
-//            exec.submit {
-                try {
-                    val root = tree.accept(ASTTransform())[0]
-                    File("out", include.path + ".xml").let {
-                        it.getParentFile().mkdirs()
-                        val s = root.toStringRecursive()
-                        it.writeText(s)
-                    }
-//                    synchronized(roots) {
-                        roots.add(root.children)
-//                    }
-                } catch (e: Throwable) {
-                    e.printStackTrace()
+            //            exec.submit {
+            try {
+                val root = tree.accept(ASTTransform())[0]
+                File("out", include.path + ".xml").let {
+                    it.getParentFile().mkdirs()
+                    val s = root.toStringRecursive()
+                    it.writeText(s)
                 }
-//            }
+                //                    synchronized(roots) {
+                roots.add(root.children)
+                //                    }
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+            //            }
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
@@ -195,7 +195,8 @@ fun main(args: Array<String>) {
         println("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
     }
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
-    time("Total time") {
+    time("Total time")
+    {
         val defs = linkedMapOf(
                 "menu" to "MENUQC",
                 "client" to "CSQC",
@@ -210,7 +211,8 @@ fun main(args: Array<String>) {
             }
         }
     }
-    time("GMQCC tests") {
+    time("GMQCC tests")
+    {
         val gmqcc = Compiler()
                 .define("GMQCC")
                 .define("__STD_GMQCC__")

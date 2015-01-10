@@ -1,11 +1,5 @@
-package com.timepath.quakec.ast
+package com.timepath.quakec.compiler.ast
 
-import com.timepath.quakec.ast.impl.FunctionLiteral
-import com.timepath.quakec.ast.impl.FunctionCall
-import com.timepath.quakec.ast.impl.ReturnStatement
-import com.timepath.quakec.ast.impl.ConstantExpression
-import com.timepath.quakec.ast.impl.ReferenceExpression
-import com.timepath.quakec.ast.impl.DeclarationExpression
 import java.util.ArrayList
 
 abstract class Statement {
@@ -77,45 +71,3 @@ class BlockStatement(newChildren: List<Statement> = emptyList()) : Statement() {
 }
 
 fun BlockStatement(vararg children: Statement) = BlockStatement(children.toList())
-
-fun ast(configure: (BlockStatement.() -> Unit)? = null): BlockStatement {
-    val block = BlockStatement()
-    if (configure != null)
-        block.configure()
-    return block
-}
-
-fun BlockStatement.block(configure: (BlockStatement.() -> Unit)? = null): BlockStatement {
-    return initChild(BlockStatement(), configure)
-}
-
-fun BlockStatement.const(value: Any): ConstantExpression {
-    return ConstantExpression(value)
-}
-
-fun BlockStatement.def(name: String): DeclarationExpression {
-    return initChild(DeclarationExpression(name))
-}
-
-fun BlockStatement.ref(id: String): ReferenceExpression {
-    return ReferenceExpression(id)
-}
-
-fun BlockStatement.func(returnType: Type, name: String, argTypes: Array<Type>,
-                        configure: (BlockStatement.() -> Unit)? = null): FunctionLiteral {
-    val functionLiteral = initChild(FunctionLiteral(name, returnType, argTypes))
-    functionLiteral.initChild(BlockStatement(), configure)
-    return functionLiteral
-}
-
-fun BlockStatement.ret(returnValue: Expression? = null): ReturnStatement {
-    return initChild(ReturnStatement(returnValue))
-}
-
-fun BlockStatement.call(function: Expression, configure: (FunctionCall.() -> Unit)? = null): FunctionCall {
-    return initChild(FunctionCall(function), configure)
-}
-
-fun FunctionCall.arg(expr: Expression): Expression {
-    return initChild(expr)
-}

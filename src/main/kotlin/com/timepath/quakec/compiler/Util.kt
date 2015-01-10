@@ -1,11 +1,9 @@
-package com.timepath.quakec
+package com.timepath.quakec.compiler
 
+import java.text.SimpleDateFormat
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.Executors
-import java.text.SimpleDateFormat
 import java.util.Date
-
-fun String.times(n: Int) = this.repeat(n)
 
 fun Date.format(pattern: String) = SimpleDateFormat(pattern).format(this)
 

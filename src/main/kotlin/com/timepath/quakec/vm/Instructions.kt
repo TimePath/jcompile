@@ -2,7 +2,6 @@ package com.timepath.quakec.vm
 
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import com.timepath.quakec.times
 
 fun FloatBuffer.set(index: Int, value: Float) = this.put(index, value)
 fun Boolean.toFloat(): Float = if (this) 1f else 0f
@@ -10,7 +9,9 @@ fun Boolean.toFloat(): Float = if (this) 1f else 0f
 enum class Instruction {
 
     protected open fun stringify(it: Statement): Array<Any> = array("ILLEGAL")
-    protected open fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {}
+    protected open fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
+    }
+
     protected open fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 1
 
     DONE {
@@ -20,6 +21,7 @@ enum class Instruction {
             f[OFS_PARAM(-1) + 1] = f[it.a + 1]
             f[OFS_PARAM(-1) + 2] = f[it.a + 2]
         }
+
         override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 0
     }
 
@@ -261,6 +263,7 @@ enum class Instruction {
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer) {
             f[OFS_PARAM(-1)] = f[it.a]
         }
+
         override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 0
     }
 
@@ -395,8 +398,7 @@ enum class Instruction {
                 else -> "\$$it (${get(it) ?: "?"}}"
             }
         }
-        return "${this.name()}${" " * (11 - name().length())}\t(${stringified.joinToString(" ")}}"
+        return "${this.name()}${" ".repeat(11 - name().length())}\t(${stringified.joinToString(" ")}}"
     }
 
 }
-

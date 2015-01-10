@@ -1,4 +1,4 @@
-package com.timepath.quakec
+package com.timepath.quakec.compiler
 
 import org.jetbrains.spek.api.Spek
 import com.timepath.quakec.vm.Program

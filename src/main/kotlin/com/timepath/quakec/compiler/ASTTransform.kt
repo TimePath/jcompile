@@ -1,18 +1,9 @@
-package com.timepath.quakec
+package com.timepath.quakec.compiler
 
-import com.timepath.quakec.ast.Statement
+import com.timepath.quakec.QCBaseVisitor
+import com.timepath.quakec.QCParser
+import com.timepath.quakec.compiler.ast.*
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.quakec.ast.BlockStatement
-import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.ast.Type
-import com.timepath.quakec.ast.impl.FunctionLiteral
-import com.timepath.quakec.ast.impl.DeclarationExpression
-import com.timepath.quakec.ast.impl.ReturnStatement
-import com.timepath.quakec.ast.impl.ReferenceExpression
-import com.timepath.quakec.ast.impl.BinaryExpression
-import com.timepath.quakec.ast.impl.ConditionalExpression
-import com.timepath.quakec.ast.impl.ConstantExpression
-import com.timepath.quakec.ast.impl.FunctionCall
 import org.antlr.v4.runtime.tree.TerminalNode
 
 class ASTTransform : QCBaseVisitor<List<Statement>>() {

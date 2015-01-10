@@ -2,8 +2,8 @@ package com.timepath.quakec.vm
 
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
-import kotlin.properties.Delegates
 import java.nio.FloatBuffer
+import kotlin.properties.Delegates
 import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 

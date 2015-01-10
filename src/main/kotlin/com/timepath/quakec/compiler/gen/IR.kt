@@ -1,7 +1,7 @@
-package com.timepath.quakec.ast
+package com.timepath.quakec.compiler.gen
 
-import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.misc.Utils
 
 class IR(val instr: Instruction? = null,
          val args: Array<Int> = array(),

@@ -1,15 +1,6 @@
-package com.timepath.quakec.ast.impl
-
-import com.timepath.quakec.ast.Expression
-import com.timepath.quakec.vm.Instruction
-import com.timepath.quakec.ast.Value
+package com.timepath.quakec.compiler.ast
 
 class ConstantExpression(any: Any) : Expression() {
-
-    val instr: Map<Class<*>, Instruction> = mapOf(
-            javaClass<String>() to Instruction.STORE_STR,
-            javaClass<Float>() to Instruction.STORE_FLOAT
-    )
 
     val value = Value(any)
 

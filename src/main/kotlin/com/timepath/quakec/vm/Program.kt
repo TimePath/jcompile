@@ -2,8 +2,8 @@ package com.timepath.quakec.vm
 
 import java.io.File
 import java.util.*
-import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.vm.util.ProgramDataReader
+import org.antlr.v4.runtime.misc.Utils
 
 public class Program(val data: ProgramData?) {
 

@@ -1,15 +1,11 @@
 package com.timepath.quakec.vm.util
 
 import java.io.File
-import com.timepath.quakec.vm
-import com.timepath.quakec.vm.ProgramData
 import java.util.ArrayList
-import com.timepath.quakec.vm.Definition
-import com.timepath.quakec.vm.Function
 import java.util.LinkedHashMap
-import com.timepath.quakec.vm.StringManager
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
+import com.timepath.quakec.vm.*
 
 class ProgramDataReader(file: File) {
 
@@ -41,7 +37,7 @@ class ProgramDataReader(file: File) {
         val ret = ProgramData(
                 header = header,
                 statements = iterData(header.statements) {
-                    vm.Statement(
+                    Statement(
                             raf.readShort(),
                             raf.readShort(),
                             raf.readShort(),
