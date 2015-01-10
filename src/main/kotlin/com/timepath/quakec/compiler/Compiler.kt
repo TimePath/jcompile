@@ -123,8 +123,7 @@ public class Compiler {
         return tree
     }
 
-    public fun compile(): ProgramData {
-        val data = ProgramData()
+    fun ast(): List<List<Statement>> {
         val exec = if (debugThreads)
             Executors.newSingleThreadExecutor()
         else
@@ -167,24 +166,12 @@ public class Compiler {
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
-        val ctx = GenerationContext(roots.flatMap { it })
-        val asm = ctx.generate()
-        File("out", "asm").let {
-            it.getParentFile().mkdirs()
-            it.writeText("") // truncate
-            asm.forEach { ir ->
-                if (!ir.dummy)
-                    it.appendText(ir.toString() + '\n')
-            }
-        }
-        File("out", "unit.xml").let {
-            it.getParentFile().mkdirs()
+        return roots
+    }
 
-            val s = BlockStatement(includes.zip(roots).flatMap {
-                listOf(DeclarationExpression("__FILE__ = ${it.first.path}")) + it.second
-            }).toStringRecursive()
-            it.writeText(s)
-        }
+    public fun compile(roots: List<List<Statement>> = ast()): ProgramData {
+        val data = ProgramData()
+        // TODO
         return data
     }
 }

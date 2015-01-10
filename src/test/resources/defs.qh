@@ -1,0 +1,12 @@
+void   (string, ...)    print  = #1;
+string (float)          ftos   = #2;
+entity ()               spawn  = #3;
+void   (entity)         kill   = #4;
+
+float  (string)         stof   = #9;
+string (...)            strcat = #10;
+float  (string, string) strcmp = #11;
+
+float  (float)          sqrt   = #13;
+float  (float)          floor  = #14;
+float  (float, float)   pow    = #15;
