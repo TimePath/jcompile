@@ -171,6 +171,7 @@ public class Compiler {
         val asm = ctx.generate()
         File("out", "asm").let {
             it.getParentFile().mkdirs()
+            it.writeText("") // truncate
             asm.forEach { ir ->
                 if (!ir.dummy)
                     it.appendText(ir.toString() + '\n')
@@ -195,7 +196,7 @@ fun main(args: Array<String>) {
         println("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
     }
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
-    time("Total time")
+//    time("Total time")
     {
         val defs = linkedMapOf(
                 "menu" to "MENUQC",
@@ -228,7 +229,8 @@ fun main(args: Array<String>) {
             }
         }
         include { it.name.endsWith(".qh") }
-        include { it.name.endsWith(".qc") }
+//        include { it.name.endsWith(".qc") }
+        gmqcc.include(File(xonotic, "gmqcc/tests/fieldparams.qc"))
         gmqcc.compile()
     }
 }
