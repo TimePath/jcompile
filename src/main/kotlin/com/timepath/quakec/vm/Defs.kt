@@ -76,7 +76,9 @@ data class ProgramData(val header: Header? = null,
                        val strings: StringManager? = null,
                        val globalData: ByteBuffer? = null) {
 
-    val entities = EntityManager(this)
+    val entities: EntityManager by Delegates.lazy {
+        EntityManager(this)
+    }
 
     data class Header(
             /**
