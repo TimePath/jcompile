@@ -17,6 +17,9 @@ enum class Instruction {
 
     protected open fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = 1
 
+    /**
+     * Same as RETURN, used for disassembly
+     */
     DONE {
         override fun stringify(it: Statement): Array<Any> = array(it.a, ",", it.b, ",", it.c)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {

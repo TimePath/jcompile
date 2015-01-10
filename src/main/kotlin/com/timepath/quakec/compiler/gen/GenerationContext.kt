@@ -142,6 +142,7 @@ class GenerationContext(val roots: List<Statement>) {
                 val global = registry.register(id)
                 registry.push()
                 (children.flatMap { it.generate() }
+                        + IR(instr = Instruction.DONE)
                         + IR(ret = global, dummy = true))
             }
             is ConstantExpression -> {
