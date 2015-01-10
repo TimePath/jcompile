@@ -8,12 +8,12 @@ class StringManager(
          */
         val constant: Map<Int, String>,
         /**
-         * The largest constant key + its length
+         * The largest constant key + the length of its value
          */
-        val constantSize: Int) {
+        private val constantSize: Int) {
 
-    val temp: MutableList<String> = ArrayList(512)
-    val zone: MutableList<String?> = ArrayList(512)
+    private val temp: MutableList<String> = ArrayList(512)
+    private val zone: MutableList<String?> = ArrayList(512)
 
     fun get(index: Int): String? {
         if (index >= 0) {

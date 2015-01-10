@@ -76,17 +76,32 @@ data class ProgramData(val header: Header? = null,
                        val strings: StringManager? = null,
                        val globalData: ByteBuffer? = null) {
 
-    data class Header(val version: Int,
-                      val crc: Int,
-                      val statements: Section,
-                      val globalDefs: Section,
-                      val fieldDefs: Section,
-                      val functions: Section,
-                      val stringData: Section,
-                      val globalData: Section,
-                      val entityCount: Int) {
+    data class Header(
+            /**
+             * Latest version: 6
+             */
+            val version: Int,
+            /**
+             * CRC16
+             */
+            val crc: Int,
+            val statements: Section,
+            val globalDefs: Section,
+            val fieldDefs: Section,
+            val functions: Section,
+            val stringData: Section,
+            val globalData: Section,
+            val entityCount: Int) {
 
-        data class Section(val offset: Int, val count: Int)
+        data class Section(
+                /**
+                 * Absolute offset in the progs file
+                 */
+                val offset: Int,
+                /**
+                 * Number of records in the section
+                 */
+                val count: Int)
     }
 
     val globalIntData: IntBuffer by Delegates.lazy {
