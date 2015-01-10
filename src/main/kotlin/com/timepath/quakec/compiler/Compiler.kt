@@ -170,9 +170,8 @@ public class Compiler {
     }
 
     public fun compile(roots: List<List<Statement>> = ast()): ProgramData {
-        val data = ProgramData()
-        // TODO
-        return data
+        val ctx = GenerationContext(roots.flatMap { it })
+        return ctx.generateProgs()
     }
 }
 

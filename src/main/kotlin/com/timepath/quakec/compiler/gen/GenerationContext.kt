@@ -1,11 +1,20 @@
 package com.timepath.quakec.compiler.gen
 
+import java.nio.ByteBuffer
+import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.vm
 import com.timepath.quakec.vm.Instruction
+import com.timepath.quakec.vm.Definition
+import com.timepath.quakec.vm.Function
+import com.timepath.quakec.vm.ProgramData
+import com.timepath.quakec.vm.ProgramData.Header
+import com.timepath.quakec.vm.ProgramData.Header.Section
+import com.timepath.quakec.vm.StringManager
 
 class GenerationContext(val roots: List<Statement>) {
 
@@ -88,6 +97,47 @@ class GenerationContext(val roots: List<Statement>) {
 
     fun generate(): List<IR> {
         return BlockStatement(roots).generate()
+    }
+
+    fun generateProgs(ir: List<IR> = generate()): ProgramData {
+        val statements = ArrayList<vm.Statement>()
+        val globalDefs = ArrayList<Definition>()
+        val fieldDefs = ArrayList<Definition>()
+        val functions = ArrayList<Function>()
+        val globalData = ByteBuffer.allocate(0)
+        val strings = StringManager(mapOf<Int, String>(), 0)
+
+        val version = 6
+        val crc = -1 // TODO: CRC16
+        val entityFields = fieldDefs.size() // TODO: good enough?
+
+        val statementsOffset = 60
+        val globalDefsOffset = statementsOffset + statements.size() * 8
+        val fieldDefsOffset = globalDefsOffset + globalDefs.size() * 8
+        val functionsOffset = fieldDefsOffset + fieldDefs.size() * 8
+        val globalDataOffset = functionsOffset + functions.size() * 36
+        // Last for simplicity; strings are not fixed size
+        val stringsOffset = globalDataOffset + globalData.capacity() * 4
+
+        return ProgramData(
+                header = Header(
+                        version = version,
+                        crc = crc,
+                        entityFields = entityFields,
+                        statements = Section(statementsOffset, statements.size()),
+                        globalDefs = Section(globalDefsOffset, globalDefs.size()),
+                        fieldDefs = Section(fieldDefsOffset, fieldDefs.size()),
+                        functions = Section(functionsOffset, functions.size()),
+                        globalData = Section(stringsOffset, globalData.capacity()),
+                        stringData = Section(globalDataOffset, strings.constant.size())
+                ),
+                statements = statements,
+                globalDefs = globalDefs,
+                fieldDefs = fieldDefs,
+                functions = functions,
+                globalData = globalData,
+                strings = strings
+        )
     }
 
     private fun error(msg: String) {
