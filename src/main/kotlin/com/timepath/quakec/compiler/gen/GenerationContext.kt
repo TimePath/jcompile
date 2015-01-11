@@ -1,6 +1,7 @@
 package com.timepath.quakec.compiler.gen
 
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashMap
@@ -34,7 +35,6 @@ class GenerationContext(val roots: List<Statement>) {
         val values: MutableMap<Int, Any> = HashMap()
         val reverse: MutableMap<Int, String> = LinkedHashMap()
         val scope = Stack<Scope>()
-        val strings = LinkedHashSet<String>()
 
         inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
 
@@ -85,10 +85,14 @@ class GenerationContext(val roots: List<Statement>) {
             return i
         }
 
+        val strings = LinkedHashSet<String>()
+        var stringOffset = 0
+
         fun registerString(s: String): Int {
-            val size = strings.size()
+            val pointer = stringOffset
             strings.add(s)
-            return size
+            stringOffset += s.length() + 1
+            return pointer
         }
 
         override fun toString() = reverse.map { "${it.key}\t${it.value}\t${values[it.key]}" }.join("\n")
@@ -112,6 +116,13 @@ class GenerationContext(val roots: List<Statement>) {
         return BlockStatement(roots).generate()
     }
 
+    /**
+     * Ought to be enough, instructions can't address beyond this range anyway
+     */
+    val globalData = ByteBuffer.allocateDirect(4 * 0xFFFF).order(ByteOrder.LITTLE_ENDIAN)
+    val intData = globalData.asIntBuffer()
+    val floatData = globalData.asFloatBuffer()
+
     fun generateProgs(ir: List<IR> = generate()): ProgramData {
         val globalDefs = ArrayList<Definition>()
         val fieldDefs = ArrayList<Definition>()
@@ -130,12 +141,20 @@ class GenerationContext(val roots: List<Statement>) {
                 statements.add(vm.Statement(it.instr!!, a, b, c))
             }
         }
+        for ((k, v) in registry.values) {
+            when (v) {
+                is Int -> intData.put(k, v)
+            }
+        }
 
-        val strings = registry.strings.toList()
+        val globalData = {
+            assert(4 * registry.counter >= globalData.position())
+            globalData.limit(4 * registry.counter)
+            globalData.position(0)
+            globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
+        }()
 
-        val globalData = ByteBuffer.allocate(4 * registry.counter) // TODO: good enough?
-
-        val stringManager = StringManager(strings)
+        val stringManager = StringManager(registry.strings.toList())
 
         val version = 6
         val crc = -1 // TODO: CRC16
