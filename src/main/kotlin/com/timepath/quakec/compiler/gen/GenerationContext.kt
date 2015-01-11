@@ -131,7 +131,11 @@ class GenerationContext(val roots: List<Statement>) {
         val functions = ArrayList<Function>()
         ir.forEach {
             if (it.function != null) {
-                functions.add(it.function.copy(firstStatement = statements.size()))
+                functions.add(
+                        if (it.function.firstStatement >= 0)
+                            it.function.copy(firstStatement = statements.size())
+                        else
+                            it.function)
             }
             if (!it.dummy) {
                 val args = it.args
@@ -255,8 +259,25 @@ class GenerationContext(val roots: List<Statement>) {
             }
             is DeclarationExpression -> {
                 val global = registry.register(id)
-                listOf(
-                        IR(dummy = true, ret = global))
+                val ret = linkedListOf<IR>()
+                if (this.value != null) {
+                    val value = this.value.evaluate()
+                    val s = value.toString()
+                    if (s.startsWith('#')) { // FIXME: HACK
+                        val builtin = Function(
+                                firstStatement = -s.substring(1).toInt(),
+                                firstLocal = 0,
+                                numLocals = 0,
+                                profiling = 0,
+                                nameOffset = registry.registerString(id),
+                                fileNameOffset = 0,
+                                numParams = 0,
+                                sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0))
+                        ret.add(IR(dummy = true, function = builtin))
+                    }
+                }
+                ret.add(IR(dummy = true, ret = global))
+                ret
             }
             is ReferenceExpression -> {
                 val global = registry[id]!!

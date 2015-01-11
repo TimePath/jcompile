@@ -57,12 +57,12 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         }
         val params = paramDeclarations.map {
             val paramId = it.declarator()?.getText()
-            if (paramId != null) DeclarationExpression(paramId) else null
+            if (paramId != null) DeclarationExpression(paramId, null) else null
         }.filterNotNull()
 
         val varargId = ctx.declarator()?.parameterTypeList()?.parameterVarargs()?.Identifier()
         val vararg: List<Statement> = if (varargId != null) {
-            listOf(DeclarationExpression(varargId.getText()))
+            listOf(DeclarationExpression(varargId.getText(), null))
         } else {
             emptyList()
         }
@@ -75,7 +75,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                DeclarationExpression(id)
+                DeclarationExpression(id, null)
             }
         }
         return declarations.map {
@@ -84,14 +84,15 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 declarator = declarator.declarator()
             }
             val id = declarator.getText()
-            DeclarationExpression(id)
+            val statement = it.initializer()?.accept(this)?.single()
+            DeclarationExpression(id, if (statement != null) statement as ConstantExpression else null)
         }
     }
 
     override fun visitLabeledStatement(ctx: QCParser.LabeledStatementContext): List<Statement> {
         val id = ctx.Identifier()?.getText()
         // TODO: custom node
-        return if (id != null) listOf(DeclarationExpression(id)) else emptyList()
+        return if (id != null) listOf(DeclarationExpression(id, null)) else emptyList()
     }
 
     override fun visitJumpStatement(ctx: QCParser.JumpStatementContext): List<Statement> {

@@ -11,18 +11,18 @@ fun main(args: Array<String>) {
     val root = ast {
         val print = const(-1)
         func(Type.Void, "test", array()) {
-            def("asd")
+            def("asd", 1)
             add(
                     ConditionalExpression(
                             ConstantExpression(1),
-                            DeclarationExpression("yay")
+                            DeclarationExpression("yay", ConstantExpression(1))
                     )
             )
             add(
                     ConditionalExpression(
                             ConstantExpression(2),
                             BlockStatement(
-                                    DeclarationExpression("yay2")
+                                    DeclarationExpression("yay2", ConstantExpression(1))
                             )
                     )
             )

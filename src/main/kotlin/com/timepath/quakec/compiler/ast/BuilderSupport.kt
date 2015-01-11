@@ -15,8 +15,8 @@ fun BlockStatement.const(value: Any): ConstantExpression {
     return ConstantExpression(value)
 }
 
-fun BlockStatement.def(name: String): DeclarationExpression {
-    return initChild(DeclarationExpression(name))
+fun BlockStatement.def(name: String, any: Any): DeclarationExpression {
+    return initChild(DeclarationExpression(name, ConstantExpression(any)))
 }
 
 fun BlockStatement.ref(id: String): ReferenceExpression {
