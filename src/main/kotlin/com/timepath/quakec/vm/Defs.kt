@@ -39,7 +39,7 @@ class Definition(val type: Short,
 
 }
 
-class Function(
+data class Function(
         /**
          * Negative indicated a builtin
          */

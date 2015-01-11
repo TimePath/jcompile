@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashMap
+import java.util.LinkedHashSet
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
@@ -33,6 +34,7 @@ class GenerationContext(val roots: List<Statement>) {
         val values: MutableMap<Int, Any> = HashMap()
         val reverse: MutableMap<Int, String> = LinkedHashMap()
         val scope = Stack<Scope>()
+        val strings = LinkedHashSet<String>()
 
         inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
 
@@ -83,6 +85,12 @@ class GenerationContext(val roots: List<Statement>) {
             return i
         }
 
+        fun registerString(s: String): Int {
+            val size = strings.size()
+            strings.add(s)
+            return size
+        }
+
         override fun toString() = reverse.map { "${it.key}\t${it.value}\t${values[it.key]}" }.join("\n")
 
         fun push() {
@@ -105,8 +113,15 @@ class GenerationContext(val roots: List<Statement>) {
     }
 
     fun generateProgs(ir: List<IR> = generate()): ProgramData {
+        val globalDefs = ArrayList<Definition>()
+        val fieldDefs = ArrayList<Definition>()
+
         val statements = ArrayList<vm.Statement>(ir.size())
+        val functions = ArrayList<Function>()
         ir.forEach {
+            if (it.function != null) {
+                functions.add(it.function.copy(firstStatement = statements.size()))
+            }
             if (!it.dummy) {
                 val args = it.args
                 val a = if (args.size() > 0) args[0] else 0
@@ -116,16 +131,7 @@ class GenerationContext(val roots: List<Statement>) {
             }
         }
 
-        val globalDefs = ArrayList<Definition>()
-        val fieldDefs = ArrayList<Definition>()
-
-        val functions = ArrayList<Function>()
-        functions.add(Function(-1, 0, 0, 0, 0, 0, 0, byteArray(0, 0, 0, 0, 0, 0, 0, 0)))
-        functions.add(Function(0, 0, 0, 0, 1, 1, 0, byteArray(0, 0, 0, 0, 0, 0, 0, 0)))
-
-        val strings = ArrayList<String>()
-        strings.add("")
-        strings.add("main")
+        val strings = registry.strings.toList()
 
         val globalData = ByteBuffer.allocate(4 * registry.counter) // TODO: good enough?
 
@@ -207,23 +213,35 @@ class GenerationContext(val roots: List<Statement>) {
             is FunctionLiteral -> {
                 val global = registry.register(id)
                 registry.push()
-                (children.flatMap { it.generate() }
+                val f = Function(
+                        firstStatement = 0, // to be filled in later
+                        firstLocal = 0,
+                        numLocals = 0,
+                        profiling = 0,
+                        nameOffset = registry.registerString(id!!),
+                        fileNameOffset = 0,
+                        numParams = 0,
+                        sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
+                )
+                (listOf(
+                        IR(dummy = true, function = f))
+                        + children.flatMap { it.generate() }
                         + IR(instr = Instruction.DONE)
-                        + IR(ret = global, dummy = true))
+                        + IR(dummy = true, ret = global))
             }
             is ConstantExpression -> {
                 val global = registry.register(null, value)
                 listOf(
-                        IR(ret = global, dummy = true))
+                        IR(dummy = true, ret = global))
             }
             is DeclarationExpression -> {
                 val global = registry.register(id)
                 listOf(
-                        IR(ret = global, dummy = true))
+                        IR(dummy = true, ret = global))
             }
             is ReferenceExpression -> {
                 val global = registry[id]!!
-                listOf(IR(ret = global, dummy = true))
+                listOf(IR(dummy = true, ret = global))
             }
             is BinaryExpression.Assign -> {
                 // ast:
