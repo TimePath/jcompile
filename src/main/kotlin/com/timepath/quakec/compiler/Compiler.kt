@@ -1,14 +1,16 @@
 package com.timepath.quakec.compiler
 
+import java.awt.Dimension
 import java.io.File
 import java.io.Reader
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.Date
 import java.util.EnumSet
 import java.util.LinkedList
-import java.awt.Dimension
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.logging.Level
 import javax.swing.*
+import com.timepath.quakec.Logging
 import com.timepath.quakec.QCLexer
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.compiler.gen.GenerationContext
@@ -23,6 +25,10 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 public class Compiler {
+
+    class object {
+        val logger = Logging.new()
+    }
 
     val debugThreads = true
     val debugPP = false
@@ -130,7 +136,7 @@ public class Compiler {
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
         val roots = linkedListOf<List<Statement>>()
         includes.forEach { include ->
-            println(include.path)
+            logger.info(include.path)
             preprocessor.addInput(include.source)
             val stream = ANTLRInputStream(preview(CppReader(preprocessor)))
             stream.name = include.path
@@ -145,7 +151,7 @@ public class Compiler {
                         it.writeText(listener.toString())
                     }
                 } catch (e: Throwable) {
-                    e.printStackTrace()
+                    logger.log(Level.SEVERE, "Error printing parse tree", e)
                 }
             }
             //            exec.submit {
@@ -160,7 +166,7 @@ public class Compiler {
                 roots.add(root.children)
                 //                    }
             } catch (e: Throwable) {
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Error printing syntax tree", e)
             }
             //            }
         }
@@ -175,11 +181,12 @@ public class Compiler {
     }
 }
 
+val logger = Logging.new()
 fun main(args: Array<String>) {
     val time = {(name: String, action: () -> Unit) ->
         val start = Date()
         action()
-        println("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
+        logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
     }
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
 //    time("Total time")

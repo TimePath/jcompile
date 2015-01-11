@@ -1,5 +1,6 @@
 package com.timepath.quakec.compiler
 
+import com.timepath.quakec.Logging
 import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.compiler.ast.*
@@ -8,6 +9,10 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
+    class object {
+        val logger = Logging.new()
+    }
+
     private fun debug(ctx: ParserRuleContext) {
         val token = ctx.start
         val source = token.getTokenSource()
@@ -15,7 +20,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val line = token.getLine()
         val col = token.getCharPositionInLine()
         val file = source.getSourceName()
-        println("I: {$token} $line,$col $file")
+        logger.fine("{$token} $line,$col $file")
     }
 
     override fun defaultResult(): List<Statement> = emptyList()

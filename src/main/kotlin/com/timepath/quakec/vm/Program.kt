@@ -2,10 +2,15 @@ package com.timepath.quakec.vm
 
 import java.io.File
 import java.util.*
+import com.timepath.quakec.Logging
 import com.timepath.quakec.vm.util.ProgramDataReader
 import org.antlr.v4.runtime.misc.Utils
 
 public class Program(val data: ProgramData?) {
+
+    class object {
+        val logger = Logging.new()
+    }
 
     public fun exec(needle: String = "main") {
         exec(data!!.functions!!.first { it.name == needle })
@@ -52,7 +57,7 @@ public class Program(val data: ProgramData?) {
 
         while (!stack.empty()) {
             val s = data!!.statements!![stmt]
-            println(s.toString())
+            logger.fine(s.toString())
 
             val ret = s(data).toInt()
             if (ret == 0) {
@@ -105,7 +110,7 @@ public class Program(val data: ProgramData?) {
             args addAll parameterTypes.map { read(it) }
             if (varargsType != null)
                 args addAll ((parameterTypes.size()..parameterCount - 1).map { read(varargsType) })
-            println("""$name(${
+            logger.info("""$name(${
             args.map({
                 if (it is String)
                     "\"${Utils.escapeWhitespace(it, false)}\""
@@ -122,7 +127,7 @@ public class Program(val data: ProgramData?) {
                     name = "print",
                     varargsType = javaClass<String>(),
                     callback = {
-                        System.err.print(it.map { it.toString() }.join(""))
+                        logger.info(it.map { it.toString() }.join(""))
                     }
             ),
             2 to Builtin(

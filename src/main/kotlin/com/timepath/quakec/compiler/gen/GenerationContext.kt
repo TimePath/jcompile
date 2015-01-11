@@ -6,6 +6,7 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.Stack
 import java.util.regex.Pattern
+import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.vm
 import com.timepath.quakec.vm.Instruction
@@ -17,6 +18,10 @@ import com.timepath.quakec.vm.ProgramData.Header.Section
 import com.timepath.quakec.vm.StringManager
 
 class GenerationContext(val roots: List<Statement>) {
+
+    class object {
+        val logger = Logging.new()
+    }
 
     val registry: Registry = Registry()
 
@@ -159,20 +164,12 @@ class GenerationContext(val roots: List<Statement>) {
         )
     }
 
-    private fun error(msg: String) {
-        println("E: $msg")
-    }
-
-    private fun warn(msg: String) {
-        println("W: $msg")
-    }
-
     private fun Statement.enter() {
-        println ("${"> > " repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
+        logger.fine("${"> > " repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
         when (this) {
             is FunctionLiteral -> {
                 if (id != null && id in registry) {
-                    warn("redefining $id")
+                    logger.warning("redefining $id")
                 }
             }
             is DeclarationExpression -> {
@@ -180,7 +177,7 @@ class GenerationContext(val roots: List<Statement>) {
             }
             is ReferenceExpression -> {
                 if (id !in registry) {
-                    error("unknown reference $id")
+                    logger.severe("unknown reference $id")
                 }
             }
         }
@@ -195,7 +192,7 @@ class GenerationContext(val roots: List<Statement>) {
                 registry.pop()
             }
         }
-        println ("${" < <" repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
+        logger.fine("${" < <" repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
     }
 
     private fun Statement.generate(): List<IR> {

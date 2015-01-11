@@ -1,7 +1,10 @@
 package com.timepath.quakec.compiler.test
 
+import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.compiler.gen.GenerationContext
+
+val logger = Logging.new()
 
 fun main(args: Array<String>) {
 
@@ -53,25 +56,25 @@ fun main(args: Array<String>) {
             ret()
         }
     }
-    println(root.toStringRecursive())
+    logger.info(root.toStringRecursive())
 
-    println("=======")
+    logger.info("=======")
 
     val ctx = GenerationContext(root.children)
     val asm = ctx.generate()
 
-    println("=======")
+    logger.info("=======")
 
-    println(ctx.registry)
+    logger.info(ctx.registry.toString())
 
-    println("=======")
+    logger.info("=======")
 
-    println(asm)
+    logger.info(asm.toString())
 
-    println("=======")
+    logger.info("=======")
 
     asm.forEach {
         if (!it.dummy)
-            println(it)
+            logger.info(it.toString())
     }
 }
