@@ -72,12 +72,12 @@ class ProgramDataReader(file: File) {
                     )
                 },
                 strings = StringManager({
-                    val list: MutableList<String> = ArrayList(512)
-                    val sb = StringBuilder()
                     raf.offset = header.stringData.offset.toLong()
 
+                    val list: MutableList<String> = ArrayList(512)
+                    val sb = StringBuilder()
                     val c: Int
-                    while (true) {
+                    while (raf.offset - header.stringData.offset < header.stringData.count) {
                         c = raf.readByte().toInt()
                         when {
                             c < 0 -> break
@@ -88,26 +88,18 @@ class ProgramDataReader(file: File) {
                             else -> sb.append(c.toChar())
                         }
                     }
-
-                    var stroff = 0
-                    val strings = LinkedHashMap<Int, String>(list.size())
-                    for (s in list) {
-                        strings[stroff] = s
-                        stroff += s.length() + 1
-                    }
-                    strings
+                    list
                 }(), header.stringData.count),
-                globalData = {
+                globalData = ByteBuffer.wrap({
                     raf.offset = header.globalData.offset.toLong()
-                    val bytes = ByteArray(header.globalData.count * 4)
-                    raf.read(bytes)
-                    ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-                }()
+
+                    val bytes = ByteArray(4 * header.globalData.count)
+                    val i = raf.read(bytes)
+                    val b = i == bytes.size()
+                    assert(b)
+                    bytes
+                }()).order(ByteOrder.LITTLE_ENDIAN)
         )
-        ret.statements?.forEach { it.data = ret }
-        ret.globalDefs?.forEach { it.data = ret }
-        ret.fieldDefs?.forEach { it.data = ret }
-        ret.functions?.forEach { it.data = ret }
         return ret
     }
 

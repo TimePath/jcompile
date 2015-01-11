@@ -7,7 +7,7 @@ import kotlin.properties.Delegates
 import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 
-fun Statement(op: Short, a: Short, b: Short, c: Short): Statement = Statement(Instruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
+fun Statement(op: Short, a: Short, b: Short, c: Short) = Statement(Instruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
 class Statement(val op: Instruction, val a: Int, val b: Int, val c: Int) {
 
     var data: ProgramData? = null
@@ -39,22 +39,41 @@ class Definition(val type: Short,
 
 }
 
-class Function(val firstStatement: Int,
-               val firstLocal: Int,
-               val numLocals: Int,
-               val profiling: Int,
-               val nameOffset: Int,
-               val fileNameOffset: Int,
-               val numParams: Int,
-               val sizeof: ByteArray) {
+class Function(
+        /**
+         * Negative indicated a builtin
+         */
+        val firstStatement: Int,
+        val firstLocal: Int,
+        val numLocals: Int,
+        /**
+         * Runtime counter of statements executed
+         */
+        val profiling: Int,
+        /**
+         * Offset into strings
+         */
+        val nameOffset: Int,
+        /**
+         * Offset into strings
+         */
+        val fileNameOffset: Int,
+        /**
+         * Number of parameters
+         */
+        val numParams: Int,
+        /**
+         * Size 8 byte array with size of each parameter. 3 for vectors, 1 for everything else
+         */
+        val sizeof: ByteArray) {
 
     var data: ProgramData? = null
 
     val name: String?
-        get() = data?.strings!![this.nameOffset]
+        get() = data?.strings!![nameOffset]
 
     val fileName: String?
-        get() = data?.strings!![this.fileNameOffset]
+        get() = data?.strings!![fileNameOffset]
 
     override fun toString(): String = """Function {
     firstStatement=${firstStatement},
@@ -75,6 +94,13 @@ data class ProgramData(val header: Header? = null,
                        val functions: List<Function>? = null,
                        val strings: StringManager? = null,
                        val globalData: ByteBuffer? = null) {
+
+    {
+        statements?.forEach { it.data = this }
+        globalDefs?.forEach { it.data = this }
+        fieldDefs?.forEach { it.data = this }
+        functions?.forEach { it.data = this }
+    }
 
     val entities: EntityManager by Delegates.lazy {
         EntityManager(this)

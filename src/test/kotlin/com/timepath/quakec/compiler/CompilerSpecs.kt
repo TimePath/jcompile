@@ -67,9 +67,7 @@ class CompilerSpecs : Spek() {{
                     }
                 }
                 it("should execute") {
-                    fails { // TODO
-                        Program(compiler.compile(roots)).exec()
-                    }
+                    Program(compiler.compile(roots)).exec()
                 }
             }
         }

@@ -64,7 +64,7 @@ public class Program(val data: ProgramData?) {
             stmt += ret
             when (s.op) {
                 Instruction.CALL0, Instruction.CALL1, Instruction.CALL2, Instruction.CALL3, Instruction.CALL4, Instruction.CALL5, Instruction.CALL6, Instruction.CALL7, Instruction.CALL8 -> {
-                    val function = data.functions!![data.globalIntData.get(s.a.toInt())]
+                    val function = data.functions!![data.globalIntData[s.a]]
                     val i = function.firstStatement
                     if (i < 0) {
                         builtin(-i, s.op.ordinal() - Instruction.CALL0.ordinal())

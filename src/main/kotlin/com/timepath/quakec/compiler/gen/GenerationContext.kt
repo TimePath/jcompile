@@ -100,12 +100,31 @@ class GenerationContext(val roots: List<Statement>) {
     }
 
     fun generateProgs(ir: List<IR> = generate()): ProgramData {
-        val statements = ArrayList<vm.Statement>()
+        val statements = ArrayList<vm.Statement>(ir.size())
+        ir.forEach {
+            if (!it.dummy) {
+                val args = it.args
+                val a = if (args.size() > 0) args[0] else 0
+                val b = if (args.size() > 1) args[1] else 0
+                val c = if (args.size() > 2) args[2] else 0
+                statements.add(vm.Statement(it.instr!!, a, b, c))
+            }
+        }
+
         val globalDefs = ArrayList<Definition>()
         val fieldDefs = ArrayList<Definition>()
+
         val functions = ArrayList<Function>()
-        val globalData = ByteBuffer.allocate(0)
-        val strings = StringManager(mapOf<Int, String>(), 0)
+        functions.add(Function(-1, 0, 0, 0, 0, 0, 0, byteArray(0, 0, 0, 0, 0, 0, 0, 0)))
+        functions.add(Function(0, 0, 0, 0, 1, 1, 0, byteArray(0, 0, 0, 0, 0, 0, 0, 0)))
+
+        val strings = ArrayList<String>()
+        strings.add("")
+        strings.add("main")
+
+        val globalData = ByteBuffer.allocate(4 * registry.counter) // TODO: good enough?
+
+        val stringManager = StringManager(strings)
 
         val version = 6
         val crc = -1 // TODO: CRC16
@@ -129,14 +148,14 @@ class GenerationContext(val roots: List<Statement>) {
                         fieldDefs = Section(fieldDefsOffset, fieldDefs.size()),
                         functions = Section(functionsOffset, functions.size()),
                         globalData = Section(stringsOffset, globalData.capacity()),
-                        stringData = Section(globalDataOffset, strings.constant.size())
+                        stringData = Section(globalDataOffset, stringManager.constant.size())
                 ),
                 statements = statements,
                 globalDefs = globalDefs,
                 fieldDefs = fieldDefs,
                 functions = functions,
                 globalData = globalData,
-                strings = strings
+                strings = stringManager
         )
     }
 

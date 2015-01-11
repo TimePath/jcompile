@@ -1,16 +1,34 @@
 package com.timepath.quakec.vm
 
 import java.util.ArrayList
+import java.util.LinkedHashMap
 
-class StringManager(
-        /**
-         * Map of addresses to strings
-         */
-        val constant: Map<Int, String>,
-        /**
-         * The largest constant key + the length of its value
-         */
-        private val constantSize: Int) {
+class StringManager(list: List<String>, expectedSize: Int? = null) {
+
+    /**
+     * Map of addresses to strings
+     */
+    val constant: Map<Int, String>
+
+    /**
+     * The largest constant key + the length of its value
+     */
+    private val constantSize: Int
+
+    {
+        var stroff = 0
+        val strings = LinkedHashMap<Int, String>(list.size())
+        for (s in list) {
+            strings[stroff] = s
+            stroff += s.length() + 1
+        }
+        constant = strings
+        if (expectedSize != null) {
+            val b = expectedSize == stroff
+            assert(b, "String constants size mismatch")
+        }
+        constantSize = stroff
+    }
 
     private val temp: MutableList<String> = ArrayList(512)
     private val zone: MutableList<String?> = ArrayList(512)
