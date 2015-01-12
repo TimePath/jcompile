@@ -1,13 +1,16 @@
 package com.timepath.quakec.compiler
 
-import org.jetbrains.spek.api.Spek
-import com.timepath.quakec.vm.Program
-import org.intellij.lang.annotations.Language
-import com.timepath.quakec.vm.ProgramData
 import java.io.File
-import com.timepath.quakec.compiler.ast.BlockStatement
-import com.timepath.quakec.compiler.gen.Generator
 import kotlin.test.assertEquals
+import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.ast.BlockStatement
+import com.timepath.quakec.compiler.ast.Statement
+import com.timepath.quakec.compiler.gen.Generator
+import com.timepath.quakec.compiler.gen.IR
+import com.timepath.quakec.vm.Program
+import com.timepath.quakec.vm.ProgramData
+import org.intellij.lang.annotations.Language
+import org.jetbrains.spek.api.Spek
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
     return Compiler()
@@ -18,6 +21,8 @@ fun compile([Language("QuakeC")] input: String): ProgramData {
 fun exec([Language("QuakeC")] input: String) {
     Program(compile(input)).exec("main")
 }
+
+val logger = Logging.new()
 
 class CompilerSpecs : Spek() {{
     given("a compiler") {
@@ -30,9 +35,12 @@ class CompilerSpecs : Spek() {{
                 val compiler = Compiler()
                 compiler.include(File(resources, "defs.qh"))
                 compiler.include(it)
-                val roots = compiler.ast()
+
+                var roots: List<List<Statement>>?
                 it("should parse") {
-                    val actual = BlockStatement(roots.last()).toStringRecursive()
+                    logger.info("Parsing $it")
+                    roots = compiler.ast()
+                    val actual = BlockStatement(roots!!.last()).toStringRecursive()
                     val saved = File(resources, "${it.name}.xml")
                     if (saved.exists()) {
                         val expected = saved.readText()
@@ -44,10 +52,13 @@ class CompilerSpecs : Spek() {{
 //                        fail("Nothing to compare")
                     }
                 }
+                var ctx: Generator?
+                var asm: List<IR>?
                 it("should compile") {
-                    val ctx = Generator(roots.flatMap { it })
-                    val asm = ctx.generate()
-                    val actual = asm.map { ir ->
+                    logger.info("Compiling $it")
+                    ctx = Generator(roots!!.flatMap { it })
+                    asm = ctx!!.generate()
+                    val actual = asm!!.map { ir ->
                         if (ir.real)
                             ir.toString()
                         else
@@ -65,7 +76,8 @@ class CompilerSpecs : Spek() {{
                     }
                 }
                 it("should execute") {
-                    Program(compiler.compile(roots)).exec()
+                    logger.info("Executing $it")
+                    Program(ctx!!.generateProgs(asm!!)).exec()
                 }
             }
         }
