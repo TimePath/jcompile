@@ -147,7 +147,10 @@ class Allocator {
      * Return the index in memory
      */
     fun allocateConstant(value: Value, id: String? = null): Int {
-        if (value.value is String) return allocateString(value.value)
+        if (value.value is String) {
+            val stringId = allocateString(value.value)
+            return allocateConstant(Value(stringId), "str$stringId")
+        }
         val name = id ?: "val$counter"
         val i = counter
         return allocate(constants, name, i) {
