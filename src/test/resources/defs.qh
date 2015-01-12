@@ -10,3 +10,5 @@ float  (string, string) strcmp = #11;
 float  (float)          sqrt   = #13;
 float  (float)          floor  = #14;
 float  (float, float)   pow    = #15;
+
+void   (float, string)  ASSERT = #16;

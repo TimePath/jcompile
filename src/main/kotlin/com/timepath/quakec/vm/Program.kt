@@ -229,6 +229,16 @@ public class Program(val data: ProgramData) {
                         val exponent = it[1] as Float
                         Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
                     }
+            ),
+            16 to Builtin(
+                    name = "assert",
+                    parameterTypes = array(javaClass<Float>(), javaClass<String>()),
+                    callback = {
+                        val assertion = it[0] as Float
+                        val message = it[1] as String
+                        if (assertion == 0f)
+                            throw AssertionError(message)
+                    }
             )
     )
 
