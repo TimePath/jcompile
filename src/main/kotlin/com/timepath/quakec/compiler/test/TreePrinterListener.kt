@@ -1,5 +1,6 @@
 package com.timepath.quakec.compiler.test
 
+import com.timepath.quakec.compiler.quote
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Utils
 import org.antlr.v4.runtime.tree.*
@@ -25,7 +26,7 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
             sb.append(" ")
         }
 
-        sb.append("\"${Utils.escapeWhitespace(Trees.getNodeText(node, ruleNames), false).replace("\"", "\\\"")}\"")
+        sb.append(Trees.getNodeText(node, ruleNames).quote())
     }
 
     override fun visitErrorNode(node: ErrorNode) {

@@ -3,6 +3,7 @@ package com.timepath.quakec.vm
 import java.io.File
 import java.util.*
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.vm.util.ProgramDataReader
 import org.antlr.v4.runtime.misc.Utils
 
@@ -113,7 +114,7 @@ public class Program(val data: ProgramData) {
             logger.info("""$name(${
             args.map({
                 if (it is String)
-                    "\"${Utils.escapeWhitespace(it, false)}\""
+                    it.quote()
                 else
                     it.toString()
             }).join(", ")

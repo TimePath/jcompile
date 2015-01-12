@@ -3,11 +3,6 @@ package com.timepath.quakec.compiler.gen
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
-import java.util.HashMap
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
-import java.util.Stack
-import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.vm
@@ -60,12 +55,15 @@ class Generator(val roots: List<Statement>) {
                 statements.add(vm.Statement(it.instr!!, a, b, c))
             }
         }
-        for ((k, wrapped) in allocator.constants) {
+        val merge = {(it: Map.Entry<Int, Value>): Unit ->
+            val (k, wrapped) = it
             val v = wrapped.value
             when (v) {
                 is Int -> intData.put(k, v)
             }
         }
+        allocator.references.values.forEach(merge)
+        allocator.constants.values.forEach(merge)
 
         val globalData = {
             assert(4 * allocator.counter >= globalData.position())
@@ -110,7 +108,7 @@ class Generator(val roots: List<Statement>) {
     }
 
     private fun Statement.enter() {
-        logger.fine("${"> > ".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
+        logger.finer("${"> > ".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
         when (this) {
             is FunctionLiteral -> {
                 if (id != null && id in allocator) {
@@ -137,7 +135,7 @@ class Generator(val roots: List<Statement>) {
                 allocator.pop()
             }
         }
-        logger.fine("${" < <".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
+        logger.finer("${" < <".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
     }
 
     private fun Statement.generate(): List<IR> {
@@ -152,7 +150,10 @@ class Generator(val roots: List<Statement>) {
             is FunctionLiteral -> {
                 val global = allocator.allocateFunction(id)
                 val f = Function(
-                        firstStatement = 0, // to be filled in later
+                        firstStatement = if (builtin == null)
+                            0 // to be filled in later
+                        else
+                            -builtin,
                         firstLocal = 0,
                         numLocals = 0,
                         profiling = 0,
@@ -178,19 +179,7 @@ class Generator(val roots: List<Statement>) {
                 val ret = linkedListOf<IR>()
                 if (this.value != null) {
                     val value = this.value.evaluate()
-                    val s = value.toString()
-                    if (s.startsWith('#')) { // FIXME: HACK
-                        val builtin = Function(
-                                firstStatement = -s.substring(1).toInt(),
-                                firstLocal = 0,
-                                numLocals = 0,
-                                profiling = 0,
-                                nameOffset = allocator.allocateString(id),
-                                fileNameOffset = 0,
-                                numParams = 0,
-                                sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0))
-                        ret.add(FunctionIR(builtin))
-                    }
+                    allocator.references[global] = value
                 }
                 ret.add(ReferenceIR(global))
                 ret

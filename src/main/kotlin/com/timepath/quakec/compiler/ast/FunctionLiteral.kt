@@ -8,7 +8,8 @@ import java.util.Arrays
 class FunctionLiteral(val id: String? = null,
                       val returnType: Type? = null,
                       val argTypes: Array<Type>? = null,
-                      c: List<Statement>? = null) : Expression() {
+                      c: List<Statement>? = null,
+                      val builtin: Int? = null) : Expression() {
 
     {
         if (c != null) {

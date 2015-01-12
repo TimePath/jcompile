@@ -78,14 +78,22 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 DeclarationExpression(id)
             }
         }
-        return declarations.map {
+        return declarations.map {(it: QCParser.InitDeclaratorContext): Expression ->
             var declarator = it.declarator()
             while (declarator.declarator() != null) {
                 declarator = declarator.declarator()
             }
             val id = declarator.getText()
-            val statement = it.initializer()?.accept(this)?.single()
-            DeclarationExpression(id, if (statement != null) statement as ConstantExpression else null)
+            val initializer = it.initializer()?.accept(this)?.single()
+            val constantExpression = if (initializer != null) initializer as ConstantExpression else null
+            if (constantExpression != null) {
+                val value = constantExpression.evaluate()
+                val s = value.value.toString()
+                if (s.startsWith('#')) { // FIXME: HACK
+                    return@map FunctionLiteral(id, builtin = s.substring(1).toInt())
+                }
+            }
+            return@map DeclarationExpression(id, constantExpression)
         }
     }
 

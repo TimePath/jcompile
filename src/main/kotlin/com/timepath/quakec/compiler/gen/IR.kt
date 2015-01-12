@@ -11,7 +11,7 @@ open class IR(val instr: Instruction? = null,
 
     override fun toString(): String {
         val csv = args.map { '$' + it.toString() }.join(", ")
-        val comment = if (name != null) " /* ${Utils.escapeWhitespace(name, false)} */" else ""
+        val comment = if (name != null) " /* $name */" else ""
         return "$instr($csv)$comment"
     }
 

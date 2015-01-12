@@ -5,6 +5,7 @@ import java.util.LinkedHashMap
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.compiler.ast.Value
 
 class Allocator {
@@ -33,8 +34,6 @@ class Allocator {
         fun set(i: Int, value: Value) {
             values[i] = value
         }
-
-        fun iterator(): Iterator<Map.Entry<Int, Value>> = values.iterator()
 
         fun keySet(): MutableSet<String> = references.keySet()
 
@@ -137,7 +136,7 @@ class Allocator {
     fun allocateReference(id: String? = null): Int {
         val name = id ?: "ref$counter"
         val i = counter
-        return allocate(constants, name, i) {
+        return allocate(references, name, i) {
             scope.peek().lookup[name] = i
             counter++
         }
@@ -169,9 +168,9 @@ class Allocator {
 
     override fun toString(): String {
         val functions = functions.reverse.map { "${it.key}\t${it.value}" }.join("\n")
-        val references = references.reverse.map { "$${it.key}\t${it.value}" }.join("\n")
+        val references = references.reverse.map { "$${it.key}\t(${references[it.key]})\t${it.value}" }.join("\n")
         val constants = constants.reverse.map { "$${it.key}\t(${constants[it.key]})\t${it.value}" }.join("\n")
-        val strings = strings.reverse.map { "$${it.key}\t${it.value}" }.join("\n")
+        val strings = strings.reverse.map { "$${it.key}\t${it.value.quote()}" }.join("\n")
         return "functions:\n" + functions +
                 "\n\n" +
                 "references:\n" + references +
