@@ -8,8 +8,6 @@ import java.io.File
 import com.timepath.quakec.compiler.ast.BlockStatement
 import com.timepath.quakec.compiler.gen.GenerationContext
 import kotlin.test.assertEquals
-import kotlin.test.fail
-import kotlin.test.fails
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
     return Compiler()
@@ -50,7 +48,7 @@ class CompilerSpecs : Spek() {{
                     val ctx = GenerationContext(roots.flatMap { it })
                     val asm = ctx.generate()
                     val actual = asm.map { ir ->
-                        if (!ir.dummy)
+                        if (ir.real)
                             ir.toString()
                         else
                             null

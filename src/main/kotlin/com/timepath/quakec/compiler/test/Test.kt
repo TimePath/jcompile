@@ -74,7 +74,7 @@ fun main(args: Array<String>) {
     logger.info("=======")
 
     asm.forEach {
-        if (!it.dummy)
+        if (it.real)
             logger.info(it.toString())
     }
 }

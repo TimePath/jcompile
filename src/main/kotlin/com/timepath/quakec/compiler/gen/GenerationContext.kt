@@ -130,14 +130,14 @@ class GenerationContext(val roots: List<Statement>) {
         val statements = ArrayList<vm.Statement>(ir.size())
         val functions = ArrayList<Function>()
         ir.forEach {
-            if (it.function != null) {
+            if (it is FunctionIR) {
                 functions.add(
                         if (it.function.firstStatement >= 0)
                             it.function.copy(firstStatement = statements.size())
                         else
                             it.function)
             }
-            if (!it.dummy) {
+            if (it.real) {
                 val args = it.args
                 val a = if (args.size() > 0) args[0] else 0
                 val b = if (args.size() > 1) args[1] else 0
@@ -247,15 +247,15 @@ class GenerationContext(val roots: List<Statement>) {
                         sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
                 )
                 (listOf(
-                        IR(dummy = true, function = f))
+                        FunctionIR(f))
                         + children.flatMap { it.generate() }
                         + IR(instr = Instruction.DONE)
-                        + IR(dummy = true, ret = global))
+                        + ReferenceIR(global))
             }
             is ConstantExpression -> {
                 val global = registry.register(null, value)
                 listOf(
-                        IR(dummy = true, ret = global))
+                        ReferenceIR(global))
             }
             is DeclarationExpression -> {
                 val global = registry.register(id)
@@ -273,15 +273,15 @@ class GenerationContext(val roots: List<Statement>) {
                                 fileNameOffset = 0,
                                 numParams = 0,
                                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0))
-                        ret.add(IR(dummy = true, function = builtin))
+                        ret.add(FunctionIR(builtin))
                     }
                 }
-                ret.add(IR(dummy = true, ret = global))
+                ret.add(ReferenceIR(global))
                 ret
             }
             is ReferenceExpression -> {
                 val global = registry[id]!!
-                listOf(IR(dummy = true, ret = global))
+                listOf(ReferenceIR(global))
             }
             is BinaryExpression.Assign -> {
                 // ast:
