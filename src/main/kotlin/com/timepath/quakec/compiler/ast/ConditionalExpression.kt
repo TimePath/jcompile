@@ -1,14 +1,14 @@
 package com.timepath.quakec.compiler.ast
 
 class ConditionalExpression(val test: Expression,
-                            val yes: Statement,
-                            val no: Statement? = null) : Expression() {
+                            val pass: Statement,
+                            val fail: Statement? = null) : Expression() {
 
     {
-        mutableChildren.add(test)
-        mutableChildren.add(yes)
-        if (no != null) {
-            mutableChildren.add(no)
+        add(test)
+        add(pass)
+        if (fail != null) {
+            add(fail)
         }
     }
 
@@ -18,9 +18,9 @@ class ConditionalExpression(val test: Expression,
         val eval = @lambda {(it: Statement?): Value? ->
             return@lambda if (it is Expression) it.evaluate() else null
         }
-        return if (result.toBoolean()) eval(yes) else eval(no)
+        return if (result.toBoolean()) eval(pass) else eval(fail)
     }
 
-    override fun toString(): String = "($test ? $yes : $no)"
+    override fun toString(): String = "($test ? $pass : $fail)"
 
 }

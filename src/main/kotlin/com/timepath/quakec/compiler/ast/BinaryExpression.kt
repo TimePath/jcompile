@@ -4,15 +4,14 @@ import com.timepath.quakec.compiler.ast.Expression as rvalue
 import com.timepath.quakec.compiler.ast.ReferenceExpression as lvalue
 import com.timepath.quakec.vm.Instruction
 
-abstract class BinaryExpression<L : Expression, R : Expression>(val left: L,
-                                                                val right: R) : rvalue() {
+abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val right: R) : rvalue() {
 
     abstract val instr: Instruction
     abstract val op: String
 
     {
-        mutableChildren.add(left)
-        mutableChildren.add(right)
+        add(left)
+        add(right)
     }
 
     override fun toString(): String = "($left $op $right)"

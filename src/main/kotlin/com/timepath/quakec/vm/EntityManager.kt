@@ -7,7 +7,7 @@ import kotlin.properties.Delegates
 class EntityManager(val data: ProgramData) {
 
     private val entities = ArrayList<Entity?>()
-    private val entitySize = data.header!!.entityFields
+    private val entitySize = data.header.entityFields
 
     inner data class Entity {
         val byte: ByteBuffer = ByteBuffer.allocateDirect(4 * entitySize)

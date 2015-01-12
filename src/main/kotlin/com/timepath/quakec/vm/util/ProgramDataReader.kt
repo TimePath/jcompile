@@ -2,7 +2,6 @@ package com.timepath.quakec.vm.util
 
 import java.io.File
 import java.util.ArrayList
-import java.util.LinkedHashMap
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import com.timepath.quakec.vm.*
@@ -20,7 +19,10 @@ class ProgramDataReader(file: File) {
         return ret
     }
 
-    private fun readSection(): ProgramData.Header.Section = ProgramData.Header.Section(offset = raf.readInt(), count = raf.readInt())
+    private fun readSection() = ProgramData.Header.Section(
+            offset = raf.readInt(),
+            count = raf.readInt()
+    )
 
     fun read(): ProgramData {
         val header = ProgramData.Header(

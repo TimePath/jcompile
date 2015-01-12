@@ -75,7 +75,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                DeclarationExpression(id, null)
+                DeclarationExpression(id)
             }
         }
         return declarations.map {
@@ -92,7 +92,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
     override fun visitLabeledStatement(ctx: QCParser.LabeledStatementContext): List<Statement> {
         val id = ctx.Identifier()?.getText()
         // TODO: custom node
-        return if (id != null) listOf(DeclarationExpression(id, null)) else emptyList()
+        return if (id != null) listOf(DeclarationExpression(id)) else emptyList()
     }
 
     override fun visitJumpStatement(ctx: QCParser.JumpStatementContext): List<Statement> {
@@ -132,7 +132,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             return expr.accept(this)
         }
         // redundant semicolon
-        return listOf()
+        return emptyList()
     }
 
     val QCParser.AssignmentExpressionContext.terminal: Boolean get() = assignmentExpression() != null
@@ -161,7 +161,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 else -> null
             }
             if (op != null) return listOf(op)
-            return listOf()
+            return emptyList()
         }
         return super.visitAssignmentExpression(ctx)
     }
@@ -333,7 +333,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 ?.assignmentExpression()
                 ?.flatMap { it.accept(this) }
                 ?.filterNotNull()
-        return listOf(FunctionCall(left as Expression, right ?: listOf()))
+        return listOf(FunctionCall(left as Expression, right ?: emptyList()))
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {

@@ -3,7 +3,8 @@ package com.timepath.quakec.vm
 import java.util.ArrayList
 import java.util.LinkedHashMap
 
-class StringManager(list: List<String>, expectedSize: Int? = null) {
+class StringManager(list: List<String>,
+                    expectedSize: Int? = null) {
 
     /**
      * Map of addresses to strings

@@ -1,7 +1,7 @@
 package com.timepath.quakec
 
-import java.util.logging.Logger
 import java.lang.invoke.MethodHandles
+import java.util.logging.Logger
 import java.util.logging.LogManager
 
 object Logging {

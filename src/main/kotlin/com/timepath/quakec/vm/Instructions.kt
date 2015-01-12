@@ -449,7 +449,7 @@ enum class Instruction {
     fun invoke(it: Statement, data: ProgramData): Int {
         val f = data.globalFloatData
         val i = data.globalIntData
-        val s = data.strings!!
+        val s = data.strings
         val e = data.entities
         action(it, f, i, s, e)
         return advance(it, f, i)
@@ -458,7 +458,11 @@ enum class Instruction {
     fun toString(s: Statement, data: ProgramData?): String {
         val get = {(it: Int) ->
             try {
-                data?.globalFloatData?.get(it)
+                if (data != null) {
+                    data.globalFloatData[it]
+                } else {
+                    null
+                }
             } catch (e: IndexOutOfBoundsException) {
                 null
             }

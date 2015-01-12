@@ -21,9 +21,9 @@ fun main(args: Array<String>) {
             add(
                     ConditionalExpression(
                             ConstantExpression(2),
-                            BlockStatement(
+                            BlockStatement(listOf(
                                     DeclarationExpression("yay2", ConstantExpression(1))
-                            )
+                            ))
                     )
             )
             call(print) {

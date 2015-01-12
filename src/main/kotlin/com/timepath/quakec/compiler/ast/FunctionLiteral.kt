@@ -8,10 +8,12 @@ import java.util.Arrays
 class FunctionLiteral(val id: String? = null,
                       val returnType: Type? = null,
                       val argTypes: Array<Type>? = null,
-                      newChildren: List<Statement> = emptyList()) : Expression() {
+                      c: List<Statement>? = null) : Expression() {
 
     {
-        mutableChildren.addAll(newChildren)
+        if (c != null) {
+            addAll(c)
+        }
     }
 
     override val attributes: Map<String, Any?>

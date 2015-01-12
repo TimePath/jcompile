@@ -44,7 +44,7 @@ class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
 
         val ruleIndex = ctx.getRuleIndex()
         val ruleName = if (ruleIndex >= 0 && ruleIndex < ruleNames.size()) {
-            ruleNames.get(ruleIndex)
+            ruleNames[ruleIndex]
         } else {
             Integer.toString(ruleIndex)
         }

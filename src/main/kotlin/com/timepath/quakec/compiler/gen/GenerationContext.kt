@@ -320,7 +320,7 @@ class GenerationContext(val roots: List<Statement>) {
                 }
                 (args.flatMap { it }
                         + prepare
-                        + listOf(IR(instr(i), array(function!!.generate().last().ret), Instruction.OFS_PARAM(-1)))
+                        + listOf(IR(instr(i), array(function.generate().last().ret), Instruction.OFS_PARAM(-1)))
                         )
             }
             is ReturnStatement -> {

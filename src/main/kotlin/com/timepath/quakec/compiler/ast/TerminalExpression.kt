@@ -22,4 +22,5 @@ open class ReferenceExpression(val id: String) : Expression() {
 
 }
 
-class DeclarationExpression(id: String, val value: ConstantExpression?) : ReferenceExpression(id)
+class DeclarationExpression(id: String,
+                            val value: ConstantExpression? = null) : ReferenceExpression(id)

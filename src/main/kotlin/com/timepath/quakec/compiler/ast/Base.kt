@@ -1,13 +1,11 @@
 package com.timepath.quakec.compiler.ast
 
-import java.util.ArrayList
-
 abstract class Statement {
 
     open val attributes: Map<String, Any?>
         get() = mapOf()
 
-    protected val mutableChildren: MutableList<Statement> = ArrayList()
+    private val mutableChildren: MutableList<Statement> = linkedListOf()
 
     val children: List<Statement>
         get() = mutableChildren
@@ -21,6 +19,10 @@ abstract class Statement {
 
     fun add(s: Statement) {
         mutableChildren.add(s)
+    }
+
+    fun addAll(c: List<Statement>) {
+        mutableChildren.addAll(c)
     }
 
     private fun render(sb: StringBuilder = StringBuilder(), indent: String = ""): StringBuilder {
@@ -64,10 +66,10 @@ abstract class Expression : Statement() {
     open fun hasSideEffects(): Boolean = false
 }
 
-class BlockStatement(newChildren: List<Statement> = emptyList()) : Statement() {
+class BlockStatement(c: List<Statement>? = null) : Statement() {
     {
-        mutableChildren.addAll(newChildren)
+        if (c != null) {
+            addAll(c)
+        }
     }
 }
-
-fun BlockStatement(vararg children: Statement) = BlockStatement(children.toList())

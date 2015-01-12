@@ -2,10 +2,13 @@ package com.timepath.quakec.compiler.ast
 
 import kotlin.properties.Delegates
 
-class FunctionCall(val function: Expression? = null, newChildren: List<Statement> = emptyList()) : Expression() {
+class FunctionCall(val function: Expression,
+                   c: List<Statement>? = null) : Expression() {
 
     {
-        mutableChildren.addAll(newChildren)
+        if (c != null) {
+            addAll(c)
+        }
     }
 
     val args: List<Expression> by Delegates.lazy {

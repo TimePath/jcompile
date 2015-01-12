@@ -6,14 +6,14 @@ import com.timepath.quakec.Logging
 import com.timepath.quakec.vm.util.ProgramDataReader
 import org.antlr.v4.runtime.misc.Utils
 
-public class Program(val data: ProgramData?) {
+public class Program(val data: ProgramData) {
 
     class object {
         val logger = Logging.new()
     }
 
     public fun exec(needle: String = "main") {
-        exec(data!!.functions!!.first { it.name == needle })
+        exec(data.functions.first { it.name == needle })
     }
 
     data class Frame(val sp: Int,
@@ -35,7 +35,7 @@ public class Program(val data: ProgramData?) {
             var k = it.firstLocal
             for (i in 0..it.numParams - 1) {
                 for (j in 0..it.sizeof[i] - 1) {
-                    data!!.globalIntData.put(k++, data.globalIntData.get(Instruction.OFS_PARAM(i) + j))
+                    data.globalIntData[k++] = data.globalIntData[Instruction.OFS_PARAM(i) + j]
                 }
             }
 
@@ -56,7 +56,7 @@ public class Program(val data: ProgramData?) {
         push(start)
 
         while (!stack.empty()) {
-            val s = data!!.statements!![stmt]
+            val s = data.statements[stmt]
             logger.fine(s.toString())
 
             val ret = s(data).toInt()
@@ -69,7 +69,7 @@ public class Program(val data: ProgramData?) {
             stmt += ret
             when (s.op) {
                 Instruction.CALL0, Instruction.CALL1, Instruction.CALL2, Instruction.CALL3, Instruction.CALL4, Instruction.CALL5, Instruction.CALL6, Instruction.CALL7, Instruction.CALL8 -> {
-                    val function = data.functions!![data.globalIntData[s.a]]
+                    val function = data.functions[data.globalIntData[s.a]]
                     val i = function.firstStatement
                     if (i < 0) {
                         builtin(-i, s.op.ordinal() - Instruction.CALL0.ordinal())
@@ -89,8 +89,8 @@ public class Program(val data: ProgramData?) {
 
         fun call(parameterCount: Int): Any {
             var offset = Instruction.OFS_PARAM(0)
-            val getFloat = {(i: Int) -> data!!.globalFloatData.get(i) }
-            val getString = {(i: Int) -> data!!.strings!![data.globalIntData.get(i)] }
+            val getFloat = {(i: Int) -> data.globalFloatData[i] }
+            val getString = {(i: Int) -> data.strings[data.globalIntData[i]] }
             val read = {(it: Any) ->
                 when (it) {
                     javaClass<Float>() -> {
@@ -106,10 +106,10 @@ public class Program(val data: ProgramData?) {
                     else -> it
                 }
             }
-            val args: MutableList<*> = ArrayList(parameterCount)
-            args addAll parameterTypes.map { read(it) }
+            val args: MutableList<Any?> = ArrayList(parameterCount)
+            parameterTypes.mapTo(args) { read(it) }
             if (varargsType != null)
-                args addAll ((parameterTypes.size()..parameterCount - 1).map { read(varargsType) })
+                (parameterTypes.size()..parameterCount - 1).mapTo(args) { read(varargsType) }
             logger.info("""$name(${
             args.map({
                 if (it is String)
@@ -141,7 +141,7 @@ public class Program(val data: ProgramData?) {
             3 to Builtin(
                     name = "spawn",
                     callback = {
-                        val entityManager = this.data!!.entities
+                        val entityManager = this.data.entities
                         entityManager.spawn()
                     }
             ),
@@ -150,7 +150,7 @@ public class Program(val data: ProgramData?) {
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
                         val e = it[0] as Int
-                        val entityManager = this.data!!.entities
+                        val entityManager = this.data.entities
                         entityManager.kill(e)
                     }
             ),
@@ -236,13 +236,11 @@ public class Program(val data: ProgramData?) {
         val ret = builtin?.call(parameterCount)
         if (ret == null) return
 
-        data!!
         when (ret) {
             is Float -> {
                 data.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
             }
             is String -> {
-                data.strings!!
                 data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(ret))
             }
         }

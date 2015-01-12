@@ -13,7 +13,7 @@ class ProgramDataWriter(file: File) {
     }
 
     fun write(ret: ProgramData) {
-        val h = ret.header!!
+        val h = ret.header
         raf.writeInt(h.version)
         raf.writeInt(h.crc)
         writeSection(h.statements)
@@ -25,7 +25,7 @@ class ProgramDataWriter(file: File) {
         raf.writeInt(h.entityFields)
 
         raf.offset = ret.header.statements.offset.toLong()
-        for (it in ret.statements!!) {
+        for (it in ret.statements) {
             raf.writeShort(it.op.ordinal())
             raf.writeShort(it.a)
             raf.writeShort(it.b)
@@ -33,21 +33,21 @@ class ProgramDataWriter(file: File) {
         }
 
         raf.offset = ret.header.globalDefs.offset.toLong()
-        for (it in ret.globalDefs!!) {
+        for (it in ret.globalDefs) {
             raf.writeShort(it.type.toInt())
             raf.writeShort(it.offset.toInt())
             raf.writeInt(it.nameOffset)
         }
 
         raf.offset = ret.header.fieldDefs.offset.toLong()
-        for (it in ret.fieldDefs!!) {
+        for (it in ret.fieldDefs) {
             raf.writeShort(it.type.toInt())
             raf.writeShort(it.offset.toInt())
             raf.writeInt(it.nameOffset)
         }
 
         raf.offset = ret.header.functions.offset.toLong()
-        for (it in ret.functions!!) {
+        for (it in ret.functions) {
             raf.writeInt(it.firstStatement)
             raf.writeInt(it.firstLocal)
             raf.writeInt(it.numLocals)
@@ -58,13 +58,13 @@ class ProgramDataWriter(file: File) {
             raf.write(it.sizeof)
         }
 
-        for ((key, value) in ret.strings!!.constant.entrySet()) {
+        for ((key, value) in ret.strings.constant.entrySet()) {
             raf.offset = ret.header.stringData.offset.toLong() + key
             raf.writeString(value)
         }
 
         raf.offset = ret.header.globalData.offset.toLong()
-        raf.write(ret.globalData!!.array())
+        raf.write(ret.globalData.array())
     }
 
 }

@@ -7,8 +7,15 @@ import kotlin.properties.Delegates
 import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 
-fun Statement(op: Short, a: Short, b: Short, c: Short) = Statement(Instruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
-class Statement(val op: Instruction, val a: Int, val b: Int, val c: Int) {
+fun Statement(op: Short,
+              a: Short,
+              b: Short,
+              c: Short) = Statement(Instruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
+
+class Statement(val op: Instruction,
+                val a: Int,
+                val b: Int,
+                val c: Int) {
 
     var data: ProgramData? = null
 
@@ -29,7 +36,7 @@ class Definition(val type: Short,
     var data: ProgramData? = null
 
     val name: String?
-        get() = data?.strings!![nameOffset]
+        get() = data!!.strings[nameOffset]
 
     override fun toString(): String = """Definition {
     type=$type,
@@ -70,10 +77,10 @@ data class Function(
     var data: ProgramData? = null
 
     val name: String?
-        get() = data?.strings!![nameOffset]
+        get() = data!!.strings[nameOffset]
 
     val fileName: String?
-        get() = data?.strings!![fileNameOffset]
+        get() = data!!.strings[fileNameOffset]
 
     override fun toString(): String = """Function {
     firstStatement=${firstStatement},
@@ -87,19 +94,19 @@ data class Function(
 }"""
 }
 
-data class ProgramData(val header: Header? = null,
-                       val statements: List<Statement>? = null,
-                       val globalDefs: List<Definition>? = null,
-                       val fieldDefs: List<Definition>? = null,
-                       val functions: List<Function>? = null,
-                       val strings: StringManager? = null,
-                       val globalData: ByteBuffer? = null) {
+data class ProgramData(val header: Header,
+                       val statements: List<Statement>,
+                       val globalDefs: List<Definition>,
+                       val fieldDefs: List<Definition>,
+                       val functions: List<Function>,
+                       val strings: StringManager,
+                       val globalData: ByteBuffer) {
 
     {
-        statements?.forEach { it.data = this }
-        globalDefs?.forEach { it.data = this }
-        fieldDefs?.forEach { it.data = this }
-        functions?.forEach { it.data = this }
+        statements.forEach { it.data = this }
+        globalDefs.forEach { it.data = this }
+        fieldDefs.forEach { it.data = this }
+        functions.forEach { it.data = this }
     }
 
     val entities: EntityManager by Delegates.lazy {
@@ -138,9 +145,9 @@ data class ProgramData(val header: Header? = null,
     }
 
     val globalIntData: IntBuffer by Delegates.lazy {
-        globalData!!.asIntBuffer()
+        globalData.asIntBuffer()
     }
     val globalFloatData: FloatBuffer by Delegates.lazy {
-        globalData!!.asFloatBuffer()
+        globalData.asFloatBuffer()
     }
 }
