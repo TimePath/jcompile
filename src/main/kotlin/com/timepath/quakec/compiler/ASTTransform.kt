@@ -89,7 +89,8 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             if (constantExpression != null) {
                 val value = constantExpression.evaluate()
                 val s = value.value.toString()
-                if (s.startsWith('#')) { // FIXME: HACK
+                if (s.startsWith('#')) {
+                    // FIXME: HACK
                     return@map FunctionLiteral(id, builtin = s.substring(1).toInt())
                 }
             }
@@ -346,17 +347,25 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {
         val text = ctx.getText()
-        return listOf(when {
-            ctx.Identifier() != null -> ReferenceExpression(text)
-            ctx.StringLiteral().isNotEmpty() -> {
-                val concat = ctx.StringLiteral()
-                        .fold("", {(ret: String, string: TerminalNode) ->
-                            val s = string.getText()
-                            ret + s.substring(1, s.length() - 1)
-                        })
-                ConstantExpression(concat)
-            }
-            else -> ConstantExpression(text)
-        })
+        if (ctx.Identifier() != null) {
+            return listOf(ReferenceExpression(text))
+        }
+        if (ctx.StringLiteral().isNotEmpty()) {
+            val concat = ctx.StringLiteral()
+                    .fold("", {(ret: String, string: TerminalNode) ->
+                        val s = string.getText()
+                        ret + s.substring(1, s.length() - 1)
+                    })
+            return listOf(ConstantExpression(concat))
+        }
+        if (text.startsWith('#')) {
+            return listOf(ConstantExpression(text))
+        }
+        if (ctx.Constant() != null) {
+            val constant = ctx.Constant()
+            val f = constant.getText().toFloat()
+            return listOf(ConstantExpression(f))
+        }
+        return listOf(ConstantExpression("FIXME_${text}"))
     }
 }

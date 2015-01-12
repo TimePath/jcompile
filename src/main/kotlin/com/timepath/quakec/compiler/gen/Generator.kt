@@ -60,6 +60,7 @@ class Generator(val roots: List<Statement>) {
             val v = wrapped.value
             when (v) {
                 is Int -> intData.put(k, v)
+                is Float -> floatData.put(k, v)
             }
         }
         allocator.references.values.forEach(merge)
