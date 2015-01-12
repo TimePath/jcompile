@@ -19,102 +19,15 @@ import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 import com.timepath.quakec.vm.StringManager
 
-class GenerationContext(val roots: List<Statement>) {
+class Generator(val roots: List<Statement>) {
 
     class object {
         val logger = Logging.new()
     }
 
-    val registry: Registry = Registry()
+    val allocator: Allocator = Allocator()
 
-    data class Scope(val lookup: MutableMap<String, Int> = HashMap())
-
-    inner class Registry {
-
-        var counter: Int = 100
-        val values: MutableMap<Int, Any> = HashMap()
-        val reverse: MutableMap<Int, String> = LinkedHashMap()
-        val scope = Stack<Scope>()
-
-        inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
-
-        fun vecName(name: String): String? {
-            val vec = Pattern.compile("(.+)_[xyz]$")
-            val matcher = vec.matcher(name)
-            if (matcher.matches()) {
-                return matcher.group(1)
-            }
-            return null
-        }
-
-        fun contains(name: String): Boolean {
-            all {
-                if (it.lookup.containsKey(name)) {
-                    return true
-                }
-                if (it.lookup.containsKey(vecName(name))) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        fun get(name: String): Int? {
-            all {
-                val i = it.lookup[name]
-                if (i != null) {
-                    return i
-                }
-                val j = it.lookup[vecName(name)]
-                if (j != null) {
-                    return j
-                }
-            }
-            return null
-        }
-
-        fun register(name: String?, value: Any? = null): Int {
-            val n = name ?: "var$counter"
-            val existing = this[n]
-            if (existing != null) return existing
-            val i = counter++
-            if (value != null)
-                values[i] = value
-            reverse[i] = n
-            scope.peek().lookup[n] = i
-            return i
-        }
-
-        val strings = LinkedHashSet<String>()
-        var stringOffset = 0
-
-        fun registerString(s: String): Int {
-            val pointer = stringOffset
-            strings.add(s)
-            stringOffset += s.length() + 1
-            return pointer
-        }
-
-        override fun toString() = reverse.map { "${it.key}\t${it.value}\t${values[it.key]}" }.join("\n")
-
-        fun push() {
-            scope.push(Scope())
-        }
-
-        fun pop() {
-            scope.pop()
-        }
-
-        {
-            push()
-            register("_")
-        }
-
-    }
-
-    fun generate(): List<IR> {
-        return BlockStatement(roots).generate()
-    }
+    fun generate(): List<IR> = BlockStatement(roots).generate()
 
     /**
      * Ought to be enough, instructions can't address beyond this range anyway
@@ -145,20 +58,20 @@ class GenerationContext(val roots: List<Statement>) {
                 statements.add(vm.Statement(it.instr!!, a, b, c))
             }
         }
-        for ((k, v) in registry.values) {
+        for ((k, v) in allocator.constants) {
             when (v) {
                 is Int -> intData.put(k, v)
             }
         }
 
         val globalData = {
-            assert(4 * registry.counter >= globalData.position())
-            globalData.limit(4 * registry.counter)
+            assert(4 * allocator.counter >= globalData.position())
+            globalData.limit(4 * allocator.counter)
             globalData.position(0)
             globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
         }()
 
-        val stringManager = StringManager(registry.strings.toList())
+        val stringManager = StringManager(allocator.strings.toList())
 
         val version = 6
         val crc = -1 // TODO: CRC16
@@ -194,10 +107,10 @@ class GenerationContext(val roots: List<Statement>) {
     }
 
     private fun Statement.enter() {
-        logger.fine("${"> > " repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
+        logger.fine("${"> > ".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
         when (this) {
             is FunctionLiteral -> {
-                if (id != null && id in registry) {
+                if (id != null && id in allocator) {
                     logger.warning("redefining $id")
                 }
             }
@@ -205,7 +118,7 @@ class GenerationContext(val roots: List<Statement>) {
                 // do nothing
             }
             is ReferenceExpression -> {
-                if (id !in registry) {
+                if (id !in allocator) {
                     logger.severe("unknown reference $id")
                 }
             }
@@ -215,33 +128,33 @@ class GenerationContext(val roots: List<Statement>) {
     private fun Statement.exit() {
         when (this) {
             is BlockStatement -> {
-                registry.pop()
+                allocator.pop()
             }
             is FunctionLiteral -> {
-                registry.pop()
+                allocator.pop()
             }
         }
-        logger.fine("${" < <" repeat registry.scope.size()} ${this.javaClass.getSimpleName()}")
+        logger.fine("${" < <".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
     }
 
     private fun Statement.generate(): List<IR> {
         this.enter()
         val ret: List<IR> = when (this) {
             is BlockStatement -> {
-                registry.push()
+                allocator.push()
                 children.flatMap {
                     it.generate()
                 }
             }
             is FunctionLiteral -> {
-                val global = registry.register(id)
-                registry.push()
+                val global = allocator.allocateReference(id)
+                allocator.push()
                 val f = Function(
                         firstStatement = 0, // to be filled in later
                         firstLocal = 0,
                         numLocals = 0,
                         profiling = 0,
-                        nameOffset = registry.registerString(id!!),
+                        nameOffset = allocator.allocateString(id!!),
                         fileNameOffset = 0,
                         numParams = 0,
                         sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
@@ -253,12 +166,12 @@ class GenerationContext(val roots: List<Statement>) {
                         + ReferenceIR(global))
             }
             is ConstantExpression -> {
-                val global = registry.register(null, value)
+                val global = allocator.allocateConstant(value)
                 listOf(
                         ReferenceIR(global))
             }
             is DeclarationExpression -> {
-                val global = registry.register(id)
+                val global = allocator.allocateReference(id)
                 val ret = linkedListOf<IR>()
                 if (this.value != null) {
                     val value = this.value.evaluate()
@@ -269,7 +182,7 @@ class GenerationContext(val roots: List<Statement>) {
                                 firstLocal = 0,
                                 numLocals = 0,
                                 profiling = 0,
-                                nameOffset = registry.registerString(id),
+                                nameOffset = allocator.allocateString(id),
                                 fileNameOffset = 0,
                                 numParams = 0,
                                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0))
@@ -280,7 +193,7 @@ class GenerationContext(val roots: List<Statement>) {
                 ret
             }
             is ReferenceExpression -> {
-                val global = registry[id]!!
+                val global = allocator[id]!!
                 listOf(ReferenceIR(global))
             }
             is BinaryExpression.Assign -> {
@@ -300,7 +213,7 @@ class GenerationContext(val roots: List<Statement>) {
                 // c (=) a (op) b
                 val genL = left.generate()
                 val genR = right.generate()
-                val global = registry.register(null)
+                val global = allocator.allocateReference()
                 (genL + genR
                         + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
             }

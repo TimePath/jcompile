@@ -2,7 +2,7 @@ package com.timepath.quakec.compiler.test
 
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.ast.*
-import com.timepath.quakec.compiler.gen.GenerationContext
+import com.timepath.quakec.compiler.gen.Generator
 
 val logger = Logging.new()
 
@@ -60,12 +60,12 @@ fun main(args: Array<String>) {
 
     logger.info("=======")
 
-    val ctx = GenerationContext(root.children)
+    val ctx = Generator(root.children)
     val asm = ctx.generate()
 
     logger.info("=======")
 
-    logger.info(ctx.registry.toString())
+    logger.info(ctx.allocator.toString())
 
     logger.info("=======")
 

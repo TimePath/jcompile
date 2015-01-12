@@ -6,7 +6,7 @@ import org.intellij.lang.annotations.Language
 import com.timepath.quakec.vm.ProgramData
 import java.io.File
 import com.timepath.quakec.compiler.ast.BlockStatement
-import com.timepath.quakec.compiler.gen.GenerationContext
+import com.timepath.quakec.compiler.gen.Generator
 import kotlin.test.assertEquals
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
@@ -45,7 +45,7 @@ class CompilerSpecs : Spek() {{
                     }
                 }
                 it("should compile") {
-                    val ctx = GenerationContext(roots.flatMap { it })
+                    val ctx = Generator(roots.flatMap { it })
                     val asm = ctx.generate()
                     val actual = asm.map { ir ->
                         if (ir.real)

@@ -13,7 +13,7 @@ import com.timepath.quakec.Logging
 import com.timepath.quakec.QCLexer
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.compiler.ast.*
-import com.timepath.quakec.compiler.gen.GenerationContext
+import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.preproc.CustomPreprocessor
 import com.timepath.quakec.compiler.test.TreePrinterListener
 import com.timepath.quakec.vm.ProgramData
@@ -149,7 +149,7 @@ public class Compiler {
     }
 
     public fun compile(roots: List<List<Statement>> = ast()): ProgramData {
-        val ctx = GenerationContext(roots.flatMap { it })
+        val ctx = Generator(roots.flatMap { it })
         return ctx.generateProgs()
     }
 }
