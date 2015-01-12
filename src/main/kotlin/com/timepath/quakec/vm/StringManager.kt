@@ -3,7 +3,7 @@ package com.timepath.quakec.vm
 import java.util.ArrayList
 import java.util.LinkedHashMap
 
-class StringManager(list: List<String>,
+class StringManager(list: Collection<String>,
                     expectedSize: Int? = null) {
 
     /**

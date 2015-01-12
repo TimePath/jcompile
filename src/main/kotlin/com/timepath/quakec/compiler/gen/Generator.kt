@@ -37,6 +37,8 @@ class Generator(val roots: List<Statement>) {
     val floatData = globalData.asFloatBuffer()
 
     fun generateProgs(ir: List<IR> = generate()): ProgramData {
+        logger.fine(allocator.toString())
+
         val globalDefs = ArrayList<Definition>()
         val fieldDefs = ArrayList<Definition>()
 
@@ -58,7 +60,8 @@ class Generator(val roots: List<Statement>) {
                 statements.add(vm.Statement(it.instr!!, a, b, c))
             }
         }
-        for ((k, v) in allocator.constants) {
+        for ((k, wrapped) in allocator.constants) {
+            val v = wrapped.value
             when (v) {
                 is Int -> intData.put(k, v)
             }
@@ -71,7 +74,7 @@ class Generator(val roots: List<Statement>) {
             globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
         }()
 
-        val stringManager = StringManager(allocator.strings.toList())
+        val stringManager = StringManager(allocator.strings.keySet())
 
         val version = 6
         val crc = -1 // TODO: CRC16
@@ -147,8 +150,7 @@ class Generator(val roots: List<Statement>) {
                 }
             }
             is FunctionLiteral -> {
-                val global = allocator.allocateReference(id)
-                allocator.push()
+                val global = allocator.allocateFunction(id)
                 val f = Function(
                         firstStatement = 0, // to be filled in later
                         firstLocal = 0,
@@ -159,6 +161,7 @@ class Generator(val roots: List<Statement>) {
                         numParams = 0,
                         sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
                 )
+                allocator.push()
                 (listOf(
                         FunctionIR(f))
                         + children.flatMap { it.generate() }
@@ -231,9 +234,11 @@ class Generator(val roots: List<Statement>) {
                     val param = Instruction.OFS_PARAM(i++)
                     IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
                 }
+                val genF = function.generate()
+                val funcId = genF.last().ret
                 (args.flatMap { it }
                         + prepare
-                        + listOf(IR(instr(i), array(function.generate().last().ret), Instruction.OFS_PARAM(-1)))
+                        + listOf(IR(instr(i), array(funcId), Instruction.OFS_PARAM(-1)))
                         )
             }
             is ReturnStatement -> {

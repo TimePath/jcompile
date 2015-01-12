@@ -2,10 +2,10 @@ package com.timepath.quakec.compiler.gen
 
 import java.util.HashMap
 import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.ast.Value
 
 class Allocator {
 
@@ -13,19 +13,43 @@ class Allocator {
         val logger = Logging.new()
     }
 
-    val scope = Stack<Scope>()
-    var counter: Int = 100
-    private val reverse: MutableMap<Int, String> = LinkedHashMap()
-    val constants: MutableMap<Int, Any> = HashMap()
-    val strings = LinkedHashSet<String>()
-    private var stringOffset = 0
+    /**
+     * Maps names to pointers
+     */
+    class AllocationMap {
+        internal val references = LinkedHashMap<String, Int>()
+        internal val reverse = LinkedHashMap<Int, String>()
+        internal val values = LinkedHashMap<Int, Value>()
 
-    {
-        push()
-        allocateReference("_")
+        fun contains(s: String) = s in references
+
+        fun get(s: String): Int? = references[s]
+        fun set(s: String, i: Int) {
+            references[s] = i
+            reverse[i] = s
+        }
+
+        fun get(i: Int): Value? = values[i]
+        fun set(i: Int, value: Value) {
+            values[i] = value
+        }
+
+        fun iterator(): Iterator<Map.Entry<Int, Value>> = values.iterator()
+
+        fun keySet(): MutableSet<String> = references.keySet()
+
+        fun size() = references.size()
+
     }
 
+    val functions = AllocationMap()
+    val references = AllocationMap()
+    val constants = AllocationMap()
+    val strings = AllocationMap()
+
     data class Scope(val lookup: MutableMap<String, Int> = HashMap())
+
+    val scope = Stack<Scope>()
 
     fun push() {
         scope.push(Scope())
@@ -33,6 +57,10 @@ class Allocator {
 
     fun pop() {
         scope.pop()
+    }
+
+    {
+        push()
     }
 
     private fun vecName(name: String): String? {
@@ -48,11 +76,14 @@ class Allocator {
 
     fun contains(name: String): Boolean {
         all {
-            if (it.lookup.containsKey(name)) {
+            if (name in it.lookup) {
                 return true
             }
-            if (it.lookup.containsKey(vecName(name))) {
-                return true
+            val vecName = vecName(name)
+            if (vecName != null) {
+                if (vecName in it.lookup) {
+                    return true
+                }
             }
         }
         return false
@@ -64,42 +95,90 @@ class Allocator {
             if (i != null) {
                 return i
             }
-            val j = it.lookup[vecName(name)]
-            if (j != null) {
-                return j
+            val vecName = vecName(name)
+            if (vecName != null) {
+                val j = it.lookup[vecName]
+                if (j != null) {
+                    return j
+                }
             }
         }
         return null
     }
 
+    private inline fun allocate(map: AllocationMap, id: String, index: Int, onCreate: () -> Unit): Int {
+        val existing = map[id]
+        if (existing != null) return existing
+        val i = index
+        map[id] = i
+        onCreate()
+        return i
+    }
+
+    var counter: Int = 100
+
+    /**
+     * Return the index to a constant referring to this function
+     */
+    fun allocateFunction(id: String? = null): Int {
+        val name = id ?: "fun$counter"
+        val i = functions.size()
+        // index the function will have
+        val idx = allocate(functions, name, i, {})
+        val constPtr = allocateConstant(Value(idx), name)
+        scope.peek().lookup[name] = constPtr
+        return constPtr
+    }
+
+    /**
+     * Reserve space for this variable and add its name to the current scope
+     * Return the index in memory
+     */
     fun allocateReference(id: String? = null): Int {
         val name = id ?: "ref$counter"
-        val existing = this[name]
-        if (existing != null) return existing
-        val i = counter++
-        reverse[i] = name
-        constants[i] = 0
-        scope.peek().lookup[name] = i
-        return i
+        val i = counter
+        return allocate(constants, name, i) {
+            scope.peek().lookup[name] = i
+            counter++
+        }
     }
 
-    fun allocateConstant(value: Any): Int {
-        val name = "const$counter"
-        val existing = this[name]
-        if (existing != null) return existing
-        val i = counter++
-        reverse[i] = name
-        constants[i] = value
-        return i
+    /**
+     * Reserve space for this constant
+     * Return the index in memory
+     */
+    fun allocateConstant(value: Value, id: String? = null): Int {
+        if (value.value is String) return allocateString(value.value)
+        val name = id ?: "val$counter"
+        val i = counter
+        return allocate(constants, name, i) {
+            constants[i] = value
+            counter++
+        }
     }
+
+    private var stringOffset = 0
 
     fun allocateString(s: String): Int {
-        val pointer = stringOffset
-        strings.add(s)
-        stringOffset += s.length() + 1
-        return pointer
+        val name = s
+        val i = stringOffset
+        return allocate(strings, name, i) {
+            stringOffset += name.length() + 1
+        }
     }
 
-    override fun toString() = reverse.map { "${it.key}\t${it.value}\t${constants[it.key]}" }.join("\n")
+    override fun toString(): String {
+        val functions = functions.reverse.map { "${it.key}\t${it.value}" }.join("\n")
+        val references = references.reverse.map { "$${it.key}\t${it.value}" }.join("\n")
+        val constants = constants.reverse.map { "$${it.key}\t(${constants[it.key]})\t${it.value}" }.join("\n")
+        val strings = strings.reverse.map { "$${it.key}\t${it.value}" }.join("\n")
+        return "functions:\n" + functions +
+                "\n\n" +
+                "references:\n" + references +
+                "\n\n" +
+                "constants:\n" + constants +
+                "\n\n" +
+                "strings:\n" + strings
+    }
 
 }
