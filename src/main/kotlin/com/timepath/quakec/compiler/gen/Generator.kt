@@ -226,10 +226,13 @@ class Generator(val roots: List<Statement>) {
                 }
                 val genF = function.generate()
                 val funcId = genF.last().ret
-                (args.flatMap { it }
-                        + prepare
-                        + listOf(IR(instr(i), array(funcId), Instruction.OFS_PARAM(-1)))
-                        )
+                val global = allocator.allocateReference()
+                val ret = linkedListOf<IR>()
+                ret.addAll(args.flatMap { it })
+                ret.addAll(prepare)
+                ret.add(IR(instr(i), array(funcId), Instruction.OFS_PARAM(-1)))
+                ret.add(IR(Instruction.STORE_FLOAT, array(Instruction.OFS_PARAM(-1), global), global, "Save response"))
+                ret
             }
             is ReturnStatement -> {
                 listOf(
