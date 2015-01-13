@@ -80,7 +80,7 @@ expression
 assignmentExpression
     :   constantExpression
     |   unaryExpression
-        op=( '='
+        op=('='
         | '*='
         | '/='
         | '%='
@@ -131,27 +131,27 @@ andExpression
 
 equalityExpression
     :   relationalExpression
-    |   equalityExpression ('==' | '!=') relationalExpression
+    |   equalityExpression op=('==' | '!=') relationalExpression
     ;
 
 relationalExpression
     :   shiftExpression
-    |   relationalExpression ('<' | '>' | '<=' | '>=') shiftExpression
+    |   relationalExpression op=('<' | '>' | '<=' | '>=') shiftExpression
     ;
 
 shiftExpression
     :   additiveExpression
-    |   shiftExpression ('<<' | '>>') additiveExpression
+    |   shiftExpression op=('<<' | '>>') additiveExpression
     ;
 
 additiveExpression
     :   multiplicativeExpression
-    |   additiveExpression ('+' | '-') multiplicativeExpression
+    |   additiveExpression op=('+' | '-') multiplicativeExpression
     ;
 
 multiplicativeExpression
     :   castExpression
-    |   multiplicativeExpression ('*' | '/' | '%') castExpression
+    |   multiplicativeExpression op=('*' | '/' | '%') castExpression
     ;
 
 castExpression
@@ -161,9 +161,9 @@ castExpression
 
 unaryExpression
     :   postfixExpression
-    |   ('++' | '--') unaryExpression
-    |   ('+' | '-' | '~' | '!') unaryExpression
-    |   ('sizeof' | '_length') unaryExpression
+    |   op=('++' | '--') unaryExpression
+    |   op=('+' | '-' | '~' | '!') unaryExpression
+    |   op=('sizeof' | '_length') unaryExpression
     |   'sizeof' '(' typeName ')'
     ;
 

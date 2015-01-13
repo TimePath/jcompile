@@ -255,8 +255,16 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.equalityExpression().accept(this).single()
             val right = ctx.relationalExpression().accept(this).single()
-            // TODO
-            return listOf(BinaryExpression.Eq(left as Expression, right as Expression))
+            val op = when (ctx.op.getType()) {
+                QCParser.Equal -> BinaryExpression.Eq(left as Expression, right as Expression)
+                QCParser.NotEqual -> BinaryExpression.Ne(left as Expression, right as Expression)
+                else -> null
+            }
+            if (op != null) {
+                return listOf(op)
+            } else {
+                return emptyList()
+            }
         }
         return super.visitEqualityExpression(ctx)
     }
@@ -267,8 +275,18 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.relationalExpression().accept(this).single()
             val right = ctx.shiftExpression().accept(this).single()
-            // TODO
-            return listOf(BinaryExpression.Le(left as Expression, right as Expression))
+            val op = when (ctx.op.getType()) {
+                QCParser.Less -> BinaryExpression.Lt(left as Expression, right as Expression)
+                QCParser.LessEqual -> BinaryExpression.Le(left as Expression, right as Expression)
+                QCParser.Greater -> BinaryExpression.Gt(left as Expression, right as Expression)
+                QCParser.GreaterEqual -> BinaryExpression.Ge(left as Expression, right as Expression)
+                else -> null
+            }
+            if (op != null) {
+                return listOf(op)
+            } else {
+                return emptyList()
+            }
         }
         return super.visitRelationalExpression(ctx)
     }
