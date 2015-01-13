@@ -214,8 +214,27 @@ class Generator(val roots: List<Statement>) {
                         + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
             }
             is ConditionalExpression -> {
-                // TODO
-                test.generate()
+                val ret = linkedListOf<IR>()
+                val genPred = test.generate()
+                ret.addAll(genPred)
+                val genTrue = pass.generate()
+                val trueCount = genTrue.count { it.real }
+                val genFalse = fail?.generate()
+                if (genFalse == null) {
+                    // No else, jump to the instruction after the body
+                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, 1 + trueCount, 0)))
+                    ret.addAll(genTrue)
+                } else {
+                    // The if body has a goto, include it in the count
+                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, 2 + trueCount, 0)))
+                    ret.addAll(genTrue)
+                    val falseCount = genFalse.count { it.real }
+                    // end if, jump to the instruction after the else
+                    ret.add(IR(Instruction.GOTO, array(1 + falseCount, 0, 0)))
+                    // else
+                    ret.addAll(genFalse)
+                }
+                ret
             }
             is FunctionCall -> {
                 val args = args.map { it.generate() }
