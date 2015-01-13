@@ -185,6 +185,9 @@ class Generator(val roots: List<Statement>) {
                 ret.add(ReferenceIR(global))
                 ret
             }
+            is MemoryReference -> {
+                listOf(ReferenceIR(ref))
+            }
             is ReferenceExpression -> {
                 val global = allocator[id]!!
                 listOf(ReferenceIR(global))
@@ -235,8 +238,15 @@ class Generator(val roots: List<Statement>) {
                 ret
             }
             is ReturnStatement -> {
-                listOf(
-                        IR(Instruction.RETURN, array(0, 0, 0), 0))
+                val genRet = returnValue?.generate()
+                val ret = linkedListOf<IR>()
+                val args = array(0, 0, 0)
+                if (genRet != null) {
+                    ret.addAll(genRet)
+                    args[0] = genRet.last().ret
+                }
+                ret.add(IR(Instruction.RETURN, args, 0))
+                ret
             }
             else -> emptyList()
         }

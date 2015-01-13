@@ -24,3 +24,12 @@ open class ReferenceExpression(val id: String) : Expression() {
 
 class DeclarationExpression(id: String,
                             val value: ConstantExpression? = null) : ReferenceExpression(id)
+
+class MemoryReference(val ref: Int) : Expression() {
+
+    override val attributes: Map<String, Any>
+        get() = mapOf("ref" to ref)
+
+    override fun toString(): String = "$$ref"
+
+}

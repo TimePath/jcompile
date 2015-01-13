@@ -339,7 +339,7 @@ initDeclarator
 
 declarator
     :   Identifier
-    |   '(' declarator ')'
+    //|   '(' declarator ')'
     |   declarator '[' assignmentExpression? ']'
     |   declarator '(' parameterTypeList ')'
     ;

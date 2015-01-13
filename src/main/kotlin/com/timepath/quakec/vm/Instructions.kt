@@ -459,14 +459,14 @@ enum class Instruction {
         val stringified = stringify(s).map {
             when (it) {
                 !is Int -> it
-                else -> "\$$it (${if (data != null) {
+                else -> "\$$it {${if (data != null) {
                     "i: ${data.globalIntData[it]}, f: ${data.globalFloatData[it]}"
                 } else {
                     null
-                } ?: "?"})"
+                } ?: "?"}}"
             }
         }
-        return "${this.name()}${" ".repeat(13 - name().length())}\t(${stringified.joinToString(" ")}}"
+        return "${this.name()}${" ".repeat(13 - name().length())}\t[${stringified.joinToString(" ")}]"
     }
 
 }

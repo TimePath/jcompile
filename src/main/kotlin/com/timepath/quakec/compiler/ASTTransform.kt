@@ -4,6 +4,7 @@ import com.timepath.quakec.Logging
 import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -55,10 +56,16 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val paramDeclarations = paramContext.flatMap {
             it.parameterList().parameterDeclaration()
         }
-        val params = paramDeclarations.map {
+        val params = paramDeclarations.mapIndexed { (i, it) ->
             val paramId = it.declarator()?.getText()
-            if (paramId != null) DeclarationExpression(paramId, null) else null
-        }.filterNotNull()
+            if (paramId != null) {
+                val declarationExpression = DeclarationExpression(paramId, null)
+                val memoryReference = MemoryReference(Instruction.OFS_PARAM(i))
+                listOf(declarationExpression, BinaryExpression.Assign(declarationExpression, memoryReference))
+            } else {
+                emptyList()
+            }
+        }.flatMap { it }
 
         val varargId = ctx.declarator()?.parameterTypeList()?.parameterVarargs()?.Identifier()
         val vararg: List<Statement> = if (varargId != null) {
@@ -108,8 +115,8 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         // TODO: break, continue
         val expr = ctx.expression()
         val ret = if (expr != null) {
-            val list = expr.accept(this).single()
-            ReturnStatement(list as Expression)
+            val retVal = expr.accept(this).single()
+            ReturnStatement(retVal as Expression)
         } else {
             ReturnStatement(null)
         }
