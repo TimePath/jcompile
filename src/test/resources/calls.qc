@@ -7,8 +7,7 @@ void main() {
     float b = 2;
     float c = 3;
 
-    float f;
-    f = sum(sum(a, sum(a, b, c), c),
+    float f; f = sum(sum(a, sum(a, b, c), c),
             sum(sum(sum(a, b, c), b, sum(a, b, c)), b, sum(a, b, sum(a, b, c))),
             sum(sum(a, b, c), b, c));
 
