@@ -16,7 +16,7 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
 
     override fun toString(): String = "($left $op $right)"
 
-    class Assign(left: lvalue, right: rvalue) : BinaryExpression<lvalue, rvalue>(left, right) {
+    class Assign(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.STORE_FLOAT
         override val op = "="
     }
@@ -109,5 +109,10 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
     class Mod(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.DIV_FLOAT // TODO
         override val op = "%"
+    }
+
+    class Dot(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override var instr = Instruction.LOAD_FLOAT
+        override val op = "."
     }
 }

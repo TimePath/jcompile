@@ -180,7 +180,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.unaryExpression().accept(this).single()
             val right = ctx.assignmentExpression().accept(this).single()
-            val ref = left as ReferenceExpression
+            val ref = left as Expression
             val value = right as Expression
             val assign = {(value: Expression): Expression ->
                 BinaryExpression.Assign(ref, value)
@@ -411,6 +411,13 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 ?.flatMap { it.accept(this) }
                 ?.filterNotNull()
         return listOf(FunctionCall(left as Expression, right ?: emptyList()))
+    }
+
+    override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Statement> {
+        val left = ctx.postfixExpression().accept(this).single()
+        val right = ctx.Identifier()
+        val fieldRef = EntityFieldReference(right.getText())
+        return listOf(BinaryExpression.Dot(left as Expression, fieldRef))
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {

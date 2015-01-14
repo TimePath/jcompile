@@ -37,6 +37,7 @@ class Generator(val roots: List<Statement>) {
 
         val globalDefs = ArrayList<Definition>()
         val fieldDefs = ArrayList<Definition>()
+        fieldDefs.add(Definition(0, 0, 0)) // FIXME: temporary
 
         val statements = ArrayList<vm.Statement>(ir.size())
         val functions = ArrayList<Function>()
@@ -190,6 +191,9 @@ class Generator(val roots: List<Statement>) {
             is MemoryReference -> {
                 listOf(ReferenceIR(ref))
             }
+            is EntityFieldReference -> {
+                listOf(ReferenceIR(0)) // TODO: field by name
+            }
             is ReferenceExpression -> {
                 val global = allocator[id]!!
                 listOf(ReferenceIR(global.ref))
@@ -199,6 +203,21 @@ class Generator(val roots: List<Statement>) {
                 // left(a) = right(b)
                 // vm:
                 // b (=) a
+                val left = when (left) {
+                    is BinaryExpression.Dot -> {
+                        // make a copy to avoid changing the right half of the assignment
+                        val special = BinaryExpression.Dot(left.left, left.right)
+                        special.instr = Instruction.ADDRESS
+                        special
+                    }
+                    else -> left
+                }
+                val instr = when {
+                    left is BinaryExpression.Dot -> {
+                        Instruction.STOREP_FLOAT
+                    }
+                    else -> instr
+                }
                 val genL = left.generate()
                 val genR = right.generate()
                 (genL + genR

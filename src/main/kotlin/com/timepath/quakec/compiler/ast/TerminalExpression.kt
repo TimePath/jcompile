@@ -22,6 +22,8 @@ open class ReferenceExpression(val id: String) : Expression() {
 
 }
 
+class EntityFieldReference(id: String) : ReferenceExpression(id)
+
 class DeclarationExpression(id: String,
                             val value: ConstantExpression? = null) : ReferenceExpression(id)
 
