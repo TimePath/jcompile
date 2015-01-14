@@ -421,6 +421,10 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {
+        val expressionContext = ctx.expression()
+        if (expressionContext != null) {
+            return expressionContext.accept(this)
+        }
         val text = ctx.getText()
         if (ctx.Identifier() != null) {
             return listOf(ReferenceExpression(text))
