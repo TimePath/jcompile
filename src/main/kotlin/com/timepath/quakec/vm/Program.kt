@@ -239,6 +239,14 @@ public class Program(val data: ProgramData) {
                         if (assertion == 0f)
                             throw AssertionError(message)
                     }
+            ),
+            17 to Builtin(
+                    name = "ftoi",
+                    parameterTypes = array(javaClass<Float>()),
+                    callback = {
+                        val f = it[0] as Float
+                        f.toInt()
+                    }
             )
     )
 
@@ -250,6 +258,9 @@ public class Program(val data: ProgramData) {
         when (ret) {
             is Float -> {
                 data.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
+            }
+            is Int -> {
+                data.globalIntData.put(Instruction.OFS_PARAM(-1), ret)
             }
             is String -> {
                 data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(ret))
