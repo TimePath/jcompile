@@ -2,11 +2,12 @@ package com.timepath.quakec.compiler.gen
 
 import java.util.HashMap
 import java.util.LinkedHashMap
+import java.util.LinkedList
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
-import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.compiler.ast.Value
+import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
 
 class Allocator {
 
@@ -18,26 +19,33 @@ class Allocator {
      * Maps names to pointers
      */
     class AllocationMap {
-        internal val references = LinkedHashMap<String, Int>()
-        internal val reverse = LinkedHashMap<Int, String>()
-        internal val values = LinkedHashMap<Int, Value>()
 
-        fun contains(s: String) = s in references
+        internal data class Entry(var ref: Int,
+                                  var value: Value,
+                                  var name: String)
 
-        fun get(s: String): Int? = references[s]
-        fun set(s: String, i: Int) {
-            references[s] = i
-            reverse[i] = s
+        val all = LinkedList<Entry>()
+        internal val refs = LinkedHashMap<Int, Entry>()
+        internal val values = LinkedHashMap<Value, Entry>()
+        internal val names = LinkedHashMap<String, Entry>()
+
+        fun add(e: Entry) {
+            all.add(e)
+            refs[e.ref] = e
+            values[e.value] = e
+            names[e.name] = e
         }
 
-        fun get(i: Int): Value? = values[i]
-        fun set(i: Int, value: Value) {
-            values[i] = value
-        }
+        fun contains(i: Int) = i in refs
+        fun get(i: Int): Entry? = refs[i]
 
-        fun keySet(): MutableSet<String> = references.keySet()
+        fun contains(v: Value) = v in values
+        fun get(v: Value): Entry? = values[v]
 
-        fun size() = references.size()
+        fun contains(s: String) = s in names
+        fun get(s: String): Entry? = names[s]
+
+        fun size() = names.size()
 
     }
 
@@ -46,7 +54,7 @@ class Allocator {
     val constants = AllocationMap()
     val strings = AllocationMap()
 
-    data class Scope(val lookup: MutableMap<String, Int> = HashMap())
+    data class Scope(val lookup: MutableMap<String, Entry> = HashMap())
 
     val scope = Stack<Scope>()
 
@@ -88,7 +96,7 @@ class Allocator {
         return false
     }
 
-    fun get(name: String): Int? {
+    fun get(name: String): Entry? {
         all {
             val i = it.lookup[name]
             if (i != null) {
@@ -105,13 +113,13 @@ class Allocator {
         return null
     }
 
-    private inline fun allocate(map: AllocationMap, id: String, index: Int, onCreate: () -> Unit): Int {
+    private inline fun allocate(map: AllocationMap, id: String, index: Int, onCreate: () -> Value?): Entry {
         val existing = map[id]
         if (existing != null) return existing
         val i = index
-        map[id] = i
-        onCreate()
-        return i
+        val entry = Entry(i, onCreate() ?: Value(null), id)
+        map.add(entry)
+        return entry
     }
 
     var counter: Int = 100
@@ -119,68 +127,86 @@ class Allocator {
     /**
      * Return the index to a constant referring to this function
      */
-    fun allocateFunction(id: String? = null): Int {
+    fun allocateFunction(id: String? = null): Entry {
         val name = id ?: "fun$counter"
         val i = functions.size()
         // index the function will have
-        val idx = allocate(functions, name, i, {})
-        val constPtr = allocateConstant(Value(idx), name)
-        scope.peek().lookup[name] = constPtr
-        return constPtr
+        val function = allocate(functions, name, i, { null })
+        val const = allocateConstant(Value(function.ref), "fun($name)")
+        scope.peek().lookup[name] = const
+        return const
     }
 
     /**
      * Reserve space for this variable and add its name to the current scope
      * Return the index in memory
      */
-    fun allocateReference(id: String? = null): Int {
+    fun allocateReference(id: String? = null): Entry {
         val name = id ?: "ref$counter"
         val i = counter
-        return allocate(references, name, i) {
-            scope.peek().lookup[name] = i
+        val entry = allocate(references, name, i) {
             counter++
+            null
         }
+        scope.peek().lookup[name] = entry
+        return entry
     }
 
     /**
      * Reserve space for this constant
      * Return the index in memory
      */
-    fun allocateConstant(value: Value, id: String? = null): Int {
+    fun allocateConstant(value: Value, id: String? = null): Entry {
         if (value.value is String) {
-            val stringId = allocateString(value.value)
-            return allocateConstant(Value(stringId), "str$stringId")
+            val string = allocateString(value.value)
+            return allocateConstant(Value(string.ref), "str(${string.name})")
         }
-        val name = id ?: "val$counter"
+        val name: String = when {
+            id != null -> id
+            else -> when (value.value) {
+                is Int -> "${value.value}i"
+                is Float -> "${value.value}f"
+                else -> "$value"
+            }
+        }
+        // merge constants
+        val existing = constants.values[value]
+        if (existing != null) {
+            constants.names[name] = existing
+            if (!existing.name.split('|').contains(name))
+                existing.name += "|$name"
+            return existing
+        }
         val i = counter
         return allocate(constants, name, i) {
-            constants[i] = value
             counter++
+            value
         }
     }
 
     private var stringOffset = 0
 
-    fun allocateString(s: String): Int {
+    fun allocateString(s: String): Entry {
         val name = s
         val i = stringOffset
         return allocate(strings, name, i) {
             stringOffset += name.length() + 1
+            null
         }
     }
 
     override fun toString(): String {
-        val functions = functions.reverse.map { "${it.key}\t${it.value}" }.join("\n")
-        val references = references.reverse.map { "$${it.key}\t(${references[it.key]})\t${it.value}" }.join("\n")
-        val constants = constants.reverse.map { "$${it.key}\t(${constants[it.key]})\t${it.value}" }.join("\n")
-        val strings = strings.reverse.map { "$${it.key}\t${it.value.quote()}" }.join("\n")
-        return "functions:\n" + functions +
+        val constants = constants.all.map { it.toString() }.join("\n")
+        val functions = functions.all.map { it.toString() }.join("\n")
+        val strings = strings.all.map { it.toString() }.join("\n")
+        val references = references.all.map { it.toString() }.join("\n")
+        return "constants:\n" + constants +
                 "\n\n" +
-                "references:\n" + references +
+                "functions:\n" + functions +
                 "\n\n" +
-                "constants:\n" + constants +
+                "strings:\n" + strings +
                 "\n\n" +
-                "strings:\n" + strings
+                "references:\n" + references
     }
 
 }

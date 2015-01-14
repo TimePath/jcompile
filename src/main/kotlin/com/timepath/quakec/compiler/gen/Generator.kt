@@ -5,6 +5,7 @@ import java.nio.ByteOrder
 import java.util.ArrayList
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.ast.*
+import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
 import com.timepath.quakec.vm
 import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.vm.Definition
@@ -55,16 +56,17 @@ class Generator(val roots: List<Statement>) {
                 statements.add(vm.Statement(it.instr!!, a, b, c))
             }
         }
-        val merge = {(it: Map.Entry<Int, Value>): Unit ->
-            val (k, wrapped) = it
+        val merge = {(it: Entry): Unit ->
+            val wrapped = it.value
+            val k = it.ref
             val v = wrapped.value
             when (v) {
                 is Int -> intData.put(k, v)
                 is Float -> floatData.put(k, v)
             }
         }
-        allocator.references.values.forEach(merge)
-        allocator.constants.values.forEach(merge)
+        allocator.references.all.forEach(merge)
+        allocator.constants.all.forEach(merge)
 
         val globalData = {
             assert(4 * allocator.counter >= globalData.position())
@@ -73,7 +75,7 @@ class Generator(val roots: List<Statement>) {
             globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
         }()
 
-        val stringManager = StringManager(allocator.strings.keySet())
+        val stringManager = StringManager(allocator.strings.all.map { it.name })
 
         val version = 6
         val crc = -1 // TODO: CRC16
@@ -158,7 +160,7 @@ class Generator(val roots: List<Statement>) {
                         firstLocal = 0,
                         numLocals = 0,
                         profiling = 0,
-                        nameOffset = allocator.allocateString(id!!),
+                        nameOffset = allocator.allocateString(id!!).ref,
                         fileNameOffset = 0,
                         numParams = 0,
                         sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
@@ -168,21 +170,21 @@ class Generator(val roots: List<Statement>) {
                         FunctionIR(f))
                         + children.flatMap { it.generate() }
                         + IR(instr = Instruction.DONE)
-                        + ReferenceIR(global))
+                        + ReferenceIR(global.ref))
             }
             is ConstantExpression -> {
                 val global = allocator.allocateConstant(value)
                 listOf(
-                        ReferenceIR(global))
+                        ReferenceIR(global.ref))
             }
             is DeclarationExpression -> {
                 val global = allocator.allocateReference(id)
                 val ret = linkedListOf<IR>()
                 if (this.value != null) {
                     val value = this.value.evaluate()
-                    allocator.references[global] = value
+                    global.value = value
                 }
-                ret.add(ReferenceIR(global))
+                ret.add(ReferenceIR(global.ref))
                 ret
             }
             is MemoryReference -> {
@@ -190,7 +192,7 @@ class Generator(val roots: List<Statement>) {
             }
             is ReferenceExpression -> {
                 val global = allocator[id]!!
-                listOf(ReferenceIR(global))
+                listOf(ReferenceIR(global.ref))
             }
             is BinaryExpression.Assign -> {
                 // ast:
@@ -211,7 +213,7 @@ class Generator(val roots: List<Statement>) {
                 val genR = right.generate()
                 val global = allocator.allocateReference()
                 (genL + genR
-                        + IR(instr, array(genL.last().ret, genR.last().ret, global), global, this.toString()))
+                        + IR(instr, array(genL.last().ret, genR.last().ret, global.ref), global.ref, this.toString()))
             }
             is ConditionalExpression -> {
                 val ret = linkedListOf<IR>()
@@ -282,7 +284,7 @@ class Generator(val roots: List<Statement>) {
                 ret.addAll(args.flatMap { it })
                 ret.addAll(prepare)
                 ret.add(IR(instr(i), array(funcId), Instruction.OFS_PARAM(-1)))
-                ret.add(IR(Instruction.STORE_FLOAT, array(Instruction.OFS_PARAM(-1), global), global, "Save response"))
+                ret.add(IR(Instruction.STORE_FLOAT, array(Instruction.OFS_PARAM(-1), global.ref), global.ref, "Save response"))
                 ret
             }
             is ReturnStatement -> {
