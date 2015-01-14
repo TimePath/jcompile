@@ -62,6 +62,10 @@ class ProgramDataWriter(file: File) {
             raf.offset = ret.header.stringData.offset.toLong() + key
             raf.writeString(value)
         }
+        // Ensure termination
+        raf.writeString("")
+        raf.writeString("")
+        raf.writeString("")
 
         raf.offset = ret.header.globalData.offset.toLong()
         raf.write(ret.globalData.array())
