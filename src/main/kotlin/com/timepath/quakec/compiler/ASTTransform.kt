@@ -360,9 +360,21 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitUnaryExpression(ctx: QCParser.UnaryExpressionContext): List<Statement> {
         if (ctx.terminal) {
-            val left = ctx.unaryExpression().accept(this).single()
-            // TODO
-            return listOf(left)
+            val right = ctx.unaryExpression().accept(this).single()
+            val expr = right as Expression
+            val expand = when (ctx.op.getType()) {
+                QCParser.PlusPlus -> {
+                    val ref = expr as ReferenceExpression
+                    BinaryExpression.Assign(ref, BinaryExpression.Add(ref, ConstantExpression(1f)))
+                }
+                QCParser.MinusMinus -> {
+                    val ref = expr as ReferenceExpression
+                    BinaryExpression.Assign(ref, BinaryExpression.Sub(ref, ConstantExpression(1f)))
+                }
+                QCParser.Minus -> BinaryExpression.Sub(ConstantExpression(0), expr)
+                else -> right
+            }
+            return listOf(expand)
         }
         val typeName = ctx.typeName()
         if (typeName != null) {
