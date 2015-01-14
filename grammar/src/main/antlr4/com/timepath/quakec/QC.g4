@@ -450,10 +450,10 @@ selectionStatement
     ;
 
 iterationStatement
-    :   'while' '(' expression ')' statement
-    |   'do' statement 'while' '(' expression ')' ';'
-    |   'for' '(' expression? ';' expression? ';' expression? ')' statement
-    |   'for' '(' declaration expression? ';' expression? ')' statement
+    :   'while' '(' predicate=expression ')' statement
+    |   'do' statement 'while' '(' predicate=expression ')' ';'
+    |   'for' '(' initE=expression? ';' predicate=expression? ';' update=expression? ')' statement
+    |   'for' '(' initD=declaration predicate=expression? ';' update=expression? ')' statement
     ;
 
 jumpStatement

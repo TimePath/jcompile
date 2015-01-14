@@ -236,6 +236,35 @@ class Generator(val roots: List<Statement>) {
                 }
                 ret
             }
+            is Loop -> {
+                val genPred = predicate.generate()
+                val predCount = genPred.count { it.real }
+
+                val genBody = children.flatMap { it.generate() }
+                val bodyCount = genBody.count { it.real }
+
+                val genUpdate = update?.generate()
+                val updateCount = genUpdate?.count { it.real } ?: 0
+
+                val totalCount = bodyCount + updateCount + predCount
+
+                val ret = linkedListOf<IR>()
+                if (initializer != null) {
+                    ret.addAll(initializer.generate())
+                }
+                ret.addAll(genPred)
+                if (checkBefore) {
+                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret,
+                            totalCount + /* the last if */ 1 + /* the next instruction */ 1, 0)))
+                }
+                ret.addAll(genBody)
+                if (genUpdate != null) {
+                    ret.addAll(genUpdate)
+                }
+                ret.addAll(genPred)
+                ret.add(IR(Instruction.IF, array(genPred.last().ret, -totalCount, 0)))
+                ret
+            }
             is FunctionCall -> {
                 val args = args.map { it.generate() }
                 val instr = {(i: Int) ->

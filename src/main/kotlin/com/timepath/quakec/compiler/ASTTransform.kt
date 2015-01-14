@@ -56,7 +56,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val paramDeclarations = paramContext.flatMap {
             it.parameterList().parameterDeclaration()
         }
-        val params = paramDeclarations.mapIndexed { (i, it) ->
+        val params = paramDeclarations.mapIndexed {(i, it) ->
             val paramId = it.declarator()?.getText()
             if (paramId != null) {
                 val declarationExpression = DeclarationExpression(paramId, null)
@@ -124,8 +124,24 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
     }
 
     override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): List<Statement> {
-        // TODO
-        return listOf(ConstantExpression("TODO: Iteration"))
+        val predicate = ctx.predicate
+        val predicateExpr = when (predicate) {
+            null -> ConstantExpression(1)
+            else -> predicate.accept(this).single()
+        }
+
+        val bodyStmt = ctx.statement().accept(this).single()
+        val checkBefore = !ctx.getText().startsWith("do")
+        val initializer = when {
+            ctx.initD != null -> ctx.initD.accept(this).single()
+            ctx.initE != null -> ctx.initE.accept(this).single()
+            else -> null
+        }
+        val update = when (ctx.update) {
+            null -> null
+            else -> ctx.update.accept(this).single()
+        }
+        return listOf(Loop(predicateExpr as Expression, bodyStmt, checkBefore, initializer, update))
     }
 
     override fun visitIfStatement(ctx: QCParser.IfStatementContext): List<Statement> {

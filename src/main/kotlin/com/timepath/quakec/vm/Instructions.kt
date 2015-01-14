@@ -459,11 +459,20 @@ enum class Instruction {
         val stringified = stringify(s).map {
             when (it) {
                 !is Int -> it
-                else -> "\$$it {${if (data != null) {
-                    "i: ${data.globalIntData[it]}, f: ${data.globalFloatData[it]}"
-                } else {
-                    null
-                } ?: "?"}}"
+                else -> {
+                    val values = {
+                        try {
+                            if (data != null) {
+                                val intVal = data.globalIntData[it]
+                                val floatVal = data.globalFloatData[it]
+                                "i: $intVal, f: $floatVal"
+                            } else null
+                        } catch(e: IndexOutOfBoundsException) {
+                            null
+                        }
+                    }()
+                    "\$$it {${values ?: "?"}}"
+                }
             }
         }
         return "${this.name()}${" ".repeat(13 - name().length())}\t[${stringified.joinToString(" ")}]"
