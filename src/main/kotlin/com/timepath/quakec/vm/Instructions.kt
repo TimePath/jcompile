@@ -48,17 +48,19 @@ enum class Instruction {
     MUL_FLOAT_VEC {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            f[it.c + 0] = f[it.a] * f[it.b + 0]
-            f[it.c + 1] = f[it.a] * f[it.b + 1]
-            f[it.c + 2] = f[it.a] * f[it.b + 2]
+            val tmpf = f[it.a]
+            f[it.c + 0] = tmpf * f[it.b + 0]
+            f[it.c + 1] = tmpf * f[it.b + 1]
+            f[it.c + 2] = tmpf * f[it.b + 2]
         }
     }
     MUL_VEC_FLOAT {
         override fun stringify(it: Statement): Array<Any> = array(it.c, "=", it.a, "*", it.b)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            f[it.c + 0] = f[it.a + 0] * f[it.b]
-            f[it.c + 1] = f[it.a + 1] * f[it.b]
-            f[it.c + 2] = f[it.a + 2] * f[it.b]
+            val tmpf = f[it.b]
+            f[it.c + 0] = f[it.a + 0] * tmpf
+            f[it.c + 1] = f[it.a + 1] * tmpf
+            f[it.c + 2] = f[it.a + 2] * tmpf
         }
     }
     DIV_FLOAT {
