@@ -341,8 +341,12 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.multiplicativeExpression().accept(this).single()
             val right = ctx.castExpression().accept(this).single()
-            // TODO
-            return listOf(BinaryExpression.Mul(left as Expression, right as Expression))
+            val op = when (ctx.op.getType()) {
+                QCParser.Star -> BinaryExpression.Mul(left as Expression, right as Expression)
+                QCParser.Div -> BinaryExpression.Div(left as Expression, right as Expression)
+                else -> null
+            }
+            return if (op != null) listOf(op) else emptyList()
         }
         return super.visitMultiplicativeExpression(ctx)
     }
