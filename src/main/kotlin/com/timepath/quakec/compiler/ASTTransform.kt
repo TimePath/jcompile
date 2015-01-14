@@ -85,23 +85,30 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 DeclarationExpression(id)
             }
         }
-        return declarations.map {(it: QCParser.InitDeclaratorContext): Expression ->
+        return declarations.flatMap {
             var declarator = it.declarator()
             while (declarator.declarator() != null) {
                 declarator = declarator.declarator()
             }
             val id = declarator.getText()
             val initializer = it.initializer()?.accept(this)?.single()
-            val constantExpression = if (initializer != null) initializer as ConstantExpression else null
-            if (constantExpression != null) {
-                val value = constantExpression.evaluate()
-                val s = value.value.toString()
-                if (s.startsWith('#')) {
-                    // FIXME: HACK
-                    return@map FunctionLiteral(id, builtin = s.substring(1).toInt())
+            return when (initializer) {
+                is ConstantExpression -> {
+                    val value = initializer.evaluate()
+                    val s = value.value.toString()
+                    if (s.startsWith('#')) {
+                        // FIXME: HACK
+                        listOf(FunctionLiteral(id, builtin = s.substring(1).toInt()))
+                    } else {
+                        listOf(DeclarationExpression(id, initializer))
+                    }
                 }
+                is Expression -> {
+                    val decl = DeclarationExpression(id)
+                    listOf(decl, BinaryExpression.Assign(decl, initializer))
+                }
+                else -> listOf(DeclarationExpression(id))
             }
-            return@map DeclarationExpression(id, constantExpression)
         }
     }
 

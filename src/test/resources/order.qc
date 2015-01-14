@@ -6,6 +6,6 @@ float test(float x) {
 }
 
 void main() {
-    float f; f = test(1) + test(2);
+    float f = test(1) + test(2);
     assert(glob == 2, "Bad order");
 }
