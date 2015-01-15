@@ -33,8 +33,6 @@ class Generator(val roots: List<Statement>) {
     val floatData = globalData.asFloatBuffer()
 
     fun generateProgs(ir: List<IR> = generate()): ProgramData {
-        logger.fine(allocator.toString())
-
         val globalDefs = ArrayList<Definition>()
         val fieldDefs = ArrayList<Definition>()
         fieldDefs.add(Definition(0, 0, 0)) // FIXME: temporary

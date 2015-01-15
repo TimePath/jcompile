@@ -22,11 +22,25 @@ fun exec([Language("QuakeC")] input: String) {
     Program(compile(input)).exec("main")
 }
 
+val resources = File("src/test/resources")
+
+fun compare(what: String, name: String, actual: String) {
+    val saved = File(resources, name)
+    if (saved.exists()) {
+        val expected = saved.readText()
+        assertEquals(expected, actual, "$what differs")
+    } else {
+        val temp = File(resources, name + ".tmp")
+        temp.getParentFile().mkdirs()
+        temp.writeText(actual)
+//        fail("Nothing to compare")
+    }
+}
+
 val logger = Logging.new()
 
 class CompilerSpecs : Spek() {{
     given("a compiler") {
-        val resources = File("src/test/resources")
         val tests = File(resources, "all.src").readLines().map { File(resources, it) }
         .filter { it.exists() }
         tests.forEach {
@@ -40,16 +54,7 @@ class CompilerSpecs : Spek() {{
                     logger.info("Parsing $it")
                     roots = compiler.ast()
                     val actual = BlockStatement(roots!!.last()).toStringRecursive()
-                    val saved = File(resources, "${it.name}.xml")
-                    if (saved.exists()) {
-                        val expected = saved.readText()
-                        assertEquals(expected, actual, "AST differs")
-                    } else {
-                        val temp = File(resources, "${it.name}.xml.tmp")
-                        temp.getParentFile().mkdirs()
-                        temp.writeText(actual)
-//                        fail("Nothing to compare")
-                    }
+                    compare("AST", it.name + ".xml", actual)
                 }
                 var ctx: Generator?
                 var asm: List<IR>?
@@ -57,21 +62,16 @@ class CompilerSpecs : Spek() {{
                     logger.info("Compiling $it")
                     ctx = Generator(roots!!.flatMap { it })
                     asm = ctx!!.generate()
-                    val actual = asm!!.map { ir ->
+                    asm!!.map { ir ->
                         if (ir.real)
                             ir.toString()
                         else
                             null
-                    }.filterNotNull().joinToString("\n")
-                    val saved = File(resources, "${it.name}.asm")
-                    if (saved.exists()) {
-                        val expected = saved.readText()
-                        assertEquals(expected, actual, "ASM differs")
-                    } else {
-                        val temp = File(resources, "${it.name}.asm.tmp")
-                        temp.getParentFile().mkdirs()
-                        temp.writeText(actual)
-//                        fail("Nothing to compare")
+                    }.filterNotNull().joinToString("\n").let { actual ->
+                        compare("ASM", it.name + ".asm", actual)
+                    }
+                    ctx!!.allocator.toString().let { actual ->
+                        compare("allocation", it.name + ".txt", actual)
                     }
                 }
                 it("should execute") {
