@@ -191,8 +191,9 @@ class Generator(val roots: List<Statement>) {
                 listOf(ReferenceIR(0)) // TODO: field by name
             }
             is ReferenceExpression -> {
-                val global = allocator[id]!!
-                listOf(ReferenceIR(global.ref))
+                // FIXME: null references
+                val global = allocator[id]
+                listOf(ReferenceIR(global?.ref ?: 0))
             }
             is BinaryExpression.Assign -> {
                 // ast:
@@ -254,7 +255,7 @@ class Generator(val roots: List<Statement>) {
                 ret
             }
             is Loop -> {
-                val genInit = initializer?.generate()
+                val genInit = initializer?.flatMap { it.generate() }
 
                 val genPred = predicate.generate()
                 val predCount = genPred.count { it.real }
@@ -262,7 +263,7 @@ class Generator(val roots: List<Statement>) {
                 val genBody = children.flatMap { it.generate() }
                 val bodyCount = genBody.count { it.real }
 
-                val genUpdate = update?.generate()
+                val genUpdate = update?.flatMap { it.generate() }
                 val updateCount = genUpdate?.count { it.real } ?: 0
 
                 val totalCount = bodyCount + updateCount + predCount
@@ -285,7 +286,11 @@ class Generator(val roots: List<Statement>) {
                 ret
             }
             is FunctionCall -> {
-                val args = args.map { it.generate() }
+                // TODO: increase this
+                if(args.size() > 8) {
+                    logger.warning("${function} takes ${args.size()} parameters")
+                }
+                val args = args.take(8).map { it.generate() }
                 val instr = {(i: Int) ->
                     Instruction.from(Instruction.CALL0.ordinal() + i)
                 }

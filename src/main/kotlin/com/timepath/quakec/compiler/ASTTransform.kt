@@ -1,5 +1,6 @@
 package com.timepath.quakec.compiler
 
+import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
@@ -92,7 +93,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             }
             val id = declarator.getText()
             val initializer = it.initializer()?.accept(this)?.single()
-            return when (initializer) {
+            when (initializer) {
                 is ConstantExpression -> {
                     val value = initializer.evaluate()
                     val s = value.value.toString()
@@ -140,13 +141,13 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val bodyStmt = ctx.statement().accept(this).single()
         val checkBefore = !ctx.getText().startsWith("do")
         val initializer = when {
-            ctx.initD != null -> ctx.initD.accept(this).single()
-            ctx.initE != null -> ctx.initE.accept(this).single()
+            ctx.initD != null -> ctx.initD.accept(this)
+            ctx.initE != null -> ctx.initE.accept(this)
             else -> null
         }
         val update = when (ctx.update) {
             null -> null
-            else -> ctx.update.accept(this).single()
+            else -> ctx.update.accept(this)
         }
         return listOf(Loop(predicateExpr as Expression, bodyStmt, checkBefore, initializer, update))
     }
@@ -165,13 +166,29 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         return listOf(ConditionalExpression(testExpr as Expression, yesExpr, noExpr))
     }
 
+    override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext?): List<Statement>? {
+        // TODO
+        return listOf(ConditionalExpression(ConstantExpression(0), ConstantExpression(0)))
+    }
+
     override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext): List<Statement> {
         val expr = ctx.expression()
         if (expr != null) {
             return expr.accept(this)
         }
         // redundant semicolon
-        return emptyList()
+        return listOf(Nop())
+    }
+
+    val QCParser.ExpressionContext.terminal: Boolean get() = expression() != null
+
+    override fun visitExpression(ctx: QCParser.ExpressionContext): List<Statement> {
+        if (ctx.terminal) {
+            val left = ctx.expression().accept(this).single()
+            val right = ctx.assignmentExpression().accept(this).single()
+            return listOf(BinaryExpression.Comma(left as Expression, right as Expression))
+        }
+        return super.visitExpression(ctx)
     }
 
     val QCParser.AssignmentExpressionContext.terminal: Boolean get() = assignmentExpression() != null
@@ -351,6 +368,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val op = when (ctx.op.getType()) {
                 QCParser.Star -> BinaryExpression.Mul(left as Expression, right as Expression)
                 QCParser.Div -> BinaryExpression.Div(left as Expression, right as Expression)
+                QCParser.Mod -> BinaryExpression.Mod(left as Expression, right as Expression)
                 else -> null
             }
             return if (op != null) listOf(op) else emptyList()
@@ -420,6 +438,20 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         return listOf(BinaryExpression.Dot(left as Expression, fieldRef))
     }
 
+    override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext): List<Statement> {
+        val left = ctx.postfixExpression().accept(this).single()
+        val right = ctx.expression().accept(this).single()
+        // TODO
+        return listOf(BinaryExpression.Dot(left as Expression, right as Expression))
+    }
+
+    override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext): List<Statement> {
+        val left = ctx.postfixExpression().accept(this).single()
+        val right = ctx.expression().accept(this).single()
+        // TODO
+        return listOf(BinaryExpression.Dot(left as Expression, right as Expression))
+    }
+
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {
         val expressionContext = ctx.expression()
         if (expressionContext != null) {
@@ -442,7 +474,31 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         }
         if (ctx.Constant() != null) {
             val constant = ctx.Constant()
-            val f = constant.getText().toFloat()
+            val s = constant.getText()
+            Pattern.compile("'(.)'").let {
+                val matcher = it.matcher(s)
+                if (matcher.matches()) {
+                    val c1 = matcher.group(1)
+                    return listOf(ConstantExpression(c1.charAt(0)))
+                }
+            }
+            Pattern.compile("'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'").let {
+                val matcher = it.matcher(s)
+                if (matcher.matches()) {
+                    val c1 = matcher.group(1).toFloat()
+                    val c2 = matcher.group(2).toFloat()
+                    val c3 = matcher.group(3).toFloat()
+                    return listOf(ConstantExpression(array(c1, c2, c3)))
+                }
+            }
+            Pattern.compile("0x([\\d0-F]+)").let {
+                val matcher = it.matcher(s)
+                if (matcher.matches()) {
+                    val hex = Integer.parseInt(matcher.group(1), 16)
+                    return listOf(ConstantExpression(hex.toFloat()))
+                }
+            }
+            val f = s.toFloat()
             return listOf(ConstantExpression(f))
         }
         return listOf(ConstantExpression("FIXME_${text}"))

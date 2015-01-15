@@ -72,6 +72,11 @@ class Allocator {
             scope.pop()
     }
 
+    {
+        push("<builtin>")
+        allocateReference("_") // TODO: not really a function
+    }
+
     private fun vecName(name: String): String? {
         val vec = Pattern.compile("(.+)_[xyz]$")
         val matcher = vec.matcher(name)

@@ -66,6 +66,11 @@ abstract class Expression : Statement() {
     open fun hasSideEffects(): Boolean = false
 }
 
+/**
+ * Lonely semicolon
+ */
+class Nop : Statement()
+
 class BlockStatement(c: List<Statement>? = null) : Statement() {
     {
         if (c != null) {

@@ -16,6 +16,11 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
 
     override fun toString(): String = "($left $op $right)"
 
+    class Comma(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
+        override val instr = Instruction.AND // TODO
+        override val op = ","
+    }
+
     class Assign(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.STORE_FLOAT
         override val op = "="
