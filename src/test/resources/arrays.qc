@@ -20,13 +20,17 @@
         return name##_set_this(value);                          \
     }
 
-ARRAY(array, 3)
-ARRAY_COMPONENT(array, 0, 0)
-ARRAY_COMPONENT(array, 1, 0)
-ARRAY_COMPONENT(array, 2, 0)
+ARRAY(array, 256)
+#include <boost/preprocessor/repetition/repeat.hpp>
+#define DECL(z, n, name) ARRAY_COMPONENT(name, n, n)
+BOOST_PP_REPEAT(256, DECL, array)
 
 void main() {
-    assert(array_get(0) == 0, "Initial value");
+    float f;
+    for(f = 0; f < array_size; ++f) {
+        float v = array_get(f);
+        assert(v == f, "Initial value");
+    }
     assert(array_set(0, 2) == 2, "Result of assignment");
     assert(array_get(0) == 2, "Read");
 }

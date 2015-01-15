@@ -14,4 +14,4 @@ float  (float, float)   pow    = #15;
 #define assert ASSERT
 void   (float, string)  assert = #16;
 
-float  (float)          ftoi   = #17;
+//float  (float)          ftoi   = #17;
