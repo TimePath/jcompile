@@ -30,7 +30,7 @@ fun compare(what: String, name: String, actual: String) {
         val expected = saved.readText()
         assertEquals(expected, actual, "$what differs")
     } else {
-        val temp = File(resources, name + ".tmp")
+        val temp = File(resources, "tmp/" + name)
         temp.getParentFile().mkdirs()
         temp.writeText(actual)
 //        fail("Nothing to compare")
