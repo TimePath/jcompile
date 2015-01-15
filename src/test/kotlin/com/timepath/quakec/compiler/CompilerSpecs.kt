@@ -27,9 +27,8 @@ val logger = Logging.new()
 class CompilerSpecs : Spek() {{
     given("a compiler") {
         val resources = File("src/test/resources")
-        val tests = resources.listFiles {
-            it.name.matches(".+qc")
-        }!!.toSortedList()
+        val tests = File(resources, "all.src").readLines().map { File(resources, it) }
+        .filter { it.exists() }
         tests.forEach {
             on(it.name) {
                 val compiler = Compiler()
