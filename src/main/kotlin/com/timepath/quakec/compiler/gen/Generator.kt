@@ -247,6 +247,14 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
                 }
                 ret
             }
+            is ContinueStatement -> {
+                // filled in by Loop.generate()
+                listOf(IR(Instruction.GOTO, array(0, 0, 0)))
+            }
+            is BreakStatement -> {
+                // filled in by Loop.generate()
+                listOf(IR(Instruction.GOTO, array(0, 1, 0)))
+            }
             is Loop -> {
                 val genInit = initializer?.flatMap { it.generate() }
 
@@ -276,11 +284,24 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
                 }
                 ret.addAll(genPred)
                 ret.add(IR(Instruction.IF, array(genPred.last().ret, -totalCount, 0)))
+
+                // break/continue; jump to end
+                genBody.filter { it.real }.forEachIndexed {(i, IR) ->
+                    if(IR.instr == Instruction.GOTO && IR.args[0] == 0) {
+                        val after = (bodyCount - 1) - i
+                        IR.args[0] = after + 1 + when(IR.args[1]) {
+                            // break
+                            1 -> updateCount + predCount + /* if */ 1
+                            else -> 0
+                        }
+                        IR.args[1] = 0
+                    }
+                }
                 ret
             }
             is FunctionCall -> {
                 // TODO: increase this
-                if(args.size() > 8) {
+                if (args.size() > 8) {
                     logger.warning("${function} takes ${args.size()} parameters")
                 }
                 val args = args.take(8).map { it.generate() }

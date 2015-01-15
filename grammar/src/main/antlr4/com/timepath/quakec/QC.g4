@@ -457,10 +457,10 @@ iterationStatement
     ;
 
 jumpStatement
-    :   'goto' Identifier ';'
-    |   'continue' ';'
-    |   'break' ';'
-    |   'return' expression? ';'
+    :   'goto' Identifier ';'       #gotoStatement
+    |   'continue' ';'              #continueStatement
+    |   'break' ';'                 #breakStatement
+    |   'return' expression? ';'    #returnStatement
     ;
 
 // LEXER

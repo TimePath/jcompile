@@ -119,16 +119,18 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         return if (id != null) listOf(DeclarationExpression(id)) else emptyList()
     }
 
-    override fun visitJumpStatement(ctx: QCParser.JumpStatementContext): List<Statement> {
-        // TODO: break, continue
+    override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext): List<Statement> {
         val expr = ctx.expression()
-        val ret = if (expr != null) {
-            val retVal = expr.accept(this).single()
-            ReturnStatement(retVal as Expression)
-        } else {
-            ReturnStatement(null)
-        }
-        return listOf(ret)
+        val retVal = expr.accept(this).single()
+        return listOf(ReturnStatement(retVal as Expression))
+    }
+
+    override fun visitBreakStatement(ctx: QCParser.BreakStatementContext): List<Statement> {
+        return listOf(BreakStatement())
+    }
+
+    override fun visitContinueStatement(ctx: QCParser.ContinueStatementContext): List<Statement> {
+        return listOf(ContinueStatement())
     }
 
     override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): List<Statement> {
