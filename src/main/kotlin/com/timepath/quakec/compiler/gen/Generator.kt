@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
 import com.timepath.quakec.vm
@@ -15,13 +16,13 @@ import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 import com.timepath.quakec.vm.StringManager
 
-class Generator(val roots: List<Statement>) {
+class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
 
     class object {
         val logger = Logging.new()
     }
 
-    val allocator: Allocator = Allocator()
+    val allocator: Allocator = Allocator(opts)
 
     fun generate(): List<IR> = BlockStatement(roots).generate()
 
@@ -68,8 +69,9 @@ class Generator(val roots: List<Statement>) {
         allocator.constants.all.forEach(merge)
 
         val globalData = {
-            assert(4 * allocator.counter >= globalData.position())
-            globalData.limit(4 * allocator.counter)
+            val size = 4 * (opts.userStorageStart + (allocator.references.size() + allocator.constants.size()))
+            assert(size >= globalData.position())
+            globalData.limit(size)
             globalData.position(0)
             globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
         }()
@@ -169,18 +171,11 @@ class Generator(val roots: List<Statement>) {
             }
             is ConstantExpression -> {
                 val global = allocator.allocateConstant(value)
-                listOf(
-                        ReferenceIR(global.ref))
+                listOf(ReferenceIR(global.ref))
             }
             is DeclarationExpression -> {
-                val global = allocator.allocateReference(id)
-                val ret = linkedListOf<IR>()
-                if (this.value != null) {
-                    val value = this.value.evaluate()
-                    global.value = value
-                }
-                ret.add(ReferenceIR(global.ref))
-                ret
+                val global = allocator.allocateReference(id, this.value?.evaluate())
+                listOf(ReferenceIR(global.ref))
             }
             is MemoryReference -> {
                 listOf(ReferenceIR(ref))

@@ -24,7 +24,7 @@ import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 
-public class Compiler {
+public class Compiler(val opts: CompilerOptions) {
 
     class object {
         val logger = Logging.new()
@@ -149,7 +149,7 @@ public class Compiler {
     }
 
     public fun compile(roots: List<List<Statement>> = ast()): ProgramData {
-        val ctx = Generator(roots.flatMap { it })
+        val ctx = Generator(opts, roots.flatMap { it })
         return ctx.generateProgs()
     }
 }
@@ -163,6 +163,7 @@ fun time(name: String, action: () -> Unit) {
 }
 
 fun main(args: Array<String>) {
+    val opts = CompilerOptions()
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
     time("Total time")
     {
@@ -173,7 +174,7 @@ fun main(args: Array<String>) {
         )
         defs.keySet().forEach { project ->
             time("Project time") {
-                Compiler()
+                Compiler(opts)
                         .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/$project/progs.src"))
                         .define(defs[project])
                         .compile()
@@ -182,7 +183,7 @@ fun main(args: Array<String>) {
     }
     time("GMQCC tests")
     {
-        val gmqcc = Compiler()
+        val gmqcc = Compiler(opts)
                 .define("GMQCC")
                 .define("__STD_GMQCC__")
         gmqcc.preprocessor.addFeatures(

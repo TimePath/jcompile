@@ -6,10 +6,11 @@ import java.util.LinkedList
 import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.ast.Value
 import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
 
-class Allocator {
+class Allocator(val opts: CompilerOptions) {
 
     class object {
         val logger = Logging.new()
@@ -18,20 +19,47 @@ class Allocator {
     /**
      * Maps names to pointers
      */
-    class AllocationMap {
+    inner class AllocationMap {
 
-        internal data class Entry(var ref: Int,
-                                  var value: Value,
-                                  var name: String)
+        inner data class Entry(val ref: Int,
+                                  val value: Value,
+                                  /* Privately set */
+                                  var name: String) {
 
-        val all = LinkedList<Entry>()
+            fun tag(name: String) {
+                if (!this.name.split('|').contains(name))
+                    this.name += "|$name"
+            }
+        }
+
+        private val free = LinkedList<Entry>()
+        private val pool = LinkedList<Entry>()
+        val all: List<Entry> = pool
         private val refs = LinkedHashMap<Int, Entry>()
         private val values = LinkedHashMap<Value, Entry>()
         private val names = LinkedHashMap<String, Entry>()
 
-        fun allocate(id: String, ref: Int, onCreate: () -> Value?): Entry {
-            val e = Entry(ref, onCreate() ?: Value(null), id)
-            all.add(e)
+        /**
+         * Considered inside a function at this depth
+         */
+        val insideFunc: Boolean
+            get() = scope.size() >= 3
+
+        fun allocate(id: String, ref: Int, value: Value?): Entry {
+            val valueOrDefault = value ?: Value(null)
+            // only consider uninitialized local references for now
+            if (opts.scopeFolding && insideFunc && !free.isEmpty() && valueOrDefault.value == null) {
+                val e = free.pop()
+                // add the entry to the current scope so it can be used again later on exit
+                scope.peek().add(e)
+                e.tag(id)
+                return e
+            }
+            val e = Entry(ref, valueOrDefault, id)
+            pool.add(e)
+            if (!scope.empty() && valueOrDefault.value == null) {
+                scope.peek().add(e)
+            }
             refs[e.ref] = e
             values[e.value] = e
             names[e.name] = e
@@ -50,7 +78,24 @@ class Allocator {
             names[name] = value
         }
 
-        fun size() = all.size()
+        fun size() = pool.size()
+
+        private val scope = Stack<LinkedList<Entry>>()
+
+        fun push() {
+            scope.push(LinkedList<Entry>())
+        }
+
+        /**
+         * Push all previously used entries to the head of the queue
+         */
+        fun pop() {
+            val wasInside = insideFunc
+            free.addAll(0, scope.pop())
+            // forget old free vars
+            if (wasInside != insideFunc)
+                free.clear()
+        }
 
     }
 
@@ -65,11 +110,13 @@ class Allocator {
 
     fun push(name: String) {
         scope.push(Scope(name))
+        references.push()
     }
 
     fun pop() {
         if (!scope.empty())
             scope.pop()
+        references.pop()
     }
 
     {
@@ -120,41 +167,36 @@ class Allocator {
         return null
     }
 
-    var counter: Int = 100
+    private var funCounter: Int = 0
 
     /**
      * Return the index to a constant referring to this function
      */
     fun allocateFunction(id: String? = null): Entry {
-        val name = id ?: "fun$counter"
+        val name = id ?: "fun${funCounter++}"
         val i = functions.size()
         // index the function will have
-        val function = functions.allocate(name, i) {
-            null
-        }
+        val function = functions.allocate(name, i, null)
         val const = allocateConstant(Value(function.ref), "fun($name)")
         scope.peek().lookup[name] = const
         return const
     }
 
+    private var refCounter: Int = 0
+
     /**
      * Reserve space for this variable and add its name to the current scope
-     * Return the index in memory
      */
-    fun allocateReference(id: String? = null): Entry {
-        val name = id ?: "ref$counter"
-        val i = counter
-        val entry = references.allocate(name, i) {
-            counter++
-            null
-        }
+    fun allocateReference(id: String? = null, value: Value? = null): Entry {
+        val name = id ?: "ref${refCounter++}"
+        val i = opts.userStorageStart + (references.size() + constants.size())
+        val entry = references.allocate(name, i, value)
         scope.peek().lookup[name] = entry
         return entry
     }
 
     /**
      * Reserve space for this constant
-     * Return the index in memory
      */
     fun allocateConstant(value: Value, id: String? = null): Entry {
         if (value.value is String) {
@@ -173,18 +215,14 @@ class Allocator {
         val existing = constants[value]
         if (existing != null) {
             constants[name] = existing
-            if (!existing.name.split('|').contains(name))
-                existing.name += "|$name"
+            existing.tag(name)
             return existing
         }
-        val i = counter
-        return constants.allocate(name, i) {
-            counter++
-            value
-        }
+        val i = opts.userStorageStart + (references.size() + constants.size())
+        return constants.allocate(name, i, value)
     }
 
-    private var stringOffset = 0
+    private var stringCounter = 0
 
     fun allocateString(s: String): Entry {
         val name = s
@@ -193,11 +231,9 @@ class Allocator {
         if (existing != null) {
             return existing
         }
-        val i = stringOffset
-        return strings.allocate(name, i) {
-            stringOffset += name.length() + 1
-            null
-        }
+        val i = stringCounter
+        stringCounter += name.length() + 1
+        return strings.allocate(name, i, null)
     }
 
     override fun toString(): String {
