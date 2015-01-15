@@ -1,6 +1,7 @@
 arrays.qc
 calls.qc
-doubleeval.qc
+# doubleeval.qc
+functionpointers.qc
 hello.qc
 loops.qc
 order.qc
