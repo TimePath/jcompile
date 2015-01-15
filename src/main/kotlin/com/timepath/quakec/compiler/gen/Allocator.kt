@@ -25,27 +25,32 @@ class Allocator {
                                   var name: String)
 
         val all = LinkedList<Entry>()
-        internal val refs = LinkedHashMap<Int, Entry>()
-        internal val values = LinkedHashMap<Value, Entry>()
-        internal val names = LinkedHashMap<String, Entry>()
+        private val refs = LinkedHashMap<Int, Entry>()
+        private val values = LinkedHashMap<Value, Entry>()
+        private val names = LinkedHashMap<String, Entry>()
 
-        fun add(e: Entry) {
+        fun allocate(id: String, ref: Int, onCreate: () -> Value?): Entry {
+            val e = Entry(ref, onCreate() ?: Value(null), id)
             all.add(e)
             refs[e.ref] = e
             values[e.value] = e
             names[e.name] = e
+            return e
         }
 
-        fun contains(i: Int) = i in refs
-        fun get(i: Int): Entry? = refs[i]
+        fun contains(ref: Int) = ref in refs
+        fun get(ref: Int): Entry? = refs[ref]
 
-        fun contains(v: Value) = v in values
-        fun get(v: Value): Entry? = values[v]
+        fun contains(value: Value) = value in values
+        fun get(value: Value): Entry? = values[value]
 
-        fun contains(s: String) = s in names
-        fun get(s: String): Entry? = names[s]
+        fun contains(name: String) = name in names
+        fun get(name: String): Entry? = names[name]
+        fun set(name: String, value: Entry) {
+            names[name] = value
+        }
 
-        fun size() = names.size()
+        fun size() = all.size()
 
     }
 
@@ -54,20 +59,17 @@ class Allocator {
     val constants = AllocationMap()
     val strings = AllocationMap()
 
-    data class Scope(val lookup: MutableMap<String, Entry> = HashMap())
+    data class Scope(val name: String, val lookup: MutableMap<String, Entry> = HashMap())
 
     val scope = Stack<Scope>()
 
-    fun push() {
-        scope.push(Scope())
+    fun push(name: String) {
+        scope.push(Scope(name))
     }
 
     fun pop() {
-        scope.pop()
-    }
-
-    {
-        push()
+        if (!scope.empty())
+            scope.pop()
     }
 
     private fun vecName(name: String): String? {
@@ -113,15 +115,6 @@ class Allocator {
         return null
     }
 
-    private inline fun allocate(map: AllocationMap, id: String, index: Int, onCreate: () -> Value?): Entry {
-        val existing = map[id]
-        if (existing != null) return existing
-        val i = index
-        val entry = Entry(i, onCreate() ?: Value(null), id)
-        map.add(entry)
-        return entry
-    }
-
     var counter: Int = 100
 
     /**
@@ -131,7 +124,9 @@ class Allocator {
         val name = id ?: "fun$counter"
         val i = functions.size()
         // index the function will have
-        val function = allocate(functions, name, i, { null })
+        val function = functions.allocate(name, i) {
+            null
+        }
         val const = allocateConstant(Value(function.ref), "fun($name)")
         scope.peek().lookup[name] = const
         return const
@@ -144,7 +139,7 @@ class Allocator {
     fun allocateReference(id: String? = null): Entry {
         val name = id ?: "ref$counter"
         val i = counter
-        val entry = allocate(references, name, i) {
+        val entry = references.allocate(name, i) {
             counter++
             null
         }
@@ -170,15 +165,15 @@ class Allocator {
             }
         }
         // merge constants
-        val existing = constants.values[value]
+        val existing = constants[value]
         if (existing != null) {
-            constants.names[name] = existing
+            constants[name] = existing
             if (!existing.name.split('|').contains(name))
                 existing.name += "|$name"
             return existing
         }
         val i = counter
-        return allocate(constants, name, i) {
+        return constants.allocate(name, i) {
             counter++
             value
         }
@@ -188,8 +183,13 @@ class Allocator {
 
     fun allocateString(s: String): Entry {
         val name = s
+        // merge strings
+        val existing = strings[name]
+        if (existing != null) {
+            return existing
+        }
         val i = stringOffset
-        return allocate(strings, name, i) {
+        return strings.allocate(name, i) {
             stringOffset += name.length() + 1
             null
         }

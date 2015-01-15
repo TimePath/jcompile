@@ -131,14 +131,6 @@ class Generator(val roots: List<Statement>) {
     }
 
     private fun Statement.exit() {
-        when (this) {
-            is BlockStatement -> {
-                allocator.pop()
-            }
-            is FunctionLiteral -> {
-                allocator.pop()
-            }
-        }
         logger.finer("${" < <".repeat(allocator.scope.size())} ${this.javaClass.getSimpleName()}")
     }
 
@@ -146,10 +138,12 @@ class Generator(val roots: List<Statement>) {
         this.enter()
         val ret: List<IR> = when (this) {
             is BlockStatement -> {
-                allocator.push()
-                children.flatMap {
+                allocator.push("<block>")
+                val list = children.flatMap {
                     it.generate()
                 }
+                allocator.pop()
+                list
             }
             is FunctionLiteral -> {
                 val global = allocator.allocateFunction(id)
@@ -166,12 +160,14 @@ class Generator(val roots: List<Statement>) {
                         numParams = 0,
                         sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
                 )
-                allocator.push()
-                (listOf(
+                allocator.push(id)
+                val list = (listOf(
                         FunctionIR(f))
                         + children.flatMap { it.generate() }
                         + IR(instr = Instruction.DONE)
                         + ReferenceIR(global.ref))
+                allocator.pop()
+                list
             }
             is ConstantExpression -> {
                 val global = allocator.allocateConstant(value)
