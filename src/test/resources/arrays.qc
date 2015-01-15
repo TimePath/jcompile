@@ -26,8 +26,7 @@ ARRAY(array, 256)
 BOOST_PP_REPEAT(256, DECL, array)
 
 void main() {
-    float f;
-    for(f = 0; f < array_size; ++f) {
+    for(float f = 0; f < array_size; ++f) {
         float v = array_get(f);
         assert(v == f, "Initial value");
     }

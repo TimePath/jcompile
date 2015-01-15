@@ -254,6 +254,8 @@ class Generator(val roots: List<Statement>) {
                 ret
             }
             is Loop -> {
+                val genInit = initializer?.generate()
+
                 val genPred = predicate.generate()
                 val predCount = genPred.count { it.real }
 
@@ -266,8 +268,8 @@ class Generator(val roots: List<Statement>) {
                 val totalCount = bodyCount + updateCount + predCount
 
                 val ret = linkedListOf<IR>()
-                if (initializer != null) {
-                    ret.addAll(initializer.generate())
+                if (genInit != null) {
+                    ret.addAll(genInit)
                 }
                 ret.addAll(genPred)
                 if (checkBefore) {
