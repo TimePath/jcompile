@@ -3,6 +3,8 @@ calls.qc
 # doubleeval.qc
 functionpointers.qc
 hello.qc
+logic.qc
 loops.qc
 order.qc
 scope.qc
+ternary.qc

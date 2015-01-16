@@ -213,6 +213,22 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
                 (genL + genR
                         + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, this.toString()))
             }
+            is BinaryExpression.Or -> {
+                ConditionalExpression(left,
+                        pass = ConstantExpression(1),
+                        fail = ConditionalExpression(right,
+                                pass = ConstantExpression(1),
+                                fail = ConstantExpression(0))
+                ).generate()
+            }
+            is BinaryExpression.And -> {
+                ConditionalExpression(left,
+                        fail = ConstantExpression(0),
+                        pass = ConditionalExpression(right,
+                                fail = ConstantExpression(0),
+                                pass = ConstantExpression(1))
+                ).generate()
+            }
             is BinaryExpression<*, *> -> {
                 // ast:
                 // temp(c) = left(a) op right(b)
@@ -233,17 +249,21 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
                 val genFalse = fail?.generate()
                 if (genFalse == null) {
                     // No else, jump to the instruction after the body
-                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, 1 + trueCount, 0)))
+                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0)))
                     ret.addAll(genTrue)
                 } else {
-                    // The if body has a goto, include it in the count
-                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, 2 + trueCount, 0)))
-                    ret.addAll(genTrue)
                     val falseCount = genFalse.count { it.real }
+                    val temp = allocator.allocateReference()
+                    // The if body has a goto, include it in the count
+                    ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0)))
+                    ret.addAll(genTrue)
+                    ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
                     // end if, jump to the instruction after the else
-                    ret.add(IR(Instruction.GOTO, array(1 + falseCount, 0, 0)))
+                    ret.add(IR(Instruction.GOTO, array(falseCount + 2, 0, 0)))
                     // else
                     ret.addAll(genFalse)
+                    ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
+                    ret.add(ReferenceIR(temp.ref))
                 }
                 ret
             }
@@ -287,10 +307,10 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
 
                 // break/continue; jump to end
                 genBody.filter { it.real }.forEachIndexed {(i, IR) ->
-                    if(IR.instr == Instruction.GOTO && IR.args[0] == 0) {
+                    if (IR.instr == Instruction.GOTO && IR.args[0] == 0) {
                         val after = (bodyCount - 1) - i
-                        IR.args[0] = after + 1 + when(IR.args[1]) {
-                            // break
+                        IR.args[0] = after + 1 + when (IR.args[1]) {
+                        // break
                             1 -> updateCount + predCount + /* if */ 1
                             else -> 0
                         }
