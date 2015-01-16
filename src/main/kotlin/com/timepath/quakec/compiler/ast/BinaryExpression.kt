@@ -2,6 +2,8 @@ package com.timepath.quakec.compiler.ast
 
 import com.timepath.quakec.compiler.ast.Expression as rvalue
 import com.timepath.quakec.compiler.ast.ReferenceExpression as lvalue
+import com.timepath.quakec.compiler.gen.Generator
+import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val right: R) : rvalue() {
@@ -16,6 +18,18 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
 
     override fun toString(): String = "($left $op $right)"
 
+    override fun generate(ctx: Generator): List<IR> {
+        // ast:
+        // temp(c) = left(a) op right(b)
+        // vm:
+        // c (=) a (op) b
+        val genL = left.generate(ctx)
+        val genR = right.generate(ctx)
+        val global = ctx.allocator.allocateReference()
+        return (genL + genR
+                + IR(instr, array(genL.last().ret, genR.last().ret, global.ref), global.ref, this.toString()))
+    }
+
     class Comma(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.AND // TODO
         override val op = ","
@@ -24,16 +38,57 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
     class Assign(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.STORE_FLOAT
         override val op = "="
+        override fun generate(ctx: Generator): List<IR> {
+            // ast:
+            // left(a) = right(b)
+            // vm:
+            // b (=) a
+            val left = when (left) {
+                is BinaryExpression.Dot -> {
+                    // make a copy to avoid changing the right half of the assignment
+                    val special = BinaryExpression.Dot(left.left, left.right)
+                    special.instr = Instruction.ADDRESS
+                    special
+                }
+                else -> left
+            }
+            val instr = when {
+                left is BinaryExpression.Dot -> {
+                    Instruction.STOREP_FLOAT
+                }
+                else -> instr
+            }
+            val genL = left.generate(ctx)
+            val genR = right.generate(ctx)
+            return (genL + genR
+                    + IR(instr, array(genR.last().ret, genL.last().ret), genL.last().ret, this.toString()))
+        }
     }
 
     class Or(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.OR
         override val op = "||"
+        override fun generate(ctx: Generator): List<IR> {
+            return ConditionalExpression(left,
+                    pass = ConstantExpression(1),
+                    fail = ConditionalExpression(right,
+                            pass = ConstantExpression(1),
+                            fail = ConstantExpression(0))
+            ).generate(ctx)
+        }
     }
 
     class And(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {
         override val instr = Instruction.AND
         override val op = "&&"
+        override fun generate(ctx: Generator): List<IR> {
+            return ConditionalExpression(left,
+                    fail = ConstantExpression(0),
+                    pass = ConditionalExpression(right,
+                            fail = ConstantExpression(0),
+                            pass = ConstantExpression(1))
+            ).generate(ctx)
+        }
     }
 
     class BitOr(left: rvalue, right: rvalue) : BinaryExpression<rvalue, rvalue>(left, right) {

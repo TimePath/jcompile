@@ -1,5 +1,8 @@
 package com.timepath.quakec.compiler.ast
 
+import com.timepath.quakec.compiler.gen.Generator
+import com.timepath.quakec.compiler.gen.IR
+
 abstract class Statement {
 
     open val attributes: Map<String, Any?>
@@ -48,6 +51,8 @@ abstract class Statement {
 
     fun toStringRecursive(): String = render().toString()
 
+    open fun generate(ctx: Generator): List<IR> = emptyList()
+
 }
 
 abstract class Expression : Statement() {
@@ -76,5 +81,13 @@ class BlockStatement(c: List<Statement>? = null) : Statement() {
         if (c != null) {
             addAll(c)
         }
+    }
+    override fun generate(ctx: Generator): List<IR> {
+        ctx.allocator.push("<block>")
+        val list = children.flatMap {
+            it.generate(ctx)
+        }
+        ctx.allocator.pop()
+        return list
     }
 }
