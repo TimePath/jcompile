@@ -29,7 +29,6 @@
 /*
     TODO: GMQCC parity
 
-    dots.qc
     goto.qc (conditional label)
     state.qc
 
@@ -244,7 +243,7 @@ typeSpecifier
     ;
 
 pointer
-    :  '.'+
+    :   ('...' | '.')+
     ;
 
 directTypeSpecifier
