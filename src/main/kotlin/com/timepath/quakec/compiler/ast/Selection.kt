@@ -1,7 +1,9 @@
 package com.timepath.quakec.compiler.ast
 
+import com.timepath.quakec.compiler.gen.CaseIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
+import com.timepath.quakec.compiler.gen.LabelIR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Instruction
 
@@ -53,6 +55,35 @@ class ConditionalExpression(val test: Expression,
             ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
             ret.add(ReferenceIR(temp.ref))
         }
+        return ret
+    }
+}
+
+class SwitchStatement(val test: Expression, c: List<Statement>) : Statement() {
+
+    {
+        addAll(c)
+    }
+
+    override fun generate(ctx: Generator): List<IR> {
+        val ret = linkedListOf<IR>()
+        val body = Loop(ConstantExpression(0), BlockStatement(children))
+        val children = body.generate(ctx)
+        ret.addAll(children.map {
+            when (it) {
+                is CaseIR -> {
+                    val expr = it.expr
+                    val label = (if (expr == null) "default" else "case $expr").toString()
+                    val goto = GotoStatement(label)
+                    ret.addAll((when (expr) {
+                        null -> goto
+                        else -> ConditionalExpression(BinaryExpression.Eq(test, expr), goto)
+                    }).generate(ctx))
+                    LabelIR(label) // replace with a label so goto will be filled in later
+                }
+                else -> it
+            }
+        })
         return ret
     }
 }

@@ -139,8 +139,11 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext): List<Statement> {
         val expr = ctx.expression()
-        val retVal = expr.accept(this).single()
-        return listOf(ReturnStatement(retVal as Expression))
+        val retVal = expr?.accept(this)?.single()
+        return listOf(ReturnStatement(when {
+            retVal is Expression -> retVal : Expression
+            else -> null
+        }))
     }
 
     override fun visitBreakStatement(ctx: QCParser.BreakStatementContext): List<Statement> {
@@ -190,9 +193,10 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         return listOf(ConditionalExpression(testExpr as Expression, yesExpr, noExpr))
     }
 
-    override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext?): List<Statement>? {
-        // TODO
-        return listOf(ConditionalExpression(ConstantExpression(0), ConstantExpression(0)))
+    override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext): List<Statement> {
+        val testExpr = ctx.expression().accept(this).single()
+        val switch = SwitchStatement(testExpr as Expression, ctx.statement().accept(this))
+        return listOf(switch)
     }
 
     override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext): List<Statement> {

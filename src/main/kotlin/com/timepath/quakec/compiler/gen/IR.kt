@@ -1,5 +1,6 @@
 package com.timepath.quakec.compiler.gen
 
+import com.timepath.quakec.compiler.ast.Expression
 import com.timepath.quakec.vm.Function
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.misc.Utils
@@ -26,3 +27,4 @@ open class FakeIR : IR() {
 class ReferenceIR(override val ret: Int) : FakeIR()
 class FunctionIR(val function: Function) : FakeIR()
 class LabelIR(val id: String) : FakeIR()
+class CaseIR(val expr: Expression?) : FakeIR()
