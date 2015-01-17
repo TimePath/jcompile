@@ -67,23 +67,29 @@ class SwitchStatement(val test: Expression, c: List<Statement>) : Statement() {
 
     override fun generate(ctx: Generator): List<IR> {
         val ret = linkedListOf<IR>()
+        val default = linkedListOf<IR>()
         val body = Loop(ConstantExpression(0), BlockStatement(children))
         val children = body.generate(ctx)
-        ret.addAll(children.map {
+        val cases = children.map {
             when (it) {
                 is CaseIR -> {
                     val expr = it.expr
                     val label = (if (expr == null) "default" else "case $expr").toString()
                     val goto = GotoStatement(label)
-                    ret.addAll((when (expr) {
-                        null -> goto
-                        else -> ConditionalExpression(BinaryExpression.Eq(test, expr), goto)
-                    }).generate(ctx))
+                    if (expr == null) {
+                        default.addAll(goto.generate(ctx))
+                    } else {
+                        val test = BinaryExpression.Eq(test, expr)
+                        val jump = ConditionalExpression(test, goto)
+                        ret.addAll(jump.generate(ctx))
+                    }
                     LabelIR(label) // replace with a label so goto will be filled in later
                 }
                 else -> it
             }
-        })
+        }
+        ret.addAll(default)
+        ret.addAll(cases)
         return ret
     }
 }
