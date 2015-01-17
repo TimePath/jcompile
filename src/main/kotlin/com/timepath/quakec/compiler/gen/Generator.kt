@@ -18,6 +18,8 @@ import com.timepath.quakec.vm.StringManager
 
 class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
 
+    val gotoLabels = linkedMapOf<IR, String>()
+
     class object {
         val logger = Logging.new()
     }

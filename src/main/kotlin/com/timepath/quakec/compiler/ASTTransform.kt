@@ -113,10 +113,28 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         }
     }
 
-    override fun visitLabeledStatement(ctx: QCParser.LabeledStatementContext): List<Statement> {
-        val id = ctx.Identifier()?.getText()
-        // TODO: custom node
-        return if (id != null) listOf(DeclarationExpression(id)) else emptyList()
+    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext): List<Statement> {
+        with(linkedListOf<Statement>()) {
+            add(Label(ctx.Identifier().getText()))
+            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
+            return this
+        }
+    }
+
+    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext): List<Statement> {
+        with(linkedListOf<Statement>()) {
+            add(CaseLabel(ctx.constantExpression().accept(this@ASTTransform).single() as Expression))
+            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
+            return this
+        }
+    }
+
+    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext): List<Statement> {
+        with(linkedListOf<Statement>()) {
+            add(CaseLabel(null))
+            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
+            return this
+        }
     }
 
     override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext): List<Statement> {
@@ -131,6 +149,10 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitContinueStatement(ctx: QCParser.ContinueStatementContext): List<Statement> {
         return listOf(ContinueStatement())
+    }
+
+    override fun visitGotoStatement(ctx: QCParser.GotoStatementContext): List<Statement> {
+        return listOf(GotoStatement(ctx.Identifier().getText()))
     }
 
     override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): List<Statement> {

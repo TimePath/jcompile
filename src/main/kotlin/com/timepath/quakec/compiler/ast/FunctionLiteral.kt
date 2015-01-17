@@ -4,6 +4,7 @@ import java.util.Arrays
 import com.timepath.quakec.compiler.gen.FunctionIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
+import com.timepath.quakec.compiler.gen.LabelIR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Function
 import com.timepath.quakec.vm.Instruction
@@ -48,9 +49,30 @@ class FunctionLiteral(val id: String? = null,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
         ctx.allocator.push(id)
+        val children = children.flatMap { it.generate(ctx) }
+        run {
+            // Calculate label jumps
+            val labelIndices = linkedMapOf<String, Int>()
+            val jumpIndices = linkedMapOf<String, Int>()
+            children.fold(0, { i, it ->
+                when {
+                    it is LabelIR -> {
+                        labelIndices[it.id] = i
+                    }
+                    it.instr == Instruction.GOTO && it.args[0] == 0 -> {
+                        jumpIndices[ctx.gotoLabels[it]] = i
+                    }
+                }
+                if (it.real) i + 1 else i
+            })
+            val real = children.filter { it.real }
+            for ((s, i) in jumpIndices) {
+                real[i].args[0] = labelIndices[s] - i
+            }
+        }
         val list = (listOf(
                 FunctionIR(f))
-                + children.flatMap { it.generate(ctx) }
+                + children
                 + IR(instr = Instruction.DONE)
                 + ReferenceIR(global.ref))
         ctx.allocator.pop()

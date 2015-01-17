@@ -25,3 +25,4 @@ open class FakeIR : IR() {
 
 class ReferenceIR(override val ret: Int) : FakeIR()
 class FunctionIR(val function: Function) : FakeIR()
+class LabelIR(val id: String) : FakeIR()

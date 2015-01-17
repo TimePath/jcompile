@@ -34,4 +34,14 @@ class BreakStatement() : Statement() {
         return listOf(IR(Instruction.GOTO, array(0, 1, 0)))
     }
 }
-class GotoStatement() : Statement()
+class GotoStatement(val id: String) : Statement() {
+    override val attributes: Map<String, Any?>
+        get() = mapOf("label" to id)
+
+    override fun generate(ctx: Generator): List<IR> {
+        // filled in by new labels
+        val instr = IR(Instruction.GOTO, array(0, 0, 0))
+        ctx.gotoLabels[instr] = id
+        return listOf(instr)
+    }
+}

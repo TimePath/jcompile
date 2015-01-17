@@ -421,10 +421,10 @@ statement
     ;
 
 labeledStatement
-    :   Identifier ':' blockItem?
-    |   ':' Identifier blockItem?
-    |   'case' constantExpression ':' blockItem
-    |   'default' ':' blockItem
+    :   Identifier ':' blockItem?                   #customLabel
+    |   ':' Identifier blockItem?                   #customLabel
+    |   'case' constantExpression ':' blockItem     #caseLabel
+    |   'default' ':' blockItem                     #defaultLabel
     ;
 
 compoundStatement
