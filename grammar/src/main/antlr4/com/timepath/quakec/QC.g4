@@ -30,14 +30,9 @@
     TODO: GMQCC parity
 
     dots.qc
-    enum.qc
-    goto.qc
-    pops.qc
+    goto.qc (conditional label)
     state.qc
-    ternary.qc
-    vec_ops.qc
 
-    allow keywords as identifiers
 */
 
 grammar QC;
@@ -136,7 +131,7 @@ equalityExpression
 
 relationalExpression
     :   shiftExpression
-    |   relationalExpression op=('<' | '>' | '<=' | '>=') shiftExpression
+    |   relationalExpression op=('<' | '>' | '<=>' | '<=' | '>=') shiftExpression
     ;
 
 shiftExpression
@@ -151,7 +146,7 @@ additiveExpression
 
 multiplicativeExpression
     :   castExpression
-    |   multiplicativeExpression op=('*' | '/' | '%') castExpression
+    |   multiplicativeExpression op=('*' | '/' | '%' | '><') castExpression
     ;
 
 castExpression
@@ -161,6 +156,7 @@ castExpression
 
 unaryExpression
     :   postfixExpression
+    |   postfixExpression op='**' unaryExpression
     |   op=('++' | '--') unaryExpression
     |   op=('+' | '-' | '~' | '!') unaryExpression
     |   op=('sizeof' | '_length') unaryExpression
@@ -526,9 +522,11 @@ Plus : '+';
 PlusPlus : '++';
 Minus : '-';
 MinusMinus : '--';
+Exp : '**';
 Star : '*';
 Div : '/';
 Mod : '%';
+Cross : '><';
 
 And : '&';
 Or : '|';
@@ -555,6 +553,7 @@ AndAssign : '&=';
 XorAssign : '^=';
 OrAssign : '|=';
 
+Compare : '<=>';
 Equal : '==';
 NotEqual : '!=';
 
