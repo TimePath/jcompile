@@ -47,14 +47,24 @@ class ConditionalExpression(val test: Expression,
             val falseCount = genFalse.count { it.real }
             val temp = ctx.allocator.allocateReference()
             // The if body has a goto, include it in the count
-            ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0)))
+            val jumpTrue = IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0))
+            ret.add(jumpTrue)
+            // if
             ret.addAll(genTrue)
-            ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
+            if (genTrue.isNotEmpty())
+                ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
+            else
+                jumpTrue.args[1]--
             // end if, jump to the instruction after the else
-            ret.add(IR(Instruction.GOTO, array(falseCount + 2, 0, 0)))
+            val jumpFalse = IR(Instruction.GOTO, array(falseCount + 2, 0, 0))
+            ret.add(jumpFalse)
             // else
             ret.addAll(genFalse)
-            ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref)))
+            if (genFalse.isNotEmpty())
+                ret.add(IR(Instruction.STORE_FLOAT, array(genFalse.last().ret, temp.ref)))
+            else
+                jumpFalse.args[1]--
+            // return
             ret.add(ReferenceIR(temp.ref))
         }
         return ret
