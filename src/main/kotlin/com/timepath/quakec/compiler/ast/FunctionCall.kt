@@ -4,13 +4,15 @@ import kotlin.properties.Delegates
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 class FunctionCall(val function: Expression,
-                   c: List<Statement>? = null) : Expression() {
+                   add: List<Statement>? = null,
+                   ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     {
-        if (c != null) {
-            addAll(c)
+        if (add != null) {
+            addAll(add)
         }
     }
 
@@ -28,7 +30,7 @@ class FunctionCall(val function: Expression,
         if (args.size() > 8) {
             Generator.logger.warning("${function} takes ${args.size()} parameters")
         }
-        val args = args.take(8).map { it.generate(ctx) }
+        val args = args.take(8).map { it.doGenerate(ctx) }
         val instr = {(i: Int) ->
             Instruction.from(Instruction.CALL0.ordinal() + i)
         }
@@ -37,7 +39,7 @@ class FunctionCall(val function: Expression,
             val param = Instruction.OFS_PARAM(i++)
             IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
         }
-        val genF = function.generate(ctx)
+        val genF = function.doGenerate(ctx)
         val funcId = genF.last().ret
         val global = ctx.allocator.allocateReference()
         val ret = linkedListOf<IR>()

@@ -32,11 +32,11 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
     }
 
     override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext): List<Statement> {
-        return listOf(BlockStatement(visitChildren(ctx)))
+        return listOf(BlockStatement(visitChildren(ctx), ctx = ctx))
     }
 
     override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext): List<Statement> {
-        return listOf(BlockStatement(visitChildren(ctx)))
+        return listOf(BlockStatement(visitChildren(ctx), ctx = ctx))
     }
 
     override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Statement> {
@@ -60,9 +60,9 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val params = paramDeclarations.mapIndexed {(i, it) ->
             val paramId = it.declarator()?.getText()
             if (paramId != null) {
-                val declarationExpression = DeclarationExpression(paramId, null)
-                val memoryReference = MemoryReference(Instruction.OFS_PARAM(i))
-                listOf(declarationExpression, BinaryExpression.Assign(declarationExpression, memoryReference))
+                val declarationExpression = DeclarationExpression(paramId, null, ctx = ctx)
+                val memoryReference = MemoryReference(Instruction.OFS_PARAM(i), ctx = ctx)
+                listOf(declarationExpression, BinaryExpression.Assign(declarationExpression, memoryReference, ctx = ctx))
             } else {
                 emptyList()
             }
@@ -70,11 +70,11 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
         val varargId = ctx.declarator()?.parameterTypeList()?.parameterVarargs()?.Identifier()
         val vararg: List<Statement> = if (varargId != null) {
-            listOf(DeclarationExpression(varargId.getText(), null))
+            listOf(DeclarationExpression(varargId.getText(), null, ctx = ctx))
         } else {
             emptyList()
         }
-        return listOf(FunctionLiteral(id, Type.Void, array(), params + vararg + visitChildren(ctx.compoundStatement())))
+        return listOf(FunctionLiteral(id, Type.Void, array(), params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Statement> {
@@ -83,7 +83,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                DeclarationExpression(id)
+                DeclarationExpression(id, ctx = ctx)
             }
         }
         return declarations.flatMap {
@@ -99,23 +99,23 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                     val s = value.value.toString()
                     if (s.startsWith('#')) {
                         // FIXME: HACK
-                        listOf(FunctionLiteral(id, builtin = s.substring(1).toInt()))
+                        listOf(FunctionLiteral(id, builtin = s.substring(1).toInt(), ctx = ctx))
                     } else {
-                        listOf(DeclarationExpression(id, initializer))
+                        listOf(DeclarationExpression(id, initializer, ctx = ctx))
                     }
                 }
                 is Expression -> {
-                    val decl = DeclarationExpression(id)
-                    listOf(decl, BinaryExpression.Assign(decl, initializer))
+                    val decl = DeclarationExpression(id, ctx = ctx)
+                    listOf(decl, BinaryExpression.Assign(decl, initializer, ctx = ctx))
                 }
-                else -> listOf(DeclarationExpression(id))
+                else -> listOf(DeclarationExpression(id, ctx = ctx))
             }
         }
     }
 
     override fun visitCustomLabel(ctx: QCParser.CustomLabelContext): List<Statement> {
         with(linkedListOf<Statement>()) {
-            add(Label(ctx.Identifier().getText()))
+            add(Label(ctx.Identifier().getText(), ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
         }
@@ -123,7 +123,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitCaseLabel(ctx: QCParser.CaseLabelContext): List<Statement> {
         with(linkedListOf<Statement>()) {
-            add(CaseLabel(ctx.constantExpression().accept(this@ASTTransform).single() as Expression))
+            add(CaseLabel(ctx.constantExpression().accept(this@ASTTransform).single() as Expression, ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
         }
@@ -131,7 +131,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
 
     override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext): List<Statement> {
         with(linkedListOf<Statement>()) {
-            add(CaseLabel(null))
+            add(CaseLabel(null, ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
         }
@@ -143,25 +143,25 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         return listOf(ReturnStatement(when {
             retVal is Expression -> retVal : Expression
             else -> null
-        }))
+        }, ctx = ctx))
     }
 
     override fun visitBreakStatement(ctx: QCParser.BreakStatementContext): List<Statement> {
-        return listOf(BreakStatement())
+        return listOf(BreakStatement(ctx = ctx))
     }
 
     override fun visitContinueStatement(ctx: QCParser.ContinueStatementContext): List<Statement> {
-        return listOf(ContinueStatement())
+        return listOf(ContinueStatement(ctx = ctx))
     }
 
     override fun visitGotoStatement(ctx: QCParser.GotoStatementContext): List<Statement> {
-        return listOf(GotoStatement(ctx.Identifier().getText()))
+        return listOf(GotoStatement(ctx.Identifier().getText(), ctx = ctx))
     }
 
     override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): List<Statement> {
         val predicate = ctx.predicate
         val predicateExpr = when (predicate) {
-            null -> ConstantExpression(1)
+            null -> ConstantExpression(1, ctx = ctx)
             else -> predicate.accept(this).single()
         }
 
@@ -176,7 +176,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             null -> null
             else -> ctx.update.accept(this)
         }
-        return listOf(Loop(predicateExpr as Expression, bodyStmt, checkBefore, initializer, update))
+        return listOf(Loop(predicateExpr as Expression, bodyStmt, checkBefore, initializer, update, ctx = ctx))
     }
 
     override fun visitIfStatement(ctx: QCParser.IfStatementContext): List<Statement> {
@@ -190,12 +190,12 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         val testExpr = test.accept(this).single()
         val yesExpr = yes.accept(this).single()
         val noExpr = no?.accept(this)?.single()
-        return listOf(ConditionalExpression(testExpr as Expression, yesExpr, noExpr))
+        return listOf(ConditionalExpression(testExpr as Expression, yesExpr, noExpr, ctx = ctx))
     }
 
     override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext): List<Statement> {
         val testExpr = ctx.expression().accept(this).single()
-        val switch = SwitchStatement(testExpr as Expression, ctx.statement().accept(this))
+        val switch = SwitchStatement(testExpr as Expression, ctx.statement().accept(this), ctx = ctx)
         return listOf(switch)
     }
 
@@ -205,7 +205,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             return expr.accept(this)
         }
         // redundant semicolon
-        return listOf(Nop())
+        return listOf(Nop(ctx = ctx))
     }
 
     val QCParser.ExpressionContext.terminal: Boolean get() = expression() != null
@@ -214,7 +214,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.expression().accept(this).single()
             val right = ctx.assignmentExpression().accept(this).single()
-            return listOf(BinaryExpression.Comma(left as Expression, right as Expression))
+            return listOf(BinaryExpression.Comma(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitExpression(ctx)
     }
@@ -228,20 +228,20 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val ref = left as Expression
             val value = right as Expression
             val assign = {(value: Expression): Expression ->
-                BinaryExpression.Assign(ref, value)
+                BinaryExpression.Assign(ref, value, ctx = ctx)
             }
             val op = when (ctx.op.getType()) {
                 QCParser.Assign -> assign(value)
-                QCParser.OrAssign -> assign(BinaryExpression.BitOr(ref, value))
-                QCParser.XorAssign -> assign(BinaryExpression.BitXor(ref, value))
-                QCParser.AndAssign -> assign(BinaryExpression.BitAnd(ref, value))
-                QCParser.LeftShiftAssign -> assign(BinaryExpression.Lsh(ref, value))
-                QCParser.RightShiftAssign -> assign(BinaryExpression.Rsh(ref, value))
-                QCParser.PlusAssign -> assign(BinaryExpression.Add(ref, value))
-                QCParser.MinusAssign -> assign(BinaryExpression.Sub(ref, value))
-                QCParser.StarAssign -> assign(BinaryExpression.Mul(ref, value))
-                QCParser.DivAssign -> assign(BinaryExpression.Div(ref, value))
-                QCParser.ModAssign -> assign(BinaryExpression.Mod(ref, value))
+                QCParser.OrAssign -> assign(BinaryExpression.BitOr(ref, value, ctx = ctx))
+                QCParser.XorAssign -> assign(BinaryExpression.BitXor(ref, value, ctx = ctx))
+                QCParser.AndAssign -> assign(BinaryExpression.BitAnd(ref, value, ctx = ctx))
+                QCParser.LeftShiftAssign -> assign(BinaryExpression.Lsh(ref, value, ctx = ctx))
+                QCParser.RightShiftAssign -> assign(BinaryExpression.Rsh(ref, value, ctx = ctx))
+                QCParser.PlusAssign -> assign(BinaryExpression.Add(ref, value, ctx = ctx))
+                QCParser.MinusAssign -> assign(BinaryExpression.Sub(ref, value, ctx = ctx))
+                QCParser.StarAssign -> assign(BinaryExpression.Mul(ref, value, ctx = ctx))
+                QCParser.DivAssign -> assign(BinaryExpression.Div(ref, value, ctx = ctx))
+                QCParser.ModAssign -> assign(BinaryExpression.Mod(ref, value, ctx = ctx))
                 else -> null
             }
             if (op != null) return listOf(op)
@@ -257,7 +257,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val condition = ctx.logicalOrExpression().accept(this).single()
             val yes = ctx.expression(0).accept(this).single()
             val no = ctx.expression(1).accept(this).single()
-            return listOf(ConditionalExpression(condition as Expression, yes, no))
+            return listOf(ConditionalExpression(condition as Expression, yes, no, ctx = ctx))
         }
         return super.visitConditionalExpression(ctx)
     }
@@ -268,7 +268,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.logicalOrExpression().accept(this).single()
             val right = ctx.logicalAndExpression().accept(this).single()
-            return listOf(BinaryExpression.Or(left as Expression, right as Expression))
+            return listOf(BinaryExpression.Or(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitLogicalOrExpression(ctx)
     }
@@ -279,7 +279,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.logicalAndExpression().accept(this).single()
             val right = ctx.inclusiveOrExpression().accept(this).single()
-            return listOf(BinaryExpression.And(left as Expression, right as Expression))
+            return listOf(BinaryExpression.And(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitLogicalAndExpression(ctx)
     }
@@ -290,7 +290,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.inclusiveOrExpression().accept(this).single()
             val right = ctx.exclusiveOrExpression().accept(this).single()
-            return listOf(BinaryExpression.BitOr(left as Expression, right as Expression))
+            return listOf(BinaryExpression.BitOr(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitInclusiveOrExpression(ctx)
     }
@@ -301,7 +301,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.exclusiveOrExpression().accept(this).single()
             val right = ctx.andExpression().accept(this).single()
-            return listOf(BinaryExpression.BitXor(left as Expression, right as Expression))
+            return listOf(BinaryExpression.BitXor(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitExclusiveOrExpression(ctx)
     }
@@ -312,7 +312,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         if (ctx.terminal) {
             val left = ctx.andExpression().accept(this).single()
             val right = ctx.equalityExpression().accept(this).single()
-            return listOf(BinaryExpression.BitAnd(left as Expression, right as Expression))
+            return listOf(BinaryExpression.BitAnd(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitAndExpression(ctx)
     }
@@ -324,8 +324,8 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val left = ctx.equalityExpression().accept(this).single()
             val right = ctx.relationalExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
-                QCParser.Equal -> BinaryExpression.Eq(left as Expression, right as Expression)
-                QCParser.NotEqual -> BinaryExpression.Ne(left as Expression, right as Expression)
+                QCParser.Equal -> BinaryExpression.Eq(left as Expression, right as Expression, ctx = ctx)
+                QCParser.NotEqual -> BinaryExpression.Ne(left as Expression, right as Expression, ctx = ctx)
                 else -> null
             }
             if (op != null) {
@@ -344,10 +344,10 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val left = ctx.relationalExpression().accept(this).single()
             val right = ctx.shiftExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
-                QCParser.Less -> BinaryExpression.Lt(left as Expression, right as Expression)
-                QCParser.LessEqual -> BinaryExpression.Le(left as Expression, right as Expression)
-                QCParser.Greater -> BinaryExpression.Gt(left as Expression, right as Expression)
-                QCParser.GreaterEqual -> BinaryExpression.Ge(left as Expression, right as Expression)
+                QCParser.Less -> BinaryExpression.Lt(left as Expression, right as Expression, ctx = ctx)
+                QCParser.LessEqual -> BinaryExpression.Le(left as Expression, right as Expression, ctx = ctx)
+                QCParser.Greater -> BinaryExpression.Gt(left as Expression, right as Expression, ctx = ctx)
+                QCParser.GreaterEqual -> BinaryExpression.Ge(left as Expression, right as Expression, ctx = ctx)
                 else -> null
             }
             if (op != null) {
@@ -366,7 +366,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val left = ctx.shiftExpression().accept(this).single()
             val right = ctx.additiveExpression().accept(this).single()
             // TODO
-            return listOf(BinaryExpression.Mul(left as Expression, right as Expression))
+            return listOf(BinaryExpression.Mul(left as Expression, right as Expression, ctx = ctx))
         }
         return super.visitShiftExpression(ctx)
     }
@@ -378,8 +378,8 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val left = ctx.additiveExpression().accept(this).single()
             val right = ctx.multiplicativeExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
-                QCParser.Plus -> BinaryExpression.Add(left as Expression, right as Expression)
-                QCParser.Minus -> BinaryExpression.Sub(left as Expression, right as Expression)
+                QCParser.Plus -> BinaryExpression.Add(left as Expression, right as Expression, ctx = ctx)
+                QCParser.Minus -> BinaryExpression.Sub(left as Expression, right as Expression, ctx = ctx)
                 else -> null
             }
             return if (op != null) listOf(op) else emptyList()
@@ -394,9 +394,9 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val left = ctx.multiplicativeExpression().accept(this).single()
             val right = ctx.castExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
-                QCParser.Star -> BinaryExpression.Mul(left as Expression, right as Expression)
-                QCParser.Div -> BinaryExpression.Div(left as Expression, right as Expression)
-                QCParser.Mod -> BinaryExpression.Mod(left as Expression, right as Expression)
+                QCParser.Star -> BinaryExpression.Mul(left as Expression, right as Expression, ctx = ctx)
+                QCParser.Div -> BinaryExpression.Div(left as Expression, right as Expression, ctx = ctx)
+                QCParser.Mod -> BinaryExpression.Mod(left as Expression, right as Expression, ctx = ctx)
                 else -> null
             }
             return if (op != null) listOf(op) else emptyList()
@@ -426,20 +426,20 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
             val expand = when (ctx.op.getType()) {
                 QCParser.PlusPlus -> {
                     val ref = expr as ReferenceExpression
-                    BinaryExpression.Assign(ref, BinaryExpression.Add(ref, ConstantExpression(1f)))
+                    BinaryExpression.Assign(ref, BinaryExpression.Add(ref, ConstantExpression(1f, ctx = ctx), ctx = ctx), ctx = ctx)
                 }
                 QCParser.MinusMinus -> {
                     val ref = expr as ReferenceExpression
-                    BinaryExpression.Assign(ref, BinaryExpression.Sub(ref, ConstantExpression(1f)))
+                    BinaryExpression.Assign(ref, BinaryExpression.Sub(ref, ConstantExpression(1f, ctx = ctx), ctx = ctx), ctx = ctx)
                 }
-                QCParser.Minus -> BinaryExpression.Sub(ConstantExpression(0), expr)
+                QCParser.Minus -> BinaryExpression.Sub(ConstantExpression(0, ctx = ctx), expr, ctx = ctx)
                 else -> right
             }
             return listOf(expand)
         }
         val typeName = ctx.typeName()
         if (typeName != null) {
-            return listOf(ReferenceExpression("TODO: sizeof(${typeName.getText()})"))
+            return listOf(ReferenceExpression("TODO: sizeof(${typeName.getText()})", ctx = ctx))
         }
         return super.visitUnaryExpression(ctx)
     }
@@ -456,28 +456,28 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 ?.assignmentExpression()
                 ?.flatMap { it.accept(this) }
                 ?.filterNotNull()
-        return listOf(FunctionCall(left as Expression, right ?: emptyList()))
+        return listOf(FunctionCall(left as Expression, right ?: emptyList(), ctx = ctx))
     }
 
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Statement> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.Identifier()
-        val fieldRef = EntityFieldReference(right.getText())
-        return listOf(BinaryExpression.Dot(left as Expression, fieldRef))
+        val fieldRef = EntityFieldReference(right.getText(), ctx = ctx)
+        return listOf(BinaryExpression.Dot(left as Expression, fieldRef, ctx = ctx))
     }
 
     override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext): List<Statement> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.expression().accept(this).single()
         // TODO
-        return listOf(BinaryExpression.Dot(left as Expression, right as Expression))
+        return listOf(BinaryExpression.Dot(left as Expression, right as Expression, ctx = ctx))
     }
 
     override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext): List<Statement> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.expression().accept(this).single()
         // TODO
-        return listOf(BinaryExpression.Dot(left as Expression, right as Expression))
+        return listOf(BinaryExpression.Dot(left as Expression, right as Expression, ctx = ctx))
     }
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Statement> {
@@ -487,7 +487,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
         }
         val text = ctx.getText()
         if (ctx.Identifier() != null) {
-            return listOf(ReferenceExpression(text))
+            return listOf(ReferenceExpression(text, ctx = ctx))
         }
         if (ctx.StringLiteral().isNotEmpty()) {
             val concat = ctx.StringLiteral()
@@ -495,10 +495,10 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                         val s = string.getText()
                         ret + s.substring(1, s.length() - 1)
                     })
-            return listOf(ConstantExpression(concat))
+            return listOf(ConstantExpression(concat, ctx = ctx))
         }
         if (text.startsWith('#')) {
-            return listOf(ConstantExpression(text))
+            return listOf(ConstantExpression(text, ctx = ctx))
         }
         if (ctx.Constant() != null) {
             val constant = ctx.Constant()
@@ -507,7 +507,7 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
                     val c1 = matcher.group(1)
-                    return listOf(ConstantExpression(c1.charAt(0)))
+                    return listOf(ConstantExpression(c1.charAt(0), ctx = ctx))
                 }
             }
             Pattern.compile("'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'").let {
@@ -516,19 +516,19 @@ class ASTTransform : QCBaseVisitor<List<Statement>>() {
                     val c1 = matcher.group(1).toFloat()
                     val c2 = matcher.group(2).toFloat()
                     val c3 = matcher.group(3).toFloat()
-                    return listOf(ConstantExpression(array(c1, c2, c3)))
+                    return listOf(ConstantExpression(array(c1, c2, c3), ctx = ctx))
                 }
             }
             Pattern.compile("0x([\\d0-F]+)").let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
                     val hex = Integer.parseInt(matcher.group(1), 16)
-                    return listOf(ConstantExpression(hex.toFloat()))
+                    return listOf(ConstantExpression(hex.toFloat(), ctx = ctx))
                 }
             }
             val f = s.toFloat()
-            return listOf(ConstantExpression(f))
+            return listOf(ConstantExpression(f, ctx = ctx))
         }
-        return listOf(ConstantExpression("FIXME_${text}"))
+        return listOf(ConstantExpression("FIXME_${text}", ctx = ctx))
     }
 }

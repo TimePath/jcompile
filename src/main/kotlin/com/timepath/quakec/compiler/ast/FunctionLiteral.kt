@@ -8,6 +8,7 @@ import com.timepath.quakec.compiler.gen.LabelIR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Function
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 /**
  * Replaced with a number during compilation
@@ -15,12 +16,13 @@ import com.timepath.quakec.vm.Instruction
 class FunctionLiteral(val id: String? = null,
                       val returnType: Type? = null,
                       val argTypes: Array<Type>? = null,
-                      c: List<Statement>? = null,
-                      val builtin: Int? = null) : Expression() {
+                      add: List<Statement>? = null,
+                      val builtin: Int? = null,
+                      ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     {
-        if (c != null) {
-            addAll(c)
+        if (add != null) {
+            addAll(add)
         }
     }
 
@@ -49,7 +51,7 @@ class FunctionLiteral(val id: String? = null,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
         ctx.allocator.push(id)
-        val children = children.flatMap { it.generate(ctx) }
+        val children = children.flatMap { it.doGenerate(ctx) }
         run {
             // Calculate label jumps
             val labelIndices = linkedMapOf<String, Int>()

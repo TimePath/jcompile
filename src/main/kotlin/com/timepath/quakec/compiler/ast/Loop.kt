@@ -3,26 +3,28 @@ package com.timepath.quakec.compiler.ast
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 class Loop(val predicate: Expression,
            body: Statement,
            val checkBefore: Boolean = true,
            val initializer: List<Statement>? = null,
-           val update:  List<Statement>? = null) : Statement() {
+           val update: List<Statement>? = null,
+           ctx: ParserRuleContext? = null) : Statement(ctx) {
     {
         add(body)
     }
 
     override fun generate(ctx: Generator): List<IR> {
-        val genInit = initializer?.flatMap { it.generate(ctx) }
+        val genInit = initializer?.flatMap { it.doGenerate(ctx) }
 
-        val genPred = predicate.generate(ctx)
+        val genPred = predicate.doGenerate(ctx)
         val predCount = genPred.count { it.real }
 
-        val genBody = children.flatMap { it.generate(ctx) }
+        val genBody = children.flatMap { it.doGenerate(ctx) }
         val bodyCount = genBody.count { it.real }
 
-        val genUpdate = update?.flatMap { it.generate(ctx) }
+        val genUpdate = update?.flatMap { it.doGenerate(ctx) }
         val updateCount = genUpdate?.count { it.real } ?: 0
 
         val totalCount = bodyCount + updateCount + predCount

@@ -55,7 +55,7 @@ class CompilerSpecs : Spek() {{
                 it("should parse") {
                     logger.info("Parsing $it")
                     roots = compiler.ast()
-                    val actual = BlockStatement(roots!!.last()).toStringRecursive()
+                    val actual = BlockStatement(roots!!.last(), null).toStringRecursive()
                     compare("AST", it.name + ".xml", actual)
                 }
                 var ctx: Generator?

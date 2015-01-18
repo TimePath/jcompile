@@ -4,8 +4,9 @@ import com.timepath.quakec.compiler.gen.CaseIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.LabelIR
+import org.antlr.v4.runtime.ParserRuleContext
 
-class Label(val id: String) : Statement() {
+class Label(val id: String, ctx: ParserRuleContext? = null) : Statement(ctx) {
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id)
 
@@ -18,7 +19,8 @@ class CaseLabel(
         /**
          * Case expression, null = default
          */
-        val expr: Expression?) : Statement() {
+        val expr: Expression?,
+        ctx: ParserRuleContext? = null) : Statement(ctx) {
 
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to expr)

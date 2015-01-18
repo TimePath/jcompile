@@ -3,13 +3,14 @@ package com.timepath.quakec.compiler.ast
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 /**
  * Return can be assigned to, and has a constant address
  */
-class ReturnStatement(val returnValue: Expression?) : Statement() {
+class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = null) : Statement(ctx) {
     override fun generate(ctx: Generator): List<IR> {
-        val genRet = returnValue?.generate(ctx)
+        val genRet = returnValue?.doGenerate(ctx)
         val ret = linkedListOf<IR>()
         val args = array(0, 0, 0)
         if (genRet != null) {
@@ -22,19 +23,19 @@ class ReturnStatement(val returnValue: Expression?) : Statement() {
 }
 
 // TODO: labels
-class ContinueStatement() : Statement() {
+class ContinueStatement(ctx: ParserRuleContext? = null) : Statement(ctx) {
     override fun generate(ctx: Generator): List<IR> {
-        // filled in by Loop.generate()
+        // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 0, 0)))
     }
 }
-class BreakStatement() : Statement() {
+class BreakStatement(ctx: ParserRuleContext? = null) : Statement(ctx) {
     override fun generate(ctx: Generator): List<IR> {
-        // filled in by Loop.generate()
+        // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 1, 0)))
     }
 }
-class GotoStatement(val id: String) : Statement() {
+class GotoStatement(val id: String, ctx: ParserRuleContext? = null) : Statement(ctx) {
     override val attributes: Map<String, Any?>
         get() = mapOf("label" to id)
 

@@ -6,10 +6,12 @@ import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.LabelIR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 class ConditionalExpression(val test: Expression,
                             val pass: Statement,
-                            val fail: Statement? = null) : Expression() {
+                            val fail: Statement? = null,
+                            ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     {
         add(test)
@@ -32,11 +34,11 @@ class ConditionalExpression(val test: Expression,
 
     override fun generate(ctx: Generator): List<IR> {
         val ret = linkedListOf<IR>()
-        val genPred = test.generate(ctx)
+        val genPred = test.doGenerate(ctx)
         ret.addAll(genPred)
-        val genTrue = pass.generate(ctx)
+        val genTrue = pass.doGenerate(ctx)
         val trueCount = genTrue.count { it.real }
-        val genFalse = fail?.generate(ctx)
+        val genFalse = fail?.doGenerate(ctx)
         if (genFalse == null) {
             // No else, jump to the instruction after the body
             ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0)))
@@ -59,17 +61,17 @@ class ConditionalExpression(val test: Expression,
     }
 }
 
-class SwitchStatement(val test: Expression, c: List<Statement>) : Statement() {
+class SwitchStatement(val test: Expression, add: List<Statement>, ctx: ParserRuleContext? = null) : Statement(ctx) {
 
     {
-        addAll(c)
+        addAll(add)
     }
 
     override fun generate(ctx: Generator): List<IR> {
         val ret = linkedListOf<IR>()
         val default = linkedListOf<IR>()
         val body = Loop(ConstantExpression(0), BlockStatement(children))
-        val children = body.generate(ctx)
+        val children = body.doGenerate(ctx)
         val cases = children.map {
             when (it) {
                 is CaseIR -> {
@@ -77,11 +79,11 @@ class SwitchStatement(val test: Expression, c: List<Statement>) : Statement() {
                     val label = (if (expr == null) "default" else "case $expr").toString()
                     val goto = GotoStatement(label)
                     if (expr == null) {
-                        default.addAll(goto.generate(ctx))
+                        default.addAll(goto.doGenerate(ctx))
                     } else {
                         val test = BinaryExpression.Eq(test, expr)
                         val jump = ConditionalExpression(test, goto)
-                        ret.addAll(jump.generate(ctx))
+                        ret.addAll(jump.doGenerate(ctx))
                     }
                     LabelIR(label) // replace with a label so goto will be filled in later
                 }

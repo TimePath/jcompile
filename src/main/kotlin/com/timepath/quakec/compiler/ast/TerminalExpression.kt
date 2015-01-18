@@ -3,8 +3,10 @@ package com.timepath.quakec.compiler.ast
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.ReferenceIR
+import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.QCParser
 
-class ConstantExpression(any: Any) : Expression() {
+class ConstantExpression(any: Any, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     val value = Value(any)
 
@@ -21,7 +23,7 @@ class ConstantExpression(any: Any) : Expression() {
     }
 }
 
-open class ReferenceExpression(val id: String) : Expression() {
+open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override val attributes: Map<String, Any>
         get() = mapOf("id" to id)
@@ -38,21 +40,22 @@ open class ReferenceExpression(val id: String) : Expression() {
     }
 }
 
-class EntityFieldReference(id: String) : ReferenceExpression(id) {
+class EntityFieldReference(id: String, ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
     override fun generate(ctx: Generator): List<IR> {
         return listOf(ReferenceIR(0)) // TODO: field by name
     }
 }
 
 class DeclarationExpression(id: String,
-                            val value: ConstantExpression? = null) : ReferenceExpression(id) {
+                            val value: ConstantExpression? = null,
+                            ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
     override fun generate(ctx: Generator): List<IR> {
         val global = ctx.allocator.allocateReference(id, this.value?.evaluate())
         return listOf(ReferenceIR(global.ref))
     }
 }
 
-class MemoryReference(val ref: Int) : Expression() {
+class MemoryReference(val ref: Int, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override val attributes: Map<String, Any>
         get() = mapOf("ref" to ref)

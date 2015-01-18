@@ -26,7 +26,7 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
 
     val allocator: Allocator = Allocator(opts)
 
-    fun generate(): List<IR> = BlockStatement(roots).generate(this)
+    fun generate(): List<IR> = BlockStatement(roots).doGenerate(this)
 
     /**
      * Ought to be enough, instructions can't address beyond this range anyway
