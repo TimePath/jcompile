@@ -3,29 +3,30 @@ package com.timepath.quakec.compiler.ast
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Value
 
-abstract class Statement(val ctx: ParserRuleContext? = null) {
+abstract class Expression(val ctx: ParserRuleContext? = null) {
 
     open val attributes: Map<String, Any?>
         get() = mapOf()
 
-    private val mutableChildren: MutableList<Statement> = linkedListOf()
+    private val mutableChildren: MutableList<Expression> = linkedListOf()
 
-    val children: List<Statement>
+    val children: List<Expression>
         get() = mutableChildren
 
-    fun initChild<T : Statement>(elem: T, configure: (T.() -> Unit)? = null): T {
+    fun initChild<T : Expression>(elem: T, configure: (T.() -> Unit)? = null): T {
         if (configure != null)
             elem.configure()
         add(elem)
         return elem
     }
 
-    fun add(s: Statement) {
+    fun add(s: Expression) {
         mutableChildren.add(s)
     }
 
-    fun addAll(c: List<Statement>) {
+    fun addAll(c: List<Expression>) {
         mutableChildren.addAll(c)
     }
 
@@ -68,9 +69,6 @@ abstract class Statement(val ctx: ParserRuleContext? = null) {
 
     open fun generate(ctx: Generator): List<IR> = emptyList()
 
-}
-
-abstract class Expression(ctx: ParserRuleContext? = null) : Statement(ctx) {
     /**
      * Used in constant folding
      *
@@ -84,25 +82,11 @@ abstract class Expression(ctx: ParserRuleContext? = null) : Statement(ctx) {
      * @return true if constant folding is forbidden for this node (not descendants)
      */
     open fun hasSideEffects(): Boolean = false
+
 }
 
 /**
  * Lonely semicolon
  */
-class Nop(ctx: ParserRuleContext? = null) : Statement(ctx)
+class Nop(ctx: ParserRuleContext? = null) : Expression(ctx)
 
-class BlockStatement(add: List<Statement>? = null, ctx: ParserRuleContext? = null) : Statement(ctx) {
-    {
-        if (add != null) {
-            addAll(add)
-        }
-    }
-    override fun generate(ctx: Generator): List<IR> {
-        ctx.allocator.push("<block>")
-        val list = children.flatMap {
-            it.doGenerate(ctx)
-        }
-        ctx.allocator.pop()
-        return list
-    }
-}

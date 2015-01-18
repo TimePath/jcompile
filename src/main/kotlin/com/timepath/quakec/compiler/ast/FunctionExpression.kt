@@ -9,14 +9,15 @@ import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Function
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
 
 /**
  * Replaced with a number during compilation
  */
-class FunctionLiteral(val id: String? = null,
+class FunctionExpression(val id: String? = null,
                       val returnType: Type? = null,
                       val argTypes: Array<Type>? = null,
-                      add: List<Statement>? = null,
+                      add: List<Expression>? = null,
                       val builtin: Int? = null,
                       ctx: ParserRuleContext? = null) : Expression(ctx) {
 

@@ -6,8 +6,8 @@ import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
-class FunctionCall(val function: Expression,
-                   add: List<Statement>? = null,
+class MethodCallExpression(val function: Expression,
+                   add: List<Expression>? = null,
                    ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     {

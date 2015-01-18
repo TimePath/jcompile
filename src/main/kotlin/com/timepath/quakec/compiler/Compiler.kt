@@ -102,12 +102,12 @@ public class Compiler(val opts: CompilerOptions) {
         includes.add(Include("predefs.qc", "<predefs>", InputLexerSource(predefs)))
     }
 
-    fun ast(): List<List<Statement>> {
+    fun ast(): List<List<Expression>> {
         val exec = if (debugThreads)
             Executors.newSingleThreadExecutor()
         else
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
-        val roots = linkedListOf<List<Statement>>()
+        val roots = linkedListOf<List<Expression>>()
         includes.forEach { include ->
             logger.info(include.path)
             preprocessor.addInput(include.source)
@@ -148,7 +148,7 @@ public class Compiler(val opts: CompilerOptions) {
         return roots
     }
 
-    public fun compile(roots: List<List<Statement>> = ast()): ProgramData {
+    public fun compile(roots: List<List<Expression>> = ast()): ProgramData {
         val ctx = Generator(opts, roots.flatMap { it })
         return ctx.generateProgs()
     }

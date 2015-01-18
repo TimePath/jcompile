@@ -16,7 +16,7 @@ import com.timepath.quakec.vm.ProgramData.Header
 import com.timepath.quakec.vm.ProgramData.Header.Section
 import com.timepath.quakec.vm.StringManager
 
-class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
+class Generator(val opts: CompilerOptions, val roots: List<Expression>) {
 
     val gotoLabels = linkedMapOf<IR, String>()
 
@@ -26,7 +26,7 @@ class Generator(val opts: CompilerOptions, val roots: List<Statement>) {
 
     val allocator: Allocator = Allocator(opts)
 
-    fun generate(): List<IR> = BlockStatement(roots).doGenerate(this)
+    fun generate(): List<IR> = BlockExpression(roots).doGenerate(this)
 
     /**
      * Ought to be enough, instructions can't address beyond this range anyway

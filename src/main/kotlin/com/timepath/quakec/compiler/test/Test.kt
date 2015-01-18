@@ -4,6 +4,7 @@ import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.compiler.gen.Generator
+import com.timepath.quakec.compiler.Type
 
 val logger = Logging.new()
 
@@ -22,7 +23,7 @@ fun main(args: Array<String>) {
             add(
                     ConditionalExpression(
                             ConstantExpression(2),
-                            BlockStatement(listOf(
+                            BlockExpression(listOf(
                                     DeclarationExpression("yay2", ConstantExpression(1))
                             ))
                     )

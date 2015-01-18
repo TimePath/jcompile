@@ -5,10 +5,22 @@ import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
+class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
+    override val attributes: Map<String, Any?>
+        get() = mapOf("label" to id)
+
+    override fun generate(ctx: Generator): List<IR> {
+        // filled in by new labels
+        val instr = IR(Instruction.GOTO, array(0, 0, 0))
+        ctx.gotoLabels[instr] = id
+        return listOf(instr)
+    }
+}
+
 /**
  * Return can be assigned to, and has a constant address
  */
-class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = null) : Statement(ctx) {
+class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = null) : Expression(ctx) {
     override fun generate(ctx: Generator): List<IR> {
         val genRet = returnValue?.doGenerate(ctx)
         val ret = linkedListOf<IR>()
@@ -20,29 +32,18 @@ class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = nu
         ret.add(IR(Instruction.RETURN, args, 0))
         return ret
     }
-}
 
-// TODO: labels
-class ContinueStatement(ctx: ParserRuleContext? = null) : Statement(ctx) {
+}
+// TODO: on labels
+class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
     override fun generate(ctx: Generator): List<IR> {
         // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 0, 0)))
     }
 }
-class BreakStatement(ctx: ParserRuleContext? = null) : Statement(ctx) {
+class BreakStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
     override fun generate(ctx: Generator): List<IR> {
         // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 1, 0)))
-    }
-}
-class GotoStatement(val id: String, ctx: ParserRuleContext? = null) : Statement(ctx) {
-    override val attributes: Map<String, Any?>
-        get() = mapOf("label" to id)
-
-    override fun generate(ctx: Generator): List<IR> {
-        // filled in by new labels
-        val instr = IR(Instruction.GOTO, array(0, 0, 0))
-        ctx.gotoLabels[instr] = id
-        return listOf(instr)
     }
 }

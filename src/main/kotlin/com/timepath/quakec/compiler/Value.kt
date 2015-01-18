@@ -1,6 +1,4 @@
-package com.timepath.quakec.compiler.ast
-
-import com.timepath.quakec.compiler.quote
+package com.timepath.quakec.compiler
 
 class Value(val value: Any? = null) {
 

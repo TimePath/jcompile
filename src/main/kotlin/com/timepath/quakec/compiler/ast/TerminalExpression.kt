@@ -6,23 +6,6 @@ import com.timepath.quakec.compiler.gen.ReferenceIR
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.quakec.QCParser
 
-class ConstantExpression(any: Any, ctx: ParserRuleContext? = null) : Expression(ctx) {
-
-    val value = Value(any)
-
-    override val attributes: Map<String, Any?>
-        get() = mapOf("value" to value)
-
-    override fun evaluate(): Value = value
-
-    override fun toString(): String = value.toString()
-
-    override fun generate(ctx: Generator): List<IR> {
-        val constant = ctx.allocator.allocateConstant(value)
-        return listOf(ReferenceIR(constant.ref))
-    }
-}
-
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override val attributes: Map<String, Any>

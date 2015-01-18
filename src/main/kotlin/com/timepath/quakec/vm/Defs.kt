@@ -52,6 +52,9 @@ data class Function(
          */
         val firstStatement: Int,
         val firstLocal: Int,
+        /**
+         * params + locals
+         */
         val numLocals: Int,
         /**
          * Runtime counter of statements executed

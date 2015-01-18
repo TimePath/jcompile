@@ -7,7 +7,7 @@ import java.util.Stack
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.CompilerOptions
-import com.timepath.quakec.compiler.ast.Value
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
 
 class Allocator(val opts: CompilerOptions) {

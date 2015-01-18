@@ -5,12 +5,12 @@ import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
-class Loop(val predicate: Expression,
-           body: Statement,
+class LoopExpression(val predicate: Expression,
+           body: Expression,
            val checkBefore: Boolean = true,
-           val initializer: List<Statement>? = null,
-           val update: List<Statement>? = null,
-           ctx: ParserRuleContext? = null) : Statement(ctx) {
+           val initializer: List<Expression>? = null,
+           val update: List<Expression>? = null,
+           ctx: ParserRuleContext? = null) : Expression(ctx) {
     {
         add(body)
     }

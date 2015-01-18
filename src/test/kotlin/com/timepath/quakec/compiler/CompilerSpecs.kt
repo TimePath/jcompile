@@ -3,8 +3,8 @@ package com.timepath.quakec.compiler
 import java.io.File
 import kotlin.test.assertEquals
 import com.timepath.quakec.Logging
-import com.timepath.quakec.compiler.ast.BlockStatement
-import com.timepath.quakec.compiler.ast.Statement
+import com.timepath.quakec.compiler.ast.BlockExpression
+import com.timepath.quakec.compiler.ast.Expression
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Program
@@ -51,11 +51,11 @@ class CompilerSpecs : Spek() {{
                 compiler.include(File(resources, "defs.qh"))
                 compiler.include(it)
 
-                var roots: List<List<Statement>>?
+                var roots: List<List<Expression>>?
                 it("should parse") {
                     logger.info("Parsing $it")
                     roots = compiler.ast()
-                    val actual = BlockStatement(roots!!.last(), null).toStringRecursive()
+                    val actual = BlockExpression(roots!!.last(), null).toStringRecursive()
                     compare("AST", it.name + ".xml", actual)
                 }
                 var ctx: Generator?

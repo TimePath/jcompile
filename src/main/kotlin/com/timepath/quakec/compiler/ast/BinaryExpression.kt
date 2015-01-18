@@ -45,16 +45,16 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
             // vm:
             // b (=) a
             val left = when (left) {
-                is BinaryExpression.Dot -> {
+                is MemberExpression -> {
                     // make a copy to avoid changing the right half of the assignment
-                    val special = BinaryExpression.Dot(left.left, left.right, ctx = this.ctx)
+                    val special = MemberExpression(left.left, left.right, ctx = this.ctx)
                     special.instr = Instruction.ADDRESS
                     special
                 }
                 else -> left
             }
             val instr = when {
-                left is BinaryExpression.Dot -> {
+                left is MemberExpression -> {
                     Instruction.STOREP_FLOAT
                 }
                 else -> instr
@@ -172,8 +172,4 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
         override val op = "%"
     }
 
-    class Dot(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
-        override var instr = Instruction.LOAD_FLOAT
-        override val op = "."
-    }
 }

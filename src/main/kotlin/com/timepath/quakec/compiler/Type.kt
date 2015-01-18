@@ -1,4 +1,4 @@
-package com.timepath.quakec.compiler.ast
+package com.timepath.quakec.compiler
 
 import com.timepath.quakec.vm.Instruction
 
