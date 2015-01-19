@@ -124,27 +124,12 @@ class Allocator(val opts: CompilerOptions) {
         allocateReference("_") // TODO: not really a function
     }
 
-    private fun vecName(name: String): String? {
-        val vec = Pattern.compile("(.+)_[xyz]$")
-        val matcher = vec.matcher(name)
-        if (matcher.matches()) {
-            return matcher.group(1)
-        }
-        return null
-    }
-
     private inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
 
     fun contains(name: String): Boolean {
         all {
             if (name in it.lookup) {
                 return true
-            }
-            val vecName = vecName(name)
-            if (vecName != null) {
-                if (vecName in it.lookup) {
-                    return true
-                }
             }
         }
         return false
@@ -155,13 +140,6 @@ class Allocator(val opts: CompilerOptions) {
             val i = it.lookup[name]
             if (i != null) {
                 return i
-            }
-            val vecName = vecName(name)
-            if (vecName != null) {
-                val j = it.lookup[vecName]
-                if (j != null) {
-                    return j
-                }
             }
         }
         return null

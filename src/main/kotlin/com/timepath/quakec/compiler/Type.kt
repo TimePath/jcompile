@@ -1,7 +1,9 @@
 package com.timepath.quakec.compiler
 
 import com.timepath.quakec.vm.Instruction
-import java.lang
+import com.timepath.quakec.compiler.ast.ConstantExpression
+import com.timepath.quakec.compiler.ast.DeclarationExpression
+import com.timepath.quakec.compiler.ast.StructDeclarationExpression
 
 trait Type {
 
@@ -16,6 +18,10 @@ trait Type {
 
     val store: Instruction
 
+    open fun declare(name: kotlin.String, value: ConstantExpression? = null): List<DeclarationExpression> {
+        throw UnsupportedOperationException()
+    }
+
     override fun toString(): kotlin.String {
         return javaClass.getSimpleName()
     }
@@ -27,6 +33,10 @@ trait Type {
 
     object Float : Type {
         override val store = Instruction.STORE_FLOAT
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
     }
 
     open class Int : Type {
@@ -34,7 +44,11 @@ trait Type {
             get() = throw UnsupportedOperationException()
     }
 
-    data abstract class Struct(val fields: Map<kotlin.String, Type>) : Type
+    data abstract class Struct(val fields: Map<kotlin.String, Type>) : Type {
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(StructDeclarationExpression(name, this))
+        }
+    }
 
     object Vector : Struct(mapOf("x" to Float, "y" to Float, "z" to Float)) {
         override val store = Instruction.STORE_VEC
@@ -44,10 +58,18 @@ trait Type {
 
     object String : Pointer() {
         override val store = Instruction.STORE_STR
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
     }
 
     object Entity : Pointer() {
         override val store = Instruction.STORE_ENT
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
     }
 
     data class Field(val type: Type) : Pointer() {
@@ -61,6 +83,10 @@ trait Type {
         override val store = Instruction.STORE_FUNC
         override fun toString(): kotlin.String {
             return "${super.toString()}($type, $argTypes)"
+        }
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
         }
     }
 }

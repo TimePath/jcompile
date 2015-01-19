@@ -106,7 +106,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                DeclarationExpression(id, Type.Float, ctx = ctx)
+                Type.Float.declare(id).single()
             }
         }
         val type = ctx.declarationSpecifiers().type()
@@ -125,14 +125,15 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                         // FIXME: HACK
                         listOf(FunctionExpression(id, builtin = s.substring(1).toInt(), ctx = ctx))
                     } else {
-                        listOf(DeclarationExpression(id, type, initializer, ctx = ctx))
+                        type.declare(id, initializer)
                     }
                 }
                 is Expression -> {
-                    val decl = DeclarationExpression(id, type, ctx = ctx)
-                    listOf(decl, BinaryExpression.Assign(decl, initializer, ctx = ctx))
+                    type.declare(id).flatMap {
+                        listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
+                    }
                 }
-                else -> listOf(DeclarationExpression(id, type, ctx = ctx))
+                else -> type.declare(id)
             }
         }
     }

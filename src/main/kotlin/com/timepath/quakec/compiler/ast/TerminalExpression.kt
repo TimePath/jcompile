@@ -29,7 +29,7 @@ class EntityFieldReference(id: String, ctx: ParserRuleContext? = null) : Referen
     }
 }
 
-class DeclarationExpression(id: String,
+open class DeclarationExpression(id: String,
                             val type: Type,
                             val value: ConstantExpression? = null,
                             ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
@@ -38,8 +38,23 @@ class DeclarationExpression(id: String,
                 "type" to type)
 
     override fun generate(ctx: Generator): List<IR> {
-        val global = ctx.allocator.allocateReference(id, this.value?.evaluate())
+        val global = ctx.allocator.allocateReference(id, value?.evaluate())
         return listOf(ReferenceIR(global.ref))
+    }
+}
+
+class StructDeclarationExpression(id: String,
+                                  val struct: Type.Struct,
+                                  ctx: ParserRuleContext? = null) : DeclarationExpression(id, struct, null, ctx) {
+    override fun generate(ctx: Generator): List<IR> {
+        val fields: List<IR> = struct.fields.flatMap {
+            it.value.declare("${id}_${it.key}", null).flatMap {
+                it.doGenerate(ctx)
+            }
+        }
+        val allocator = ctx.allocator
+        allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!
+        return fields
     }
 }
 

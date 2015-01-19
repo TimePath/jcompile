@@ -8,14 +8,14 @@
     float name##_get(float index) {                                     \
         if (index < 0) index += name##_size;                            \
         if (index > name##_size) return 0;                              \
-        auto name##_get_this;                                           \
+        float() name##_get_this;                                        \
         name##_get_this = name##_get + __builtin_ftoi(2 * (1 + index)); \
         return name##_get_this();                                       \
     }                                                                   \
     float name##_set(float index, float value) {                        \
         if (index < 0) index += name##_size;                            \
         if (index > name##_size) return 0;                              \
-        auto name##_set_this;                                           \
+        float(float) name##_set_this;                                   \
         name##_set_this = name##_set + __builtin_ftoi(2 * (1 + index)); \
         return name##_set_this(value);                                  \
     }
