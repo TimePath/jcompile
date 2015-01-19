@@ -168,7 +168,7 @@ postfixExpression
     |   postfixExpression '[' expression ']'                #postfixIndex
     |   postfixExpression '.' Identifier                    #postfixField
     |   postfixExpression '.' '(' expression ')'            #postfixAddress
-    |   postfixExpression ('++' | '--')                     #postfixIncr
+    |   postfixExpression op=('++' | '--')                  #postfixIncr
     |   '(' typeName ')' '{' initializerList ','? '}'       #postfixInit
     ;
 

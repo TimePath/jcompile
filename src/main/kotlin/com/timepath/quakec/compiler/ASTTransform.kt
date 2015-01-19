@@ -477,6 +477,16 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
         return listOf(MemberExpression(left, right, ctx = ctx))
     }
 
+    override fun visitPostfixIncr(ctx: QCParser.PostfixIncrContext): List<Expression> {
+        val expr = ctx.postfixExpression().accept(this).single()
+        val expand = when (ctx.op.getType()) {
+            QCParser.PlusPlus -> UnaryExpression.PostIncrement(expr, ctx = ctx)
+            QCParser.MinusMinus -> UnaryExpression.PostDecrement(expr, ctx = ctx)
+            else -> expr
+        }
+        return listOf(expand)
+    }
+
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Expression> {
         val expressionContext = ctx.expression()
         if (expressionContext != null) {
