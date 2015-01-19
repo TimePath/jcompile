@@ -109,6 +109,7 @@ public class Compiler(val opts: CompilerOptions) {
         else
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
         val roots = linkedListOf<List<Expression>>()
+        val types = TypeRegistry()
         includes.forEach { include ->
             logger.info(include.path)
             preprocessor.addInput(include.source)
@@ -130,7 +131,7 @@ public class Compiler(val opts: CompilerOptions) {
             }
             //            exec.submit {
             try {
-                val root = tree.accept(ASTTransform())[0]
+                val root = tree.accept(ASTTransform(types)).single()
                 File("out", include.path + ".xml").let {
                     it.getParentFile().mkdirs()
                     val s = root.toStringRecursive()

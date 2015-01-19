@@ -18,16 +18,16 @@ fun BlockExpression.const(value: Any): ConstantExpression {
 }
 
 fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
-    return initChild(DeclarationExpression(name, ConstantExpression(any)))
+    return initChild(DeclarationExpression(name, Type.from(any), ConstantExpression(any)))
 }
 
 fun BlockExpression.ref(id: String): ReferenceExpression {
     return ReferenceExpression(id)
 }
 
-fun BlockExpression.func(returnType: Type, name: String, argTypes: Array<Type>,
+fun BlockExpression.func(returnType: Type, name: String,
                         configure: (BlockExpression.() -> Unit)? = null): FunctionExpression {
-    val functionLiteral = initChild(FunctionExpression(name, returnType, argTypes))
+    val functionLiteral = initChild(FunctionExpression(name, returnType))
     functionLiteral.initChild(BlockExpression(), configure)
     return functionLiteral
 }

@@ -21,6 +21,11 @@ class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expressio
  * Return can be assigned to, and has a constant address
  */
 class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = null) : Expression(ctx) {
+    {
+        if (returnValue != null) {
+            add(returnValue)
+        }
+    }
     override fun generate(ctx: Generator): List<IR> {
         val genRet = returnValue?.doGenerate(ctx)
         val ret = linkedListOf<IR>()

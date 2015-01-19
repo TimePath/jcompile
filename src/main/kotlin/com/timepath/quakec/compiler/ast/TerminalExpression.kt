@@ -1,10 +1,10 @@
 package com.timepath.quakec.compiler.ast
 
+import com.timepath.quakec.compiler.Type
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.quakec.QCParser
 
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
@@ -30,8 +30,13 @@ class EntityFieldReference(id: String, ctx: ParserRuleContext? = null) : Referen
 }
 
 class DeclarationExpression(id: String,
+                            val type: Type,
                             val value: ConstantExpression? = null,
                             ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
+    override val attributes: Map<String, Any>
+        get() = mapOf("id" to id,
+                "type" to type)
+
     override fun generate(ctx: Generator): List<IR> {
         val global = ctx.allocator.allocateReference(id, this.value?.evaluate())
         return listOf(ReferenceIR(global.ref))

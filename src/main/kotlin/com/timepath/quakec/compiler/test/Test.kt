@@ -12,19 +12,19 @@ fun main(args: Array<String>) {
 
     val root = ast {
         val print = const(-1)
-        func(Type.Void, "test", array()) {
+        func(Type.Function(Type.Void, emptyList()), "test") {
             def("asd", 1)
             add(
                     ConditionalExpression(
                             ConstantExpression(1),
-                            DeclarationExpression("yay", ConstantExpression(1))
+                            DeclarationExpression("yay", Type.Float, ConstantExpression(1))
                     )
             )
             add(
                     ConditionalExpression(
                             ConstantExpression(2),
                             BlockExpression(listOf(
-                                    DeclarationExpression("yay2", ConstantExpression(1))
+                                    DeclarationExpression("yay2", Type.Float, ConstantExpression(1))
                             ))
                     )
             )
@@ -52,8 +52,8 @@ fun main(args: Array<String>) {
             }
             ret()
         }
-        func(Type.Void, "test", array())
-        func(Type.Void, "main", array()) {
+        func(Type.Function(Type.Void, emptyList()), "test")
+        func(Type.Function(Type.Void, emptyList()), "main") {
             call(ref("test"))
             ret()
         }

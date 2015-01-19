@@ -16,7 +16,6 @@ import com.timepath.quakec.compiler.Type
  */
 class FunctionExpression(val id: String? = null,
                       val returnType: Type? = null,
-                      val argTypes: Array<Type>? = null,
                       add: List<Expression>? = null,
                       val builtin: Int? = null,
                       ctx: ParserRuleContext? = null) : Expression(ctx) {
@@ -29,8 +28,7 @@ class FunctionExpression(val id: String? = null,
 
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id,
-                "type" to returnType,
-                "args" to Arrays.toString(argTypes))
+                "type" to returnType)
 
     override fun generate(ctx: Generator): List<IR> {
         if (id != null && id in ctx.allocator) {

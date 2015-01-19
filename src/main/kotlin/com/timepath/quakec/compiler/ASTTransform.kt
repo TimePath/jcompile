@@ -9,7 +9,7 @@ import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
-class ASTTransform : QCBaseVisitor<List<Expression>>() {
+class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() {
 
     class object {
         val logger = Logging.new()
@@ -23,6 +23,26 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
         val col = token.getCharPositionInLine()
         val file = source.getSourceName()
         logger.fine("{$token} $line,$col $file")
+    }
+
+    fun QCParser.DeclarationSpecifiersContext.type(): Type {
+        val decl = this.declarationSpecifier()?.firstOrNull { it.typeSpecifier() != null }
+        return when (decl) {
+            null -> Type.Void
+            else -> {
+                val spec = decl.typeSpecifier().directTypeSpecifier()
+                val functional = spec.parameterTypeList()
+                val ret = types[decl.typeSpecifier().directTypeSpecifier().children[0].getText()] ?: Type.Void
+                if (functional != null) {
+                    val parameterList = functional.parameterList()
+                    val args = parameterList?.parameterDeclaration()?.
+                            map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
+                    Type.Function(ret, args)
+                } else {
+                    ret
+                }
+            }
+        }
     }
 
     override fun defaultResult(): List<Expression> = emptyList()
@@ -60,21 +80,24 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
         val params = paramDeclarations.mapIndexed {(i, it) ->
             val paramId = it.declarator()?.getText()
             if (paramId != null) {
-                val declarationExpression = DeclarationExpression(paramId, null, ctx = ctx)
+                val type = it.declarationSpecifiers().type()
+                val declarationExpression = DeclarationExpression(paramId, type, null, ctx = ctx)
                 val memoryReference = MemoryReference(Instruction.OFS_PARAM(i), ctx = ctx)
                 listOf(declarationExpression, BinaryExpression.Assign(declarationExpression, memoryReference, ctx = ctx))
             } else {
                 emptyList()
             }
         }.flatMap { it }
-
-        val varargId = ctx.declarator()?.parameterTypeList()?.parameterVarargs()?.Identifier()
-        val vararg: List<Expression> = if (varargId != null) {
-            listOf(DeclarationExpression(varargId.getText(), null, ctx = ctx))
+        val varargs = ctx.declarator()?.parameterTypeList()?.parameterVarargs()
+        val vararg = if (varargs != null) {
+            val type = varargs.declarationSpecifiers().type()
+            listOf(DeclarationExpression(varargs.Identifier()?.getText() ?: "...", type, null, ctx = ctx))
         } else {
             emptyList()
         }
-        return listOf(FunctionExpression(id, Type.Void, array(), params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
+        val typeRet = ctx.declarationSpecifiers().type()
+        val typeArgs = paramDeclarations.map { it.declarationSpecifiers()?.type() ?: Type.Void }
+        return listOf(FunctionExpression(id, Type.Function(typeRet, typeArgs), params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
@@ -83,9 +106,10 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                DeclarationExpression(id, ctx = ctx)
+                DeclarationExpression(id, Type.Float, ctx = ctx)
             }
         }
+        val type = ctx.declarationSpecifiers().type()
         return declarations.flatMap {
             var declarator = it.declarator()
             while (declarator.declarator() != null) {
@@ -101,14 +125,14 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
                         // FIXME: HACK
                         listOf(FunctionExpression(id, builtin = s.substring(1).toInt(), ctx = ctx))
                     } else {
-                        listOf(DeclarationExpression(id, initializer, ctx = ctx))
+                        listOf(DeclarationExpression(id, type, initializer, ctx = ctx))
                     }
                 }
                 is Expression -> {
-                    val decl = DeclarationExpression(id, ctx = ctx)
+                    val decl = DeclarationExpression(id, type, ctx = ctx)
                     listOf(decl, BinaryExpression.Assign(decl, initializer, ctx = ctx))
                 }
-                else -> listOf(DeclarationExpression(id, ctx = ctx))
+                else -> listOf(DeclarationExpression(id, type, ctx = ctx))
             }
         }
     }
