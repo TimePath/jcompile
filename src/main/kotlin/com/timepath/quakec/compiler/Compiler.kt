@@ -17,6 +17,7 @@ import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.preproc.CustomPreprocessor
 import com.timepath.quakec.compiler.test.TreePrinterListener
 import com.timepath.quakec.vm.ProgramData
+import com.timepath.quakec.vm.util.ProgramDataWriter
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
@@ -167,17 +168,19 @@ fun main(args: Array<String>) {
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
     time("Total time")
     {
-        val defs = linkedMapOf(
-                "menu" to "MENUQC",
-                "client" to "CSQC",
-                "server" to "SVQC"
+        [data] class Project(val root: String, val define: String, val out: String)
+        val defs = listOf(
+                Project("menu", "MENUQC", "menuprogs.dat"),
+                Project("client", "CSQC", "csprogs.dat"),
+                Project("server", "SVQC", "progs.dat")
         )
-        defs.keySet().forEach { project ->
+        defs.forEach { project ->
             time("Project time") {
-                Compiler(opts)
-                        .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/$project/progs.src"))
-                        .define(defs[project])
-                        .compile()
+                val compiler = Compiler(opts)
+                        .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
+                        .define(project.define)
+                val compiled = compiler.compile()
+                ProgramDataWriter(File("out", project.out)).write(compiled)
             }
         }
     }

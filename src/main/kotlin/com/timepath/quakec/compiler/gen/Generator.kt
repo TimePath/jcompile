@@ -31,7 +31,7 @@ class Generator(val opts: CompilerOptions, val roots: List<Expression>) {
     /**
      * Ought to be enough, instructions can't address beyond this range anyway
      */
-    val globalData = ByteBuffer.allocateDirect(4 * 0xFFFF).order(ByteOrder.LITTLE_ENDIAN)
+    val globalData = ByteBuffer.allocate(4 * 0xFFFF).order(ByteOrder.LITTLE_ENDIAN)
     val intData = globalData.asIntBuffer()
     val floatData = globalData.asFloatBuffer()
 
