@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val right: R, ctx: ParserRuleContext? = null) : rvalue(ctx) {
 
-    abstract val instr: Instruction
+    abstract val instr: Instruction?
     abstract val op: String
 
     {
@@ -32,8 +32,15 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
     }
 
     class Comma(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
-        override val instr = Instruction.AND // TODO
+        override val instr = null
         override val op = ","
+        override fun generate(ctx: Generator): List<IR> {
+            with(linkedListOf<IR>()) {
+                addAll(left.doGenerate(ctx))
+                addAll(right.doGenerate(ctx))
+                return this
+            }
+        }
     }
 
     class Assign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
@@ -98,8 +105,14 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
     }
 
     class BitXor(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
-        override val instr = Instruction.NE_FLOAT // TODO
+        override val instr = null
         override val op = "^"
+        override fun generate(ctx: Generator): List<IR> {
+            with(linkedListOf<IR>()) {
+                addAll(MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right)).doGenerate(ctx))
+                return this
+            }
+        }
     }
 
     class BitAnd(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
@@ -168,8 +181,14 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val left: L, val
     }
 
     class Mod(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(left, right, ctx) {
-        override val instr = Instruction.DIV_FLOAT // TODO
+        override val instr = null
         override val op = "%"
+        override fun generate(ctx: Generator): List<IR> {
+            with(linkedListOf<IR>()) {
+                addAll(MethodCallExpression(ReferenceExpression("__builtin_mod"), listOf(left, right)).doGenerate(ctx))
+                return this
+            }
+        }
     }
 
 }

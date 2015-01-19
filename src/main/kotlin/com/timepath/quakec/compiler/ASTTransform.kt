@@ -424,15 +424,12 @@ class ASTTransform : QCBaseVisitor<List<Expression>>() {
             val right = ctx.unaryExpression().accept(this).single()
             val expr = right
             val expand = when (ctx.op.getType()) {
-                QCParser.PlusPlus -> {
-                    val ref = expr as ReferenceExpression
-                    BinaryExpression.Assign(ref, BinaryExpression.Add(ref, ConstantExpression(1f, ctx = ctx), ctx = ctx), ctx = ctx)
-                }
-                QCParser.MinusMinus -> {
-                    val ref = expr as ReferenceExpression
-                    BinaryExpression.Assign(ref, BinaryExpression.Sub(ref, ConstantExpression(1f, ctx = ctx), ctx = ctx), ctx = ctx)
-                }
-                QCParser.Minus -> BinaryExpression.Sub(ConstantExpression(0, ctx = ctx), expr, ctx = ctx)
+                QCParser.PlusPlus -> UnaryExpression.PreIncrement(expr, ctx = ctx)
+                QCParser.MinusMinus -> UnaryExpression.PreDecrement(expr, ctx = ctx)
+                QCParser.Plus -> UnaryExpression.Plus(expr, ctx = ctx)
+                QCParser.Minus -> UnaryExpression.Minus(expr, ctx = ctx)
+                QCParser.Tilde -> UnaryExpression.BitNot(expr, ctx = ctx)
+                QCParser.Not -> UnaryExpression.Not(expr, ctx = ctx)
                 else -> right
             }
             return listOf(expand)

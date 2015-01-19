@@ -1,23 +1,23 @@
-#define ARRAY_COMPONENT(name, i, v)                             \
-    float name##_##i = v;                                       \
-    float name##_get_##i() { return name##_##i; }               \
+#define ARRAY_COMPONENT(name, i, v)                                     \
+    float name##_##i = v;                                               \
+    float name##_get_##i() { return name##_##i; }                       \
     float name##_set_##i(float value##i) { return name##_##i = value##i; }
 
-#define ARRAY(name, size)                                       \
-    float name##_size = size;                                   \
-    float name##_get(float index) {                             \
-        if (index < 0) index += name##_size;                    \
-        if (index > name##_size) return 0;                      \
-        auto name##_get_this;                                   \
-        name##_get_this = name##_get + ftoi(2 * (1 + index));   \
-        return name##_get_this();                               \
-    }                                                           \
-    float name##_set(float index, float value) {                \
-        if (index < 0) index += name##_size;                    \
-        if (index > name##_size) return 0;                      \
-        auto name##_set_this;                                   \
-        name##_set_this = name##_set + ftoi(2 * (1 + index));   \
-        return name##_set_this(value);                          \
+#define ARRAY(name, size)                                               \
+    float name##_size = size;                                           \
+    float name##_get(float index) {                                     \
+        if (index < 0) index += name##_size;                            \
+        if (index > name##_size) return 0;                              \
+        auto name##_get_this;                                           \
+        name##_get_this = name##_get + __builtin_ftoi(2 * (1 + index)); \
+        return name##_get_this();                                       \
+    }                                                                   \
+    float name##_set(float index, float value) {                        \
+        if (index < 0) index += name##_size;                            \
+        if (index > name##_size) return 0;                              \
+        auto name##_set_this;                                           \
+        name##_set_this = name##_set + __builtin_ftoi(2 * (1 + index)); \
+        return name##_set_this(value);                                  \
     }
 
 ARRAY(array, 256)
