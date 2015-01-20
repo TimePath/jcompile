@@ -83,7 +83,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 val type = it.declarationSpecifiers().type()
                 val declarationExpression = DeclarationExpression(paramId, type, null, ctx = ctx)
                 val memoryReference = MemoryReference(Instruction.OFS_PARAM(i), ctx = ctx)
-                listOf(declarationExpression, BinaryExpression.Assign(declarationExpression, memoryReference, ctx = ctx))
+                listOf(declarationExpression, BinaryExpression.Assign(ReferenceExpression(paramId, ctx = ctx), memoryReference, ctx = ctx))
             } else {
                 emptyList()
             }
