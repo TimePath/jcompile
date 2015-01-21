@@ -7,6 +7,7 @@ import com.timepath.quakec.compiler.ast.ConstantExpression
 import com.timepath.quakec.compiler.ast.DeclarationExpression
 import com.timepath.quakec.compiler.ast.Expression
 import com.timepath.quakec.compiler.ast.MemberExpression
+import com.timepath.quakec.compiler.ast.MemoryReference
 import com.timepath.quakec.compiler.ast.MethodCallExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
 import com.timepath.quakec.compiler.ast.StructDeclarationExpression
@@ -64,7 +65,8 @@ abstract class Type {
         }
     })
 
-    class DefaultAssignHandler(instr: Instruction) : OperationHandler({ gen, left, right ->
+    class DefaultAssignHandler(instr: Instruction, op: (left: Expression, right: Expression) ->
+    BinaryExpression<Expression, Expression>? = { left, right -> null }) : OperationHandler({ gen, left, right ->
         with(linkedListOf<IR>()) {
             val lvalue = when (left) {
                 is MemberExpression -> {
@@ -83,8 +85,17 @@ abstract class Type {
             addAll(genLeft)
             val genRight = right!!.doGenerate(gen)
             addAll(genRight)
-            val out = genLeft.last()
-            add(IR(realInstr, array(genRight.last().ret, out.ret), out.ret))
+            val refL = genLeft.last()
+            val refR = genRight.last()
+            val action = op(MemoryReference(refL.ret), MemoryReference(refR.ret))
+            val out = if (action != null) {
+                val v = action.doGenerate(gen)
+                addAll(v)
+                v.last()
+            } else {
+                genRight.last()
+            }
+            add(IR(realInstr, array(out.ret, refL.ret), refL.ret))
             this
         }
     })
@@ -128,7 +139,7 @@ abstract class Type {
                     self.doGenerate(gen)
                 },
                 Operation("-", this) to OperationHandler { gen, self, _ ->
-                    BinaryExpression.Sub(ConstantExpression(0f), self).doGenerate(gen)
+                    BinaryExpression.Subtract(ConstantExpression(0f), self).doGenerate(gen)
                 },
                 Operation("*", this, this) to DefaultHandler(Instruction.MUL_FLOAT),
                 Operation("/", this, this) to DefaultHandler(Instruction.DIV_FLOAT),
@@ -145,19 +156,19 @@ abstract class Type {
                         val add = BinaryExpression.Add(self, ConstantExpression(1f))
                         val assign = BinaryExpression.Assign(self, add)
                         // FIXME
-                        val sub = BinaryExpression.Sub(assign, ConstantExpression(1f))
+                        val sub = BinaryExpression.Subtract(assign, ConstantExpression(1f))
                         addAll(sub.doGenerate(gen))
                         this
                     }
                 },
                 // pre
                 Operation("--", this) to OperationHandler { gen, self, _ ->
-                    BinaryExpression.Assign(self, BinaryExpression.Sub(self, ConstantExpression(1f))).doGenerate(gen)
+                    BinaryExpression.Assign(self, BinaryExpression.Subtract(self, ConstantExpression(1f))).doGenerate(gen)
                 },
                 // post
                 Operation("--", this, this) to OperationHandler { gen, self, _ ->
                     with(linkedListOf<IR>()) {
-                        val sub = BinaryExpression.Sub(self, ConstantExpression(1f))
+                        val sub = BinaryExpression.Subtract(self, ConstantExpression(1f))
                         val assign = BinaryExpression.Assign(self, sub)
                         // FIXME
                         val add = BinaryExpression.Add(assign, ConstantExpression(1f))
@@ -176,28 +187,47 @@ abstract class Type {
                     BinaryExpression.Eq(ConstantExpression(0f), self).doGenerate(gen)
                 },
                 Operation("~", this) to OperationHandler { gen, self, _ ->
-                    BinaryExpression.Sub(ConstantExpression(-1f), self).doGenerate(gen)
+                    BinaryExpression.Subtract(ConstantExpression(-1f), self).doGenerate(gen)
                 },
                 Operation("&", this, this) to DefaultHandler(Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandler(Instruction.BITOR),
                 Operation("^", this, this) to OperationHandler { gen, left, right ->
                     MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).doGenerate(gen)
-                }
+                },
                 // TODO
 //                Operation("<<", this, this) to DefaultHandler(Instruction.BITOR),
 //                Operation(">>", this, this) to DefaultHandler(Instruction.BITOR),
 //                Operation("**", this, this) to DefaultHandler(Instruction.BITOR),
-                // TODO
-//                Operation("+=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("-=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("*=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("/=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("%=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("*=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("|=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("^=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("<<=", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation(">>=", this, this) to DefaultHandler(Instruction.BITOR)
+                Operation("+=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Add(left, right)
+                },
+                Operation("-=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Subtract(left, right)
+                },
+                Operation("*=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Multiply(left, right)
+                },
+                Operation("/=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Divide(left, right)
+                },
+                Operation("%=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Modulo(left, right)
+                },
+                Operation("&=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.And(left, right)
+                },
+                Operation("|=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Or(left, right)
+                },
+                Operation("^=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.ExclusiveOr(left, right)
+                },
+                Operation("<<=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Lsh(left, right)
+                },
+                Operation(">>=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
+                    BinaryExpression.Rsh(left, right)
+                }
         )
 
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {

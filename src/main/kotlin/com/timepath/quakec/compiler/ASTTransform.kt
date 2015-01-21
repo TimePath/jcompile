@@ -252,21 +252,18 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val right = ctx.assignmentExpression().accept(this).single()
             val ref = left
             val value = right
-            val assign = {(value: Expression): Expression ->
-                BinaryExpression.Assign(ref, value, ctx = ctx)
-            }
             val op = when (ctx.op.getType()) {
-                QCParser.Assign -> assign(value)
-                QCParser.OrAssign -> assign(BinaryExpression.BitOr(ref, value, ctx = ctx))
-                QCParser.XorAssign -> assign(BinaryExpression.BitXor(ref, value, ctx = ctx))
-                QCParser.AndAssign -> assign(BinaryExpression.BitAnd(ref, value, ctx = ctx))
-                QCParser.LeftShiftAssign -> assign(BinaryExpression.Lsh(ref, value, ctx = ctx))
-                QCParser.RightShiftAssign -> assign(BinaryExpression.Rsh(ref, value, ctx = ctx))
-                QCParser.PlusAssign -> assign(BinaryExpression.Add(ref, value, ctx = ctx))
-                QCParser.MinusAssign -> assign(BinaryExpression.Sub(ref, value, ctx = ctx))
-                QCParser.StarAssign -> assign(BinaryExpression.Mul(ref, value, ctx = ctx))
-                QCParser.DivAssign -> assign(BinaryExpression.Div(ref, value, ctx = ctx))
-                QCParser.ModAssign -> assign(BinaryExpression.Mod(ref, value, ctx = ctx))
+                QCParser.Assign -> BinaryExpression.Assign(ref, value, ctx = ctx)
+                QCParser.OrAssign -> BinaryExpression.OrAssign(ref, value, ctx = ctx)
+                QCParser.XorAssign -> BinaryExpression.ExclusiveOrAssign(ref, value, ctx = ctx)
+                QCParser.AndAssign -> BinaryExpression.AndAssign(ref, value, ctx = ctx)
+                QCParser.LeftShiftAssign -> BinaryExpression.LshAssign(ref, value, ctx = ctx)
+                QCParser.RightShiftAssign -> BinaryExpression.RshAssign(ref, value, ctx = ctx)
+                QCParser.PlusAssign -> BinaryExpression.AddAssign(ref, value, ctx = ctx)
+                QCParser.MinusAssign -> BinaryExpression.SubtractAssign(ref, value, ctx = ctx)
+                QCParser.StarAssign -> BinaryExpression.MultiplyAssign(ref, value, ctx = ctx)
+                QCParser.DivAssign -> BinaryExpression.DivideAssign(ref, value, ctx = ctx)
+                QCParser.ModAssign -> BinaryExpression.ModuloAssign(ref, value, ctx = ctx)
                 else -> null
             }
             if (op != null) return listOf(op)
@@ -326,7 +323,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         if (ctx.terminal) {
             val left = ctx.exclusiveOrExpression().accept(this).single()
             val right = ctx.andExpression().accept(this).single()
-            return listOf(BinaryExpression.BitXor(left, right, ctx = ctx))
+            return listOf(BinaryExpression.ExclusiveOr(left, right, ctx = ctx))
         }
         return super.visitExclusiveOrExpression(ctx)
     }
@@ -391,7 +388,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val left = ctx.shiftExpression().accept(this).single()
             val right = ctx.additiveExpression().accept(this).single()
             // TODO
-            return listOf(BinaryExpression.Mul(left, right, ctx = ctx))
+            return listOf(BinaryExpression.Multiply(left, right, ctx = ctx))
         }
         return super.visitShiftExpression(ctx)
     }
@@ -404,7 +401,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val right = ctx.multiplicativeExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
                 QCParser.Plus -> BinaryExpression.Add(left, right, ctx = ctx)
-                QCParser.Minus -> BinaryExpression.Sub(left, right, ctx = ctx)
+                QCParser.Minus -> BinaryExpression.Subtract(left, right, ctx = ctx)
                 else -> null
             }
             return if (op != null) listOf(op) else emptyList()
@@ -419,9 +416,9 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val left = ctx.multiplicativeExpression().accept(this).single()
             val right = ctx.castExpression().accept(this).single()
             val op = when (ctx.op.getType()) {
-                QCParser.Star -> BinaryExpression.Mul(left, right, ctx = ctx)
-                QCParser.Div -> BinaryExpression.Div(left, right, ctx = ctx)
-                QCParser.Mod -> BinaryExpression.Mod(left, right, ctx = ctx)
+                QCParser.Star -> BinaryExpression.Multiply(left, right, ctx = ctx)
+                QCParser.Div -> BinaryExpression.Divide(left, right, ctx = ctx)
+                QCParser.Mod -> BinaryExpression.Modulo(left, right, ctx = ctx)
                 else -> null
             }
             return if (op != null) listOf(op) else emptyList()

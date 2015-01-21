@@ -28,9 +28,15 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val op: String, 
 
     class BitOr(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("|", left, right, ctx)
 
-    class BitXor(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("^", left, right, ctx)
+    class OrAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("|=", left, right, ctx)
+
+    class ExclusiveOr(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("^", left, right, ctx)
+
+    class ExclusiveOrAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("^=", left, right, ctx)
 
     class BitAnd(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("&", left, right, ctx)
+
+    class AndAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("&=", left, right, ctx)
 
     class Eq(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("==", left, right, ctx)
 
@@ -38,7 +44,11 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val op: String, 
 
     class Lsh(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("<<", left, right, ctx)
 
+    class LshAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("<<=", left, right, ctx)
+
     class Rsh(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(">>", left, right, ctx)
+
+    class RshAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(">>=", left, right, ctx)
 
     class Lt(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("<", left, right, ctx)
 
@@ -50,12 +60,22 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val op: String, 
 
     class Add(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("+", left, right, ctx)
 
-    class Sub(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-", left, right, ctx)
+    class AddAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("+=", left, right, ctx)
 
-    class Mul(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*", left, right, ctx)
+    class Subtract(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-", left, right, ctx)
 
-    class Div(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/", left, right, ctx)
+    class SubtractAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-=", left, right, ctx)
 
-    class Mod(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%", left, right, ctx)
+    class Multiply(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*", left, right, ctx)
+
+    class MultiplyAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*=", left, right, ctx)
+
+    class Divide(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/", left, right, ctx)
+
+    class DivideAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/=", left, right, ctx)
+
+    class Modulo(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%", left, right, ctx)
+
+    class ModuloAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%=", left, right, ctx)
 
 }
