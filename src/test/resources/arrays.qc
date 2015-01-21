@@ -1,23 +1,16 @@
-#define ARRAY_COMPONENT(name, i, v)                                     \
-    float name##_##i = v;                                               \
-    float name##_get_##i() { return name##_##i; }                       \
-    float name##_set_##i(float value##i) { return name##_##i = value##i; }
+#define ARRAY_COMPONENT(name, i, v)                                                         \
+    float name##_##i = v;                                                                   \
+    float name##_access_##i(bool mode, float value##i) {                                    \
+        return mode ? name##_##i = value##i : name##_##i;                                   \
+    }
 
-#define ARRAY(name, size)                                               \
-    float name##_size = size;                                           \
-    float name##_get(float index) {                                     \
-        if (index < 0) index += name##_size;                            \
-        if (index > name##_size) return 0;                              \
-        float() name##_get_this;                                        \
-        name##_get_this = name##_get + __builtin_ftoi(2 * (1 + index)); \
-        return name##_get_this();                                       \
-    }                                                                   \
-    float name##_set(float index, float value) {                        \
-        if (index < 0) index += name##_size;                            \
-        if (index > name##_size) return 0;                              \
-        float(float) name##_set_this;                                   \
-        name##_set_this = name##_set + __builtin_ftoi(2 * (1 + index)); \
-        return name##_set_this(value);                                  \
+#define ARRAY(name, size)                                                                   \
+    float name##_size = size;                                                               \
+    float(bool, float) name##_access(float index) {                                         \
+      /*if (index < 0) index += name##_size;                                                \
+        if (index > name##_size) return 0;*/                                                \
+        float(bool, float) name##_access_this = name##_access + __builtin_ftoi(1 + index);  \
+        return name##_access_this;                                                          \
     }
 
 ARRAY(array, 256)
@@ -27,9 +20,10 @@ BOOST_PP_REPEAT(256, DECL, array)
 
 void main() {
     for(float f = 0; f < array_size; ++f) {
-        float v = array_get(f);
-        assert(v == f, "Initial value");
+        float(bool, float) v = array_access(f);
+        assert(v(0) == f, "Initial value");
     }
-    assert(array_set(0, 2) == 2, "Result of assignment");
-    assert(array_get(0) == 2, "Read");
+    float(bool, float) index = array_access(0);
+    assert(index(1, 2) == 2, "Result of assignment");
+    assert(index(0) == 2, "Read");
 }
