@@ -25,7 +25,7 @@ fun BlockExpression.ref(id: String): ReferenceExpression {
     return ReferenceExpression(id)
 }
 
-fun BlockExpression.func(returnType: Type, name: String,
+fun BlockExpression.func(returnType: Type.Function, name: String,
                         configure: (BlockExpression.() -> Unit)? = null): FunctionExpression {
     val functionLiteral = initChild(FunctionExpression(name, returnType))
     functionLiteral.initChild(BlockExpression(), configure)

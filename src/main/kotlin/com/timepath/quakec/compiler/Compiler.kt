@@ -25,7 +25,7 @@ import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 
-public class Compiler(val opts: CompilerOptions) {
+public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
 
     class object {
         val logger = Logging.new()

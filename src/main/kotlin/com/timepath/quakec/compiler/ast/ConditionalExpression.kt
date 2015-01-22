@@ -8,6 +8,7 @@ import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.compiler.Value
 
 class ConditionalExpression(val test: Expression,
+                            val expression: Boolean,
                             val pass: Expression,
                             val fail: Expression? = null,
                             ctx: ParserRuleContext? = null) : Expression(ctx) {

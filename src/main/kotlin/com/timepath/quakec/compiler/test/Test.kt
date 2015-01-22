@@ -16,13 +16,13 @@ fun main(args: Array<String>) {
             def("asd", 1)
             add(
                     ConditionalExpression(
-                            ConstantExpression(1),
+                            ConstantExpression(1), true,
                             DeclarationExpression("yay", Type.Float, ConstantExpression(1))
                     )
             )
             add(
                     ConditionalExpression(
-                            ConstantExpression(2),
+                            ConstantExpression(2), true,
                             BlockExpression(listOf(
                                     DeclarationExpression("yay2", Type.Float, ConstantExpression(1))
                             ))

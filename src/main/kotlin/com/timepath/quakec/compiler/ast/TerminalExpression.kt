@@ -30,9 +30,9 @@ class EntityFieldReference(id: String, ctx: ParserRuleContext? = null) : Referen
 }
 
 open class DeclarationExpression(id: String,
-                            val type: Type,
-                            val value: ConstantExpression? = null,
-                            ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
+                                 val type: Type,
+                                 val value: ConstantExpression? = null,
+                                 ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
     override val attributes: Map<String, Any>
         get() = mapOf("id" to id,
                 "type" to type)

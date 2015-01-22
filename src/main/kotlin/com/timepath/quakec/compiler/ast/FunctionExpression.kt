@@ -1,6 +1,6 @@
 package com.timepath.quakec.compiler.ast
 
-import java.util.Arrays
+import com.timepath.quakec.compiler.Type
 import com.timepath.quakec.compiler.gen.FunctionIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
@@ -9,16 +9,15 @@ import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Function
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.quakec.compiler.Type
 
 /**
  * Replaced with a number during compilation
  */
 class FunctionExpression(val id: String? = null,
-                      val returnType: Type? = null,
-                      add: List<Expression>? = null,
-                      val builtin: Int? = null,
-                      ctx: ParserRuleContext? = null) : Expression(ctx) {
+                         val signature: Type.Function,
+                         add: List<Expression>? = null,
+                         val builtin: Int? = null,
+                         ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     {
         if (add != null) {
@@ -28,7 +27,7 @@ class FunctionExpression(val id: String? = null,
 
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id,
-                "type" to returnType)
+                "type" to signature)
 
     override fun generate(ctx: Generator): List<IR> {
         if (id != null && id in ctx.allocator) {

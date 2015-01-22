@@ -29,7 +29,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
                         default.addAll(goto.doGenerate(ctx))
                     } else {
                         val test = BinaryExpression.Eq(test, expr)
-                        val jump = ConditionalExpression(test, goto)
+                        val jump = ConditionalExpression(test, false, goto)
                         ret.addAll(jump.doGenerate(ctx))
                     }
                     LabelIR(label) // replace with a label so goto will be filled in later

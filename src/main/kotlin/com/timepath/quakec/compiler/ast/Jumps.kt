@@ -9,6 +9,8 @@ class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expressio
     override val attributes: Map<String, Any?>
         get() = mapOf("label" to id)
 
+    override fun toString(): String = "goto $id"
+
     override fun generate(ctx: Generator): List<IR> {
         // filled in by new labels
         val instr = IR(Instruction.GOTO, array(0, 0, 0))
@@ -41,12 +43,18 @@ class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = nu
 }
 // TODO: on labels
 class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    override fun toString(): String = "continue"
+
     override fun generate(ctx: Generator): List<IR> {
         // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 0, 0)))
     }
 }
 class BreakStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    override fun toString(): String = "break"
+
     override fun generate(ctx: Generator): List<IR> {
         // filled in by Loop.doGenerate()
         return listOf(IR(Instruction.GOTO, array(0, 1, 0)))

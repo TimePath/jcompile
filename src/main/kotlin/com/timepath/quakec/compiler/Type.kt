@@ -41,7 +41,7 @@ abstract class Type {
     }
 
     override fun toString(): kotlin.String {
-        return javaClass.getSimpleName()
+        return javaClass.getSimpleName().toLowerCase()
     }
 
     abstract val ops: Map<Operation, OperationHandler>
@@ -111,23 +111,27 @@ abstract class Type {
                 },
                 Operation("&&", this, this) to OperationHandler({ gen, left, right ->
                     // TODO: Instruction.AND when no side effects
-                    ConditionalExpression(left,
+                    ConditionalExpression(left, true,
                             fail = ConstantExpression(0),
-                            pass = ConditionalExpression(right!!,
+                            pass = ConditionalExpression(right!!, true,
                                     fail = ConstantExpression(0),
                                     pass = ConstantExpression(1f))
                     ).doGenerate(gen)
                 }),
                 Operation("||", this, this) to OperationHandler({ gen, left, right ->
                     // TODO: Instruction.OR when no side effects
-                    ConditionalExpression(left,
+                    ConditionalExpression(left, true,
                             pass = ConstantExpression(1f),
-                            fail = ConditionalExpression(right!!,
+                            fail = ConditionalExpression(right!!, true,
                                     pass = ConstantExpression(1f),
                                     fail = ConstantExpression(0))
                     ).doGenerate(gen)
                 })
         )
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
     }
 
     object Float : Type() {

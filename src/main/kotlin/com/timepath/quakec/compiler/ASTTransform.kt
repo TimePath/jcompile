@@ -123,7 +123,16 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     val s = value.value.toString()
                     if (s.startsWith('#')) {
                         // FIXME: HACK
-                        listOf(FunctionExpression(id, builtin = s.substring(1).toInt(), ctx = ctx))
+                        val signature = when (type) {
+                            is Type.Function -> type : Type.Function
+                            else -> {
+                                Type.Function(type, it.declarator().parameterTypeList().parameterList()?.parameterDeclaration()
+                                        ?.map {
+                                            it.declarationSpecifiers()?.type()
+                                        }?.filterNotNull() ?: emptyList())
+                            }
+                        }
+                        listOf(FunctionExpression(id, signature, builtin = s.substring(1).toInt(), ctx = ctx))
                     } else {
                         type.declare(id, initializer)
                     }
@@ -215,7 +224,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val testExpr = test.accept(this).single()
         val yesExpr = yes.accept(this).single()
         val noExpr = no?.accept(this)?.single()
-        return listOf(ConditionalExpression(testExpr, yesExpr, noExpr, ctx = ctx))
+        return listOf(ConditionalExpression(testExpr, false, yesExpr, noExpr, ctx = ctx))
     }
 
     override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext): List<Expression> {
@@ -279,7 +288,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val condition = ctx.logicalOrExpression().accept(this).single()
             val yes = ctx.expression(0).accept(this).single()
             val no = ctx.expression(1).accept(this).single()
-            return listOf(ConditionalExpression(condition, yes, no, ctx = ctx))
+            return listOf(ConditionalExpression(condition, true, yes, no, ctx = ctx))
         }
         return super.visitConditionalExpression(ctx)
     }

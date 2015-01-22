@@ -10,6 +10,8 @@ class LabelExpression(val id: String, ctx: ParserRuleContext? = null) : Expressi
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id)
 
+    override fun toString(): String = "$id:"
+
     override fun generate(ctx: Generator): List<IR> {
         return listOf(LabelIR(id))
     }
