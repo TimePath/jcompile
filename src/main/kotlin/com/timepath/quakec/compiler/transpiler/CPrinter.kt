@@ -44,9 +44,9 @@ class CPrinter(val all: List<Expression>) {
         return map { action(it) + append }.joinToString(join)
     }
 
-    fun Type.pprint(id: kotlin.String?): String = when (this) {
+    fun Type.pprint(id: kotlin.String? = null): String = when (this) {
         is Type.Function -> "${type}(*$id)(${argTypes.map {
-            it.pprint(null)
+            it.pprint()
         }.joinToString(", ")})"
         else -> "$this ${id ?: ""}"
     }
@@ -83,15 +83,15 @@ class CPrinter(val all: List<Expression>) {
                     ""
                 }
                 when (type) {
-                    is Type.Function -> "${type.type} $id(${type.argTypes.map { it.pprint(null) }.join(", ")});"
+                    is Type.Function -> "${type.type} $id(${type.argTypes.map { it.pprint() }.join(", ")});"
                     else -> "${type.pprint(id)} $v" + term()
                 }
             }
             is FunctionExpression -> {
                 depth++
                 try {
-                    val decl = "${signature.type} $id(${signature.argTypes.map {
-                        it.pprint(null)
+                    val decl = "${signature.type.pprint()} $id(${signature.argTypes.map {
+                        it.pprint()
                     }.joinToString(", ")})"
                     return when {
                         children.isEmpty() -> "$decl;"

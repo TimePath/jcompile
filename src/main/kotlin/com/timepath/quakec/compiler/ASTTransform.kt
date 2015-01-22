@@ -95,9 +95,15 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         } else {
             emptyList()
         }
-        val typeRet = ctx.declarationSpecifiers().type()
-        val typeArgs = paramDeclarations.map { it.declarationSpecifiers()?.type() ?: Type.Void }
-        return listOf(FunctionExpression(id, Type.Function(typeRet, typeArgs), params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
+        val temp = ctx.declarationSpecifiers().type()
+        val signature = when (temp) {
+            is Type.Function -> temp : Type.Function
+            else -> {
+                val typeArgs = paramDeclarations.map { it.declarationSpecifiers()?.type() ?: Type.Void }
+                Type.Function(temp, typeArgs)
+            }
+        }
+        return listOf(FunctionExpression(id, signature, params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
