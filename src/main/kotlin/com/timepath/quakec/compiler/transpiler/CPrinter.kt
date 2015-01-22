@@ -44,21 +44,26 @@ class CPrinter(val all: List<Expression>) {
         return map { action(it) + append }.joinToString(join)
     }
 
-    fun Type.pprint(id: kotlin.String? = null): String = when (this) {
-        is Type.Function -> "${type}(*$id)(${argTypes.map {
-            it.pprint()
-        }.joinToString(", ")})"
-        else -> "$this ${id ?: ""}"
-    }
-
-    fun Type.Function.pprint(id: String?): String {
-        return ""
+    fun Type.pprint(id: kotlin.String? = null, indirection: Int = 0): String {
+        val stars = "*".repeat(indirection)
+        return when (this) {
+            is Type.Function -> "${type.pprint()}($stars*$id)(${argTypes.map {
+                it.pprint()
+            }.joinToString(", ")})"
+            is Type.Field -> "${type.pprint(id, indirection + 1)}"
+            else -> {
+                when (id) {
+                    null -> "$this$stars"
+                    else -> "$this $stars$id"
+                }
+            }
+        }
     }
 
     fun term(): String = if (depth == 0) ";" else ""
 
     fun Expression.pprint(term: String = ""): String {
-        return when (this) {
+        return /*"/* ${this.javaClass.getSimpleName()} */" +*/ when (this) {
             is ConditionalExpression -> {
                 if (expression)
                     "(${test.pprint()} ? ${pass.pprint()} : ${fail!!.pprint()})"
@@ -76,15 +81,18 @@ class CPrinter(val all: List<Expression>) {
                 }
             }
             is DeclarationExpression -> {
-                val i = id
                 val v = if (value != null) {
                     " = ${value.pprint()}"
                 } else {
                     ""
                 }
                 when (type) {
-                    is Type.Function -> "${type.type} $id(${type.argTypes.map { it.pprint() }.join(", ")});"
-                    else -> "${type.pprint(id)} $v" + term()
+                    is Type.Function -> {
+                        val ret = type.type
+                        val args = type.argTypes
+                        "${ret.pprint()} $id(${args.map { it.pprint() }.join(", ")});"
+                    }
+                    else -> type.pprint(id) + " " + v + term()
                 }
             }
             is FunctionExpression -> {
@@ -95,7 +103,7 @@ class CPrinter(val all: List<Expression>) {
                             it.pprint()
                         })
                         if (signature.vararg != null) {
-                            add(signature.vararg.toString() + "...")
+                            add(/*signature.vararg.toString() +*/ "...")
                         }
                         this
                     }
@@ -252,7 +260,14 @@ vector operator*(float f, const vector &other) const {
     return (vector) {f * other.x, f * other.y, f * other.z};
 }
 
-struct entity {};
+struct entity {
+
+    template<typename T>
+    T &operator[](T *field) {
+        return T();
+    }
+
+};
 """)
                 }
                 val zipped = compiler.includes.map {

@@ -32,14 +32,20 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         return when (decl) {
             null -> Type.Void
             else -> {
-                val spec = decl.typeSpecifier().directTypeSpecifier()
+                val typeSpec = decl.typeSpecifier()
+                val indirection = typeSpec.pointer()?.getText()?.length() ?: 0
+                val spec = typeSpec.directTypeSpecifier()
                 val functional = spec.parameterTypeList()
-                val ret = types[decl.typeSpecifier().directTypeSpecifier().children[0].getText()] ?: Type.Void
-                if (functional != null) {
-                    functional.functionType(ret)
+                val direct = types[typeSpec.directTypeSpecifier().children[0].getText()] ?: Type.Void
+                var indirect = if (functional != null) {
+                    functional.functionType(direct)
                 } else {
-                    ret
+                    direct
                 }
+                indirection.times {
+                    indirect = Type.Field(indirect)
+                }
+                indirect
             }
         }
     }

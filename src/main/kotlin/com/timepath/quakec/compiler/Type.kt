@@ -283,6 +283,10 @@ abstract class Type {
                 Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_FIELD)
         )
 
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
+
         override fun toString(): kotlin.String {
             return "${super.toString()}($type)"
         }
