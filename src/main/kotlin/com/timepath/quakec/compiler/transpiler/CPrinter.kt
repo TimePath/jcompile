@@ -181,15 +181,77 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                 projOut.mkdirs()
                 val predef = File(projOut, "progs.h")
                 FileOutputStream(predef).writer().buffered().use {
-                    it.write("#pragma once\n")
-                    it.appendln("typedef char* string;")
-                    it.appendln("typedef struct vector_s { float x, y, z; } vector;")
-                    it.appendln("typedef struct entity_s {  } entity;")
+                    it.write("""
+#pragma once
+typedef const char *string;
+
+inline string _(string str) {
+    return str;
+}
+
+struct vector {
+    float x, y, z;
+
+    vector operator+(const vector &other) const {
+        return (vector) {x + other.x, y + other.y, z + other.z};
+    }
+
+    vector &operator+=(const vector &other) {
+        vector self = *this;
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+        return self;
+    }
+
+    vector operator-(const vector &other) const {
+        return (vector) {x - other.x, y - other.y, z - other.z};
+    }
+
+    vector &operator-=(const vector &other) {
+        vector self = *this;
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+        return self;
+    }
+
+    vector operator*(const float other) const {
+        return (vector) {x * other, y * other, z * other};
+    }
+
+    vector &operator*=(const float other) {
+        vector self = *this;
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
+        return self;
+    }
+
+    vector operator/(const float other) const {
+        return (vector) {x / other, y / other, z / other};
+    }
+
+    vector &operator/=(const float other) {
+        vector self = *this;
+        self.x /= other;
+        self.y /= other;
+        self.z /= other;
+        return self;
+    }
+};
+
+vector operator*(float f, const vector &other) const {
+    return (vector) {f * other.x, f * other.y, f * other.z};
+}
+
+struct entity {};
+""")
                 }
                 val zipped = compiler.includes.map {
                     sourceRoot.getParentFile().relativePath(File(it.path))
-                            .replace(".qc", ".c")
-                            .replace(".qh", ".h")
+                            .replace(".qc", ".cpp")
+                            .replace(".qh", ".hpp")
                 }.zip(ast)
                 val map = zipped.filter { !it.first.contains("<") }.toMap()
                 FileOutputStream(File(projOut, "CMakeLists.txt")).writer().buffered().use {
@@ -203,7 +265,7 @@ ${map.keySet().joinToString("\n")})
                 for ((f, code) in map) {
                     val file = File(projOut, f)
                     file.getParentFile().mkdirs()
-                    val header = f.endsWith(".h");
+                    val header = /* f.endsWith(".h") */ true;
                     FileOutputStream(file).writer().buffered().use {
                         val pragma = if (header) "#pragma once" else ""
                         it.write("$pragma\n")
