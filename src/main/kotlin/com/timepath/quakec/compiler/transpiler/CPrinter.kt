@@ -82,7 +82,10 @@ class CPrinter(val all: List<Expression>) {
                 } else {
                     ""
                 }
-                "${type.pprint(id)} $v" + term()
+                when (type) {
+                    is Type.Function -> "${type.type} $id(${type.argTypes.map { it.pprint(null) }.join(", ")});"
+                    else -> "${type.pprint(id)} $v" + term()
+                }
             }
             is FunctionExpression -> {
                 depth++

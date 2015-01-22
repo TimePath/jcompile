@@ -142,7 +142,17 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                         listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
                     }
                 }
-                else -> type.declare(id)
+                else -> {
+                    val parameterList = it.declarator().parameterTypeList()?.parameterList()
+                    val realType = if (parameterList == null) {
+                        type
+                    } else {
+                        val args = parameterList.parameterDeclaration()?.
+                                map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
+                        Type.Function(type, args)
+                    }
+                    realType.declare(id)
+                }
             }
         }
     }
