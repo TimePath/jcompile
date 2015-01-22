@@ -1,9 +1,11 @@
 package com.timepath.quakec.compiler
 
+import java.util.logging.Level
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
+import com.timepath.quakec.QCParser.ParameterTypeListContext
 import com.timepath.quakec.compiler.ast.*
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
@@ -34,15 +36,29 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 val functional = spec.parameterTypeList()
                 val ret = types[decl.typeSpecifier().directTypeSpecifier().children[0].getText()] ?: Type.Void
                 if (functional != null) {
-                    val parameterList = functional.parameterList()
-                    val args = parameterList?.parameterDeclaration()?.
-                            map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
-                    Type.Function(ret, args)
+                    functional.functionType(ret)
                 } else {
                     ret
                 }
             }
         }
+    }
+
+    fun ParameterTypeListContext.functionType(type: Type): Type {
+        [suppress("SENSELESS_COMPARISON")]
+        if (this == null) return type
+        //        when (type) {
+        //            is Type.Function -> return type
+        //        }
+        val parameterList = this.parameterList()
+        val parameterVarargs = this.parameterVarargs()
+        val parameterDeclarations = parameterList?.parameterDeclaration()
+        val typeArgs = parameterDeclarations?.map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
+        val vararg = if (parameterVarargs == null) null else parameterVarargs.declarationSpecifiers()?.type() ?: Type.Void
+        val function = Type.Function(type, typeArgs, vararg)
+        val decl = this.parent.parent.parent.parent.parent
+        logger.log(Level.FINEST, "${decl.getText()}\t:\t$function")
+        return function
     }
 
     override fun defaultResult(): List<Expression> = emptyList()
@@ -100,7 +116,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             is Type.Function -> temp : Type.Function
             else -> {
                 val typeArgs = paramDeclarations.map { it.declarationSpecifiers()?.type() ?: Type.Void }
-                Type.Function(temp, typeArgs)
+                Type.Function(temp, typeArgs, null)
             }
         }
         return listOf(FunctionExpression(id, signature, params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
@@ -129,16 +145,9 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     val s = value.value.toString()
                     if (s.startsWith('#')) {
                         // FIXME: HACK
-                        val signature = when (type) {
-                            is Type.Function -> type : Type.Function
-                            else -> {
-                                Type.Function(type, it.declarator().parameterTypeList().parameterList()?.parameterDeclaration()
-                                        ?.map {
-                                            it.declarationSpecifiers()?.type()
-                                        }?.filterNotNull() ?: emptyList())
-                            }
-                        }
-                        listOf(FunctionExpression(id, signature, builtin = s.substring(1).toInt(), ctx = ctx))
+                        val parameterTypeList = it.declarator().parameterTypeList()
+                        val signature = parameterTypeList.functionType(type)
+                        listOf(FunctionExpression(id, signature as Type.Function, builtin = s.substring(1).toInt(), ctx = ctx))
                     } else {
                         type.declare(id, initializer)
                     }
@@ -149,15 +158,8 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     }
                 }
                 else -> {
-                    val parameterList = it.declarator().parameterTypeList()?.parameterList()
-                    val realType = if (parameterList == null) {
-                        type
-                    } else {
-                        val args = parameterList.parameterDeclaration()?.
-                                map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
-                        Type.Function(type, args)
-                    }
-                    realType.declare(id)
+                    val parameterTypeList = it.declarator().parameterTypeList()
+                    parameterTypeList.functionType(type).declare(id)
                 }
             }
         }

@@ -288,7 +288,7 @@ abstract class Type {
         }
     }
 
-    data class Function(val type: Type, val argTypes: List<Type>) : Pointer() {
+    data class Function(val type: Type, val argTypes: List<Type>, val vararg: Type?) : Pointer() {
         override val ops = mapOf(
                 Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_FUNC)
         )
@@ -298,7 +298,10 @@ abstract class Type {
         }
 
         override fun toString(): kotlin.String {
-            return "${super.toString()}($type, $argTypes)"
+            return "${super.toString()}($type, $argTypes${when (vararg) {
+                null -> ""
+                else -> ", $vararg..."
+            }})"
         }
     }
 }

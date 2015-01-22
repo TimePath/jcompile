@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
 
     val root = ast {
         val print = const(-1)
-        func(Type.Function(Type.Void, emptyList()), "test") {
+        func(Type.Function(Type.Void, emptyList(), null), "test") {
             def("asd", 1)
             add(
                     ConditionalExpression(
@@ -52,8 +52,8 @@ fun main(args: Array<String>) {
             }
             ret()
         }
-        func(Type.Function(Type.Void, emptyList()), "test")
-        func(Type.Function(Type.Void, emptyList()), "main") {
+        func(Type.Function(Type.Void, emptyList(), null), "test")
+        func(Type.Function(Type.Void, emptyList(), null), "main") {
             call(ref("test"))
             ret()
         }

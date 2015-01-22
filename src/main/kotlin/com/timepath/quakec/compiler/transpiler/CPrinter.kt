@@ -90,9 +90,16 @@ class CPrinter(val all: List<Expression>) {
             is FunctionExpression -> {
                 depth++
                 try {
-                    val decl = "${signature.type.pprint()} $id(${signature.argTypes.map {
-                        it.pprint()
-                    }.joinToString(", ")})"
+                    val list = with(linkedListOf<String>()) {
+                        addAll(signature.argTypes.map {
+                            it.pprint()
+                        })
+                        if (signature.vararg != null) {
+                            add(signature.vararg.toString() + "...")
+                        }
+                        this
+                    }
+                    val decl = "${signature.type.pprint()} $id(${list.joinToString(", ")})"
                     return when {
                         children.isEmpty() -> "$decl;"
                         else -> "$decl {\n${children.pprint(append = ";")}\n}"
