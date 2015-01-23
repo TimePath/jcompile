@@ -7,6 +7,25 @@ import com.timepath.quakec.compiler.Value
 
 abstract class Expression(val ctx: ParserRuleContext? = null) {
 
+    fun transform(transform: (Expression) -> Expression?): List<Expression> {
+        // TODO: pure
+        val ret = mutableChildren
+        val it = ret.listIterator()
+        while (it.hasNext()) {
+            val before = it.next()
+            val after = transform(before)
+            if (after == null) {
+                it.remove()
+            } else {
+                after.transform(transform)
+                it.set(after)
+            }
+        }
+        return ret
+    }
+
+    open fun reduce(): Expression? = this
+
     open val attributes: Map<String, Any?>
         get() = mapOf()
 

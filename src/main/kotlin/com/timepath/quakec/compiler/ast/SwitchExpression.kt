@@ -3,9 +3,6 @@ package com.timepath.quakec.compiler.ast
 import com.timepath.quakec.compiler.gen.CaseIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
-import com.timepath.quakec.compiler.gen.LabelIR
-import com.timepath.quakec.compiler.gen.ReferenceIR
-import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserRuleContext? = null) : Expression(ctx) {
@@ -15,32 +12,34 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
     }
 
     override fun generate(ctx: Generator): List<IR> {
-        val ret = linkedListOf<IR>()
-        val default = linkedListOf<IR>()
-        val body = LoopExpression(ConstantExpression(0), BlockExpression(children))
-        val children = body.doGenerate(ctx)
-        val cases = children.map {
+        return reduce().doGenerate(ctx)
+    }
+
+    override fun reduce(): Expression {
+        val jumps = linkedListOf<Expression>()
+        val default = linkedListOf<Expression>()
+        val cases = LoopExpression(checkBefore = false, predicate = ConstantExpression(0), body = BlockExpression(transform {
             when (it) {
-                is CaseIR -> {
+                is Case -> {
                     val expr = it.expr
-                    val label = (if (expr == null) "default" else "case $expr").toString()
+                    fun String.sanitizeLabel(): String = "__switch_${replaceAll("[^a-zA-Z_0-9]", "_")}"
+                    val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
                     val goto = GotoExpression(label)
                     if (expr == null) {
-                        default.addAll(goto.doGenerate(ctx))
+                        default.add(goto)
                     } else {
                         val test = BinaryExpression.Eq(test, expr)
                         val jump = ConditionalExpression(test, false, goto)
-                        ret.addAll(jump.doGenerate(ctx))
+                        jumps.add(jump)
                     }
-                    LabelIR(label) // replace with a label so goto will be filled in later
+                    LabelExpression(label) // replace with a label so goto will be filled in later
                 }
                 else -> it
             }
-        }
-        ret.addAll(default)
-        ret.addAll(cases)
-        return ret
+        }))
+        return BlockExpression(jumps + default + listOf(cases));
     }
+
     class Case(
             /**
              * Case expression, null = default

@@ -37,8 +37,13 @@ class CPrinter(val all: List<Expression>) {
     var depth: Int = 0
 
     fun pprint(out: BufferedWriter) {
-        all.forEach { out.appendln(it.pprint()) }
+        for (it in all) {
+            it.transform { it.reduce() }
+            out.appendln(it.pprint())
+        }
     }
+
+    fun term(): String = if (depth == 0) ";" else ""
 
     fun List<Expression>.pprint(append: String = "", join: String = "\n", action: (it: Expression) -> String = { it.pprint() }): String {
         return map { action(it) + append }.joinToString(join)
@@ -59,8 +64,6 @@ class CPrinter(val all: List<Expression>) {
             }
         }
     }
-
-    fun term(): String = if (depth == 0) ";" else ""
 
     fun Expression.pprint(term: String = ""): String {
         return /*"/* ${this.javaClass.getSimpleName()} */" +*/ when (this) {
@@ -119,14 +122,15 @@ class CPrinter(val all: List<Expression>) {
             is LoopExpression -> {
                 val init = if (initializer != null) initializer.pprint(append = ";") else ""
                 val update = if (update != null) update.pprint(append = ";") else ""
-                "{\n${init}\nwhile (${predicate.pprint()}) {\n${children.pprint(append = ";")}\n${update}\n}\n}"
+                when (checkBefore) {
+                    true -> "{\n${init}\nwhile (${predicate.pprint()}) {\n${children.pprint(append = ";")}\n${update}\n}\n}"
+                    else -> "{\n${init}\ndo {\n${children.pprint(append = ";")}\n${update}\n} while (${predicate.pprint()});\n}"
+                }
             }
             is ReturnStatement -> when {
                 returnValue != null -> "return ${returnValue.pprint()}"
                 else -> "return"
             }
-            is MemoryReference -> "\"$$ref\""
-            is SwitchExpression -> "switch (${test.pprint()}) ${children.pprint()}"
             is MemberExpression -> "${left.pprint()}[${right.pprint()}]"
             is BinaryExpression<*, *> -> if (depth > 0) "(${when (left) {
                 is DeclarationExpression -> left.id
@@ -135,10 +139,6 @@ class CPrinter(val all: List<Expression>) {
             is UnaryExpression -> "${op}${operand.pprint()}"
             is BlockExpression -> "{\n${children.pprint(append = ";")}\n}"
             is MethodCallExpression -> "${function.pprint()}(${args.pprint(join = ", ")})"
-            is Case -> when (expr) {
-                null -> "default"
-                else -> "case ${expr.pprint()}"
-            } + ":"
             is Nop -> ";"
             is ReferenceExpression,
             is BreakStatement,
