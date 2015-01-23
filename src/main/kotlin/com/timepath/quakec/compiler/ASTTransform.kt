@@ -7,7 +7,6 @@ import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.QCParser.ParameterTypeListContext
 import com.timepath.quakec.compiler.ast.*
-import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -28,26 +27,24 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
     }
 
     fun QCParser.DeclarationSpecifiersContext.type(): Type {
+        [suppress("SENSELESS_COMPARISON")]
+        if (this == null) return Type.Void
         val decl = this.declarationSpecifier()?.firstOrNull { it.typeSpecifier() != null }
-        return when (decl) {
-            null -> Type.Void
-            else -> {
-                val typeSpec = decl.typeSpecifier()
-                val indirection = typeSpec.pointer()?.getText()?.length() ?: 0
-                val spec = typeSpec.directTypeSpecifier()
-                val functional = spec.parameterTypeList()
-                val direct = types[typeSpec.directTypeSpecifier().children[0].getText()] ?: Type.Void
-                var indirect = if (functional != null) {
-                    functional.functionType(direct)
-                } else {
-                    direct
-                }
-                indirection.times {
-                    indirect = Type.Field(indirect)
-                }
-                indirect
-            }
+        if (decl == null) return Type.Void
+        val typeSpec = decl.typeSpecifier()
+        val indirection = typeSpec.pointer()?.getText()?.length() ?: 0
+        val spec = typeSpec.directTypeSpecifier()
+        val functional = spec.parameterTypeList()
+        val direct = types[typeSpec.directTypeSpecifier().children[0].getText()] ?: Type.Void
+        var indirect = if (functional != null) {
+            functional.functionType(direct)
+        } else {
+            direct
         }
+        indirection.times {
+            indirect = Type.Field(indirect)
+        }
+        return indirect
     }
 
     fun ParameterTypeListContext.functionType(type: Type): Type {
@@ -103,9 +100,8 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val paramId = it.declarator()?.getText()
             if (paramId != null) {
                 val type = it.declarationSpecifiers().type()
-                val declarationExpression = DeclarationExpression(paramId, type, null, ctx = ctx)
-                val memoryReference = MemoryReference(Instruction.OFS_PARAM(i), ctx = ctx)
-                listOf(declarationExpression, BinaryExpression.Assign(ReferenceExpression(paramId, ctx = ctx), memoryReference, ctx = ctx))
+                val param = ParameterExpression(paramId, type, index = i, ctx = ctx)
+                listOf(param)
             } else {
                 emptyList()
             }
@@ -113,19 +109,14 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val varargs = ctx.declarator()?.parameterTypeList()?.parameterVarargs()
         val vararg = if (varargs != null) {
             val type = varargs.declarationSpecifiers().type()
-            listOf(DeclarationExpression(varargs.Identifier()?.getText() ?: "...", type, null, ctx = ctx))
+            DeclarationExpression(varargs.Identifier()?.getText() ?: "...", type, null, ctx = ctx)
         } else {
-            emptyList()
+            null
         }
         val temp = ctx.declarationSpecifiers().type()
-        val signature = when (temp) {
-            is Type.Function -> temp : Type.Function
-            else -> {
-                val typeArgs = paramDeclarations.map { it.declarationSpecifiers()?.type() ?: Type.Void }
-                Type.Function(temp, typeArgs, null)
-            }
-        }
-        return listOf(FunctionExpression(id, signature, params + vararg + visitChildren(ctx.compoundStatement()), ctx = ctx))
+        val typeArgs = paramDeclarations.map { it.declarationSpecifiers().type() }
+        val signature = Type.Function(temp, typeArgs, null)
+        return listOf(FunctionExpression(id, signature, params, vararg, visitChildren(ctx.compoundStatement()), ctx = ctx))
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {

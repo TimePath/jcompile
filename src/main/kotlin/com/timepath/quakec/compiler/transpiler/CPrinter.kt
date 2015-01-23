@@ -99,10 +99,10 @@ class CPrinter(val all: List<Expression>) {
                 depth++
                 try {
                     val list = with(linkedListOf<String>()) {
-                        addAll(signature.argTypes.map {
+                        addAll(params.orEmpty().map {
                             it.pprint()
                         })
-                        if (signature.vararg != null) {
+                        if (vararg != null) {
                             add(/*signature.vararg.toString() +*/ "...")
                         }
                         this

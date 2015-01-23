@@ -15,6 +15,8 @@ import org.antlr.v4.runtime.ParserRuleContext
  */
 class FunctionExpression(val id: String? = null,
                          val signature: Type.Function,
+                         val params: List<Expression>? = null,
+                         val vararg: Expression? = null,
                          add: List<Expression>? = null,
                          val builtin: Int? = null,
                          ctx: ParserRuleContext? = null) : Expression(ctx) {
@@ -49,6 +51,12 @@ class FunctionExpression(val id: String? = null,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
         ctx.allocator.push(id)
+        val params = with(linkedListOf<Expression>()) {
+            params?.let { addAll(it) }
+            vararg?.let { add(it) }
+            this
+        }
+        val genParams = params.flatMap { it.doGenerate(ctx) }
         val children = children.flatMap { it.doGenerate(ctx) }
         run {
             // Calculate label jumps
@@ -72,6 +80,7 @@ class FunctionExpression(val id: String? = null,
         }
         val list = (listOf(
                 FunctionIR(f))
+                + genParams
                 + children
                 + IR(instr = Instruction.DONE)
                 + ReferenceIR(global.ref))

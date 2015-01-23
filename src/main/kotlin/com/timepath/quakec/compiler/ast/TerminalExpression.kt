@@ -4,6 +4,7 @@ import com.timepath.quakec.compiler.Type
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.ReferenceIR
+import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
@@ -40,6 +41,21 @@ open class DeclarationExpression(id: String,
     override fun generate(ctx: Generator): List<IR> {
         val global = ctx.allocator.allocateReference(id, value?.evaluate())
         return listOf(ReferenceIR(global.ref))
+    }
+}
+
+open class ParameterExpression(id: String,
+                               type: Type,
+                               val index: Int,
+                               ctx: ParserRuleContext? = null) : DeclarationExpression(id, type, ctx = ctx) {
+
+    override fun generate(ctx: Generator): List<IR> {
+        val memoryReference = MemoryReference(Instruction.OFS_PARAM(index))
+        return with(linkedListOf<IR>()) {
+            addAll(super.generate(ctx))
+            addAll(BinaryExpression.Assign(ReferenceExpression(id), memoryReference).doGenerate(ctx))
+            this
+        }
     }
 }
 
