@@ -1,0 +1,21 @@
+// global
+float test1(float f);
+float test2(float f) {}
+float(float f) test3;
+float(float f) test4 = {};
+
+// global
+.float test5(float f);
+.float test6(float f) {}
+// entity
+.float(float f) test7;
+// global
+.float(float f) test8 = {};
+
+// global
+void() test9(float f);
+void() test10(float f) {}
+
+// global
+.void() test11(float f);
+.void() test12(float f) {}

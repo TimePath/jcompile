@@ -79,8 +79,8 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
             val rule: ParserRuleContext? = this.ctx
             if (rule != null) {
                 val source = rule.start.getTokenSource()
-                println("${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
-                println("${rule.getText()}")
+                println("E: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
+                println("E: ${rule.getText()}")
             }
             throw t
         }
