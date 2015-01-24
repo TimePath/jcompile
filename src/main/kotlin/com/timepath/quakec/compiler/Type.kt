@@ -6,10 +6,13 @@ import com.timepath.quakec.compiler.ast.ConditionalExpression
 import com.timepath.quakec.compiler.ast.ConstantExpression
 import com.timepath.quakec.compiler.ast.DeclarationExpression
 import com.timepath.quakec.compiler.ast.Expression
+import com.timepath.quakec.compiler.ast.FunctionExpression
 import com.timepath.quakec.compiler.ast.MemberExpression
 import com.timepath.quakec.compiler.ast.MemoryReference
 import com.timepath.quakec.compiler.ast.MethodCallExpression
+import com.timepath.quakec.compiler.ast.ParameterExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
+import com.timepath.quakec.compiler.ast.ReturnStatement
 import com.timepath.quakec.compiler.ast.StructDeclarationExpression
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
@@ -199,9 +202,9 @@ abstract class Type {
                     MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).doGenerate(gen)
                 },
                 // TODO
-//                Operation("<<", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation(">>", this, this) to DefaultHandler(Instruction.BITOR),
-//                Operation("**", this, this) to DefaultHandler(Instruction.BITOR),
+                //                Operation("<<", this, this) to DefaultHandler(Instruction.BITOR),
+                //                Operation(">>", this, this) to DefaultHandler(Instruction.BITOR),
+                //                Operation("**", this, this) to DefaultHandler(Instruction.BITOR),
                 Operation("+=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT) { left, right ->
                     BinaryExpression.Add(left, right)
                 },
@@ -306,6 +309,102 @@ abstract class Type {
                 null -> ""
                 else -> ", $vararg..."
             }})"
+        }
+    }
+
+    data class Array(val type: Type, val sizeExpr: Expression) : Pointer() {
+        override val ops = mapOf(
+                Operation("sizeof", this) to OperationHandler { gen, self, _ ->
+                    sizeExpr.doGenerate(gen)
+                }
+        )
+
+        fun generate(id: String): List<Expression> {
+            val size = (sizeExpr.evaluate()?.value as Number).toInt()
+            val intRange = size.indices
+            return with(linkedListOf<Expression>()) {
+                addAll(generateAccessor(id))
+                intRange.forEachIndexed { (i, _) ->
+                    addAll(generateComponent(id, i))
+                }
+                this
+            }
+        }
+
+        private fun generateAccessorName(id: String) = "__${id}_access"
+
+        /**
+         *  #define ARRAY(name, size)                                                                   \
+         *      float name##_size = size;                                                               \
+         *      float(bool, float) name##_access(float index) {                                         \
+         *          /*if (index < 0) index += name##_size;                                              \
+         *          if (index > name##_size) return 0;*/                                                \
+         *          float(bool, float) name##_access_this = name##_access + __builtin_ftoi(1 + index);  \
+         *          return name##_access_this;                                                          \
+         *      }
+         */
+        private fun generateAccessor(id: String): List<Expression> {
+            val accessor = generateAccessorName(id)
+            return with(linkedListOf<Expression>()) {
+                add(DeclarationExpression("${id}_size", Float, ConstantExpression(size.toInt())))
+                add(FunctionExpression(
+                        accessor,
+                        Function(Function(Float, listOf(Float, Float), null), listOf(Float), null),
+                        listOf(ParameterExpression("index", Float, 0)),
+                        add = listOf(ReturnStatement(BinaryExpression.Add(
+                                ReferenceExpression(accessor),
+                                MethodCallExpression(
+                                        ReferenceExpression("__builtin_ftoi"),
+                                        listOf(BinaryExpression.Add(
+                                                ConstantExpression(1f),
+                                                ReferenceExpression("index")
+                                        ))
+                                )
+                        )))
+                ))
+                this
+            }
+        }
+
+        /**
+         *  #define ARRAY_COMPONENT(name, i, v)                         \
+         *      float name##_##i = v;                                   \
+         *      float name##_access_##i(bool mode, float value##i) {    \
+         *          return mode ? name##_##i = value##i : name##_##i;   \
+         *      }
+         */
+        private fun generateComponent(id: String, i: kotlin.Int): List<Expression> {
+            val accessor = "${generateAccessorName(id)}_${i}"
+            val field = "${accessor}_field"
+            return with(linkedListOf<Expression>()) {
+                add(DeclarationExpression(field, type, ConstantExpression(0f))) // TODO: custom initialization
+                FunctionExpression(
+                        accessor,
+                        Function(Float, listOf(Float, Float), null),
+                        listOf(
+                                ParameterExpression("mode", Float, 0),
+                                ParameterExpression("value", Float, 1)
+                        ),
+                        add = with(linkedListOf<Expression>()) {
+                            val fieldReference = ReferenceExpression(field)
+                            add(ReturnStatement(ConditionalExpression(
+                                    ReferenceExpression("mode"), true,
+                                    BinaryExpression.Assign(fieldReference, ReferenceExpression("value")),
+                                    fieldReference
+                            )))
+                            this
+                        }
+                )
+                this
+            }
+        }
+
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
+            return listOf(DeclarationExpression(name, this, value))
+        }
+
+        override fun toString(): kotlin.String {
+            return "${super.toString()}($type[$sizeExpr])"
         }
     }
 }

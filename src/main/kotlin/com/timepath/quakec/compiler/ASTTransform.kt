@@ -137,6 +137,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             while (declarator.declarator() != null) {
                 declarator = declarator.declarator()
             }
+            val arraySize = it.declarator().assignmentExpression()
             val id = declarator.getText()
             val initializer = it.initializer()?.accept(this)?.single()
             when (initializer) {
@@ -169,7 +170,12 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 }
                 else -> {
                     val parameterTypeList = it.declarator().parameterTypeList()
-                    parameterTypeList.functionType(type).declare(id)
+                    if (arraySize != null) {
+                        val sizeExpr = arraySize.accept(this).single()
+                        Type.Array(type, sizeExpr).declare(id)
+                    } else {
+                        parameterTypeList.functionType(type).declare(id)
+                    }
                 }
             }
         }

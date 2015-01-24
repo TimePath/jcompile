@@ -1,6 +1,7 @@
 package com.timepath.quakec.compiler.ast
 
 import com.timepath.quakec.compiler.Type
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.ast.Expression as rvalue
 import com.timepath.quakec.compiler.ast.ReferenceExpression as lvalue
 import com.timepath.quakec.compiler.gen.Generator
@@ -58,23 +59,33 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val op: String, 
 
     class Ge(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(">=", left, right, ctx)
 
-    class Add(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("+", left, right, ctx)
+    class Add(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("+", left, right, ctx) {
+        override fun evaluate(): Value? = left.evaluate()?.plus(right.evaluate())
+    }
 
     class AddAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("+=", left, right, ctx)
 
-    class Subtract(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-", left, right, ctx)
+    class Subtract(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-", left, right, ctx) {
+        override fun evaluate(): Value? = left.evaluate()?.minus(right.evaluate())
+    }
 
     class SubtractAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("-=", left, right, ctx)
 
-    class Multiply(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*", left, right, ctx)
+    class Multiply(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*", left, right, ctx) {
+        override fun evaluate(): Value? = left.evaluate()?.times(right.evaluate())
+    }
 
     class MultiplyAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("*=", left, right, ctx)
 
-    class Divide(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/", left, right, ctx)
+    class Divide(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/", left, right, ctx) {
+        override fun evaluate(): Value? = left.evaluate()?.div(right.evaluate())
+    }
 
     class DivideAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("/=", left, right, ctx)
 
-    class Modulo(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%", left, right, ctx)
+    class Modulo(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%", left, right, ctx) {
+        override fun evaluate(): Value? = left.evaluate()?.mod(right.evaluate())
+    }
 
     class ModuloAssign(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>("%=", left, right, ctx)
 

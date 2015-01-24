@@ -52,10 +52,17 @@ class CPrinter(val all: List<Expression>) {
     fun Type.pprint(id: kotlin.String? = null, indirection: Int = 0): String {
         val stars = "*".repeat(indirection)
         return when (this) {
+            is Type.Array -> {
+                val expression = when (this.sizeExpr) {
+                    is ConstantExpression -> this.sizeExpr.value.value.toString()
+                    else -> this.sizeExpr.toString()
+                }
+                "${type} $id[$expression]"
+            }
+            is Type.Field -> "${type.pprint(id, indirection + 1)}"
             is Type.Function -> "${type.pprint()}($stars*$id)(${argTypes.map {
                 it.pprint()
             }.joinToString(", ")})"
-            is Type.Field -> "${type.pprint(id, indirection + 1)}"
             else -> {
                 when (id) {
                     null -> "$this$stars"
