@@ -184,6 +184,7 @@ fun time(name: String, action: () -> Unit) {
 }
 
 fun main(args: Array<String>) {
+    out.mkdirs()
     time("Total time") {
         FileOutputStream(File(out, "CMakeLists.txt")).writer().use {
             it.write("""cmake_minimum_required(VERSION 2.8)
