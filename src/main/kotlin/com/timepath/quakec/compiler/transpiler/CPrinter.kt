@@ -9,6 +9,7 @@ import java.io.FileOutputStream
 import java.util.Date
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.Type
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.ast.BinaryExpression
 import com.timepath.quakec.compiler.ast.BlockExpression
 import com.timepath.quakec.compiler.ast.BreakStatement
@@ -72,6 +73,21 @@ class CPrinter(val all: List<Expression>) {
         }
     }
 
+    fun pprintConst(v: Any?): String = when (v) {
+        null -> "NULL"
+        is Array<*> -> "(vector) { ${v.map { pprintConst(it) }.join(", ")} }"
+        is String -> '"' + Utils.escapeWhitespace(v, false)/*.replace("\"", "\\\"")*/ + '"'
+        is Float -> {
+            val i = v.toInt()
+            val int = v == i.toFloat()
+            when {
+                int -> i.toString()
+                else -> v.toString() + "f"
+            }
+        }
+        else -> "$v"
+    }
+
     fun Expression.pprint(term: String = ""): String {
         return /*"/* ${this.javaClass.getSimpleName()} */" +*/ when (this) {
             is ConditionalExpression -> {
@@ -81,14 +97,7 @@ class CPrinter(val all: List<Expression>) {
                     "if (${test.pprint()})\n${pass.pprint(";")}" + if (fail == null) "" else "\nelse\n${fail.pprint(";")}"
             }
             is ConstantExpression -> {
-                val v = value.value
-                when (v) {
-                    null -> "NULL"
-                    is Array<*> -> "(vector) { ${v.joinToString(", ")} }"
-                    is String -> '"' + Utils.escapeWhitespace(v, false)/*.replace("\"", "\\\"")*/ + '"'
-                    is Float -> v.toString() + "f"
-                    else -> "$v"
-                }
+                pprintConst(value.value)
             }
             is DeclarationExpression -> {
                 val v = if (value != null) {
