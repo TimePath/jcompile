@@ -9,16 +9,18 @@ import kotlin.test.assertTrue
 
 class ProgramDataSpecs : Spek() {{
 
-    given("Progs data") {
-        val dir = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
-        val input = File("${dir}/progs.dat")
-        val data = ProgramDataReader(input).read()
-        on("save") {
-            val output = File("${dir}/progs2.dat")
-            val writer = ProgramDataWriter(output)
-            writer.write(data)
-            it("should be identical") {
-                assertTrue(Arrays.equals(input.readBytes(), output.readBytes()))
+    val dir = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
+    val input = File("${dir}/progs.dat")
+    if (input.exists()) {
+        given("Progs data") {
+            val data = ProgramDataReader(input).read()
+            on("save") {
+                val output = File("${dir}/progs2.dat")
+                val writer = ProgramDataWriter(output)
+                writer.write(data)
+                it("should be identical") {
+                    assertTrue(Arrays.equals(input.readBytes(), output.readBytes()))
+                }
             }
         }
     }
