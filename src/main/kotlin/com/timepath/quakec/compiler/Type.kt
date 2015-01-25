@@ -23,7 +23,8 @@ abstract class Type {
     class object {
         fun from(any: Any?): Type = when (any) {
             is kotlin.Float -> Float
-            is kotlin.Int -> Int()
+            is kotlin.Int -> Int
+            is kotlin.Boolean -> Bool
             is kotlin.String -> String
             else -> Void
         }
@@ -138,7 +139,7 @@ abstract class Type {
         }
     }
 
-    object Float : Type() {
+    open class Number : Type() {
         override val ops = mapOf(
                 Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT),
                 Operation("+", this, this) to DefaultHandler(Instruction.ADD_FLOAT),
@@ -249,10 +250,11 @@ abstract class Type {
         }
     }
 
-    open class Int : Type() {
-        override val ops: Map<Operation, OperationHandler>
-            get() = throw UnsupportedOperationException()
-    }
+    object Float : Number()
+
+    object Int : Number()
+
+    object Bool : Number()
 
     data abstract class Struct(val fields: Map<kotlin.String, Type>) : Type() {
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
@@ -266,7 +268,7 @@ abstract class Type {
         )
     }
 
-    abstract class Pointer : Int()
+    abstract class Pointer : Type()
 
     object String : Pointer() {
         override val ops = mapOf(
@@ -327,7 +329,7 @@ abstract class Type {
         )
 
         fun generate(id: String): List<Expression> {
-            val size = (sizeExpr.evaluate()?.value as Number).toInt()
+            val size = (sizeExpr.evaluate()?.value as kotlin.Number).toInt()
             val intRange = size.indices
             return with(linkedListOf<Expression>()) {
                 addAll(generateAccessor(id))

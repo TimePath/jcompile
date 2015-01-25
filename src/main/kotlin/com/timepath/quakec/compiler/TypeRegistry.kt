@@ -15,6 +15,8 @@ class TypeRegistry {
         set("vector", Type.Vector)
         set("string", Type.String)
         set("entity", Type.Entity)
+        set("int", Type.Int)
+        set("bool", Type.Bool)
     }
 
 }
