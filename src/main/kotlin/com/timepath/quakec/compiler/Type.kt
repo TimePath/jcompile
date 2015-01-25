@@ -14,6 +14,7 @@ import com.timepath.quakec.compiler.ast.ParameterExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
 import com.timepath.quakec.compiler.ast.ReturnStatement
 import com.timepath.quakec.compiler.ast.StructDeclarationExpression
+import com.timepath.quakec.compiler.ast.UnaryExpression
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 
@@ -142,6 +143,12 @@ abstract class Type {
                 Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_FLOAT),
                 Operation("+", this, this) to DefaultHandler(Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandler(Instruction.SUB_FLOAT),
+                Operation("&", this) to OperationHandler { gen, self, _ ->
+                    BinaryExpression.Divide(self, ConstantExpression(1)).doGenerate(gen)
+                },
+                Operation("*", this) to OperationHandler { gen, self, _ ->
+                    BinaryExpression.Multiply(self, ConstantExpression(1)).doGenerate(gen)
+                },
                 Operation("+", this) to OperationHandler { gen, self, _ ->
                     self.doGenerate(gen)
                 },
@@ -339,7 +346,7 @@ abstract class Type {
          *      float(bool, float) name##_access(float index) {                                         \
          *          /*if (index < 0) index += name##_size;                                              \
          *          if (index > name##_size) return 0;*/                                                \
-         *          float(bool, float) name##_access_this = name##_access + __builtin_ftoi(1 + index);  \
+         *          float(bool, float) name##_access_this = name##_access + *(1 + index);               \
          *          return name##_access_this;                                                          \
          *      }
          */
@@ -353,13 +360,10 @@ abstract class Type {
                         listOf(ParameterExpression("index", Float, 0)),
                         add = listOf(ReturnStatement(BinaryExpression.Add(
                                 ReferenceExpression(accessor),
-                                MethodCallExpression(
-                                        ReferenceExpression("__builtin_ftoi"),
-                                        listOf(BinaryExpression.Add(
-                                                ConstantExpression(1f),
-                                                ReferenceExpression("index")
-                                        ))
-                                )
+                                UnaryExpression.Dereference(BinaryExpression.Add(
+                                        ConstantExpression(1f),
+                                        ReferenceExpression("index")
+                                ))
                         )))
                 ))
                 this

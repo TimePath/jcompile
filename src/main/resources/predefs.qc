@@ -1,7 +1,6 @@
 string __builtin_debug_typestring();
 float __builtin_exp();
 [[inline]] float __builtin_floor(float a) { return a | 0; }
-[[inline]] float __builtin_ftoi(float a) { return /* (float) 1i */ 1E-45 * a; }
 [[inline]] float __builtin_logxor(float a, float b) { return !a != !b; }
 [[inline]] float __builtin_mod(float a, float b) {
     float div = a / b;

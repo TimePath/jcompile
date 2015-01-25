@@ -491,6 +491,8 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val expand = when (ctx.op.getType()) {
                 QCParser.PlusPlus -> UnaryExpression.PreIncrement(expr, ctx = ctx)
                 QCParser.MinusMinus -> UnaryExpression.PreDecrement(expr, ctx = ctx)
+                QCParser.And -> UnaryExpression.Address(expr, ctx = ctx)
+                QCParser.Star -> UnaryExpression.Dereference(expr, ctx = ctx)
                 QCParser.Plus -> UnaryExpression.Plus(expr, ctx = ctx)
                 QCParser.Minus -> UnaryExpression.Minus(expr, ctx = ctx)
                 QCParser.Tilde -> UnaryExpression.BitNot(expr, ctx = ctx)

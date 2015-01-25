@@ -157,7 +157,7 @@ unaryExpression
     :   postfixExpression
     |   postfixExpression op='**' unaryExpression
     |   op=('++' | '--') unaryExpression
-    |   op=('+' | '-' | '~' | '!') unaryExpression
+    |   op=('&' | '*' | '+' | '-' | '~' | '!') unaryExpression
     |   op=('sizeof' | '_length') unaryExpression
     |   'sizeof' '(' typeName ')'
     ;

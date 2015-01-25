@@ -9,7 +9,7 @@
     float(bool, float) name##_access(float index) {                                         \
       /*if (index < 0) index += name##_size;                                                \
         if (index > name##_size) return 0;*/                                                \
-        float(bool, float) name##_access_this = name##_access + __builtin_ftoi(1 + index);  \
+        float(bool, float) name##_access_this = name##_access + *(1 + index);               \
         return name##_access_this;                                                          \
     }
 
