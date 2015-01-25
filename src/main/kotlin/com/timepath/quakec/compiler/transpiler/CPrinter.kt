@@ -285,6 +285,63 @@ struct entity {
     }
 
 };
+
+/*
+class number {
+    union {
+        float f;
+        int i;
+        bool b;
+    } n;
+    bool ok_;
+
+    typedef void (number::*bool_type)() const;
+
+    void this_type_does_not_support_comparisons() const {
+    }
+
+public:
+    explicit number(bool b = true) : ok_(b) {
+        n.b = b;
+    }
+
+    operator bool_type() const {
+        return ok_ ? &number::this_type_does_not_support_comparisons : 0;
+    }
+
+    number() {
+
+    }
+
+    number(float f) {
+        n.f = f;
+    }
+
+    operator float() {
+        return n.f;
+    }
+
+    number *operator=(number r) {
+        n = r.n;
+        return this;
+    }
+};
+
+template<typename T>
+bool operator!=(const number &lhs, const T &rhs) {
+    lhs.this_type_does_not_support_comparisons();
+    return false;
+}
+
+template<typename T>
+bool operator==(const number &lhs, const T &rhs) {
+    lhs.this_type_does_not_support_comparisons();
+    return false;
+}
+
+#define float number
+#define int number
+*/
 """)
                 }
                 val zipped = compiler.includes.map {
