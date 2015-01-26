@@ -32,6 +32,7 @@ import com.timepath.quakec.compiler.ast.SwitchExpression.Case
 import com.timepath.quakec.compiler.ast.UnaryExpression
 import com.timepath.quakec.compiler.ast.Nop
 import org.antlr.v4.runtime.misc.Utils
+import com.timepath.quakec.compiler.ast.ParameterExpression
 
 class CPrinter(val all: List<Expression>) {
 
@@ -109,7 +110,10 @@ class CPrinter(val all: List<Expression>) {
                     is Type.Function -> {
                         val ret = type.type
                         val args = type.argTypes
-                        "${ret.pprint()} $id(${args.map { it.pprint() }.join(", ")});"
+                        "${ret.pprint()} $id(${args.map { it.pprint() }.join(", ")})" + when {
+                            this is ParameterExpression -> ""
+                            else -> ";"
+                        }
                     }
                     else -> type.pprint(id) + " " + v + term()
                 }
