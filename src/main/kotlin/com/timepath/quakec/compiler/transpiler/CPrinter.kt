@@ -227,8 +227,24 @@ inline string _(string str) {
     return str;
 }
 
+enum component {
+    x, y, z
+};
+
 struct vector {
     float x, y, z;
+
+    float operator[](component c) {
+        switch (c) {
+            case ::x:
+                return x;
+            case ::y:
+                return y;
+            case ::z:
+                return z;
+        }
+        return 0;
+    }
 
     vector operator+(const vector &other) const {
         return (vector) {x + other.x, y + other.y, z + other.z};
