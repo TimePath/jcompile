@@ -246,7 +246,7 @@ struct vector {
         return 0;
     }
 
-    vector operator+(const vector &other) const {
+    vector operator+(const vector &other) {
         return (vector) {x + other.x, y + other.y, z + other.z};
     }
 
@@ -258,7 +258,7 @@ struct vector {
         return self;
     }
 
-    vector operator-(const vector &other) const {
+    vector operator-(const vector &other) {
         return (vector) {x - other.x, y - other.y, z - other.z};
     }
 
@@ -270,7 +270,7 @@ struct vector {
         return self;
     }
 
-    vector operator*(const float other) const {
+    vector operator*(const float other) {
         return (vector) {x * other, y * other, z * other};
     }
 
@@ -282,7 +282,19 @@ struct vector {
         return self;
     }
 
-    vector operator/(const float other) const {
+    vector operator*(const vector &other) {
+        return (vector) {x * other.x, y * other.y, z * other.z};
+    }
+
+    vector &operator*=(const vector &other) {
+        vector self = *this;
+        self.x *= other.x;
+        self.y *= other.y;
+        self.z *= other.z;
+        return self;
+    }
+
+    vector operator/(const float other) {
         return (vector) {x / other, y / other, z / other};
     }
 
@@ -292,6 +304,10 @@ struct vector {
         self.y /= other;
         self.z /= other;
         return self;
+    }
+
+    bool operator==(const vector &other) {
+        return x == other.x && y == other.y && z == other.z;
     }
 };
 
@@ -304,6 +320,10 @@ struct entity {
     template<typename T>
     T &operator[](T *field) {
         return T();
+    }
+
+    operator bool() {
+        return true;
     }
 
 };
@@ -364,6 +384,7 @@ bool operator==(const number &lhs, const T &rhs) {
 #define float number
 #define int number
 */
+
 """)
                 }
                 val zipped = compiler.includes.map {
