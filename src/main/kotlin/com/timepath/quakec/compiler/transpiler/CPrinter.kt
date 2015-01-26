@@ -59,7 +59,7 @@ class CPrinter(val all: List<Expression>) {
                     is ConstantExpression -> this.sizeExpr.value.value.toString()
                     else -> this.sizeExpr.toString()
                 }
-                "${type} $id[$expression]"
+                "${type.pprint()} $id[$expression]"
             }
             is Type.Field -> "${type.pprint(id, indirection + 1)}"
             is Type.Function -> "${type.pprint()}($stars*$id)(${argTypes.map {
