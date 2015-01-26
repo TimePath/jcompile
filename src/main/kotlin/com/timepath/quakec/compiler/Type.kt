@@ -26,7 +26,7 @@ abstract class Type {
             is kotlin.Int -> Int
             is kotlin.Boolean -> Bool
             is kotlin.String -> String
-            else -> Void
+            else -> throw NullPointerException()
         }
 
         fun handle(operation: Operation): Type.OperationHandler {

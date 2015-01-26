@@ -1,10 +1,10 @@
 package com.timepath.quakec.compiler
 
-import java.util.logging.Level
 import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
+import com.timepath.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.quakec.QCParser.ParameterTypeListContext
 import com.timepath.quakec.compiler.ast.*
 import org.antlr.v4.runtime.ParserRuleContext
@@ -26,16 +26,30 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         logger.fine("{$token} $line,$col $file")
     }
 
-    fun QCParser.DeclarationSpecifiersContext.type(old: Boolean = false): Type {
+    fun QCParser.DeclarationSpecifiersContext.type(old: Boolean = false): Type? {
         [suppress("SENSELESS_COMPARISON")]
-        if (this == null) return Type.Void
-        val decl = this.declarationSpecifier()?.firstOrNull { it.typeSpecifier() != null }
-        if (decl == null) return Type.Void
+        if (this == null) return null
+        return type(this.declarationSpecifier(), old)
+    }
+
+    fun QCParser.DeclarationSpecifiers2Context.type(old: Boolean = false): Type? {
+        [suppress("SENSELESS_COMPARISON")]
+        if (this == null) return null
+        return type(this.declarationSpecifier(), old)
+    }
+
+    fun type(list: List<DeclarationSpecifierContext>?, old: Boolean = false): Type? {
+        val decl = list?.lastOrNull { it.typeSpecifier() != null }
+        if (decl == null) return null
         val typeSpec = decl.typeSpecifier()
         val indirection = typeSpec.pointer()?.getText()?.length() ?: 0
         val spec = typeSpec.directTypeSpecifier()
         val functional = spec.parameterTypeList()
-        val direct = types[typeSpec.directTypeSpecifier().children[0].getText()] ?: Type.Void
+        val direct = when {
+        // varargs
+            typeSpec.pointer()?.getText()?.length() == 3 -> Type.Void
+            else -> types[typeSpec.directTypeSpecifier().children[0].getText()]
+        }
         var indirect = if (functional != null && !old) {
             functional.functionType(direct)
         } else {
@@ -53,9 +67,9 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val parameterList = this.parameterList()
         val parameterVarargs = this.parameterVarargs()
         val parameterDeclarations = parameterList?.parameterDeclaration()
-        val typeArgs = parameterDeclarations?.map { it.declarationSpecifiers()?.type() ?: Type.Void } ?: emptyList()
-        val vararg = if (parameterVarargs == null) null else parameterVarargs.declarationSpecifiers()?.type() ?: Type.Void
-        val function = Type.Function(type, typeArgs, vararg)
+        val typeArgs = parameterDeclarations?.map { it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type() } ?: emptyList()
+        val vararg = parameterVarargs?.declarationSpecifiers()?.type()
+        val function = Type.Function(type, typeArgs.requireNoNulls(), vararg)
         return function
     }
 
@@ -66,7 +80,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val paramId = it.declarator()?.getText()
             if (paramId != null) {
                 val type = it.declarationSpecifiers().type()
-                val param = ParameterExpression(paramId, type, index = i, ctx = ctx)
+                val param = ParameterExpression(paramId, type!!, index = i, ctx = ctx)
                 listOf(param)
             } else {
                 emptyList()
@@ -81,7 +95,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val vararg = when (varargs) {
             null -> null
             else -> {
-                val type = varargs.declarationSpecifiers().type()
+                val type = varargs.declarationSpecifiers().type() ?: Type.Void
                 DeclarationExpression(varargs.Identifier()?.getText() ?: "...", type, null, ctx = ctx)
             }
         }
@@ -118,7 +132,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val retType = ctx.declarationSpecifiers().type(old)
         val params = parameterTypeList.functionArgs(ctx)
         val vararg = parameterTypeList.functionVararg(ctx)
-        val signature = parameterTypeList.functionType(retType);
+        val signature = parameterTypeList.functionType(retType!!);
         return listOf(FunctionExpression(id, signature as Type.Function, params, vararg, visitChildren(ctx.compoundStatement()), ctx = ctx))
     }
 
@@ -130,6 +144,14 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 val id = it.enumerationConstant().getText()
                 Type.Float.declare(id).single()
             }
+        }
+        val typedef = ctx.declarationSpecifiers().declarationSpecifier().firstOrNull { it.storageClassSpecifier()?.getText() == "typedef" } != null
+        if (typedef) {
+            val type = type(ctx.declarationSpecifiers().declarationSpecifier())
+            ctx.initDeclaratorList().initDeclarator().forEach {
+                types[it.getText()] = type!!
+            }
+            return emptyList()
         }
         val type = ctx.declarationSpecifiers().type()
         return declarations.flatMap {
@@ -157,14 +179,14 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                         val retType = ctx.declarationSpecifiers().type(old)
                         val params = parameterTypeList.functionArgs(ctx)
                         val vararg = parameterTypeList.functionVararg(ctx)
-                        val signature = parameterTypeList.functionType(retType);
+                        val signature = parameterTypeList.functionType(retType!!);
                         listOf(FunctionExpression(id, signature as Type.Function, params = params, vararg = vararg, builtin = i, ctx = ctx))
                     } else {
-                        type.declare(id, initializer)
+                        type!!.declare(id, initializer)
                     }
                 }
                 is Expression -> {
-                    type.declare(id).flatMap {
+                    type!!.declare(id).flatMap {
                         listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
                     }
                 }
@@ -172,9 +194,9 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     val parameterTypeList = it.declarator().parameterTypeList()
                     if (arraySize != null) {
                         val sizeExpr = arraySize.accept(this).single()
-                        Type.Array(type, sizeExpr).declare(id)
+                        Type.Array(type!!, sizeExpr).declare(id)
                     } else {
-                        parameterTypeList.functionType(type).declare(id)
+                        parameterTypeList.functionType(type!!).declare(id)
                     }
                 }
             }
