@@ -33,6 +33,7 @@ import com.timepath.quakec.compiler.ast.UnaryExpression
 import com.timepath.quakec.compiler.ast.Nop
 import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.compiler.ast.ParameterExpression
+import java.nio.file.Path
 
 class CPrinter(val all: List<Expression>) {
 
@@ -238,12 +239,13 @@ ${map.keySet().joinToString("\n")})
                 val include = linkedListOf(predef)
                 for ((f, code) in map) {
                     val file = File(projOut, f)
-                    file.getParentFile().mkdirs()
+                    val parent = file.getParentFile()
+                    parent.mkdirs()
                     val header = /* f.endsWith(".h") */ true;
                     FileOutputStream(file).writer().buffered().use {
                         val pragma = if (header) "#pragma once" else ""
                         it.write("$pragma\n")
-                        it.appendln(include.map { "#include \"${it.getAbsolutePath()}\"" }.join("\n"))
+                        it.appendln(include.map { "#include \"${parent.toPath().relativize(it.toPath())}\"" }.join("\n"))
                         CPrinter(code).pprint(it)
                     }
                     if (header)
