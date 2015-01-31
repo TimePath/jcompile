@@ -220,7 +220,7 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                 projOut.mkdirs()
                 val predef = File(projOut, "progs.h")
                 FileOutputStream(predef).use {
-                    val predefs = javaClass<CPrinter>().getResourceAsStream("/com/timepath/quakec/compiler/transpiler/predefs.c")
+                    val predefs = javaClass<CPrinter>().getResourceAsStream("/com/timepath/quakec/compiler/transpiler/predefs.hpp")
                     predefs.copyTo(it)
                 }
                 val zipped = compiler.includes.map {

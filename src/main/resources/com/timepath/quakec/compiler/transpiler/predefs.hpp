@@ -60,16 +60,8 @@ struct vector {
         return self;
     }
 
-    vector operator*(const vector &other) {
-        return (vector) {x * other.x, y * other.y, z * other.z};
-    }
-
-    vector &operator*=(const vector &other) {
-        vector self = *this;
-        self.x *= other.x;
-        self.y *= other.y;
-        self.z *= other.z;
-        return self;
+    float operator*(const vector &other) {
+        return x * other.x + y * other.y + z * other.z;
     }
 
     vector operator/(const float other) {
@@ -84,9 +76,46 @@ struct vector {
         return self;
     }
 
+    explicit operator bool() {
+        return !(x == 0 && y == 0 && z == 0);
+    }
+
     bool operator==(const vector &other) {
         return x == other.x && y == other.y && z == other.z;
     }
+
+    bool operator!=(const vector &other) {
+        return !(x == other.x && y == other.y && z == other.z);
+    }
+
+    vector operator&(const vector &other) {
+        return (vector) {x & other, y & other, z & other};
+    }
+
+    vector &operator&=(const vector &other) {
+        vector self = *this;
+        self.x &= other.x;
+        self.y &= other.y;
+        self.z &= other.z;
+        return self;
+    }
+
+    vector operator|(const vector &other) {
+        return (vector) {x | other, y | other, z | other};
+    }
+
+    vector &operator|=(const vector &other) {
+        vector self = *this;
+        self.x |= other.x;
+        self.y |= other.y;
+        self.z |= other.z;
+        return self;
+    }
+
+    vector operator~() {
+        return (vector) {~x, ~y, ~z};
+    }
+
 };
 
 vector operator*(float f, const vector &other) const {
