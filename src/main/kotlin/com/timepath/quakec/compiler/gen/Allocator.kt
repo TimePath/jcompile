@@ -22,9 +22,9 @@ class Allocator(val opts: CompilerOptions) {
     inner class AllocationMap {
 
         inner data class Entry(val ref: Int,
-                                  val value: Value,
-                                  /* Privately set */
-                                  var name: String) {
+                               val value: Value,
+                /* Privately set */
+                               var name: String) {
 
             fun tag(name: String) {
                 if (!this.name.split('|').contains(name))

@@ -545,11 +545,25 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         return listOf(MethodCallExpression(left, right ?: emptyList(), ctx = ctx))
     }
 
+    val vecRegex = Pattern.compile("(.+)_([xyz])$")
+
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.Identifier()
-        val fieldRef = EntityFieldReference(right.getText(), ctx = ctx)
-        return listOf(MemberExpression(left, fieldRef, ctx = ctx))
+        val text = right.getText()
+        val matcher = vecRegex.matcher(text)
+        return listOf(when {
+            matcher.matches() -> {
+                val fieldRef = EntityFieldReference(matcher.group(1))
+                val l = MemberExpression(left, fieldRef)
+                MemberExpression(l, ReferenceExpression(matcher.group(2)), ctx = ctx)
+            }
+            else -> {
+                val fieldRef = EntityFieldReference(text)
+                MemberExpression(left, fieldRef, ctx = ctx)
+            }
+        })
+
     }
 
     override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext): List<Expression> {
