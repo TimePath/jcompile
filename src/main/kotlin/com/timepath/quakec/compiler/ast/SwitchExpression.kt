@@ -20,6 +20,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
         val default = linkedListOf<Expression>()
         val cases = LoopExpression(checkBefore = false, predicate = ConstantExpression(0), body = BlockExpression(transform {
             when (it) {
+                is SwitchExpression -> it.reduce()
                 is Case -> {
                     val expr = it.expr
                     fun String.sanitizeLabel(): String = "__switch_${replaceAll("[^a-zA-Z_0-9]", "_")}"

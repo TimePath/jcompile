@@ -11,6 +11,10 @@ void test(float n) {
             break;
         case 3:
             glob = -3;
+            switch (glob) {
+                case -3: break;
+                default: glob++;
+            }
             return;
         default:
             glob = -1;
