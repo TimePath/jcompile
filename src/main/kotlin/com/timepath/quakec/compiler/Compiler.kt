@@ -31,6 +31,8 @@ public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
         val logger = Logging.new()
         val debugThreads = true
         val debugPP = false
+        val writeAST = false
+        val writeParse = false
         fun preview(reader: Reader): Reader {
             if (debugPP) {
                 val area = JTextArea()
@@ -103,47 +105,50 @@ public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
         includes.add(Include("predefs.qc", "<predefs>", InputLexerSource(predefs)))
     }
 
+    val exec = if (debugThreads)
+        Executors.newSingleThreadExecutor()
+    else
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
+
+    inline fun debug(s: String, predicate: Boolean, inlineOptions(InlineOption.ONLY_LOCAL_RETURN) action: () -> Unit) {
+        if (predicate) {
+            exec.submit {
+                try {
+                    action()
+                } catch (e: Throwable) {
+                    logger.log(Level.SEVERE, "Error $s", e)
+                }
+            }
+        }
+    }
+
     fun ast(): List<List<Expression>> {
-        val exec = if (debugThreads)
-            Executors.newSingleThreadExecutor()
-        else
-            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
         val roots = linkedListOf<List<Expression>>()
         val types = TypeRegistry()
-        includes.forEach { include ->
+        for (include in includes) {
             logger.info(include.path)
             preprocessor.addInput(include.source)
             val stream = ANTLRInputStream(preview(CppReader(preprocessor)))
             stream.name = include.path
             val tree = parse(stream)
-            val walker = ParseTreeWalker.DEFAULT
-            exec.submit {
-                try {
-                    val listener = TreePrinterListener(rules!!)
-                    walker.walk(listener, tree)
-                    File("out", include.path + ".lisp").let {
-                        it.getParentFile().mkdirs()
-                        it.writeText(listener.toString())
-                    }
-                } catch (e: Throwable) {
-                    logger.log(Level.SEVERE, "Error printing parse tree", e)
+            val root = tree.accept(ASTTransform(types)).single()
+            roots.add(root.children)
+            debug("printing parse tree", writeParse) {
+                val listener = TreePrinterListener(rules!!)
+                ParseTreeWalker.DEFAULT.walk(listener, tree)
+                File("out", include.path + ".lisp").let {
+                    it.getParentFile().mkdirs()
+                    val s = listener.toString()
+                    it.writeText(s)
                 }
             }
-            //            exec.submit {
-            try {
-                val root = tree.accept(ASTTransform(types)).single()
+            debug("printing AST", writeAST) {
                 File("out", include.path + ".xml").let {
                     it.getParentFile().mkdirs()
                     val s = root.toStringRecursive()
                     it.writeText(s)
                 }
-                //                    synchronized(roots) {
-                roots.add(root.children)
-                //                    }
-            } catch (e: Throwable) {
-                logger.log(Level.SEVERE, "Error printing syntax tree", e)
             }
-            //            }
         }
         exec.shutdown()
         exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
@@ -167,9 +172,9 @@ fun time(name: String, action: () -> Unit) {
 fun main(args: Array<String>) {
     val opts = CompilerOptions()
     val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
-    time("Total time")
-    {
+    time("Total time") {
         [data] class Project(val root: String, val define: String, val out: String)
+
         val defs = listOf(
                 Project("menu", "MENUQC", "menuprogs.dat"),
                 Project("client", "CSQC", "csprogs.dat"),
@@ -185,8 +190,7 @@ fun main(args: Array<String>) {
             }
         }
     }
-    time("GMQCC tests")
-    {
+    time("GMQCC tests") {
         val gmqcc = Compiler(opts)
                 .define("GMQCC")
                 .define("__STD_GMQCC__")
@@ -204,7 +208,7 @@ fun main(args: Array<String>) {
             }
         }
         include { it.name.endsWith(".qh") }
-//        include { it.name.endsWith(".qc") }
+        //        include { it.name.endsWith(".qc") }
         gmqcc.include(File("$xonotic/gmqcc/tests/fieldparams.qc"))
         gmqcc.compile()
     }
