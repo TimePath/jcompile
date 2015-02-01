@@ -34,6 +34,9 @@ open class DeclarationExpression(id: String,
                 "type" to type)
 
     override fun generate(ctx: Generator): List<IR> {
+        if (id in ctx.allocator.scope.peek().lookup) {
+            Generator.logger.warning("redeclaring $id")
+        }
         val global = ctx.allocator.allocateReference(id, value?.evaluate())
         return listOf(ReferenceIR(global.ref))
     }
