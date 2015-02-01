@@ -49,6 +49,7 @@ class CPrinter(val all: List<Expression>, val ns: String) {
     }
 
     fun Type.pprint(id: kotlin.String? = null, indirection: Int = 0): String {
+        val cname = this.toString()
         val stars = "*".repeat(indirection)
         return when (this) {
             is Type.Array -> {
@@ -64,8 +65,8 @@ class CPrinter(val all: List<Expression>, val ns: String) {
             }.joinToString(", ")})"
             else -> {
                 when (id) {
-                    null -> "$this$stars"
-                    else -> "$this $stars$id"
+                    null -> "$cname$stars"
+                    else -> "$cname $stars$id"
                 }
             }
         }
@@ -243,6 +244,8 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
 project(${project.root})
 add_executable(${project.root} ${predef.getName()}
 ${map.keySet().joinToString("\n")})
+# target_compile_features(${project.root} PRIVATE cxx_explicit_conversions)
+add_definitions(-std=c++11)
 """)
                 }
                 val include = linkedListOf(predef)

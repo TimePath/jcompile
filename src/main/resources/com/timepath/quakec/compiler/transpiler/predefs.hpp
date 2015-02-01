@@ -12,16 +12,16 @@ enum component {
 struct vector {
     float x, y, z;
 
-    float operator[](component c) {
+    float &operator[](component c) {
         switch (c) {
-            case ::x:
+            case component::x:
                 return x;
-            case ::y:
+            case component::y:
                 return y;
-            case ::z:
+            case component::z:
                 return z;
         }
-        return 0;
+        return x;
     }
 
     vector operator+(const vector &other) {
@@ -33,7 +33,7 @@ struct vector {
         self.x += other.x;
         self.y += other.y;
         self.z += other.z;
-        return self;
+        return *this;
     }
 
     vector operator-(const vector &other) {
@@ -45,7 +45,7 @@ struct vector {
         self.x -= other.x;
         self.y -= other.y;
         self.z -= other.z;
-        return self;
+        return *this;
     }
 
     vector operator*(const float other) {
@@ -57,7 +57,7 @@ struct vector {
         self.x *= other;
         self.y *= other;
         self.z *= other;
-        return self;
+        return *this;
     }
 
     float operator*(const vector &other) {
@@ -73,7 +73,7 @@ struct vector {
         self.x /= other;
         self.y /= other;
         self.z /= other;
-        return self;
+        return *this;
     }
 
     explicit operator bool() {
@@ -89,36 +89,44 @@ struct vector {
     }
 
     vector operator&(const vector &other) {
-        return (vector) {x & other, y & other, z & other};
+        return (vector) {
+                        (float) (((int) x) & ((int) other.x)),
+                        (float) (((int) y) & ((int) other.y)),
+                        (float) (((int) z) & ((int) other.z))
+                        };
     }
 
     vector &operator&=(const vector &other) {
         vector self = *this;
-        self.x &= other.x;
-        self.y &= other.y;
-        self.z &= other.z;
-        return self;
+        self.x = (float) ((int) self.x & (int) other.x);
+        self.y = (float) ((int) self.y & (int) other.y);
+        self.z = (float) ((int) self.z & (int) other.z);
+        return *this;
     }
 
     vector operator|(const vector &other) {
-        return (vector) {x | other, y | other, z | other};
+        return (vector) {
+                        (float) (((int) x) | ((int) other.x)),
+                        (float) (((int) y) | ((int) other.y)),
+                        (float) (((int) z) | ((int) other.z))
+                        };
     }
 
     vector &operator|=(const vector &other) {
         vector self = *this;
-        self.x |= other.x;
-        self.y |= other.y;
-        self.z |= other.z;
-        return self;
+        self.x = (float) ((int) self.x | (int) other.x);
+        self.y = (float) ((int) self.y | (int) other.y);
+        self.z = (float) ((int) self.z | (int) other.z);
+        return *this;
     }
 
     vector operator~() {
-        return (vector) {~x, ~y, ~z};
+        return (vector) {(float)~(int) x, (float)~(int) y, (float)~(int) z};
     }
 
 };
 
-vector operator*(float f, const vector &other) const {
+vector operator*(float f, const vector &other) {
     return (vector) {f * other.x, f * other.y, f * other.z};
 }
 
@@ -126,7 +134,7 @@ struct entity {
 
     template<typename T>
     T &operator[](T *field) {
-        return T();
+        return *new T();
     }
 
     operator bool() {
