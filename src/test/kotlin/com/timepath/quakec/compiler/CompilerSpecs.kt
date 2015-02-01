@@ -11,6 +11,7 @@ import com.timepath.quakec.vm.Program
 import com.timepath.quakec.vm.ProgramData
 import org.intellij.lang.annotations.Language
 import org.jetbrains.spek.api.Spek
+import com.timepath.quakec.compiler.gen.Generator.ASM
 
 val opts = CompilerOptions()
 
@@ -59,12 +60,12 @@ class CompilerSpecs : Spek() {{
                     compare("AST", it.name + ".xml", actual)
                 }
                 var ctx: Generator?
-                var asm: List<IR>?
+                var asm: ASM?
                 it("should compile") {
                     logger.info("Compiling $it")
-                    ctx = Generator(compiler.opts, roots!!.flatMap { it })
-                    asm = ctx!!.generate()
-                    asm!!.map { ir ->
+                    ctx = Generator(compiler.opts)
+                    asm = ctx!!.generate(roots!!.flatMap { it })
+                    asm!!.ir.map { ir ->
                         if (ir.real)
                             ir.toString()
                         else
@@ -78,7 +79,7 @@ class CompilerSpecs : Spek() {{
                 }
                 it("should execute") {
                     logger.info("Executing $it")
-                    Program(ctx!!.generateProgs(asm!!)).exec()
+                    Program(asm!!.generateProgs()).exec()
                 }
             }
         }

@@ -31,12 +31,12 @@ class FunctionExpression(val id: String? = null,
         get() = mapOf("id" to id,
                 "type" to signature)
 
-    override fun generate(ctx: Generator): List<IR> {
-        if (id != null && id in ctx.allocator) {
+    override fun generate(gen: Generator): List<IR> {
+        if (id != null && id in gen.allocator) {
             Generator.logger.warning("redefining $id")
         }
 
-        val global = ctx.allocator.allocateFunction(id)
+        val global = gen.allocator.allocateFunction(id)
         val f = Function(
                 firstStatement = if (builtin == null)
                     0 // to be filled in later
@@ -45,19 +45,19 @@ class FunctionExpression(val id: String? = null,
                 firstLocal = 0,
                 numLocals = 0,
                 profiling = 0,
-                nameOffset = ctx.allocator.allocateString(id!!).ref,
+                nameOffset = gen.allocator.allocateString(id!!).ref,
                 fileNameOffset = 0,
                 numParams = 0,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
-        ctx.allocator.push(id)
+        gen.allocator.push(id)
         val params = with(linkedListOf<Expression>()) {
             params?.let { addAll(it) }
             vararg?.let { add(it) }
             this
         }
-        val genParams = params.flatMap { it.doGenerate(ctx) }
-        val children = children.flatMap { it.doGenerate(ctx) }
+        val genParams = params.flatMap { it.doGenerate(gen) }
+        val children = children.flatMap { it.doGenerate(gen) }
         run {
             // Calculate label jumps
             val labelIndices = linkedMapOf<String, Int>()
@@ -68,7 +68,7 @@ class FunctionExpression(val id: String? = null,
                         labelIndices[it.id] = i
                     }
                     it.instr == Instruction.GOTO && it.args[0] == 0 -> {
-                        jumpIndices[ctx.gotoLabels[it]] = i
+                        jumpIndices[gen.gotoLabels[it]] = i
                     }
                 }
                 if (it.real) i + 1 else i
@@ -84,7 +84,7 @@ class FunctionExpression(val id: String? = null,
                 + children
                 + IR(instr = Instruction.DONE)
                 + ReferenceIR(global.ref))
-        ctx.allocator.pop()
+        gen.allocator.pop()
         return list
     }
 }

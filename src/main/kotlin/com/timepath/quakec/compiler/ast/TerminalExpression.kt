@@ -15,12 +15,12 @@ open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) :
 
     override fun toString(): String = id
 
-    override fun generate(ctx: Generator): List<IR> {
-        if (id !in ctx.allocator) {
+    override fun generate(gen: Generator): List<IR> {
+        if (id !in gen.allocator) {
             Generator.logger.severe("unknown reference $id")
         }
         // FIXME: null references
-        val global = ctx.allocator[id]
+        val global = gen.allocator[id]
         return listOf(ReferenceIR(global?.ref ?: 0))
     }
 }
@@ -33,11 +33,11 @@ open class DeclarationExpression(id: String,
         get() = mapOf("id" to id,
                 "type" to type)
 
-    override fun generate(ctx: Generator): List<IR> {
-        if (id in ctx.allocator.scope.peek().lookup) {
+    override fun generate(gen: Generator): List<IR> {
+        if (id in gen.allocator.scope.peek().lookup) {
             Generator.logger.warning("redeclaring $id")
         }
-        val global = ctx.allocator.allocateReference(id, value?.evaluate())
+        val global = gen.allocator.allocateReference(id, value?.evaluate())
         return listOf(ReferenceIR(global.ref))
     }
 }
@@ -47,11 +47,11 @@ open class ParameterExpression(id: String,
                                val index: Int,
                                ctx: ParserRuleContext? = null) : DeclarationExpression(id, type, ctx = ctx) {
 
-    override fun generate(ctx: Generator): List<IR> {
+    override fun generate(gen: Generator): List<IR> {
         val memoryReference = MemoryReference(Instruction.OFS_PARAM(index))
         return with(linkedListOf<IR>()) {
-            addAll(super.generate(ctx))
-            addAll(BinaryExpression.Assign(ReferenceExpression(id), memoryReference).doGenerate(ctx))
+            addAll(super.generate(gen))
+            addAll(BinaryExpression.Assign(ReferenceExpression(id), memoryReference).doGenerate(gen))
             this
         }
     }
@@ -60,13 +60,13 @@ open class ParameterExpression(id: String,
 class StructDeclarationExpression(id: String,
                                   val struct: Type.Struct,
                                   ctx: ParserRuleContext? = null) : DeclarationExpression(id, struct, null, ctx) {
-    override fun generate(ctx: Generator): List<IR> {
+    override fun generate(gen: Generator): List<IR> {
         val fields: List<IR> = struct.fields.flatMap {
             it.value.declare("${id}_${it.key}", null).flatMap {
-                it.doGenerate(ctx)
+                it.doGenerate(gen)
             }
         }
-        val allocator = ctx.allocator
+        val allocator = gen.allocator
         allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!
         return fields
     }
@@ -79,7 +79,7 @@ class MemoryReference(val ref: Int, ctx: ParserRuleContext? = null) : Expression
 
     override fun toString(): String = "$$ref"
 
-    override fun generate(ctx: Generator): List<IR> {
+    override fun generate(gen: Generator): List<IR> {
         return listOf(ReferenceIR(ref))
     }
 }

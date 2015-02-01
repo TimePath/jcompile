@@ -16,12 +16,12 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
     var instr = Instruction.LOAD_FLOAT
 
     // TODO: arrays
-    override fun generate(ctx: Generator) = with(linkedListOf<IR>()) {
-        val genL = left.doGenerate(ctx)
+    override fun generate(gen: Generator) = with(linkedListOf<IR>()) {
+        val genL = left.doGenerate(gen)
         addAll(genL)
-        val genR = right.doGenerate(ctx)
+        val genR = right.doGenerate(gen)
         addAll(genR)
-        val out = ctx.allocator.allocateReference()
+        val out = gen.allocator.allocateReference()
         add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
         this
     }
@@ -33,5 +33,5 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
  */
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>(".", left, ConstantExpression(field), ctx) {
     // TODO: structs
-    override fun generate(ctx: Generator) = Type.handle(Type.Operation(op, Type.Entity, Type.String))(ctx, left, right)
+    override fun generate(gen: Generator) = Type.handle(Type.Operation(op, Type.Entity, Type.String))(gen, left, right)
 }

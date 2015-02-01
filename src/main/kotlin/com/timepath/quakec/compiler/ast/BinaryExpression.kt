@@ -17,7 +17,7 @@ abstract class BinaryExpression<L : Expression, R : Expression>(val op: String, 
 
     override fun toString(): String = "($left $op $right)"
 
-    override fun generate(ctx: Generator): List<IR> = Type.handle(Type.Operation(op, Type.Float, Type.Float))(ctx, left, right)
+    override fun generate(gen: Generator): List<IR> = Type.handle(Type.Operation(op, Type.Float, Type.Float))(gen, left, right)
 
     class Comma(left: rvalue, right: rvalue, ctx: ParserRuleContext? = null) : BinaryExpression<rvalue, rvalue>(",", left, right, ctx)
 

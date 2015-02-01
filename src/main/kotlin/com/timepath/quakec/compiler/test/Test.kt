@@ -62,12 +62,12 @@ fun main(args: Array<String>) {
 
     logger.info("=======")
 
-    val ctx = Generator(CompilerOptions(), root.children)
-    val asm = ctx.generate()
+    val gen = Generator(CompilerOptions())
+    val asm = gen.generate(root.children)
 
     logger.info("=======")
 
-    logger.info(ctx.allocator.toString())
+    logger.info(gen.allocator.toString())
 
     logger.info("=======")
 
@@ -75,7 +75,7 @@ fun main(args: Array<String>) {
 
     logger.info("=======")
 
-    asm.forEach {
+    asm.ir.forEach {
         if (it.real)
             logger.info(it.toString())
     }

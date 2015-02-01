@@ -156,8 +156,9 @@ public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
     }
 
     public fun compile(roots: List<List<Expression>> = ast()): ProgramData {
-        val ctx = Generator(opts, roots.flatMap { it })
-        return ctx.generateProgs()
+        val gen = Generator(opts)
+        val ir = gen.generate(roots.flatMap { it })
+        return ir.generateProgs()
     }
 }
 

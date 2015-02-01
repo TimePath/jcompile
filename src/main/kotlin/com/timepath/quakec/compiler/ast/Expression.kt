@@ -86,7 +86,7 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
         }
     }
 
-    open fun generate(ctx: Generator): List<IR> = emptyList()
+    open fun generate(gen: Generator): List<IR> = emptyList()
 
     /**
      * Used in constant folding

@@ -15,16 +15,16 @@ class LoopExpression(val predicate: Expression,
         add(body)
     }
 
-    override fun generate(ctx: Generator): List<IR> {
-        val genInit = initializer?.flatMap { it.doGenerate(ctx) }
+    override fun generate(gen: Generator): List<IR> {
+        val genInit = initializer?.flatMap { it.doGenerate(gen) }
 
-        val genPred = predicate.doGenerate(ctx)
+        val genPred = predicate.doGenerate(gen)
         val predCount = genPred.count { it.real }
 
-        val genBody = children.flatMap { it.doGenerate(ctx) }
+        val genBody = children.flatMap { it.doGenerate(gen) }
         val bodyCount = genBody.count { it.real }
 
-        val genUpdate = update?.flatMap { it.doGenerate(ctx) }
+        val genUpdate = update?.flatMap { it.doGenerate(gen) }
         val updateCount = genUpdate?.count { it.real } ?: 0
 
         val totalCount = bodyCount + updateCount + predCount

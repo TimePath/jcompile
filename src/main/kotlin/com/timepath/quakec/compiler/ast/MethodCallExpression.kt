@@ -25,12 +25,12 @@ class MethodCallExpression(val function: Expression,
 
     override fun toString(): String = "$function(${args.joinToString(", ")})"
 
-    override fun generate(ctx: Generator): List<IR> {
+    override fun generate(gen: Generator): List<IR> {
         // TODO: increase this
         if (args.size() > 8) {
             Generator.logger.warning("${function} takes ${args.size()} parameters")
         }
-        val args = args.take(8).map { it.doGenerate(ctx) }
+        val args = args.take(8).map { it.doGenerate(gen) }
         val instr = {(i: Int) ->
             Instruction.from(Instruction.CALL0.ordinal() + i)
         }
@@ -39,9 +39,9 @@ class MethodCallExpression(val function: Expression,
             val param = Instruction.OFS_PARAM(i++)
             IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
         }
-        val genF = function.doGenerate(ctx)
+        val genF = function.doGenerate(gen)
         val funcId = genF.last().ret
-        val global = ctx.allocator.allocateReference()
+        val global = gen.allocator.allocateReference()
         val ret = linkedListOf<IR>()
         ret.addAll(args.flatMap { it })
         ret.addAll(prepare)

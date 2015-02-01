@@ -10,12 +10,12 @@ class BlockExpression(add: List<Expression>? = null, ctx: ParserRuleContext? = n
             addAll(add)
         }
     }
-    override fun generate(ctx: Generator): List<IR> {
-        ctx.allocator.push("<block>")
+    override fun generate(gen: Generator): List<IR> {
+        gen.allocator.push("<block>")
         val list = children.flatMap {
-            it.doGenerate(ctx)
+            it.doGenerate(gen)
         }
-        ctx.allocator.pop()
+        gen.allocator.pop()
         return list
     }
 }

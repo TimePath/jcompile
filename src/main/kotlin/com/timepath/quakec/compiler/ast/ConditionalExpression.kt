@@ -32,20 +32,20 @@ class ConditionalExpression(val test: Expression,
 
     override fun toString(): String = "($test ? $pass : $fail)"
 
-    override fun generate(ctx: Generator): List<IR> {
+    override fun generate(gen: Generator): List<IR> {
         val ret = linkedListOf<IR>()
-        val genPred = test.doGenerate(ctx)
+        val genPred = test.doGenerate(gen)
         ret.addAll(genPred)
-        val genTrue = pass.doGenerate(ctx)
+        val genTrue = pass.doGenerate(gen)
         val trueCount = genTrue.count { it.real }
-        val genFalse = fail?.doGenerate(ctx)
+        val genFalse = fail?.doGenerate(gen)
         if (genFalse == null) {
             // No else, jump to the instruction after the body
             ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0)))
             ret.addAll(genTrue)
         } else {
             val falseCount = genFalse.count { it.real }
-            val temp = ctx.allocator.allocateReference()
+            val temp = gen.allocator.allocateReference()
             // The if body has a goto, include it in the count
             val jumpTrue = IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0))
             ret.add(jumpTrue)

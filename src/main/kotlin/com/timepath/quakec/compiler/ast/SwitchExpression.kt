@@ -16,10 +16,6 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
         addAll(add)
     }
 
-    override fun generate(ctx: Generator): List<IR> {
-        return reduce().doGenerate(ctx)
-    }
-
     override fun reduce(): Expression {
         val jumps = linkedListOf<Expression>()
         val default = linkedListOf<Expression>()
@@ -56,7 +52,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
         override val attributes: Map<String, Any?>
             get() = mapOf("id" to expr)
 
-        override fun generate(ctx: Generator): List<IR> {
+        override fun generate(gen: Generator): List<IR> {
             return listOf(CaseIR(expr))
         }
     }

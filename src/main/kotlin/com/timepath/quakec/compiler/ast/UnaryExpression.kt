@@ -15,7 +15,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
 
     override fun toString(): String = "($op $operand)"
 
-    override fun generate(ctx: Generator): List<IR> = Type.handle(Type.Operation(op, Type.Float))(ctx, operand, null)
+    override fun generate(gen: Generator): List<IR> = Type.handle(Type.Operation(op, Type.Float))(gen, operand, null)
 
     abstract class Post(op: String, operand: Expression, ctx: ParserRuleContext? = null) : UnaryExpression(op, operand, ctx) {
         override fun toString(): String = "($operand $op)"
