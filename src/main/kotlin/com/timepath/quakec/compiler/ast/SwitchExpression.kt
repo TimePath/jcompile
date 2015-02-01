@@ -1,11 +1,16 @@
 package com.timepath.quakec.compiler.ast
 
+import java.util.concurrent.atomic.AtomicInteger
 import com.timepath.quakec.compiler.gen.CaseIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
 
 class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    class object {
+        val uid = AtomicInteger()
+    }
 
     {
         addAll(add)
@@ -23,7 +28,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
                 is SwitchExpression -> it.reduce()
                 is Case -> {
                     val expr = it.expr
-                    fun String.sanitizeLabel(): String = "__switch_${replaceAll("[^a-zA-Z_0-9]", "_")}"
+                    fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replaceAll("[^a-zA-Z_0-9]", "_")}"
                     val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
                     val goto = GotoExpression(label)
                     if (expr == null) {
