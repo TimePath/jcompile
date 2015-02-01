@@ -31,7 +31,7 @@ import com.timepath.quakec.compiler.ast.Nop
 import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.compiler.ast.ParameterExpression
 
-class CPrinter(val all: List<Expression>) {
+class CPrinter(val all: List<Expression>, val ns: String) {
 
     var depth: Int = 0
 
@@ -154,7 +154,7 @@ class CPrinter(val all: List<Expression>) {
             is MemberExpression -> {
                 val isEntity = true
                 when (isEntity) {
-                    true -> "${left.pprint()}[::${field}]"
+                    true -> "${left.pprint()}[$ns::${field}]"
                     else -> "${left.pprint()}.${field}"
                 }
             }
@@ -195,6 +195,7 @@ val subprojects = listOf(
         , Project("server", "SVQC", "progs.c")
 )
 val out = File("out")
+val ns = "xon"
 
 fun time(name: String, action: () -> Unit) {
     val start = Date()
@@ -224,9 +225,12 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                 val projOut = File(out, project.out)
                 projOut.mkdirs()
                 val predef = File(projOut, "progs.h")
-                FileOutputStream(predef).use {
+                FileOutputStream(predef).writer().buffered().use {
                     val predefs = javaClass<CPrinter>().getResourceAsStream("/com/timepath/quakec/compiler/transpiler/predefs.hpp")
-                    predefs.copyTo(it)
+                    it.write("")
+                    it.appendln("namespace $ns {")
+                    predefs.reader().buffered().copyTo(it)
+                    it.appendln("}")
                 }
                 val zipped = compiler.includes.map {
                     sourceRoot.getParentFile().relativePath(File(it.path))
@@ -251,7 +255,9 @@ ${map.keySet().joinToString("\n")})
                         val pragma = if (header) "#pragma once" else ""
                         it.write("$pragma\n")
                         it.appendln(include.map { "#include \"${parent.toPath().relativize(it.toPath())}\"" }.join("\n"))
-                        CPrinter(code).pprint(it)
+                        it.appendln("namespace $ns {")
+                        CPrinter(code, ns).pprint(it)
+                        it.appendln("}")
                     }
                     if (header)
                         include.add(File(projOut, f))
