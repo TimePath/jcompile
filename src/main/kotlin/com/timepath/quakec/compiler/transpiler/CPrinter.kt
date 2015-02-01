@@ -53,7 +53,7 @@ class CPrinter(val all: List<Expression>) {
         return when (this) {
             is Type.Array -> {
                 val expression = when (this.sizeExpr) {
-                    is ConstantExpression -> this.sizeExpr.value.value.toString()
+                    is ConstantExpression -> (this.sizeExpr.value.value as Float).toInt().toString()
                     else -> this.sizeExpr.toString()
                 }
                 "${type.pprint()} $id[$expression]"
