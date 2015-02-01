@@ -8,6 +8,7 @@ entity test() {
 
 void main() {
     e = spawn();
+    print(ftos(e.f));
     test().f += 7;
     print(ftos(e.f));
     print(ftos(glob));

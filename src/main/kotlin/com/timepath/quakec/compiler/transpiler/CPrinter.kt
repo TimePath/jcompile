@@ -9,7 +9,6 @@ import java.io.FileOutputStream
 import java.util.Date
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.Type
-import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.ast.BinaryExpression
 import com.timepath.quakec.compiler.ast.BlockExpression
 import com.timepath.quakec.compiler.ast.BreakStatement
@@ -20,20 +19,17 @@ import com.timepath.quakec.compiler.ast.DeclarationExpression
 import com.timepath.quakec.compiler.ast.Expression
 import com.timepath.quakec.compiler.ast.FunctionExpression
 import com.timepath.quakec.compiler.ast.GotoExpression
+import com.timepath.quakec.compiler.ast.IndexExpression
 import com.timepath.quakec.compiler.ast.LabelExpression
 import com.timepath.quakec.compiler.ast.LoopExpression
 import com.timepath.quakec.compiler.ast.MemberExpression
-import com.timepath.quakec.compiler.ast.MemoryReference
 import com.timepath.quakec.compiler.ast.MethodCallExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
 import com.timepath.quakec.compiler.ast.ReturnStatement
-import com.timepath.quakec.compiler.ast.SwitchExpression
-import com.timepath.quakec.compiler.ast.SwitchExpression.Case
 import com.timepath.quakec.compiler.ast.UnaryExpression
 import com.timepath.quakec.compiler.ast.Nop
 import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.compiler.ast.ParameterExpression
-import java.nio.file.Path
 
 class CPrinter(val all: List<Expression>) {
 
@@ -152,7 +148,16 @@ class CPrinter(val all: List<Expression>) {
                 returnValue != null -> "return ${returnValue.pprint()}"
                 else -> "return"
             }
-            is MemberExpression -> "${left.pprint()}[${right.pprint()}]"
+            is IndexExpression -> {
+                "${left.pprint()}[${right.pprint()}]"
+            }
+            is MemberExpression -> {
+                val isEntity = true
+                when (isEntity) {
+                    true -> "${left.pprint()}[::${field}]"
+                    else -> "${left.pprint()}.${field}"
+                }
+            }
             is BinaryExpression<*, *> -> if (depth > 0) "(${when (left) {
                 is DeclarationExpression -> left.id
                 else -> left.pprint()

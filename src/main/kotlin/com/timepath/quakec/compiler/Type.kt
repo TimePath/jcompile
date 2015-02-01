@@ -7,9 +7,10 @@ import com.timepath.quakec.compiler.ast.ConstantExpression
 import com.timepath.quakec.compiler.ast.DeclarationExpression
 import com.timepath.quakec.compiler.ast.Expression
 import com.timepath.quakec.compiler.ast.FunctionExpression
-import com.timepath.quakec.compiler.ast.MemberExpression
+import com.timepath.quakec.compiler.ast.IndexExpression
 import com.timepath.quakec.compiler.ast.MemoryReference
 import com.timepath.quakec.compiler.ast.MethodCallExpression
+import com.timepath.quakec.compiler.ast.MemberExpression
 import com.timepath.quakec.compiler.ast.ParameterExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
 import com.timepath.quakec.compiler.ast.ReturnStatement
@@ -17,6 +18,7 @@ import com.timepath.quakec.compiler.ast.StructDeclarationExpression
 import com.timepath.quakec.compiler.ast.UnaryExpression
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
+import com.timepath.quakec.compiler.gen.ReferenceIR
 
 abstract class Type {
 
@@ -30,7 +32,7 @@ abstract class Type {
         }
 
         fun handle(operation: Operation): Type.OperationHandler {
-            val primary = Float.ops[operation]
+            val primary = operation.left.ops[operation]
             if (primary != null) {
                 return primary
             }
@@ -74,16 +76,21 @@ abstract class Type {
     BinaryExpression<Expression, Expression>? = { left, right -> null }) : OperationHandler({ gen, left, right ->
         with(linkedListOf<IR>()) {
             val lvalue = when (left) {
-                is MemberExpression -> {
-                    // make a copy to avoid changing the right half of the assignment
-                    val special = MemberExpression(left.left, left.right)
-                    special.instr = Instruction.ADDRESS
-                    special
+                is IndexExpression, is MemberExpression -> {
+                    with(left as BinaryExpression<*, *>) {
+                        // make a copy to avoid changing the right half of the assignment
+                        val special = IndexExpression(left.left, when(left) {
+                            is MemberExpression -> ConstantExpression(0) // TODO: names to fields
+                            else -> left.right
+                        })
+                        special.instr = Instruction.ADDRESS
+                        special
+                    }
                 }
                 else -> left
             }
             val realInstr = when {
-                lvalue is MemberExpression -> Instruction.STOREP_FLOAT // TODO
+                lvalue is IndexExpression -> Instruction.STOREP_FLOAT // TODO
                 else -> instr
             }
             val genLeft = lvalue.doGenerate(gen)
@@ -282,7 +289,11 @@ abstract class Type {
 
     object Entity : Pointer() {
         override val ops = mapOf(
-                Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_ENT)
+                Operation("=", this, this) to DefaultAssignHandler(Instruction.STORE_ENT),
+                Operation(".", this, String) to OperationHandler { gen, left, right ->
+                    // TODO: names to fields
+                    ConstantExpression(0).doGenerate(gen)
+                }
         )
 
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {

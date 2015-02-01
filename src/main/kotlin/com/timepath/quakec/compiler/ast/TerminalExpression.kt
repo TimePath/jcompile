@@ -7,6 +7,7 @@ import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
+// TODO: namespace
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override val attributes: Map<String, Any>
@@ -21,12 +22,6 @@ open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) :
         // FIXME: null references
         val global = ctx.allocator[id]
         return listOf(ReferenceIR(global?.ref ?: 0))
-    }
-}
-
-class EntityFieldReference(id: String, ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
-    override fun generate(ctx: Generator): List<IR> {
-        return listOf(ReferenceIR(0)) // TODO: field by name
     }
 }
 

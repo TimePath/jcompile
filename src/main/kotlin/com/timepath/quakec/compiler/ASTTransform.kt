@@ -545,39 +545,52 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         return listOf(MethodCallExpression(left, right ?: emptyList(), ctx = ctx))
     }
 
-    val vecRegex = Pattern.compile("(.+)_([xyz])$")
-
+    /**
+     * static:
+     * struct.field
+     */
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.Identifier()
         val text = right.getText()
+        val legacyVectors = true
+        val vecFields = listOf("x", "y", "z")
+        val vecRegex = Pattern.compile("(.+)_(${vecFields.join("|")})$")
         val matcher = vecRegex.matcher(text)
         return listOf(when {
-            matcher.matches() -> {
-                val fieldRef = EntityFieldReference(matcher.group(1))
-                val l = MemberExpression(left, fieldRef)
-                MemberExpression(l, ReferenceExpression(matcher.group(2)), ctx = ctx)
+            legacyVectors && matcher.matches() -> {
+                // `ent.vec_x` -> `ent.vec.x`
+                // hides similarly named fields, but so be it
+                val vector = matcher.group(1)
+                val component = matcher.group(2)
+                MemberExpression(MemberExpression(left, vector), component, ctx = ctx)
             }
             else -> {
-                val fieldRef = EntityFieldReference(text)
-                MemberExpression(left, fieldRef, ctx = ctx)
+                MemberExpression(left, text, ctx = ctx)
             }
         })
-
     }
 
+    /**
+     * dynamic:
+     * entity.(field)
+     */
     override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.expression().accept(this).single()
         // TODO
-        return listOf(MemberExpression(left, right, ctx = ctx))
+        return listOf(IndexExpression(left, right, ctx = ctx))
     }
 
+    /**
+     * dynamic:
+     * array[index]
+     */
     override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
         val right = ctx.expression().accept(this).single()
         // TODO
-        return listOf(MemberExpression(left, right, ctx = ctx))
+        return listOf(IndexExpression(left, right, ctx = ctx))
     }
 
     override fun visitPostfixIncr(ctx: QCParser.PostfixIncrContext): List<Expression> {
