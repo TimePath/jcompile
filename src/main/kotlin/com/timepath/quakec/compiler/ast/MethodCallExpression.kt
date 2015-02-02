@@ -5,6 +5,7 @@ import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
 
 class MethodCallExpression(val function: Expression,
                    add: List<Expression>? = null,
@@ -15,6 +16,8 @@ class MethodCallExpression(val function: Expression,
             addAll(add)
         }
     }
+
+    override fun type(gen: Generator): Type = (function.type(gen) as Type.Function).type
 
     val args: List<Expression> by Delegates.lazy {
         children.filterIsInstance<Expression>()
@@ -41,7 +44,7 @@ class MethodCallExpression(val function: Expression,
         }
         val genF = function.doGenerate(gen)
         val funcId = genF.last().ret
-        val global = gen.allocator.allocateReference()
+        val global = gen.allocator.allocateReference(type = type(gen))
         val ret = linkedListOf<IR>()
         ret.addAll(args.flatMap { it })
         ret.addAll(prepare)

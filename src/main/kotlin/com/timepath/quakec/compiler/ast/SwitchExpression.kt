@@ -5,8 +5,11 @@ import com.timepath.quakec.compiler.gen.CaseIR
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
 
 class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    override fun type(gen: Generator) = test.type(gen)
 
     class object {
         val uid = AtomicInteger()
@@ -48,6 +51,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
              */
             val expr: Expression?,
             ctx: ParserRuleContext? = null) : Expression(ctx) {
+        override fun type(gen: Generator) = expr?.type(gen) ?: Type.Void
 
         override val attributes: Map<String, Any?>
             get() = mapOf("id" to expr)

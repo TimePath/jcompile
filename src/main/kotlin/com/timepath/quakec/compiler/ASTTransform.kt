@@ -142,7 +142,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val enum = ctx.enumSpecifier()
             return enum.enumeratorList().enumerator().map {
                 val id = it.enumerationConstant().getText()
-                Type.Float.declare(id).single()
+                Type.Int.declare(id).single()
             }
         }
         val typedef = ctx.declarationSpecifiers().declarationSpecifier().firstOrNull { it.storageClassSpecifier()?.getText() == "typedef" } != null

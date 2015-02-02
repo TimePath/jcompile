@@ -1,4 +1,4 @@
-float glob1, glob1;
+float glob1, glob2;
 void main() {
     glob1 = 1;
     glob2 = 2;

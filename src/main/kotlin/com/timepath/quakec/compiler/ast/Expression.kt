@@ -1,11 +1,14 @@
 package com.timepath.quakec.compiler.ast
 
+import com.timepath.quakec.compiler.Type
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.quakec.compiler.Value
 
 abstract class Expression(val ctx: ParserRuleContext? = null) {
+
+    abstract fun type(gen: Generator): Type
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure
@@ -107,5 +110,7 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 /**
  * Lonely semicolon
  */
-class Nop(ctx: ParserRuleContext? = null) : Expression(ctx)
+class Nop(ctx: ParserRuleContext? = null) : Expression(ctx) {
+    override fun type(gen: Generator): Type = throw UnsupportedOperationException()
+}
 

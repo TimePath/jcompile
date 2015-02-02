@@ -1,11 +1,12 @@
 package com.timepath.quakec.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
-import com.timepath.quakec.vm.Instruction
 import com.timepath.quakec.compiler.gen.ReferenceIR
-import com.timepath.quakec.compiler.Value
+import com.timepath.quakec.vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 
 class ConditionalExpression(val test: Expression,
                             val expression: Boolean,
@@ -18,6 +19,14 @@ class ConditionalExpression(val test: Expression,
         add(pass)
         if (fail != null) {
             add(fail)
+        }
+    }
+
+    override fun type(gen: Generator): Type {
+        val type = pass.type(gen)
+        return when (fail) {
+            null -> Type.Void // Type.Nullable(type)
+            else -> type
         }
     }
 
@@ -45,7 +54,7 @@ class ConditionalExpression(val test: Expression,
             ret.addAll(genTrue)
         } else {
             val falseCount = genFalse.count { it.real }
-            val temp = gen.allocator.allocateReference()
+            val temp = gen.allocator.allocateReference(type = type(gen))
             // The if body has a goto, include it in the count
             val jumpTrue = IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0))
             ret.add(jumpTrue)

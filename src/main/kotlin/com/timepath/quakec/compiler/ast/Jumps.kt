@@ -4,8 +4,11 @@ import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
 
 class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
+    override fun type(gen: Generator) = throw UnsupportedOperationException()
+
     override val attributes: Map<String, Any?>
         get() = mapOf("label" to id)
 
@@ -28,6 +31,9 @@ class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = nu
             add(returnValue)
         }
     }
+
+    override fun type(gen: Generator) = returnValue?.type(gen) ?: Type.Void
+
     override fun generate(gen: Generator): List<IR> {
         val genRet = returnValue?.doGenerate(gen)
         val ret = linkedListOf<IR>()
@@ -41,8 +47,10 @@ class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = nu
     }
 
 }
+
 // TODO: on labels
 class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
+    override fun type(gen: Generator) = throw UnsupportedOperationException()
 
     override fun toString(): String = "continue"
 
@@ -51,7 +59,9 @@ class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
         return listOf(IR(Instruction.GOTO, array(0, 0, 0)))
     }
 }
+
 class BreakStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
+    override fun type(gen: Generator) = throw UnsupportedOperationException()
 
     override fun toString(): String = "break"
 

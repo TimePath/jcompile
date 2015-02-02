@@ -27,6 +27,8 @@ class FunctionExpression(val id: String? = null,
         }
     }
 
+    override fun type(gen: Generator) = signature
+
     override val attributes: Map<String, Any?>
         get() = mapOf("id" to id,
                 "type" to signature)
@@ -36,7 +38,7 @@ class FunctionExpression(val id: String? = null,
             Generator.logger.warning("redefining $id")
         }
 
-        val global = gen.allocator.allocateFunction(id)
+        val global = gen.allocator.allocateFunction(id, type = type(gen))
         val f = Function(
                 firstStatement = if (builtin == null)
                     0 // to be filled in later

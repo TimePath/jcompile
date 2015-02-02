@@ -4,16 +4,19 @@ import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
 
 class LoopExpression(val predicate: Expression,
-           body: Expression,
-           val checkBefore: Boolean = true,
-           val initializer: List<Expression>? = null,
-           val update: List<Expression>? = null,
-           ctx: ParserRuleContext? = null) : Expression(ctx) {
+                     body: Expression,
+                     val checkBefore: Boolean = true,
+                     val initializer: List<Expression>? = null,
+                     val update: List<Expression>? = null,
+                     ctx: ParserRuleContext? = null) : Expression(ctx) {
     {
         add(body)
     }
+
+    override fun type(gen: Generator) = throw UnsupportedOperationException()
 
     override fun generate(gen: Generator): List<IR> {
         val genInit = initializer?.flatMap { it.doGenerate(gen) }

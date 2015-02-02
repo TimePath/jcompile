@@ -1,22 +1,21 @@
-#define ARRAY_COMPONENT(name, i, v)                                                         \
-    float name##_##i = v;                                                                   \
-    float name##_access_##i(bool mode, float value##i) {                                    \
+#define ARRAY_COMPONENT(type, name, i, v)                                                   \
+    type name##_##i = v;                                                                    \
+    type name##_access_##i(bool mode, type value##i) {                                      \
         return mode ? name##_##i = value##i : name##_##i;                                   \
     }
 
-#define ARRAY(name, size)                                                                   \
-    float name##_size = size;                                                               \
-    float(bool, float) name##_access(float index) {                                         \
+#define ARRAY(type, name, size)                                                             \
+    type name##_size = size;                                                                \
+    type(bool, type) name##_access(type index) {                                            \
       /*if (index < 0) index += name##_size;                                                \
         if (index > name##_size) return 0;*/                                                \
-        float(bool, float) name##_access_this = name##_access + *(1 + index);               \
-        return name##_access_this;                                                          \
+        return *(&name##_access + 1 + index);                                               \
     }
 
-ARRAY(array, 256)
+ARRAY(float, array, 2)
 #include <boost/preprocessor/repetition/repeat.hpp>
-#define DECL(z, n, name) ARRAY_COMPONENT(name, n, n)
-BOOST_PP_REPEAT(256, DECL, array)
+#define DECL(z, n, name) ARRAY_COMPONENT(float, name, n, n)
+BOOST_PP_REPEAT(2, DECL, array)
 
 void main() {
     for(float f = 0; f < array_size; ++f) {

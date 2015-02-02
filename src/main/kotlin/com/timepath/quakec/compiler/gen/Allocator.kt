@@ -4,11 +4,11 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Stack
-import java.util.regex.Pattern
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.gen.Allocator.AllocationMap.Entry
+import com.timepath.quakec.compiler.Type
 
 class Allocator(val opts: CompilerOptions) {
 
@@ -21,10 +21,12 @@ class Allocator(val opts: CompilerOptions) {
      */
     inner class AllocationMap {
 
-        inner data class Entry(val ref: Int,
-                               val value: Value,
-                /* Privately set */
-                               var name: String) {
+        inner data class Entry(
+                /** Privately set */
+                var name: String,
+                val ref: Int,
+                val value: Value,
+                val type: Type) {
 
             fun tag(name: String) {
                 if (!this.name.split('|').contains(name))
@@ -45,7 +47,7 @@ class Allocator(val opts: CompilerOptions) {
         val insideFunc: Boolean
             get() = scope.size() >= 3
 
-        fun allocate(id: String, ref: Int, value: Value?): Entry {
+        fun allocate(id: String, ref: Int, value: Value?, type: Type): Entry {
             val valueOrDefault = value ?: Value(null)
             // only consider uninitialized local references for now
             if (opts.scopeFolding && insideFunc && !free.isEmpty() && valueOrDefault.value == null) {
@@ -55,7 +57,7 @@ class Allocator(val opts: CompilerOptions) {
                 e.tag(id)
                 return e
             }
-            val e = Entry(ref, valueOrDefault, id)
+            val e = Entry(id, ref, valueOrDefault, type)
             pool.add(e)
             if (!scope.empty() && valueOrDefault.value == null) {
                 scope.peek().add(e)
@@ -121,7 +123,7 @@ class Allocator(val opts: CompilerOptions) {
 
     {
         push("<builtin>")
-        allocateReference("_") // TODO: not really a function
+        allocateReference("_", Type.Function(Type.String, listOf(Type.String))) // TODO: not really a function
     }
 
     private inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
@@ -150,12 +152,12 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Return the index to a constant referring to this function
      */
-    fun allocateFunction(id: String? = null): Entry {
+    fun allocateFunction(id: String? = null, type: Type.Function): Entry {
         val name = id ?: "fun${funCounter++}"
         val i = functions.size()
         // index the function will have
-        val function = functions.allocate(name, i, null)
-        val const = allocateConstant(Value(function.ref), "fun($name)")
+        val function = functions.allocate(name, i, null, type)
+        val const = allocateConstant(Value(function.ref), type, "fun($name)")
         scope.peek().lookup[name] = const
         return const
     }
@@ -165,10 +167,10 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Reserve space for this variable and add its name to the current scope
      */
-    fun allocateReference(id: String? = null, value: Value? = null): Entry {
+    fun allocateReference(id: String? = null, type: Type, value: Value? = null): Entry {
         val name = id ?: "ref${refCounter++}"
         val i = opts.userStorageStart + (references.size() + constants.size())
-        val entry = references.allocate(name, i, value)
+        val entry = references.allocate(name, i, value, type)
         scope.peek().lookup[name] = entry
         return entry
     }
@@ -176,10 +178,10 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Reserve space for this constant
      */
-    fun allocateConstant(value: Value, id: String? = null): Entry {
+    fun allocateConstant(value: Value, type: Type, id: String? = null): Entry {
         if (value.value is String) {
             val string = allocateString(value.value)
-            return allocateConstant(Value(string.ref), "str(${string.name})")
+            return allocateConstant(Value(string.ref), Type.String, "str(${string.name})")
         }
         val name: String = when {
             id != null -> id
@@ -197,7 +199,7 @@ class Allocator(val opts: CompilerOptions) {
             return existing
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
-        return constants.allocate(name, i, value)
+        return constants.allocate(name, i, value, type)
     }
 
     private var stringCounter = 0
@@ -211,7 +213,7 @@ class Allocator(val opts: CompilerOptions) {
         }
         val i = stringCounter
         stringCounter += name.length() + 1
-        return strings.allocate(name, i, null)
+        return strings.allocate(name, i, null, Type.String)
     }
 
     override fun toString(): String {

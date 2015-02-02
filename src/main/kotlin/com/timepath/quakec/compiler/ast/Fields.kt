@@ -10,18 +10,19 @@ import com.timepath.quakec.compiler.Type
 /**
  * dynamic:
  * array[index], entity.(field)
+ *
+ * TODO: arrays
  */
 class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>("[]", left, right, ctx) {
 
     var instr = Instruction.LOAD_FLOAT
 
-    // TODO: arrays
     override fun generate(gen: Generator) = with(linkedListOf<IR>()) {
         val genL = left.doGenerate(gen)
         addAll(genL)
         val genR = right.doGenerate(gen)
         addAll(genR)
-        val out = gen.allocator.allocateReference()
+        val out = gen.allocator.allocateReference(type = type(gen))
         add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
         this
     }
@@ -30,8 +31,26 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
 /**
  * static:
  * struct.field
+ *
+ * TODO: structs
  */
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>(".", left, ConstantExpression(field), ctx) {
-    // TODO: structs
-    override fun generate(gen: Generator) = Type.handle(Type.Operation(op, Type.Entity, Type.String))(gen, left, right)
+
+    var instr = Instruction.LOAD_FLOAT
+
+    // TODO: based on field
+    override fun type(gen: Generator) = Type.Float
+
+    override fun handler(gen: Generator) = Type.handle(Type.Operation(op, Type.Entity, Type.String))
+
+    override fun generate(gen: Generator) = with(linkedListOf<IR>()) {
+        val genL = left.doGenerate(gen)
+        addAll(genL)
+        val genR = ConstantExpression(0).doGenerate(gen) // TODO: field by name
+        addAll(genR)
+        val out = gen.allocator.allocateReference(type = type(gen))
+        add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
+        this
+    }
+
 }

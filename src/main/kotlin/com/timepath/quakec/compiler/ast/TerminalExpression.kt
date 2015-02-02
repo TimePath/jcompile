@@ -6,9 +6,14 @@ import com.timepath.quakec.compiler.gen.IR
 import com.timepath.quakec.compiler.gen.ReferenceIR
 import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.gen.Allocator
 
 // TODO: namespace
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    override fun type(gen: Generator): Type {
+        return gen.allocator[id]?.type!!
+    }
 
     override val attributes: Map<String, Any>
         get() = mapOf("id" to id)
@@ -29,6 +34,9 @@ open class DeclarationExpression(id: String,
                                  val type: Type,
                                  val value: ConstantExpression? = null,
                                  ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
+
+    override fun type(gen: Generator) = type
+
     override val attributes: Map<String, Any>
         get() = mapOf("id" to id,
                 "type" to type)
@@ -37,7 +45,7 @@ open class DeclarationExpression(id: String,
         if (id in gen.allocator.scope.peek().lookup) {
             Generator.logger.warning("redeclaring $id")
         }
-        val global = gen.allocator.allocateReference(id, value?.evaluate())
+        val global = gen.allocator.allocateReference(id, type(gen), value?.evaluate())
         return listOf(ReferenceIR(global.ref))
     }
 }
@@ -48,7 +56,7 @@ open class ParameterExpression(id: String,
                                ctx: ParserRuleContext? = null) : DeclarationExpression(id, type, ctx = ctx) {
 
     override fun generate(gen: Generator): List<IR> {
-        val memoryReference = MemoryReference(Instruction.OFS_PARAM(index))
+        val memoryReference = MemoryReference(Instruction.OFS_PARAM(index), type)
         return with(linkedListOf<IR>()) {
             addAll(super.generate(gen))
             addAll(BinaryExpression.Assign(ReferenceExpression(id), memoryReference).doGenerate(gen))
@@ -72,7 +80,9 @@ class StructDeclarationExpression(id: String,
     }
 }
 
-class MemoryReference(val ref: Int, ctx: ParserRuleContext? = null) : Expression(ctx) {
+class MemoryReference(val ref: Int, val type: Type, ctx: ParserRuleContext? = null) : Expression(ctx) {
+
+    override fun type(gen: Generator): Type = type
 
     override val attributes: Map<String, Any>
         get() = mapOf("ref" to ref)

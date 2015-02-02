@@ -2,8 +2,6 @@ package com.timepath.quakec.compiler
 
 class Value(val value: Any? = null) {
 
-    val type: Type? = null
-
     fun toBoolean(): Boolean = false
 
     override fun toString(): String = "${value?.javaClass?.getSimpleName()}(${value?.toString()?.quote() ?: ""})"

@@ -104,16 +104,17 @@ class CPrinter(val all: List<Expression>, val ns: String) {
                 } else {
                     ""
                 }
-                when (type) {
+                val declType = type
+                when (declType) {
                     is Type.Function -> {
-                        val ret = type.type
-                        val args = type.argTypes
+                        val ret = declType.type
+                        val args = declType.argTypes
                         "${ret.pprint()} $id(${args.map { it.pprint() }.join(", ")})" + when {
                             this is ParameterExpression -> ""
                             else -> ";"
                         }
                     }
-                    else -> type.pprint(id) + " " + v + term()
+                    else -> declType.pprint(id) + " " + v + term()
                 }
             }
             is FunctionExpression -> {
