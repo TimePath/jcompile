@@ -93,7 +93,7 @@ public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
 
     fun includeFrom(progs: File): Compiler {
         progs.readLines().drop(1).map {
-            val name = it.replaceFirst("\\s*//.*", "")
+            val name = it.replaceFirst("//.*", "").trim()
             val file = File(progs.getParent(), name)
             if (name.isNotEmpty() && file.exists()) Include(file) else null
         }.filterNotNullTo(includes)
