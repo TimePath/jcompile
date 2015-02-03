@@ -16,7 +16,7 @@ class LoopExpression(val predicate: Expression,
         add(body)
     }
 
-    override fun type(gen: Generator) = throw UnsupportedOperationException()
+    override fun type(gen: Generator) = Type.Void
 
     override fun generate(gen: Generator): List<IR> {
         val genInit = initializer?.flatMap { it.doGenerate(gen) }
