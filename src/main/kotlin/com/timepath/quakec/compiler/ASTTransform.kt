@@ -6,6 +6,7 @@ import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.quakec.QCParser.ParameterTypeListContext
+import com.timepath.quakec.compiler.Vector
 import com.timepath.quakec.compiler.ast.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -643,7 +644,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     val c1 = matcher.group(1).toFloat()
                     val c2 = matcher.group(2).toFloat()
                     val c3 = matcher.group(3).toFloat()
-                    return listOf(ConstantExpression(array(c1, c2, c3), ctx = ctx))
+                    return listOf(ConstantExpression(Vector(c1, c2, c3), ctx = ctx))
                 }
             }
             matchHex.let {
