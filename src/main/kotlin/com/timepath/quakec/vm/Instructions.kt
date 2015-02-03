@@ -315,7 +315,7 @@ enum class Instruction {
     }
 
     RETURN {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, ",", it.b, ",", it.c)
+        override fun stringify(it: Statement): Array<Any> = array("return", it.a, ",", it.b, ",", it.c)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[OFS_PARAM(-1) + 0] = f[it.a + 0]
             f[OFS_PARAM(-1) + 1] = f[it.a + 1]
@@ -326,13 +326,13 @@ enum class Instruction {
     }
 
     NOT_FLOAT {
-        override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b] = (!f[it.a]).toFloat()
         }
     }
     NOT_VEC {
-        override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!f[it.a + 0]
                     && !f[it.a + 1]
@@ -340,19 +340,19 @@ enum class Instruction {
         }
     }
     NOT_STR {
-        override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }
     }
     NOT_ENT {
-        override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }
     }
     NOT_FUNC {
-        override fun stringify(it: Statement): Array<Any> = array("!", it.a)
+        override fun stringify(it: Statement): Array<Any> = array(it.b, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }
@@ -368,31 +368,31 @@ enum class Instruction {
     }
 
     CALL0 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "()")
     }
     CALL1 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.)")
     }
     CALL2 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(..)")
     }
     CALL3 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(...)")
     }
     CALL4 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(....)")
     }
     CALL5 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.....)")
     }
     CALL6 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(......)")
     }
     CALL7 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.......)")
     }
     CALL8 {
-        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(........)")
     }
 
     STATE {
@@ -403,7 +403,7 @@ enum class Instruction {
     }
 
     GOTO {
-        override fun stringify(it: Statement): Array<Any> = array("jmp rel", it.a)
+        override fun stringify(it: Statement): Array<Any> = array("jmp", "rel", it.a)
         override fun advance(it: Statement, f: FloatBuffer, i: IntBuffer): Int = it.a
     }
 
