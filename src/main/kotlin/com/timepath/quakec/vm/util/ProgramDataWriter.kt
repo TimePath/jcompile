@@ -3,9 +3,7 @@ package com.timepath.quakec.vm.util
 import java.io.File
 import com.timepath.quakec.vm.*
 
-class ProgramDataWriter(file: File) {
-
-    val raf = RandomAccessFile(file, "rw")
+class ProgramDataWriter(val raf: RandomAccessBuffer) {
 
     private fun writeSection(it: ProgramData.Header.Section) {
         raf.writeInt(it.offset)
@@ -24,7 +22,7 @@ class ProgramDataWriter(file: File) {
         writeSection(h.globalData)
         raf.writeInt(h.entityFields)
 
-        raf.offset = ret.header.statements.offset.toLong()
+        raf.offset = ret.header.statements.offset
         for (it in ret.statements) {
             raf.writeShort(it.op.ordinal())
             raf.writeShort(it.a)
@@ -32,21 +30,21 @@ class ProgramDataWriter(file: File) {
             raf.writeShort(it.c)
         }
 
-        raf.offset = ret.header.globalDefs.offset.toLong()
+        raf.offset = ret.header.globalDefs.offset
         for (it in ret.globalDefs) {
             raf.writeShort(it.type.toInt())
             raf.writeShort(it.offset.toInt())
             raf.writeInt(it.nameOffset)
         }
 
-        raf.offset = ret.header.fieldDefs.offset.toLong()
+        raf.offset = ret.header.fieldDefs.offset
         for (it in ret.fieldDefs) {
             raf.writeShort(it.type.toInt())
             raf.writeShort(it.offset.toInt())
             raf.writeInt(it.nameOffset)
         }
 
-        raf.offset = ret.header.functions.offset.toLong()
+        raf.offset = ret.header.functions.offset
         for (it in ret.functions) {
             raf.writeInt(it.firstStatement)
             raf.writeInt(it.firstLocal)
@@ -59,7 +57,7 @@ class ProgramDataWriter(file: File) {
         }
 
         for ((key, value) in ret.strings.constant.entrySet()) {
-            raf.offset = ret.header.stringData.offset.toLong() + key
+            raf.offset = ret.header.stringData.offset + key
             raf.writeString(value)
         }
         // Ensure termination
@@ -67,7 +65,7 @@ class ProgramDataWriter(file: File) {
         raf.writeString("")
         raf.writeString("")
 
-        raf.offset = ret.header.globalData.offset.toLong()
+        raf.offset = ret.header.globalData.offset
         raf.write(ret.globalData.array())
     }
 

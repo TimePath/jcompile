@@ -6,13 +6,11 @@ import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import com.timepath.quakec.vm.*
 
-class ProgramDataReader(file: File) {
-
-    val raf = RandomAccessFile(file, "r")
+class ProgramDataReader(val raf: RandomAccessBuffer) {
 
     private fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
         val ret = ArrayList<T>(section.count)
-        raf.offset = section.offset.toLong()
+        raf.offset = section.offset
         for (i in 0..section.count - 1) {
             ret add action()
         }
@@ -24,7 +22,7 @@ class ProgramDataReader(file: File) {
             count = raf.readInt()
     )
 
-    fun read(): ProgramData {
+    public fun read(): ProgramData {
         val header = ProgramData.Header(
                 version = raf.readInt(),
                 crc = raf.readInt(),
@@ -74,7 +72,7 @@ class ProgramDataReader(file: File) {
                     )
                 },
                 strings = StringManager({
-                    raf.offset = header.stringData.offset.toLong()
+                    raf.offset = header.stringData.offset
 
                     val list: MutableList<String> = ArrayList(512)
                     val sb = StringBuilder()
@@ -93,12 +91,10 @@ class ProgramDataReader(file: File) {
                     list
                 }(), header.stringData.count),
                 globalData = ByteBuffer.wrap({
-                    raf.offset = header.globalData.offset.toLong()
+                    raf.offset = header.globalData.offset
 
                     val bytes = ByteArray(4 * header.globalData.count)
-                    val i = raf.read(bytes)
-                    val b = i == bytes.size()
-                    assert(b)
+                    raf.read(bytes)
                     bytes
                 }()).order(ByteOrder.LITTLE_ENDIAN)
         )

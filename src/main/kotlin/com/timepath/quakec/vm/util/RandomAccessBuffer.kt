@@ -1,25 +1,36 @@
 package com.timepath.quakec.vm.util
 
 import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
-class RandomAccessFile(file: File, mode: String) {
+fun RandomAccessBuffer(file: File, write: Boolean = false): RandomAccessBuffer {
+    val raf = RandomAccessFile(file, if (write) "rw" else "r")
+    return RandomAccessBuffer(raf.getChannel().map(when {
+        write -> FileChannel.MapMode.READ_WRITE
+        else -> FileChannel.MapMode.READ_ONLY
+    }, 0, file.length()))
+}
 
-    val raf = java.io.RandomAccessFile(file, mode)
+class RandomAccessBuffer(val raf: ByteBuffer) {
 
     private private fun _read(n: Int): Long {
         var ret = 0
         (0..n - 1).forEach {
-            val b = raf.read()
+            val b = raf.get().toInt()
             ret = ret or ((b and 0xFF) shl (8 * it))
         }
         return ret.toLong()
     }
 
-    fun read(b: ByteArray): Int = raf.read(b)
+    fun read(b: ByteArray) = raf.get(b)
 
-    var offset: Long
-        get() = raf.getFilePointer()
-        set(offset) = raf.seek(offset.toLong())
+    var offset: Int
+        get() = raf.position()
+        set(offset) {
+            raf.position(offset)
+        }
 
     fun readBoolean(): Boolean = _read(1) != 0L
 
@@ -44,13 +55,13 @@ class RandomAccessFile(file: File, mode: String) {
     fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
 
     fun writeString(s: String) {
-        raf.writeBytes(s)
+        raf.put(s.toByteArray())
         writeByte(0)
     }
 
-    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { raf.write(((v.toLong() ushr (it * 8)) and 255).toInt()) }
+    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { raf.put(((v.toLong() ushr (it * 8)) and 255).toByte()) }
 
-    fun write(b: ByteArray) = raf.write(b)
+    fun write(b: ByteArray) = raf.put(b)
 
     fun writeByte(v: Int) = _write(1, v)
 

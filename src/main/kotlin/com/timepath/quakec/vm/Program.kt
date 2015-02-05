@@ -6,6 +6,7 @@ import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.vm.util.ProgramDataReader
 import org.antlr.v4.runtime.misc.Utils
+import com.timepath.quakec.vm.util.RandomAccessBuffer
 
 public class Program(val data: ProgramData) {
 
@@ -272,5 +273,5 @@ public class Program(val data: ProgramData) {
 
 fun main(args: Array<String>) {
     val data = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
-    Program(ProgramDataReader(File("$data/progs.dat")).read()).exec()
+    Program(ProgramDataReader(RandomAccessBuffer(File("$data/progs.dat"))).read()).exec()
 }
