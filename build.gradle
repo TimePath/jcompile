@@ -1,5 +1,23 @@
-version = '0.1'
+apply plugin: 'maven-publish'
+group = 'com.timepath'
+version = '0.1-SNAPSHOT'
 apply plugin: 'application'
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
 
 def base = 'com.timepath.quakec.compiler'
 task createAllStartScripts() << { }
