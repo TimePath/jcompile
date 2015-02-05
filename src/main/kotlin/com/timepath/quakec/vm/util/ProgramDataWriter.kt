@@ -56,10 +56,8 @@ class ProgramDataWriter(val raf: RandomAccessBuffer) {
             raf.write(it.sizeof)
         }
 
-        for ((key, value) in ret.strings.constant.entrySet()) {
-            raf.offset = ret.header.stringData.offset + key
-            raf.writeString(value)
-        }
+        raf.offset = ret.header.stringData.offset
+        raf.writeString(ret.strings.constant)
         // Ensure termination
         raf.writeString("")
         raf.writeString("")

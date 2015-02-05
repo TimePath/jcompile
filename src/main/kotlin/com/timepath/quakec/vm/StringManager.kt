@@ -1,15 +1,15 @@
 package com.timepath.quakec.vm
 
 import java.util.ArrayList
-import java.util.LinkedHashMap
+import java.util.Scanner
 
 class StringManager(list: Collection<String>,
                     expectedSize: Int? = null) {
 
     /**
-     * Map of addresses to strings
+     * Giant string
      */
-    val constant: Map<Int, String>
+    val constant: String
 
     /**
      * The largest constant key + the length of its value
@@ -17,13 +17,12 @@ class StringManager(list: Collection<String>,
     private val constantSize: Int
 
     {
-        var stroff = 0
-        val strings = LinkedHashMap<Int, String>(list.size())
-        for (s in list) {
-            strings[stroff] = s
-            stroff += s.length() + 1
-        }
-        constant = strings
+        constant = StringBuilder {
+            for (s in list) {
+                append(s + "\u0000")
+            }
+        }.toString()
+        val stroff = constant.length()
         if (expectedSize != null) {
             val b = expectedSize == stroff
             assert(b, "String constants size mismatch")
@@ -37,7 +36,10 @@ class StringManager(list: Collection<String>,
     fun get(index: Int): String? {
         if (index >= 0) {
             if (index < constantSize)
-                return constant[index]!!
+                return Scanner(constant.substring(index)).let {
+                    it.useDelimiter("\u0000")
+                    it.next()
+                }
             val zoneIndex = index - constantSize
             if (zoneIndex < zone.size())
                 return zone[zoneIndex]!!

@@ -109,7 +109,7 @@ class Generator(val opts: CompilerOptions) {
                             fieldDefs = Section(fieldDefsOffset, fieldDefs.size()),
                             functions = Section(functionsOffset, functions.size()),
                             globalData = Section(stringsOffset, globalData.capacity()),
-                            stringData = Section(globalDataOffset, stringManager.constant.size())
+                            stringData = Section(globalDataOffset, stringManager.constant.length())
                     ),
                     statements = statements,
                     globalDefs = globalDefs,
