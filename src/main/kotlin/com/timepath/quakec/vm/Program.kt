@@ -5,7 +5,6 @@ import java.util.*
 import com.timepath.quakec.Logging
 import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.vm.util.ProgramDataReader
-import org.antlr.v4.runtime.misc.Utils
 import com.timepath.quakec.vm.util.RandomAccessBuffer
 
 public class Program(val data: ProgramData) {
@@ -256,7 +255,8 @@ public class Program(val data: ProgramData) {
     fun builtin(id: Int, parameterCount: Int) {
         val builtin = builtins[id]
         val ret = builtin?.call(parameterCount)
-        if (ret == null) return
+        if (ret == null)
+            throw IndexOutOfBoundsException("Builtin $id not defined")
 
         when (ret) {
             is Float -> {
