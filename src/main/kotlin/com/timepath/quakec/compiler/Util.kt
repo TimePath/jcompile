@@ -2,7 +2,6 @@ package com.timepath.quakec.compiler
 
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.Executors
-import org.antlr.v4.runtime.misc.Utils
 
 class DaemonThreadFactory : ThreadFactory {
     override fun newThread(r: Runnable): Thread {
@@ -14,4 +13,14 @@ class DaemonThreadFactory : ThreadFactory {
     val delegate = Executors.defaultThreadFactory()
 }
 
-fun String.quote() = '"' + Utils.escapeWhitespace(this.replace("\"", "\\\""), false) + '"'
+public fun String.quote(): String = '"' + StringBuilder {
+    for (c in toCharArray()) {
+        when (c) {
+            '\t' -> append("\\t")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '"' -> append("\\\"")
+            else -> append(c)
+        }
+    }
+}.toString() + '"'
