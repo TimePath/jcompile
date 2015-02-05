@@ -10,6 +10,8 @@ import com.timepath.quakec.vm.util.RandomAccessBuffer
 
 public class Program(val data: ProgramData) {
 
+    val world = data.entities.spawn()
+
     class object {
         val logger = Logging.new()
     }
