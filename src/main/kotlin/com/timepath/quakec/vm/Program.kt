@@ -3,7 +3,6 @@ package com.timepath.quakec.vm
 import java.io.File
 import java.util.*
 import com.timepath.quakec.Logging
-import com.timepath.quakec.compiler.quote
 import com.timepath.quakec.vm.util.ProgramDataReader
 import com.timepath.quakec.vm.util.RandomAccessBuffer
 
@@ -85,55 +84,18 @@ public class Program(val data: ProgramData) {
 
     }
 
-    inner class Builtin(val name: String,
-                        val parameterTypes: Array<Class<*>> = array(),
-                        val varargsType: Class<*>? = null,
-                        val callback: (args: List<*>) -> Any = {}) {
+    fun getFloat(i: Int) = data.globalFloatData[i]
+    fun getString(i: Int) = data.strings[data.globalIntData[i]]
 
-        fun call(parameterCount: Int): Any {
-            var offset = Instruction.OFS_PARAM(0)
-            val getFloat = {(i: Int) -> data.globalFloatData[i] }
-            val getString = {(i: Int) -> data.strings[data.globalIntData[i]] }
-            val read = {(it: Any) ->
-                when (it) {
-                    javaClass<Float>() -> {
-                        val i = offset
-                        offset += 3
-                        getFloat(i)
-                    }
-                    javaClass<String>() -> {
-                        val i = offset
-                        offset += 3
-                        getString(i)
-                    }
-                    else -> it
-                }
-            }
-            val args: MutableList<Any?> = ArrayList(parameterCount)
-            parameterTypes.mapTo(args) { read(it) }
-            if (varargsType != null)
-                (parameterTypes.size()..parameterCount - 1).mapTo(args) { read(varargsType) }
-            logger.info("""$name(${
-            args.map({
-                if (it is String)
-                    it.quote()
-                else
-                    it.toString()
-            }).join(", ")
-            })""")
-            return callback(args)
-        }
-    }
-
-    val builtins: Map<Int, Builtin> = mapOf(
-            1 to Builtin(
+    val builtins: MutableMap<Int, Builtin> = linkedMapOf(
+            1 to KBuiltin(
                     name = "print",
                     varargsType = javaClass<String>(),
                     callback = {
                         logger.info(it.map { it.toString() }.join(""))
                     }
             ),
-            2 to Builtin(
+            2 to KBuiltin(
                     name = "ftos",
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
@@ -141,14 +103,14 @@ public class Program(val data: ProgramData) {
                         f.toString()
                     }
             ),
-            3 to Builtin(
+            3 to KBuiltin(
                     name = "spawn",
                     callback = {
                         val entityManager = this.data.entities
                         entityManager.spawn()
                     }
             ),
-            4 to Builtin(
+            4 to KBuiltin(
                     name = "kill",
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
@@ -157,19 +119,19 @@ public class Program(val data: ProgramData) {
                         entityManager.kill(e)
                     }
             ),
-            5 to Builtin(
+            5 to KBuiltin(
                     name = "vtos"
             ),
-            6 to Builtin(
+            6 to KBuiltin(
                     name = "error"
             ),
-            7 to Builtin(
+            7 to KBuiltin(
                     name = "vlen"
             ),
-            8 to Builtin(
+            8 to KBuiltin(
                     name = "etos"
             ),
-            9 to Builtin(
+            9 to KBuiltin(
                     name = "stof",
                     parameterTypes = array(javaClass<String>()),
                     callback = {
@@ -177,14 +139,14 @@ public class Program(val data: ProgramData) {
                         s.toFloat()
                     }
             ),
-            10 to Builtin(
+            10 to KBuiltin(
                     name = "strcat",
                     varargsType = javaClass<String>(),
                     callback = {
                         it.map { it.toString() }.join("")
                     }
             ),
-            11 to Builtin(
+            11 to KBuiltin(
                     name = "strcmp",
                     parameterTypes = array(javaClass<String>(), javaClass<String>(), javaClass<Float>()),
                     callback = {
@@ -204,10 +166,10 @@ public class Program(val data: ProgramData) {
                         ret
                     }
             ),
-            12 to Builtin(
+            12 to KBuiltin(
                     name = "normalize"
             ),
-            13 to Builtin(
+            13 to KBuiltin(
                     name = "sqrt",
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
@@ -215,7 +177,7 @@ public class Program(val data: ProgramData) {
                         Math.sqrt(n.toDouble()).toFloat()
                     }
             ),
-            14 to Builtin(
+            14 to KBuiltin(
                     name = "floor",
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
@@ -223,7 +185,7 @@ public class Program(val data: ProgramData) {
                         Math.floor(n.toDouble()).toFloat()
                     }
             ),
-            15 to Builtin(
+            15 to KBuiltin(
                     name = "pow",
                     parameterTypes = array(javaClass<Float>(), javaClass<Float>()),
                     callback = {
@@ -232,7 +194,7 @@ public class Program(val data: ProgramData) {
                         Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
                     }
             ),
-            16 to Builtin(
+            16 to KBuiltin(
                     name = "assert",
                     parameterTypes = array(javaClass<Float>(), javaClass<String>()),
                     callback = {
@@ -242,7 +204,7 @@ public class Program(val data: ProgramData) {
                             throw AssertionError(message)
                     }
             ),
-            17 to Builtin(
+            17 to KBuiltin(
                     name = "ftoi",
                     parameterTypes = array(javaClass<Float>()),
                     callback = {
@@ -254,7 +216,7 @@ public class Program(val data: ProgramData) {
 
     fun builtin(id: Int, parameterCount: Int) {
         val builtin = builtins[id]
-        val ret = builtin?.call(parameterCount)
+        val ret = builtin?.call(this, parameterCount)
         if (ret == null)
             throw IndexOutOfBoundsException("Builtin $id not defined")
 
