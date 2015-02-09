@@ -6,7 +6,6 @@ import com.timepath.quakec.QCBaseVisitor
 import com.timepath.quakec.QCParser
 import com.timepath.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.quakec.QCParser.ParameterTypeListContext
-import com.timepath.quakec.compiler.Vector
 import com.timepath.quakec.compiler.ast.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -496,11 +495,9 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
 
     override fun visitCastExpression(ctx: QCParser.CastExpressionContext): List<Expression> {
         if (ctx.terminal) {
-            val left = ctx.castExpression().accept(this).single()
-            // TODO
-            //            val right = ctx.typeName().accept(this).single()
-            //            return BinaryExpression.Cast(left, right)
-            return listOf(left)
+            val type = types[ctx.typeName().getText()]
+            val expr = ctx.castExpression().accept(this).single()
+            return listOf(UnaryExpression.Cast(type, expr))
         }
         return super.visitCastExpression(ctx)
     }
@@ -509,8 +506,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
 
     override fun visitUnaryExpression(ctx: QCParser.UnaryExpressionContext): List<Expression> {
         if (ctx.terminal) {
-            val right = ctx.unaryExpression().accept(this).single()
-            val expr = right
+            val expr = ctx.unaryExpression().accept(this).single()
             val expand = when (ctx.op.getType()) {
                 QCParser.PlusPlus -> UnaryExpression.PreIncrement(expr, ctx = ctx)
                 QCParser.MinusMinus -> UnaryExpression.PreDecrement(expr, ctx = ctx)
@@ -520,7 +516,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 QCParser.Minus -> UnaryExpression.Minus(expr, ctx = ctx)
                 QCParser.Tilde -> UnaryExpression.BitNot(expr, ctx = ctx)
                 QCParser.Not -> UnaryExpression.Not(expr, ctx = ctx)
-                else -> right
+                else -> expr
             }
             return listOf(expand)
         }
@@ -655,7 +651,11 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 }
             }
             val f = s.toFloat()
-            return listOf(ConstantExpression(f, ctx = ctx))
+            val constExpr = ConstantExpression(f, ctx = ctx)
+            return listOf(when {
+                f == f.toInt().toFloat() -> UnaryExpression.Cast(Type.Int, constExpr)
+                else -> constExpr
+            })
         }
         return listOf(ConstantExpression("FIXME_${text}", ctx = ctx))
     }
