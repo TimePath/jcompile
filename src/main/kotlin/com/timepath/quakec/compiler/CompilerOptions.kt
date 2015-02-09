@@ -14,8 +14,15 @@ data class CompilerOptions(
          *      float x;
          * }
          * float y; // re-use x
+         *
+         * TODO: give generated functions locals
+         * TODO: types per fold
+         *
          */
-        val scopeFolding: Boolean = true,
+        val scopeFolding: Boolean = false,
+        /**
+         * TODO: types per fold
+         */
         val mergeConstants: Boolean = false
 
 )
