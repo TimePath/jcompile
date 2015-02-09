@@ -123,6 +123,8 @@ class Allocator(val opts: CompilerOptions) {
 
     {
         push("<builtin>")
+        allocateReference("false", Type.Bool, Value(0f))
+        allocateReference("true", Type.Bool, Value(1f))
         allocateReference("_", Type.Function(Type.String, listOf(Type.String))) // TODO: not really a function
     }
 

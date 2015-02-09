@@ -73,6 +73,11 @@ public class Compiler(val opts: CompilerOptions = CompilerOptions()) {
         preprocessor.addMacro(name, value)
         return this
     }
+    
+    {
+        define("QCC_SUPPORT_INT")
+        define("QCC_SUPPORT_BOOL")
+    }
 
     val includes = LinkedList<Include>()
 

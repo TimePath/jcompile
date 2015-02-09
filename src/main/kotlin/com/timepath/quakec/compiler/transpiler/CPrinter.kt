@@ -230,8 +230,6 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                 val compiler = com.timepath.quakec.compiler.Compiler()
                         .includeFrom(File(sourceRoot, "progs.src"))
                         .define(project.define)
-                        .define("QCC_SUPPORT_INT")
-                        .define("QCC_SUPPORT_BOOL")
 
                 val ast = compiler.ast()
                 val projOut = File(out, project.out)
