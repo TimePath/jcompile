@@ -23,6 +23,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
     override fun type(gen: Generator) = handler(gen).type
 
     class Cast(val type: Type, val operand: Expression, ctx: ParserRuleContext? = null) : Expression(ctx) {
+        override fun toString(): String = "(($type) $operand)"
         override fun type(gen: Generator): Type = type
         override val attributes: Map<String, Any?>
             get() = operand.attributes
