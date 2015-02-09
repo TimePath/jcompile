@@ -76,7 +76,7 @@ class StructDeclarationExpression(id: String,
             }
         }
         val allocator = gen.allocator
-        allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!
+        allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!.copy(name = id, type = struct)
         return fields
     }
 }
