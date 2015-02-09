@@ -106,12 +106,12 @@ class Allocator(val opts: CompilerOptions) {
     val constants = AllocationMap()
     val strings = AllocationMap()
 
-    data class Scope(val name: String, val lookup: MutableMap<String, Entry> = HashMap())
+    data class Scope(val id: Any, val lookup: MutableMap<String, Entry> = HashMap())
 
     val scope = Stack<Scope>()
 
-    fun push(name: String) {
-        scope.push(Scope(name))
+    fun push(id: Any) {
+        scope.push(Scope(id))
         references.push()
     }
 
