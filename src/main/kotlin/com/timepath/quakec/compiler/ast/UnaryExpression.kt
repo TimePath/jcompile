@@ -1,9 +1,10 @@
 package com.timepath.quakec.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.quakec.compiler.Type
+import com.timepath.quakec.compiler.Value
 import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.gen.IR
-import com.timepath.quakec.compiler.Type
+import org.antlr.v4.runtime.ParserRuleContext
 
 abstract class UnaryExpression(val op: String, val operand: Expression, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
@@ -21,8 +22,15 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
 
     override fun type(gen: Generator) = handler(gen).type
 
-    class Cast(val type: Type, operand: Expression, ctx: ParserRuleContext? = null) : UnaryExpression("($type)", operand, ctx) {
+    class Cast(val type: Type, val operand: Expression, ctx: ParserRuleContext? = null) : Expression(ctx) {
         override fun type(gen: Generator): Type = type
+        override val attributes: Map<String, Any?>
+            get() = operand.attributes
+
+        override fun evaluate(): Value? = operand.evaluate()
+        override fun generate(gen: Generator) = operand.generate(gen)
+        override fun hasSideEffects(): Boolean = operand.hasSideEffects()
+        override fun reduce(): Expression? = operand.reduce()
     }
 
     abstract class Post(op: String, operand: Expression, ctx: ParserRuleContext? = null) : UnaryExpression(op, operand, ctx) {
