@@ -12,7 +12,8 @@ import com.timepath.quakec.compiler.gen.Allocator
 open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override fun type(gen: Generator): Type {
-        return gen.allocator[id]?.type!!
+        gen.allocator[id]?.let { return it.type }
+        throw NullPointerException("Reference $id not found")
     }
 
     override val attributes: Map<String, Any>
