@@ -17,8 +17,8 @@ import com.timepath.quakec.compiler.gen.Generator
 import com.timepath.quakec.compiler.preproc.CustomPreprocessor
 import com.timepath.quakec.compiler.test.TreePrinterListener
 import com.timepath.quakec.vm.ProgramData
+import com.timepath.quakec.vm.util.IOWrapper
 import com.timepath.quakec.vm.util.ProgramDataWriter
-import com.timepath.quakec.vm.util.RandomAccessBuffer
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
@@ -188,7 +188,7 @@ fun main(args: Array<String>) {
                         .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
                         .define(project.define)
                 val compiled = compiler.compile()
-                ProgramDataWriter(RandomAccessBuffer(File("out", project.out), write = true)).write(compiled)
+                ProgramDataWriter(IOWrapper.File(File("out", project.out), write = true)).write(compiled)
             }
         }
     }

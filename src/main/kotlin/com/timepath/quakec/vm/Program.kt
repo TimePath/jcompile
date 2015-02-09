@@ -3,8 +3,8 @@ package com.timepath.quakec.vm
 import java.io.File
 import java.util.*
 import com.timepath.quakec.Logging
+import com.timepath.quakec.vm.util.IOWrapper
 import com.timepath.quakec.vm.util.ProgramDataReader
-import com.timepath.quakec.vm.util.RandomAccessBuffer
 
 public class Program(val data: ProgramData) {
 
@@ -237,5 +237,5 @@ public class Program(val data: ProgramData) {
 
 fun main(args: Array<String>) {
     val data = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
-    Program(ProgramDataReader(RandomAccessBuffer(File("$data/progs.dat"))).read()).exec()
+    Program(ProgramDataReader(IOWrapper.File(File("$data/progs.dat"))).read()).exec()
 }

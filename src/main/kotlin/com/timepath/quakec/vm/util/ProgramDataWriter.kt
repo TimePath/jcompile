@@ -3,7 +3,8 @@ package com.timepath.quakec.vm.util
 import java.io.File
 import com.timepath.quakec.vm.*
 
-class ProgramDataWriter(val raf: RandomAccessBuffer) {
+fun ProgramDataWriter(file: File) = ProgramDataWriter(IOWrapper.File(file, write = true))
+class ProgramDataWriter(val raf: IOWrapper) {
 
     private fun writeSection(it: ProgramData.Header.Section) {
         raf.writeInt(it.offset)
@@ -59,7 +60,6 @@ class ProgramDataWriter(val raf: RandomAccessBuffer) {
         raf.offset = ret.header.stringData.offset
         raf.writeString(ret.strings.constant)
         // Ensure termination
-        raf.writeString("")
         raf.writeString("")
         raf.writeString("")
 

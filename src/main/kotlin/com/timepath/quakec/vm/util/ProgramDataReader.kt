@@ -6,7 +6,8 @@ import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import com.timepath.quakec.vm.*
 
-class ProgramDataReader(val raf: RandomAccessBuffer) {
+fun ProgramDataReader(file: File) = ProgramDataReader(IOWrapper.File(file))
+class ProgramDataReader(val raf: IOWrapper) {
 
     private fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
         val ret = ArrayList<T>(section.count)
