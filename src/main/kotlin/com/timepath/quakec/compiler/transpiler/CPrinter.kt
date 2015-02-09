@@ -8,6 +8,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
 import com.timepath.quakec.Logging
+import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.Type
 import com.timepath.quakec.compiler.ast.BinaryExpression
 import com.timepath.quakec.compiler.ast.BlockExpression
@@ -24,18 +25,20 @@ import com.timepath.quakec.compiler.ast.LabelExpression
 import com.timepath.quakec.compiler.ast.LoopExpression
 import com.timepath.quakec.compiler.ast.MemberExpression
 import com.timepath.quakec.compiler.ast.MethodCallExpression
+import com.timepath.quakec.compiler.ast.Nop
+import com.timepath.quakec.compiler.ast.ParameterExpression
 import com.timepath.quakec.compiler.ast.ReferenceExpression
 import com.timepath.quakec.compiler.ast.ReturnStatement
 import com.timepath.quakec.compiler.ast.UnaryExpression
-import com.timepath.quakec.compiler.ast.Nop
+import com.timepath.quakec.compiler.gen.Generator
 import org.antlr.v4.runtime.misc.Utils
-import com.timepath.quakec.compiler.ast.ParameterExpression
 
-class CPrinter(val all: List<Expression>, val ns: String) {
+class CPrinter(val gen: Generator, val all: List<Expression>, val ns: String) {
 
     var depth: Int = 0
 
     fun pprint(out: BufferedWriter) {
+        gen.generate(all) // FIXME: separate type propagation phase
         for (it in all) {
             it.transform { it.reduce() }
             out.appendln(it.pprint())
@@ -160,6 +163,13 @@ class CPrinter(val all: List<Expression>, val ns: String) {
                     else -> "${left.pprint()}.${field}"
                 }
             }
+            is BinaryExpression.Eq -> {
+                if (left.type(gen) == Type.String && right.type(gen) == Type.String) {
+                    "(strcmp(${left.pprint()}, ${right.pprint()}) == 0)"
+                } else {
+                    "(${left.pprint()} $op ${right.pprint()})"
+                }
+            }
             is BinaryExpression<*, *> -> if (depth > 0) "(${when (left) {
                 is DeclarationExpression -> left.id
                 else -> left.pprint()
@@ -250,7 +260,10 @@ add_definitions(-std=c++11)
 """)
                 }
                 val include = linkedListOf(predef)
+                val gen = Generator(CompilerOptions())
+                val accumulate = linkedListOf<Expression>()
                 for ((f, code) in map) {
+                    accumulate.addAll(code)
                     val file = File(projOut, f)
                     val parent = file.getParentFile()
                     parent.mkdirs()
@@ -260,7 +273,7 @@ add_definitions(-std=c++11)
                         it.write("$pragma\n")
                         it.appendln(include.map { "#include \"${parent.toPath().relativize(it.toPath())}\"" }.join("\n"))
                         it.appendln("namespace $ns {")
-                        CPrinter(code, ns).pprint(it)
+                        CPrinter(gen, accumulate, ns).pprint(it)
                         it.appendln("}")
                     }
                     if (header)
