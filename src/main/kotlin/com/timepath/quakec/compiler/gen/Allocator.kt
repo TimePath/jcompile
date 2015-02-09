@@ -191,12 +191,12 @@ class Allocator(val opts: CompilerOptions) {
                 else -> "$value"
             }
         }
-        // merge constants
-        val existing = constants[value]
-        if (existing != null) {
-            constants[name] = existing
-            existing.tag(name)
-            return existing
+        if (opts.mergeConstants) {
+            constants[value]?.let { it ->
+                constants[name] = it
+                it.tag(name)
+                return it
+            }
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
         return constants.allocate(name, i, value, type)

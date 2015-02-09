@@ -15,6 +15,7 @@ data class CompilerOptions(
          * }
          * float y; // re-use x
          */
-        val scopeFolding: Boolean = true
+        val scopeFolding: Boolean = true,
+        val mergeConstants: Boolean = false
 
 )
