@@ -26,13 +26,10 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
-    TODO: GMQCC parity
-
-    goto.qc (conditional label)
-    state.qc
-
-*/
+/**
+ * TODO: GMQCC parity: goto.qc (conditional label)
+ * TODO: GMQCC parity: state.qc
+ */
 
 grammar QC;
 

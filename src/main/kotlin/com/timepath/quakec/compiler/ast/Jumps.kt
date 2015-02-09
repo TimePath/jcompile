@@ -6,6 +6,7 @@ import com.timepath.quakec.vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.quakec.compiler.Type
 
+// TODO: conditional goto
 class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
     override fun type(gen: Generator) = throw UnsupportedOperationException()
 
@@ -60,6 +61,7 @@ class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
     }
 }
 
+// TODO: on labels
 class BreakStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
     override fun type(gen: Generator) = throw UnsupportedOperationException()
 

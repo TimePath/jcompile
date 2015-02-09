@@ -9,9 +9,8 @@ import com.timepath.quakec.compiler.Type
 /**
  * dynamic:
  * array[index], entity.(field)
- *
- * TODO: arrays
  */
+// TODO: arrays
 class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>("[]", left, right, ctx) {
 
     var instr = Instruction.LOAD_FLOAT
@@ -30,9 +29,8 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
 /**
  * static:
  * struct.field
- *
- * TODO: structs
  */
+// TODO: structs
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>(".", left, ConstantExpression(field), ctx) {
 
     var instr = Instruction.LOAD_FLOAT
@@ -49,8 +47,8 @@ class MemberExpression(left: Expression, val field: String, ctx: ParserRuleConte
                 // TODO: struct member return type
                 Type.Float
             }
-            // TODO: vec_[xyz]
-//            else -> throw UnsupportedOperationException("field access on type $lhs")
+        // TODO: vec_[xyz]
+        //            else -> throw UnsupportedOperationException("field access on type $lhs")
             else -> lhs
         }
     }
