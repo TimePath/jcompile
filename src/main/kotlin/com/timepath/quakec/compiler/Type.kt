@@ -47,7 +47,7 @@ abstract class Type {
         }
     }
 
-    open fun declare(name: kotlin.String, value: ConstantExpression? = null): List<DeclarationExpression> {
+    open fun declare(name: kotlin.String, value: ConstantExpression? = null): List<Expression> {
         throw UnsupportedOperationException()
     }
 
@@ -468,44 +468,48 @@ abstract class Type {
                 }
         )
 
-        fun generate(id: String): List<Expression> {
+        override fun declare(name: kotlin.String, value: ConstantExpression?): List<Expression> {
             val size = (sizeExpr.evaluate()?.value as kotlin.Number).toInt()
             val intRange = size.indices
             return with(linkedListOf<Expression>()) {
-                add(DeclarationExpression("${id}_size", Int, ConstantExpression(size.toInt())))
-                add(generateAccessor(id))
+                add(DeclarationExpression("${name}_size", Int, ConstantExpression(size.toInt())))
+                add(generateAccessor(name))
                 intRange.forEachIndexed {(i, _) ->
-                    addAll(generateComponent(id, i))
+                    addAll(generateComponent(name, i))
                 }
                 this
             }
         }
 
-        private fun generateAccessorName(id: String) = "__${id}_access"
+        private fun generateAccessorName(id: kotlin.String) = "__${id}_access"
 
         /**
-         *  #define ARRAY(name, size)                                                                   \
-         *      float name##_size = size;                                                               \
-         *      float(bool, float) name##_access(float index) {                                         \
-         *          /*if (index < 0) index += name##_size;                                              \
-         *          if (index > name##_size) return 0;*/                                                \
-         *          float(bool, float) name##_access_this = name##_access + *(1 + index);               \
-         *          return name##_access_this;                                                          \
+         *  #define ARRAY(name, size)                                                       \
+         *      float name##_size = size;                                                   \
+         *      float(bool, float) name##_access(float index) {                             \
+         *          /*if (index < 0) index += name##_size;                                  \
+         *          if (index > name##_size) return 0;*/                                    \
+         *          float(bool, float) name##_access_this = *(&name##_access + 1 + index);  \
+         *          return name##_access_this;                                              \
          *      }
          */
-        private fun generateAccessor(id: String): Expression {
+        private fun generateAccessor(id: kotlin.String): Expression {
             val accessor = generateAccessorName(id)
             return FunctionExpression(
                     accessor,
                     Function(Function(Float, listOf(Float, Float), null), listOf(Float), null),
                     listOf(ParameterExpression("index", Float, 0)),
-                    add = listOf(ReturnStatement(BinaryExpression.Add(
-                            ReferenceExpression(accessor),
+                    add = listOf(ReturnStatement(
                             UnaryExpression.Dereference(BinaryExpression.Add(
-                                    ConstantExpression(1f),
-                                    ReferenceExpression("index")
+                                    UnaryExpression.Address(
+                                            ReferenceExpression(accessor)
+                                    ),
+                                    BinaryExpression.Add(
+                                            ConstantExpression(1f),
+                                            ReferenceExpression("index")
+                                    )
                             ))
-                    )))
+                    ))
             )
         }
 
@@ -516,34 +520,27 @@ abstract class Type {
          *          return mode ? name##_##i = value##i : name##_##i;   \
          *      }
          */
-        private fun generateComponent(id: String, i: kotlin.Int): List<Expression> {
+        private fun generateComponent(id: kotlin.String, i: kotlin.Int): List<Expression> {
             val accessor = "${generateAccessorName(id)}_${i}"
             val field = "${accessor}_field"
             return with(linkedListOf<Expression>()) {
-                add(DeclarationExpression(field, type, ConstantExpression(0f))) // TODO: custom initialization
-                FunctionExpression(
+                add(DeclarationExpression(field, type, ConstantExpression(i.toFloat())))
+                val fieldReference = ReferenceExpression(field)
+                add(FunctionExpression(
                         accessor,
                         Function(Float, listOf(Float, Float), null),
                         listOf(
                                 ParameterExpression("mode", Float, 0),
                                 ParameterExpression("value", Float, 1)
                         ),
-                        add = with(linkedListOf<Expression>()) {
-                            val fieldReference = ReferenceExpression(field)
-                            add(ReturnStatement(ConditionalExpression(
-                                    ReferenceExpression("mode"), true,
-                                    BinaryExpression.Assign(fieldReference, ReferenceExpression("value")),
-                                    fieldReference
-                            )))
-                            this
-                        }
-                )
+                        add = listOf(ReturnStatement(ConditionalExpression(
+                                ReferenceExpression("mode"), true,
+                                BinaryExpression.Assign(fieldReference, ReferenceExpression("value")),
+                                fieldReference
+                        )))
+                ))
                 this
             }
-        }
-
-        override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
-            return listOf(DeclarationExpression(name, this, value))
         }
 
         override fun toString(): kotlin.String {
