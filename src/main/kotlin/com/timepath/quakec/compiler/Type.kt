@@ -73,7 +73,7 @@ abstract class Type {
             val genRight = right.doGenerate(gen)
             addAll(genRight)
             val out = gen.allocator.allocateReference(type = type)
-            add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref))
+            add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$left $instr $right"))
             this
         }
     })
@@ -83,7 +83,7 @@ abstract class Type {
             val genLeft = self.doGenerate(gen)
             addAll(genLeft)
             val out = gen.allocator.allocateReference(type = type)
-            add(IR(instr, array(genLeft.last().ret, out.ref), out.ref))
+            add(IR(instr, array(genLeft.last().ret, out.ref), out.ref, name = "$self"))
             this
         }
     })

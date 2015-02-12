@@ -368,31 +368,31 @@ enum class Instruction {
     }
 
     CALL0 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "()")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "()")
     }
     CALL1 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(.)")
     }
     CALL2 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(..)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(..)")
     }
     CALL3 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(...)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(...)")
     }
     CALL4 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(....)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(....)")
     }
     CALL5 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.....)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(.....)")
     }
     CALL6 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(......)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(......)")
     }
     CALL7 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(.......)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(.......)")
     }
     CALL8 {
-        override fun stringify(it: Statement): Array<Any> = array(1, "=", it.a, "(........)")
+        override fun stringify(it: Statement): Array<Any> = array(it.a, "(........)")
     }
 
     STATE {

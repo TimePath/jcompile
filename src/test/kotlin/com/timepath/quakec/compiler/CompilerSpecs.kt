@@ -67,9 +67,9 @@ class CompilerSpecs : Spek() {{
                     asm = ctx!!.generate(roots!!.flatMap { it })
                     asm!!.ir.map { ir ->
                         if (ir.real)
-                            ir.toString()
+                            "$ir"
                         else
-                            null
+                            "/* $ir */"
                     }.filterNotNull().joinToString("\n").let { actual ->
                         compare("ASM", it.name + ".asm", actual)
                     }

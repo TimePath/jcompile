@@ -12,7 +12,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
         add(operand)
     }
 
-    override fun toString(): String = "($op $operand)"
+    override fun toString(): String = "$op($operand)"
 
     fun handler(gen: Generator) = Type.handle(Type.Operation(op, operand.type(gen)))
 

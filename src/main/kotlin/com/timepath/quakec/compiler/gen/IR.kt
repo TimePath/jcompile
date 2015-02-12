@@ -20,11 +20,12 @@ open class IR(val instr: Instruction? = null,
 
 }
 
-open class FakeIR : IR() {
+open class FakeIR(val repr: String) : IR() {
     override val real = false
+    override fun toString(): String = repr
 }
 
-class ReferenceIR(override val ret: Int) : FakeIR()
-class FunctionIR(val function: Function) : FakeIR()
-class LabelIR(val id: String) : FakeIR()
-class CaseIR(val expr: Expression?) : FakeIR()
+class ReferenceIR(override val ret: Int) : FakeIR("ref $ret")
+class FunctionIR(val function: Function) : FakeIR("function")
+class LabelIR(val id: String) : FakeIR("label $id")
+class CaseIR(val expr: Expression?) : FakeIR("case $expr")
