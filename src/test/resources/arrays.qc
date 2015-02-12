@@ -1,11 +1,12 @@
 float array[2];
 
 void main() {
-    for(float f = 0; f < array_size; ++f) {
-        float(bool, float) v = __array_access(f);
-        assert(v(0) == f, "Initial value");
+    for (int i = 0; i < array_size; i++) {
+        assert(array[i] == 0, "Initial value");
     }
-    float(bool, float) index = __array_access(0);
-    assert(index(1, 2) == 2, "Result of assignment");
-    assert(index(0) == 2, "Read");
+    int test = 0;
+    int expect = 2;
+    float(bool, float) index = __array_access(test);
+    assert(index(1, expect) == expect, "Result of assignment");
+    assert(array[test] == expect, "Read");
 }

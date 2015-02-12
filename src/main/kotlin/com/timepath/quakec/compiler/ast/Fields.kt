@@ -15,14 +15,28 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
 
     var instr = Instruction.LOAD_FLOAT
 
+    override fun type(gen: Generator): Type {
+        val typeL = left.type(gen)
+        return if (typeL is Type.Entity) {
+            (right.type(gen) as Type.Field).type
+        } else {
+            super.type(gen)
+        }
+    }
+
     override fun generate(gen: Generator) = with(linkedListOf<IR>()) {
-        val genL = left.doGenerate(gen)
-        addAll(genL)
-        val genR = right.doGenerate(gen)
-        addAll(genR)
-        val out = gen.allocator.allocateReference(type = type(gen))
-        add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
-        this
+        val typeL = left.type(gen)
+        if (typeL is Type.Entity) {
+            val genL = left.doGenerate(gen)
+            addAll(genL)
+            val genR = right.doGenerate(gen)
+            addAll(genR)
+            val out = gen.allocator.allocateReference(type = type(gen))
+            add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
+            this
+        } else {
+            super.generate(gen)
+        }
     }
 }
 

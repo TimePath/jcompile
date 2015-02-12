@@ -99,12 +99,13 @@ abstract class Type {
             // TODO: other storeps
             when {
                 left is IndexExpression -> {
+                    val typeL = left.left.type(gen)
                     val tmp = left.left.doGenerate(gen)
                     addAll(tmp)
                     val refE = tmp.last().ret
 
                     realInstr = Instruction.STOREP_FLOAT
-                    val memoryReference = MemoryReference(refE, Type.Entity)
+                    val memoryReference = MemoryReference(refE, typeL)
                     leftR = IndexExpression(memoryReference, left.right)
                     leftL = IndexExpression(memoryReference, left.right).let {
                         it.instr = Instruction.ADDRESS
@@ -112,13 +113,14 @@ abstract class Type {
                     }
                 }
                 left is MemberExpression -> {
+                    val typeL = left.left.type(gen)
                     // get the entity
                     val tmp = left.left.doGenerate(gen)
                     addAll(tmp)
                     val refE = tmp.last().ret
 
                     realInstr = Instruction.STOREP_FLOAT
-                    val memoryReference = MemoryReference(refE, left.left.type(gen))
+                    val memoryReference = MemoryReference(refE, typeL)
                     leftR = MemberExpression(memoryReference, left.field)
                     leftL = MemberExpression(memoryReference, left.field).let {
                         it.instr = Instruction.ADDRESS
@@ -465,6 +467,11 @@ abstract class Type {
         override val ops = mapOf(
                 Operation("sizeof", this) to OperationHandler(Int) { gen, self, _ ->
                     sizeExpr.doGenerate(gen)
+                },
+                Operation("[]", this, Int) to OperationHandler(type) { gen, left, right ->
+                    val s = generateAccessorName((left as ReferenceExpression).id)
+                    val indexer = MethodCallExpression(ReferenceExpression(s), listOf(right!!))
+                    MethodCallExpression(indexer, listOf(ConstantExpression(0))).doGenerate(gen)
                 }
         )
 
@@ -472,7 +479,8 @@ abstract class Type {
             val size = (sizeExpr.evaluate()?.value as kotlin.Number).toInt()
             val intRange = size.indices
             return with(linkedListOf<Expression>()) {
-                add(DeclarationExpression("${name}_size", Int, ConstantExpression(size.toInt())))
+                add(DeclarationExpression(name, this@Array))
+                add(DeclarationExpression("${name}_size", Int, ConstantExpression(size.toFloat())))
                 add(generateAccessor(name))
                 intRange.forEachIndexed {(i, _) ->
                     addAll(generateComponent(name, i))
@@ -524,7 +532,7 @@ abstract class Type {
             val accessor = "${generateAccessorName(id)}_${i}"
             val field = "${accessor}_field"
             return with(linkedListOf<Expression>()) {
-                add(DeclarationExpression(field, type, ConstantExpression(i.toFloat())))
+                add(DeclarationExpression(field, type))
                 val fieldReference = ReferenceExpression(field)
                 add(FunctionExpression(
                         accessor,
