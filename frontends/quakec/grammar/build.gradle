@@ -25,10 +25,10 @@ apply plugin: 'me.champeau.gradle.antlr4'
 
 sourceSets {
     generated {
-        java { srcDirs = ['src/generated/java']}
+        java { srcDirs = ['src/generated/java'] }
     }
     main {
-        java { srcDirs = []}
+        java { srcDirs = [] }
         compileClasspath += generated.output
         runtimeClasspath += generated.output
     }
@@ -46,7 +46,7 @@ jar {
 }
 
 // FIXME: autodetect
-String pkg = "com.timepath.quakec"
+String pkg = "com.timepath.compiler.frontend.quakec"
 antlr4.extraArgs = ["-package", pkg]
 antlr4.output = file("${projectDir}/src/generated/java/${pkg.replace('.', '/')}")
 

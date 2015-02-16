@@ -19,11 +19,11 @@ publishing {
     }
 }
 
-def base = 'com.timepath.quakec.compiler'
-task createAllStartScripts() << { }
+def base = 'com.timepath.compiler'
+task createAllStartScripts() << {}
 def scripts = [
-        'compile': "${base}.CompilerPackage",
-        'transpile': "${base}.transpiler.TranspilerPackage"
+        'compile'  : "${base}.CompilerPackage",
+        'transpile': "${base}.backend.cpp.CppPackage"
 ]
 mainClassName = scripts['compile']
 scripts.each { scriptName, className ->

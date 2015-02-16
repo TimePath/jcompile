@@ -1,13 +1,13 @@
-import com.timepath.quakec.Logging
+package com.timepath.compiler
+
 import java.util.Date
-import com.timepath.quakec.compiler.CompilerOptions
-import com.timepath.quakec.compiler.Compiler
 import java.io.File
-import com.timepath.quakec.vm.util.ProgramDataWriter
-import com.timepath.quakec.vm.util.IOWrapper
+import com.timepath.Logging
+import com.timepath.compiler.frontend.quakec.QCC
+import com.timepath.q1vm.ProgramData
+import com.timepath.q1vm.util.ProgramDataWriter
+import com.timepath.q1vm.util.IOWrapper
 import org.anarres.cpp.Feature
-import com.timepath.quakec.QCC
-import com.timepath.quakec.vm.ProgramData
 
 val logger = Logging.new()
 
