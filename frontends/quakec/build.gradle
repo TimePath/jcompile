@@ -1,0 +1,44 @@
+buildscript {
+    ext.versions = [
+            antlr               : '4.3',
+            jcpp                : '1.4.8-SNAPSHOT',
+            kotlin              : '0.10.195',
+    ]
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    // jcpp
+    maven {
+        url "http://repository.jetbrains.com/all"
+    }
+}
+
+apply plugin: 'kotlin'
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+    }
+    test {
+        java { srcDirs = [] }
+    }
+}
+
+dependencies {
+    compile project(':api')
+    compile project('grammar')
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+    compile "org.anarres:jcpp:${versions.jcpp}"
+    compile "org.antlr:antlr4-runtime:${versions.antlr}"
+}

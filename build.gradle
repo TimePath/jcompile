@@ -62,7 +62,7 @@ buildscript {
 repositories {
     mavenLocal()
     mavenCentral()
-    // jcpp, spek
+    // spek
     maven {
         url "http://repository.jetbrains.com/all"
     }
@@ -80,10 +80,10 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':grammar')
+    compile project('api')
+    compile project('frontends:quakec')
+    compile project('backends:q1vm')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-    compile "org.anarres:jcpp:${versions.jcpp}"
-    compile "org.antlr:antlr4-runtime:${versions.antlr}"
     compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
     testCompile "org.jetbrains.spek:spek:${versions.spek}"
 }

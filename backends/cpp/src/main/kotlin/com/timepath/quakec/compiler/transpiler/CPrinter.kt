@@ -8,6 +8,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
 import com.timepath.quakec.Logging
+import com.timepath.quakec.QCC
 import com.timepath.quakec.compiler.CompilerOptions
 import com.timepath.quakec.compiler.Type
 import com.timepath.quakec.compiler.ast.BinaryExpression
@@ -212,7 +213,7 @@ val ns = "xon"
 fun time(name: String, action: () -> Unit) {
     val start = Date()
     action()
-    com.timepath.quakec.compiler.logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
+    logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
 }
 
 fun main(args: Array<String>) {
@@ -227,7 +228,7 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
         for (project in subprojects) {
             time("Project time") {
                 val sourceRoot = File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}")
-                val compiler = com.timepath.quakec.compiler.Compiler()
+                val compiler = com.timepath.quakec.compiler.Compiler(QCC)
                         .includeFrom(File(sourceRoot, "progs.src"))
                         .define(project.define)
 

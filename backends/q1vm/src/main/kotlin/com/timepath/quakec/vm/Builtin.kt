@@ -40,14 +40,14 @@ class Builtin(val name: String,
         parameterTypes.mapTo(args) { read(it) }
         if (varargsType != null)
             (parameterTypes.size()..parameterCount - 1).mapTo(args) { read(varargsType) }
-        Program.logger.info("""$name(${
-        args.map({
-            if (it is String)
-                it.quote()
-            else
-                it.toString()
-        }).join(", ")
-        })""")
+//        Program.logger.info("""$name(${
+//        args.map({
+//            if (it is String)
+//                it.quote()
+//            else
+//                it.toString()
+//        }).join(", ")
+//        })""")
         return callback.call(args)
     }
 }

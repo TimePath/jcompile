@@ -12,13 +12,14 @@ import com.timepath.quakec.vm.ProgramData
 import org.intellij.lang.annotations.Language
 import org.jetbrains.spek.api.Spek
 import com.timepath.quakec.compiler.gen.Generator.ASM
+import com.timepath.quakec.QCC
 
 val opts = CompilerOptions()
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
-    return Compiler(opts)
+    return Compiler(QCC, opts)
             .include(input, "-")
-            .compile()
+            .compile() as ProgramData
 }
 
 fun exec([Language("QuakeC")] input: String) {
@@ -48,7 +49,7 @@ class CompilerSpecs : Spek() {{
         .filter { it.exists() }
         tests.forEach {
             on(it.name) {
-                val compiler = Compiler(opts)
+                val compiler = Compiler(QCC, opts)
                 compiler.include(File(resources, "defs.qh"))
                 compiler.include(it)
 
