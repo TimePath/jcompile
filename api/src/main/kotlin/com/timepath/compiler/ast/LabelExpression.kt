@@ -13,8 +13,5 @@ class LabelExpression(val id: String, ctx: ParserRuleContext? = null) : Expressi
 
     override fun toString(): String = "$id:"
 
-    override fun generate(gen: Generator): List<IR> {
-        return listOf(LabelIR(id))
-    }
 }
 

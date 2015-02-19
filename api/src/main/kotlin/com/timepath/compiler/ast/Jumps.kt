@@ -15,12 +15,6 @@ class GotoExpression(val id: String, ctx: ParserRuleContext? = null) : Expressio
 
     override fun toString(): String = "goto $id"
 
-    override fun generate(gen: Generator): List<IR> {
-        // filled in by new labels
-        val instr = IR(Instruction.GOTO, array(0, 0, 0))
-        gen.gotoLabels[instr] = id
-        return listOf(instr)
-    }
 }
 
 /**
@@ -35,18 +29,6 @@ class ReturnStatement(val returnValue: Expression?, ctx: ParserRuleContext? = nu
 
     override fun type(gen: Generator) = returnValue?.type(gen) ?: Type.Void
 
-    override fun generate(gen: Generator): List<IR> {
-        val genRet = returnValue?.doGenerate(gen)
-        val ret = linkedListOf<IR>()
-        val args = array(0, 0, 0)
-        if (genRet != null) {
-            ret.addAll(genRet)
-            args[0] = genRet.last().ret
-        }
-        ret.add(IR(Instruction.RETURN, args, 0))
-        return ret
-    }
-
 }
 
 // TODO: on labels
@@ -55,10 +37,6 @@ class ContinueStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override fun toString(): String = "continue"
 
-    override fun generate(gen: Generator): List<IR> {
-        // filled in by Loop.doGenerate()
-        return listOf(IR(Instruction.GOTO, array(0, 0, 0)))
-    }
 }
 
 // TODO: on labels
@@ -67,8 +45,4 @@ class BreakStatement(ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override fun toString(): String = "break"
 
-    override fun generate(gen: Generator): List<IR> {
-        // filled in by Loop.doGenerate()
-        return listOf(IR(Instruction.GOTO, array(0, 1, 0)))
-    }
 }

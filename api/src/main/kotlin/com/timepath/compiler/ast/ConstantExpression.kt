@@ -19,8 +19,4 @@ class ConstantExpression(any: Any, ctx: ParserRuleContext? = null) : Expression(
 
     override fun toString(): String = value.toString()
 
-    override fun generate(gen: Generator): List<IR> {
-        val constant = gen.allocator.allocateConstant(value, type = type(gen))
-        return listOf(ReferenceIR(constant.ref))
-    }
 }

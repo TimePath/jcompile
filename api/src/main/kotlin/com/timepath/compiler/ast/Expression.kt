@@ -10,9 +10,7 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 
     abstract fun type(gen: Generator): Type
 
-    fun accept(visitor: ASTVisitor) {
-        visitor.visit(this)
-    }
+    fun <T> accept(visitor: ASTVisitor<T>): T = visitor.visit(this)
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure
@@ -79,9 +77,10 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 
     fun toStringRecursive(): String = render().toString()
 
-    fun doGenerate(ctx: Generator): List<IR> {
+    fun doGenerate(gen: Generator): List<IR> {
         try {
-            return generate(ctx)
+            // TODO: push up
+            return GeneratorVisitor(gen).visit(this)
         } catch(t: Throwable) {
             val rule: ParserRuleContext? = this.ctx
             if (rule != null) {
@@ -92,8 +91,6 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
             throw t
         }
     }
-
-    open fun generate(gen: Generator): List<IR> = emptyList()
 
     /**
      * Used in constant folding

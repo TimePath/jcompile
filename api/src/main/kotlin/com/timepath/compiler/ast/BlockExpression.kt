@@ -13,12 +13,4 @@ class BlockExpression(add: List<Expression>? = null, ctx: ParserRuleContext? = n
 
     override fun type(gen: Generator) = children.last().type(gen)
 
-    override fun generate(gen: Generator): List<IR> {
-        gen.allocator.push(this)
-        val list = children.flatMap {
-            it.doGenerate(gen)
-        }
-        gen.allocator.pop()
-        return list
-    }
 }

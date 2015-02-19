@@ -7,78 +7,85 @@ fun main(args: Array<String>) {
             .forEach {
                 println("fun visit(e: " + it.toString()
                         .replace("$", ".")
-                        .replace("class com.timepath.compiler.ast.", "") + ")")
+                        .replace("class com.timepath.compiler.ast.", "") + "): T")
             }
 }
 
-fun ASTVisitor.visit(e: Expression): Unit {
-    javaClass.getMethod("visit", e.javaClass)(this, e)
+fun <T> ASTVisitor<T>.visit(e: Expression): T {
+    val method = javaClass.getMethod("visit", e.javaClass)
+    try {
+        val result = method.invoke(this, e)
+        [suppress("UNCHECKED_CAST")]
+        return result as T
+    } catch (t: Throwable) {
+        throw t
+    }
 }
 
-trait ASTVisitor {
-    fun visit(e: BinaryExpression)
-    fun visit(e: BinaryExpression.Add)
-    fun visit(e: BinaryExpression.AddAssign)
-    fun visit(e: BinaryExpression.And)
-    fun visit(e: BinaryExpression.AndAssign)
-    fun visit(e: BinaryExpression.Assign)
-    fun visit(e: BinaryExpression.BitAnd)
-    fun visit(e: BinaryExpression.BitOr)
-    fun visit(e: BinaryExpression.Comma)
-    fun visit(e: BinaryExpression.Divide)
-    fun visit(e: BinaryExpression.DivideAssign)
-    fun visit(e: BinaryExpression.Eq)
-    fun visit(e: BinaryExpression.ExclusiveOr)
-    fun visit(e: BinaryExpression.ExclusiveOrAssign)
-    fun visit(e: BinaryExpression.Ge)
-    fun visit(e: BinaryExpression.Gt)
-    fun visit(e: BinaryExpression.Le)
-    fun visit(e: BinaryExpression.Lsh)
-    fun visit(e: BinaryExpression.LshAssign)
-    fun visit(e: BinaryExpression.Lt)
-    fun visit(e: BinaryExpression.Modulo)
-    fun visit(e: BinaryExpression.ModuloAssign)
-    fun visit(e: BinaryExpression.Multiply)
-    fun visit(e: BinaryExpression.MultiplyAssign)
-    fun visit(e: BinaryExpression.Ne)
-    fun visit(e: BinaryExpression.Or)
-    fun visit(e: BinaryExpression.OrAssign)
-    fun visit(e: BinaryExpression.Rsh)
-    fun visit(e: BinaryExpression.RshAssign)
-    fun visit(e: BinaryExpression.Subtract)
-    fun visit(e: BinaryExpression.SubtractAssign)
-    fun visit(e: BlockExpression)
-    fun visit(e: BreakStatement)
-    fun visit(e: ConditionalExpression)
-    fun visit(e: ConstantExpression)
-    fun visit(e: ContinueStatement)
-    fun visit(e: DeclarationExpression)
-    fun visit(e: FunctionExpression)
-    fun visit(e: GotoExpression)
-    fun visit(e: IndexExpression)
-    fun visit(e: LabelExpression)
-    fun visit(e: LoopExpression)
-    fun visit(e: MemberExpression)
-    fun visit(e: MemoryReference)
-    fun visit(e: MethodCallExpression)
-    fun visit(e: Nop)
-    fun visit(e: ParameterExpression)
-    fun visit(e: ReferenceExpression)
-    fun visit(e: ReturnStatement)
-    fun visit(e: StructDeclarationExpression)
-    fun visit(e: SwitchExpression)
-    fun visit(e: SwitchExpression.Case)
-    fun visit(e: UnaryExpression)
-    fun visit(e: UnaryExpression.Address)
-    fun visit(e: UnaryExpression.BitNot)
-    fun visit(e: UnaryExpression.Cast)
-    fun visit(e: UnaryExpression.Dereference)
-    fun visit(e: UnaryExpression.Minus)
-    fun visit(e: UnaryExpression.Not)
-    fun visit(e: UnaryExpression.Plus)
-    fun visit(e: UnaryExpression.Post)
-    fun visit(e: UnaryExpression.PostDecrement)
-    fun visit(e: UnaryExpression.PostIncrement)
-    fun visit(e: UnaryExpression.PreDecrement)
-    fun visit(e: UnaryExpression.PreIncrement)
+trait ASTVisitor<T> {
+    fun visit(e: BinaryExpression): T
+    fun visit(e: BinaryExpression.Add): T
+    fun visit(e: BinaryExpression.AddAssign): T
+    fun visit(e: BinaryExpression.And): T
+    fun visit(e: BinaryExpression.AndAssign): T
+    fun visit(e: BinaryExpression.Assign): T
+    fun visit(e: BinaryExpression.BitAnd): T
+    fun visit(e: BinaryExpression.BitOr): T
+    fun visit(e: BinaryExpression.Comma): T
+    fun visit(e: BinaryExpression.Divide): T
+    fun visit(e: BinaryExpression.DivideAssign): T
+    fun visit(e: BinaryExpression.Eq): T
+    fun visit(e: BinaryExpression.ExclusiveOr): T
+    fun visit(e: BinaryExpression.ExclusiveOrAssign): T
+    fun visit(e: BinaryExpression.Ge): T
+    fun visit(e: BinaryExpression.Gt): T
+    fun visit(e: BinaryExpression.Le): T
+    fun visit(e: BinaryExpression.Lsh): T
+    fun visit(e: BinaryExpression.LshAssign): T
+    fun visit(e: BinaryExpression.Lt): T
+    fun visit(e: BinaryExpression.Modulo): T
+    fun visit(e: BinaryExpression.ModuloAssign): T
+    fun visit(e: BinaryExpression.Multiply): T
+    fun visit(e: BinaryExpression.MultiplyAssign): T
+    fun visit(e: BinaryExpression.Ne): T
+    fun visit(e: BinaryExpression.Or): T
+    fun visit(e: BinaryExpression.OrAssign): T
+    fun visit(e: BinaryExpression.Rsh): T
+    fun visit(e: BinaryExpression.RshAssign): T
+    fun visit(e: BinaryExpression.Subtract): T
+    fun visit(e: BinaryExpression.SubtractAssign): T
+    fun visit(e: BlockExpression): T
+    fun visit(e: BreakStatement): T
+    fun visit(e: ConditionalExpression): T
+    fun visit(e: ConstantExpression): T
+    fun visit(e: ContinueStatement): T
+    fun visit(e: DeclarationExpression): T
+    fun visit(e: FunctionExpression): T
+    fun visit(e: GotoExpression): T
+    fun visit(e: IndexExpression): T
+    fun visit(e: LabelExpression): T
+    fun visit(e: LoopExpression): T
+    fun visit(e: MemberExpression): T
+    fun visit(e: MemoryReference): T
+    fun visit(e: MethodCallExpression): T
+    fun visit(e: Nop): T
+    fun visit(e: ParameterExpression): T
+    fun visit(e: ReferenceExpression): T
+    fun visit(e: ReturnStatement): T
+    fun visit(e: StructDeclarationExpression): T
+    fun visit(e: SwitchExpression): T
+    fun visit(e: SwitchExpression.Case): T
+    fun visit(e: UnaryExpression): T
+    fun visit(e: UnaryExpression.Address): T
+    fun visit(e: UnaryExpression.BitNot): T
+    fun visit(e: UnaryExpression.Cast): T
+    fun visit(e: UnaryExpression.Dereference): T
+    fun visit(e: UnaryExpression.Minus): T
+    fun visit(e: UnaryExpression.Not): T
+    fun visit(e: UnaryExpression.Plus): T
+    fun visit(e: UnaryExpression.Post): T
+    fun visit(e: UnaryExpression.PostDecrement): T
+    fun visit(e: UnaryExpression.PostIncrement): T
+    fun visit(e: UnaryExpression.PreDecrement): T
+    fun visit(e: UnaryExpression.PreIncrement): T
 }

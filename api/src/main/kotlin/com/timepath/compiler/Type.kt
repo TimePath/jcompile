@@ -417,7 +417,7 @@ abstract class Type {
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_ENT),
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_ENT),
                 Operation("(int)", this) to OperationHandler(Int) { gen, self, _ ->
-                    MemoryReference(self.generate(gen).last().ret, Int).doGenerate(gen)
+                    MemoryReference(self.doGenerate(gen).last().ret, Int).doGenerate(gen)
                 }
         )
 
@@ -447,7 +447,7 @@ abstract class Type {
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_FUNC),
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_FUNC),
                 Operation("&", this) to OperationHandler(Float) { gen, self, _ ->
-                    BinaryExpression.Divide(MemoryReference(self.generate(gen).last().ret, Float), ConstantExpression(1)).doGenerate(gen)
+                    BinaryExpression.Divide(MemoryReference(self.doGenerate(gen).last().ret, Float), ConstantExpression(1)).doGenerate(gen)
                 }
         )
 

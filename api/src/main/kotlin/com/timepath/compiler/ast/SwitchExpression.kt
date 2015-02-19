@@ -56,9 +56,6 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
         override val attributes: Map<String, Any?>
             get() = mapOf("id" to expr)
 
-        override fun generate(gen: Generator): List<IR> {
-            return listOf(CaseIR(expr))
-        }
     }
 
 }
