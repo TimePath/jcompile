@@ -1,6 +1,7 @@
 package com.timepath.compiler.ast
 
 import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.misc.Interval
 
 fun main(args: Array<String>) {
     org.reflections.Reflections("com.timepath")
@@ -27,7 +28,10 @@ fun <T> ASTVisitor<T>.visitReflective(e: Expression): T {
         if (rule != null) {
             val source = rule.start.getTokenSource()
             println("e: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
-            println("e: ${rule.getText()}")
+            val charStream = rule.start.getInputStream()
+            val interval = Interval.of(rule.start.getStartIndex(), rule.stop.getStopIndex())
+            val text = charStream.getText(interval)
+            println("e: ${text}")
         }
         throw t
     }
