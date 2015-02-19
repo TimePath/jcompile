@@ -29,8 +29,4 @@ class FunctionExpression(val id: String? = null,
 
     override fun type(gen: Generator) = signature
 
-    override val attributes: Map<String, Any?>
-        get() = mapOf("id" to id,
-                "type" to signature)
-
 }

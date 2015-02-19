@@ -12,9 +12,6 @@ class ConstantExpression(any: Any, ctx: ParserRuleContext? = null) : Expression(
 
     override fun type(gen: Generator) = Type.from(value.value)
 
-    override val attributes: Map<String, Any?>
-        get() = mapOf("value" to value)
-
     override fun toString(): String = value.toString()
 
 }

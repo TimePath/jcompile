@@ -23,9 +23,6 @@ class MethodCallExpression(val function: Expression,
         children.filterIsInstance<Expression>()
     }
 
-    override val attributes: Map<String, Any?>
-        get() = mapOf("id" to function)
-
     override fun toString(): String = "$function(${args.joinToString(", ")})"
 
 }

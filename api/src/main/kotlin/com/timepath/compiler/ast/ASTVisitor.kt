@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
             .forEach {
                 println("fun visit(e: " + it.toString()
                         .replace("$", ".")
-                        .replace("class com.timepath.compiler.ast.", "") + "): T")
+                        .replace("class com.timepath.compiler.ast.", "") + ") = default(e)")
             }
 }
 
@@ -31,69 +31,70 @@ fun <T> ASTVisitor<T>.visit(e: Expression): T {
 }
 
 trait ASTVisitor<T> {
-    fun visit(e: BinaryExpression): T
-    fun visit(e: BinaryExpression.Add): T
-    fun visit(e: BinaryExpression.AddAssign): T
-    fun visit(e: BinaryExpression.And): T
-    fun visit(e: BinaryExpression.AndAssign): T
-    fun visit(e: BinaryExpression.Assign): T
-    fun visit(e: BinaryExpression.BitAnd): T
-    fun visit(e: BinaryExpression.BitOr): T
-    fun visit(e: BinaryExpression.Comma): T
-    fun visit(e: BinaryExpression.Divide): T
-    fun visit(e: BinaryExpression.DivideAssign): T
-    fun visit(e: BinaryExpression.Eq): T
-    fun visit(e: BinaryExpression.ExclusiveOr): T
-    fun visit(e: BinaryExpression.ExclusiveOrAssign): T
-    fun visit(e: BinaryExpression.Ge): T
-    fun visit(e: BinaryExpression.Gt): T
-    fun visit(e: BinaryExpression.Le): T
-    fun visit(e: BinaryExpression.Lsh): T
-    fun visit(e: BinaryExpression.LshAssign): T
-    fun visit(e: BinaryExpression.Lt): T
-    fun visit(e: BinaryExpression.Modulo): T
-    fun visit(e: BinaryExpression.ModuloAssign): T
-    fun visit(e: BinaryExpression.Multiply): T
-    fun visit(e: BinaryExpression.MultiplyAssign): T
-    fun visit(e: BinaryExpression.Ne): T
-    fun visit(e: BinaryExpression.Or): T
-    fun visit(e: BinaryExpression.OrAssign): T
-    fun visit(e: BinaryExpression.Rsh): T
-    fun visit(e: BinaryExpression.RshAssign): T
-    fun visit(e: BinaryExpression.Subtract): T
-    fun visit(e: BinaryExpression.SubtractAssign): T
-    fun visit(e: BlockExpression): T
-    fun visit(e: BreakStatement): T
-    fun visit(e: ConditionalExpression): T
-    fun visit(e: ConstantExpression): T
-    fun visit(e: ContinueStatement): T
-    fun visit(e: DeclarationExpression): T
-    fun visit(e: FunctionExpression): T
-    fun visit(e: GotoExpression): T
-    fun visit(e: IndexExpression): T
-    fun visit(e: LabelExpression): T
-    fun visit(e: LoopExpression): T
-    fun visit(e: MemberExpression): T
-    fun visit(e: MemoryReference): T
-    fun visit(e: MethodCallExpression): T
-    fun visit(e: Nop): T
-    fun visit(e: ParameterExpression): T
-    fun visit(e: ReferenceExpression): T
-    fun visit(e: ReturnStatement): T
-    fun visit(e: StructDeclarationExpression): T
-    fun visit(e: SwitchExpression): T
-    fun visit(e: SwitchExpression.Case): T
-    fun visit(e: UnaryExpression): T
-    fun visit(e: UnaryExpression.Address): T
-    fun visit(e: UnaryExpression.BitNot): T
-    fun visit(e: UnaryExpression.Cast): T
-    fun visit(e: UnaryExpression.Dereference): T
-    fun visit(e: UnaryExpression.Minus): T
-    fun visit(e: UnaryExpression.Not): T
-    fun visit(e: UnaryExpression.Plus): T
-    fun visit(e: UnaryExpression.Post): T
-    fun visit(e: UnaryExpression.PostDecrement): T
-    fun visit(e: UnaryExpression.PostIncrement): T
-    fun visit(e: UnaryExpression.PreDecrement): T
-    fun visit(e: UnaryExpression.PreIncrement): T
+    fun default(e: Expression): T = throw UnsupportedOperationException()
+    fun visit(e: BinaryExpression) = default(e)
+    fun visit(e: BinaryExpression.Add) = default(e)
+    fun visit(e: BinaryExpression.AddAssign) = default(e)
+    fun visit(e: BinaryExpression.And) = default(e)
+    fun visit(e: BinaryExpression.AndAssign) = default(e)
+    fun visit(e: BinaryExpression.Assign) = default(e)
+    fun visit(e: BinaryExpression.BitAnd) = default(e)
+    fun visit(e: BinaryExpression.BitOr) = default(e)
+    fun visit(e: BinaryExpression.Comma) = default(e)
+    fun visit(e: BinaryExpression.Divide) = default(e)
+    fun visit(e: BinaryExpression.DivideAssign) = default(e)
+    fun visit(e: BinaryExpression.Eq) = default(e)
+    fun visit(e: BinaryExpression.ExclusiveOr) = default(e)
+    fun visit(e: BinaryExpression.ExclusiveOrAssign) = default(e)
+    fun visit(e: BinaryExpression.Ge) = default(e)
+    fun visit(e: BinaryExpression.Gt) = default(e)
+    fun visit(e: BinaryExpression.Le) = default(e)
+    fun visit(e: BinaryExpression.Lsh) = default(e)
+    fun visit(e: BinaryExpression.LshAssign) = default(e)
+    fun visit(e: BinaryExpression.Lt) = default(e)
+    fun visit(e: BinaryExpression.Modulo) = default(e)
+    fun visit(e: BinaryExpression.ModuloAssign) = default(e)
+    fun visit(e: BinaryExpression.Multiply) = default(e)
+    fun visit(e: BinaryExpression.MultiplyAssign) = default(e)
+    fun visit(e: BinaryExpression.Ne) = default(e)
+    fun visit(e: BinaryExpression.Or) = default(e)
+    fun visit(e: BinaryExpression.OrAssign) = default(e)
+    fun visit(e: BinaryExpression.Rsh) = default(e)
+    fun visit(e: BinaryExpression.RshAssign) = default(e)
+    fun visit(e: BinaryExpression.Subtract) = default(e)
+    fun visit(e: BinaryExpression.SubtractAssign) = default(e)
+    fun visit(e: BlockExpression) = default(e)
+    fun visit(e: BreakStatement) = default(e)
+    fun visit(e: ConditionalExpression) = default(e)
+    fun visit(e: ConstantExpression) = default(e)
+    fun visit(e: ContinueStatement) = default(e)
+    fun visit(e: DeclarationExpression) = default(e)
+    fun visit(e: FunctionExpression) = default(e)
+    fun visit(e: GotoExpression) = default(e)
+    fun visit(e: IndexExpression) = default(e)
+    fun visit(e: LabelExpression) = default(e)
+    fun visit(e: LoopExpression) = default(e)
+    fun visit(e: MemberExpression) = default(e)
+    fun visit(e: MemoryReference) = default(e)
+    fun visit(e: MethodCallExpression) = default(e)
+    fun visit(e: Nop) = default(e)
+    fun visit(e: ParameterExpression) = default(e)
+    fun visit(e: ReferenceExpression) = default(e)
+    fun visit(e: ReturnStatement) = default(e)
+    fun visit(e: StructDeclarationExpression) = default(e)
+    fun visit(e: SwitchExpression) = default(e)
+    fun visit(e: SwitchExpression.Case) = default(e)
+    fun visit(e: UnaryExpression) = default(e)
+    fun visit(e: UnaryExpression.Address) = default(e)
+    fun visit(e: UnaryExpression.BitNot) = default(e)
+    fun visit(e: UnaryExpression.Cast) = default(e)
+    fun visit(e: UnaryExpression.Dereference) = default(e)
+    fun visit(e: UnaryExpression.Minus) = default(e)
+    fun visit(e: UnaryExpression.Not) = default(e)
+    fun visit(e: UnaryExpression.Plus) = default(e)
+    fun visit(e: UnaryExpression.Post) = default(e)
+    fun visit(e: UnaryExpression.PostDecrement) = default(e)
+    fun visit(e: UnaryExpression.PostIncrement) = default(e)
+    fun visit(e: UnaryExpression.PreDecrement) = default(e)
+    fun visit(e: UnaryExpression.PreIncrement) = default(e)
 }

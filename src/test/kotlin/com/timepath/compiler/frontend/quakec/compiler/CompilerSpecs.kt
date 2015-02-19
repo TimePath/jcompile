@@ -13,6 +13,7 @@ import com.timepath.q1vm.Program
 import com.timepath.q1vm.ProgramData
 import org.intellij.lang.annotations.Language
 import org.jetbrains.spek.api.Spek
+import com.timepath.compiler.PrintVisitor
 
 val opts = CompilerOptions()
 
@@ -57,7 +58,7 @@ class CompilerSpecs : Spek() {{
                 it("should parse") {
                     logger.info("Parsing $it")
                     roots = compiler.ast()
-                    val actual = BlockExpression(roots!!.last(), null).toStringRecursive()
+                    val actual = PrintVisitor.render(BlockExpression(roots!!.last(), null))
                     compare("AST", it.name + ".xml", actual)
                 }
                 var ctx: Generator?

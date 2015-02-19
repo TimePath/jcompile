@@ -118,7 +118,7 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
             debug("printing AST", writeAST) {
                 File("out", include.path + ".xml").let {
                     it.getParentFile().mkdirs()
-                    val s = root.toStringRecursive()
+                    val s = PrintVisitor.render(root)
                     it.writeText(s)
                 }
             }

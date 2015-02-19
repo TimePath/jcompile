@@ -15,9 +15,6 @@ open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) :
         throw NullPointerException("Reference $id not found")
     }
 
-    override val attributes: Map<String, Any>
-        get() = mapOf("id" to id)
-
     override fun toString(): String = id
 
 }
@@ -28,10 +25,6 @@ open class DeclarationExpression(id: String,
                                  ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
 
     override fun type(gen: Generator) = type
-
-    override val attributes: Map<String, Any>
-        get() = mapOf("id" to id,
-                "type" to type)
 
 }
 
@@ -50,9 +43,6 @@ class StructDeclarationExpression(id: String,
 class MemoryReference(val ref: Int, val type: Type, ctx: ParserRuleContext? = null) : Expression(ctx) {
 
     override fun type(gen: Generator): Type = type
-
-    override val attributes: Map<String, Any>
-        get() = mapOf("ref" to ref)
 
     override fun toString(): String = "$$ref"
 

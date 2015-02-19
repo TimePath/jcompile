@@ -53,9 +53,6 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
             ctx: ParserRuleContext? = null) : Expression(ctx) {
         override fun type(gen: Generator) = expr?.type(gen) ?: Type.Void
 
-        override val attributes: Map<String, Any?>
-            get() = mapOf("id" to expr)
-
     }
 
 }
