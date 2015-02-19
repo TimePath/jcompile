@@ -1,15 +1,26 @@
-package com.timepath.compiler.ast
+package com.timepath.compiler.gen
 
-import com.timepath.compiler.gen.IR
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.gen.ReferenceIR
-import com.timepath.q1vm.Function
-import com.timepath.compiler.gen.LabelIR
-import com.timepath.compiler.gen.FunctionIR
-import com.timepath.compiler.Type
 import java.util.LinkedList
-import com.timepath.compiler.gen.CaseIR
+import com.timepath.compiler.Type
+import com.timepath.compiler.ast.*
+import com.timepath.q1vm.Function
+import com.timepath.q1vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
+
+fun Expression.doGenerate(gen: Generator): List<IR> {
+    try {
+        // TODO: push up
+        return GeneratorVisitor(gen).visit(this)
+    } catch(t: Throwable) {
+        val rule: ParserRuleContext? = this.ctx
+        if (rule != null) {
+            val source = rule.start.getTokenSource()
+            println("E: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
+            println("E: ${rule.getText()}")
+        }
+        throw t
+    }
+}
 
 class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: BinaryExpression) = e.handler(gen)(gen, e.left, e.right)

@@ -1,25 +1,12 @@
 package com.timepath.compiler
 
+import kotlin.properties.Delegates
 import com.timepath.compiler.Type.Operation
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConditionalExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.ast.FunctionExpression
-import com.timepath.compiler.ast.IndexExpression
-import com.timepath.compiler.ast.MemoryReference
-import com.timepath.compiler.ast.MethodCallExpression
-import com.timepath.compiler.ast.MemberExpression
-import com.timepath.compiler.ast.ParameterExpression
-import com.timepath.compiler.ast.ReferenceExpression
-import com.timepath.compiler.ast.ReturnStatement
-import com.timepath.compiler.ast.StructDeclarationExpression
-import com.timepath.compiler.ast.UnaryExpression
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
+import com.timepath.compiler.gen.doGenerate
 import com.timepath.q1vm.Instruction
-import kotlin.properties.Delegates
 
 abstract class Type {
 

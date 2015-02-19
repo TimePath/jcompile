@@ -5,6 +5,7 @@ import com.timepath.compiler.Value
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.compiler.gen.GeneratorVisitor
 
 abstract class Expression(val ctx: ParserRuleContext? = null) {
 
@@ -76,21 +77,6 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
     }
 
     fun toStringRecursive(): String = render().toString()
-
-    fun doGenerate(gen: Generator): List<IR> {
-        try {
-            // TODO: push up
-            return GeneratorVisitor(gen).visit(this)
-        } catch(t: Throwable) {
-            val rule: ParserRuleContext? = this.ctx
-            if (rule != null) {
-                val source = rule.start.getTokenSource()
-                println("E: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
-                println("E: ${rule.getText()}")
-            }
-            throw t
-        }
-    }
 
     /**
      * Used in constant folding
