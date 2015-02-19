@@ -30,15 +30,6 @@ class ConditionalExpression(val test: Expression,
         }
     }
 
-    override fun evaluate(): Value? {
-        val result = test.evaluate()
-        if (result == null) return null
-        val eval = @lambda {(it: Expression?): Value? ->
-            return@lambda if (it is Expression) it.evaluate() else null
-        }
-        return if (result.toBoolean()) eval(pass) else eval(fail)
-    }
-
     override fun toString(): String = "($test ? $pass : $fail)"
 
 }

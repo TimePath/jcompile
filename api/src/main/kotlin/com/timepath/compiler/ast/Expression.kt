@@ -78,20 +78,6 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 
     fun toStringRecursive(): String = render().toString()
 
-    /**
-     * Used in constant folding
-     *
-     * @return A constant or null if it could change at runtime
-     */
-    open fun evaluate(): Value? = throw UnsupportedOperationException()
-
-    /**
-     * Used in constant folding
-     *
-     * @return true if constant folding is forbidden for this node (not descendants)
-     */
-    open fun hasSideEffects(): Boolean = false
-
 }
 
 /**

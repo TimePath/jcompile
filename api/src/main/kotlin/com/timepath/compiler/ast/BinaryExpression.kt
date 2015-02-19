@@ -59,33 +59,23 @@ abstract class BinaryExpression(val op: String, val left: Expression, val right:
 
     class Ge(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression(">=", left, right, ctx)
 
-    class Add(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("+", left, right, ctx) {
-        override fun evaluate(): Value? = left.evaluate()?.plus(right.evaluate())
-    }
+    class Add(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("+", left, right, ctx)
 
     class AddAssign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("+=", left, right, ctx)
 
-    class Subtract(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("-", left, right, ctx) {
-        override fun evaluate(): Value? = left.evaluate()?.minus(right.evaluate())
-    }
+    class Subtract(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("-", left, right, ctx)
 
     class SubtractAssign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("-=", left, right, ctx)
 
-    class Multiply(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("*", left, right, ctx) {
-        override fun evaluate(): Value? = left.evaluate()?.times(right.evaluate())
-    }
+    class Multiply(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("*", left, right, ctx)
 
     class MultiplyAssign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("*=", left, right, ctx)
 
-    class Divide(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("/", left, right, ctx) {
-        override fun evaluate(): Value? = left.evaluate()?.div(right.evaluate())
-    }
+    class Divide(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("/", left, right, ctx)
 
     class DivideAssign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("/=", left, right, ctx)
 
-    class Modulo(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("%", left, right, ctx) {
-        override fun evaluate(): Value? = left.evaluate()?.mod(right.evaluate())
-    }
+    class Modulo(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("%", left, right, ctx)
 
     class ModuloAssign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("%=", left, right, ctx)
 

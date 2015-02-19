@@ -24,8 +24,6 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
         override val attributes: Map<String, Any?>
             get() = operand.attributes
 
-        override fun evaluate(): Value? = operand.evaluate()
-        override fun hasSideEffects(): Boolean = operand.hasSideEffects()
         override fun reduce(): Expression? = operand.reduce()
     }
 

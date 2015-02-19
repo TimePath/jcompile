@@ -3,6 +3,7 @@ package com.timepath.compiler
 import kotlin.properties.Delegates
 import com.timepath.compiler.Type.Operation
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 import com.timepath.compiler.gen.doGenerate

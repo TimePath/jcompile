@@ -8,6 +8,7 @@ import com.timepath.compiler.Vector
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
+import com.timepath.compiler.gen.evaluate
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -165,7 +166,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             val initializer = it.initializer()?.accept(this)?.single()
             when (initializer) {
                 is ConstantExpression -> {
-                    val value = initializer.evaluate()
+                    val value = initializer.evaluate()!!
                     val s = value.value.toString()
                     if (s.startsWith('#')) {
                         // FIXME: HACK
