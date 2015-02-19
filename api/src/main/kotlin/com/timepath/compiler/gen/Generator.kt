@@ -3,7 +3,7 @@ package com.timepath.compiler.gen
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
@@ -20,7 +20,7 @@ class Generator(val opts: CompilerOptions) {
     val gotoLabels = linkedMapOf<IR, String>()
 
     class object {
-        val logger = Logging.new()
+        val logger = Logger.new()
     }
 
     val allocator: Allocator = Allocator(opts)

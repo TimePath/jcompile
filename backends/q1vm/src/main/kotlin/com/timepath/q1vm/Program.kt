@@ -2,7 +2,7 @@ package com.timepath.q1vm
 
 import java.io.File
 import java.util.*
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.q1vm.util.IOWrapper
 import com.timepath.q1vm.util.ProgramDataReader
 
@@ -11,7 +11,7 @@ public class Program(val data: ProgramData) {
     val world = data.entities.spawn()
 
     class object {
-        val logger = Logging.new()
+        val logger = Logger.new()
     }
 
     public fun exec(needle: String = "main") {

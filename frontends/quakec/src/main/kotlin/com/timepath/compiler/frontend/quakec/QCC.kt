@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
 
 object QCC : Frontend {
-    var rules: List<String>? = null
+    public val rules: Array<String> = QCParser.ruleNames
 
     fun tree(input: ANTLRInputStream): ParseTree {
         val lexer = QCLexer(input)
@@ -27,7 +27,6 @@ object QCC : Frontend {
             parser.compilationUnit() // STAGE 2
             // if we parse ok, it's LL not SLL
         }
-        rules = parser.getRuleNames().toList()
         return tree
     }
 

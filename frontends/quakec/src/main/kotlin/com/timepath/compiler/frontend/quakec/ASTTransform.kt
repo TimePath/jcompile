@@ -1,7 +1,7 @@
 package com.timepath.compiler.frontend.quakec
 
 import java.util.regex.Pattern
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.Type
 import com.timepath.compiler.TypeRegistry
 import com.timepath.compiler.Vector
@@ -14,7 +14,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() {
 
     class object {
-        val logger = Logging.new()
+        val logger = Logger.new()
     }
 
     private fun debug(ctx: ParserRuleContext) {

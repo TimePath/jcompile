@@ -1,12 +1,12 @@
 package com.timepath.compiler.test
 
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.Type
 
-val logger = Logging.new()
+val logger = Logger.new()
 
 fun main(args: Array<String>) {
 

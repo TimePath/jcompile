@@ -4,7 +4,7 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Stack
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Value
 import com.timepath.compiler.Type
@@ -13,7 +13,7 @@ import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
 class Allocator(val opts: CompilerOptions) {
 
     class object {
-        val logger = Logging.new()
+        val logger = Logger.new()
     }
 
     /**

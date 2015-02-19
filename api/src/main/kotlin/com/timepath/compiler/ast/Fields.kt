@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext
  * array[index], entity.(field)
  */
 // TODO: arrays
-class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>("[]", left, right, ctx) {
+class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression("[]", left, right, ctx) {
 
     var instr = Instruction.LOAD_FLOAT
 
@@ -45,7 +45,7 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
  * struct.field
  */
 // TODO: structs
-class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression<Expression, Expression>(".", left, ConstantExpression(field), ctx) {
+class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
 
     var instr = Instruction.LOAD_FLOAT
 

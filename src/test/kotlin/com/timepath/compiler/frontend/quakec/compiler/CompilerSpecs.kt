@@ -2,7 +2,7 @@ package com.timepath.quakec.compiler
 
 import java.io.File
 import kotlin.test.assertEquals
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
@@ -41,7 +41,7 @@ fun compare(what: String, name: String, actual: String) {
     }
 }
 
-val logger = Logging.new()
+val logger = Logger.new()
 
 class CompilerSpecs : Spek() {{
     given("a compiler") {

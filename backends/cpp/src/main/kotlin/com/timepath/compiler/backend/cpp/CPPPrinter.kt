@@ -4,7 +4,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Type
@@ -169,7 +169,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
                     "(${left.pprint()} $op ${right.pprint()})"
                 }
             }
-            is BinaryExpression<*, *> -> if (depth > 0) "(${when (left) {
+            is BinaryExpression -> if (depth > 0) "(${when (left) {
                 is DeclarationExpression -> left.id
                 else -> left.pprint()
             }} ${op} ${right.pprint()})" else "/* FIXME: constant fold */"
@@ -194,7 +194,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
 }
 
 
-val logger = Logging.new()
+val logger = Logger.new()
 
 val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
 

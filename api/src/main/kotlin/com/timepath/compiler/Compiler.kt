@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import javax.swing.*
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.gen.Generator
@@ -19,7 +19,7 @@ import org.antlr.v4.runtime.ANTLRInputStream
 public class Compiler(val parser: Frontend, val opts: CompilerOptions = CompilerOptions()) {
 
     class object {
-        val logger = Logging.new()
+        val logger = Logger.new()
         val debugThreads = true
         val debugPP = false
         val writeAST = false

@@ -2,17 +2,20 @@ package com.timepath.compiler
 
 import java.util.Date
 import java.io.File
-import com.timepath.Logging
+import com.timepath.Logger
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.q1vm.util.IOWrapper
 import org.anarres.cpp.Feature
 
-val logger = Logging.new()
+val logger = Logger.new()
 
 fun time(name: String, action: () -> Unit) {
     val start = Date()
+    kotlin.util.measureTimeMillis {
+
+    }
     action()
     logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
 }

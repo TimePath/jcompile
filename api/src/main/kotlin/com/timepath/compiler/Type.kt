@@ -90,7 +90,7 @@ abstract class Type {
 
     class DefaultAssignHandler(type: Type,
                                instr: Instruction,
-                               op: (left: Expression, right: Expression) -> BinaryExpression<Expression, Expression>? = { left, right -> null })
+                               op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
     : OperationHandler(type, { gen, left, right ->
         with(linkedListOf<IR>()) {
             val realInstr: Instruction

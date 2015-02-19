@@ -1,13 +1,14 @@
 package com.timepath
 
 import java.lang.invoke.MethodHandles
-import java.util.logging.Logger
 import java.util.logging.LogManager
 
-object Logging {
+object Logger {
     {
-        LogManager.getLogManager().readConfiguration(javaClass.getResourceAsStream("/logging.properties"));
+        LogManager.getLogManager()
+                .readConfiguration(javaClass.getResourceAsStream("/logging.properties"));
     }
     [suppress("NOTHING_TO_INLINE")]
-    inline fun new(name: String = MethodHandles.lookup().lookupClass().getName()) = Logger.getLogger(name)
+    inline fun new(name: String = MethodHandles.lookup().lookupClass().getName())
+            = java.util.logging.Logger.getLogger(name)
 }
