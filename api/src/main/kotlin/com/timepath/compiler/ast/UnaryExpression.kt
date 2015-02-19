@@ -6,7 +6,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
 
-abstract class UnaryExpression(val op: String, val operand: Expression, ctx: ParserRuleContext? = null) : Expression(ctx) {
+abstract class UnaryExpression(val op: String, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
 
     {
         add(operand)
@@ -18,7 +18,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, ctx: Par
 
     override fun type(gen: Generator) = handler(gen).type
 
-    class Cast(val type: Type, val operand: Expression, ctx: ParserRuleContext? = null) : Expression(ctx) {
+    class Cast(val type: Type, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
         override fun toString(): String = "(($type) $operand)"
         override fun type(gen: Generator): Type = type
         override fun reduce(): Expression? = operand.reduce()

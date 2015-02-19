@@ -8,7 +8,7 @@ import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 // TODO: namespace
-open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) : Expression(ctx) {
+open class ReferenceExpression(val id: String, override val ctx: ParserRuleContext? = null) : Expression() {
 
     override fun type(gen: Generator): Type {
         gen.allocator[id]?.let { return it.type }
@@ -22,7 +22,7 @@ open class ReferenceExpression(val id: String, ctx: ParserRuleContext? = null) :
 open class DeclarationExpression(id: String,
                                  val type: Type,
                                  val value: ConstantExpression? = null,
-                                 ctx: ParserRuleContext? = null) : ReferenceExpression(id, ctx) {
+                                 override val ctx: ParserRuleContext? = null) : ReferenceExpression(id) {
 
     override fun type(gen: Generator) = type
 
@@ -31,16 +31,16 @@ open class DeclarationExpression(id: String,
 open class ParameterExpression(id: String,
                                type: Type,
                                val index: Int,
-                               ctx: ParserRuleContext? = null) : DeclarationExpression(id, type, ctx = ctx) {
+                               override val ctx: ParserRuleContext? = null) : DeclarationExpression(id, type) {
 
 }
 
 class StructDeclarationExpression(id: String,
                                   val struct: Type.Struct,
-                                  ctx: ParserRuleContext? = null) : DeclarationExpression(id, struct, null, ctx) {
+                                  override val ctx: ParserRuleContext? = null) : DeclarationExpression(id, struct, null) {
 }
 
-class MemoryReference(val ref: Int, val type: Type, ctx: ParserRuleContext? = null) : Expression(ctx) {
+class MemoryReference(val ref: Int, val type: Type, override val ctx: ParserRuleContext? = null) : Expression() {
 
     override fun type(gen: Generator): Type = type
 

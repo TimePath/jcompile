@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 
-class BlockExpression(add: List<Expression>? = null, ctx: ParserRuleContext? = null) : Expression(ctx) {
+class BlockExpression(add: List<Expression>? = null, override val ctx: ParserRuleContext? = null) : Expression() {
     {
         if (add != null) {
             addAll(add)

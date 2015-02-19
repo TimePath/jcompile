@@ -7,7 +7,9 @@ import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.gen.GeneratorVisitor
 
-abstract class Expression(val ctx: ParserRuleContext? = null) {
+abstract class Expression {
+
+    abstract val ctx: ParserRuleContext?
 
     abstract fun type(gen: Generator): Type
 
@@ -57,7 +59,7 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 /**
  * Lonely semicolon
  */
-class Nop(ctx: ParserRuleContext? = null) : Expression(ctx) {
+class Nop(override val ctx: ParserRuleContext? = null) : Expression() {
     override fun type(gen: Generator): Type = throw UnsupportedOperationException()
 }
 

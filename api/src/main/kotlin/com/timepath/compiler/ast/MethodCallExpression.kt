@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 class MethodCallExpression(val function: Expression,
                            add: List<Expression>? = null,
-                           ctx: ParserRuleContext? = null) : Expression(ctx) {
+                           override val ctx: ParserRuleContext? = null) : Expression() {
 
     {
         if (add != null) {

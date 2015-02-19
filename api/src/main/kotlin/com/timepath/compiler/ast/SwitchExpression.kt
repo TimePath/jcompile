@@ -7,7 +7,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
 
-class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserRuleContext? = null) : Expression(ctx) {
+class SwitchExpression(val test: Expression, add: List<Expression>, override val ctx: ParserRuleContext? = null) : Expression() {
 
     override fun type(gen: Generator) = test.type(gen)
 
@@ -50,7 +50,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, ctx: ParserR
              * Case expression, null = default
              */
             val expr: Expression?,
-            ctx: ParserRuleContext? = null) : Expression(ctx) {
+            override val ctx: ParserRuleContext? = null) : Expression() {
         override fun type(gen: Generator) = expr?.type(gen) ?: Type.Void
 
     }

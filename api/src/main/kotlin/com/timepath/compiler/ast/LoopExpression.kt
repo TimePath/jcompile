@@ -11,7 +11,7 @@ class LoopExpression(val predicate: Expression,
                      val checkBefore: Boolean = true,
                      val initializer: List<Expression>? = null,
                      val update: List<Expression>? = null,
-                     ctx: ParserRuleContext? = null) : Expression(ctx) {
+                     override val ctx: ParserRuleContext? = null) : Expression() {
     {
         add(body)
     }

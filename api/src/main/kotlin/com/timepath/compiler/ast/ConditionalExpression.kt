@@ -12,7 +12,7 @@ class ConditionalExpression(val test: Expression,
                             val expression: Boolean,
                             val pass: Expression,
                             val fail: Expression? = null,
-                            ctx: ParserRuleContext? = null) : Expression(ctx) {
+                            override val ctx: ParserRuleContext? = null) : Expression() {
 
     {
         add(test)

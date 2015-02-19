@@ -7,7 +7,7 @@ import com.timepath.compiler.gen.IR
 import com.timepath.compiler.gen.ReferenceIR
 import org.antlr.v4.runtime.ParserRuleContext
 
-class ConstantExpression(any: Any, ctx: ParserRuleContext? = null) : Expression(ctx) {
+class ConstantExpression(any: Any, override val ctx: ParserRuleContext? = null) : Expression() {
     val value = Value(any)
 
     override fun type(gen: Generator) = Type.from(value.value)

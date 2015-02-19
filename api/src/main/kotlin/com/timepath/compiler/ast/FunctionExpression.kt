@@ -19,7 +19,7 @@ class FunctionExpression(val id: String? = null,
                          val vararg: Expression? = null,
                          add: List<Expression>? = null,
                          val builtin: Int? = null,
-                         ctx: ParserRuleContext? = null) : Expression(ctx) {
+                         override val ctx: ParserRuleContext? = null) : Expression() {
 
     {
         if (add != null) {

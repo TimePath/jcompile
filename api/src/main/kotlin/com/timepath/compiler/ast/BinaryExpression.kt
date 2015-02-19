@@ -6,7 +6,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
-abstract class BinaryExpression(val op: String, val left: Expression, val right: Expression, ctx: PRC? = null) : Expression(ctx) {
+abstract class BinaryExpression(val op: String, val left: Expression, val right: Expression, override val ctx: PRC? = null) : Expression() {
 
     {
         add(left)
