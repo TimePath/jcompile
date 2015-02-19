@@ -1,5 +1,7 @@
 package com.timepath.compiler.ast
 
+import org.antlr.v4.runtime.ParserRuleContext
+
 fun main(args: Array<String>) {
     org.reflections.Reflections("com.timepath")
             .getSubTypesOf(javaClass<Expression>())
@@ -18,6 +20,12 @@ fun <T> ASTVisitor<T>.visit(e: Expression): T {
         [suppress("UNCHECKED_CAST")]
         return result as T
     } catch (t: Throwable) {
+        val rule: ParserRuleContext? = e.ctx
+        if (rule != null) {
+            val source = rule.start.getTokenSource()
+            println("e: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
+            println("e: ${rule.getText()}")
+        }
         throw t
     }
 }

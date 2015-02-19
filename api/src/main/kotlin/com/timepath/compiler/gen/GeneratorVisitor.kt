@@ -7,20 +7,8 @@ import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
-fun Expression.doGenerate(gen: Generator): List<IR> {
-    try {
-        // TODO: push up
-        return GeneratorVisitor(gen).visit(this)
-    } catch(t: Throwable) {
-        val rule: ParserRuleContext? = this.ctx
-        if (rule != null) {
-            val source = rule.start.getTokenSource()
-            println("E: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
-            println("E: ${rule.getText()}")
-        }
-        throw t
-    }
-}
+// TODO: push up
+fun Expression.doGenerate(gen: Generator): List<IR> = GeneratorVisitor(gen).visit(this)
 
 class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: BinaryExpression) = e.handler(gen)(gen, e.left, e.right)
