@@ -39,4 +39,5 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
     compile "org.anarres:jcpp:${versions.jcpp}"
     compile "org.antlr:antlr4-runtime:${versions.antlr}"
+    compile "org.reflections:reflections:0.9.9"
 }

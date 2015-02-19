@@ -10,6 +10,10 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
 
     abstract fun type(gen: Generator): Type
 
+    fun accept(visitor: ASTVisitor) {
+        visitor.visit(this)
+    }
+
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure
         val ret = mutableChildren
@@ -96,7 +100,7 @@ abstract class Expression(val ctx: ParserRuleContext? = null) {
      *
      * @return A constant or null if it could change at runtime
      */
-    open fun evaluate(): Value? = null
+    open fun evaluate(): Value? = throw UnsupportedOperationException()
 
     /**
      * Used in constant folding
