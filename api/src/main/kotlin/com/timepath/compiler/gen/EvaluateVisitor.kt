@@ -8,7 +8,7 @@ import com.timepath.compiler.ast.*
  *
  * @return A constant or null if it could change at runtime
  */
-fun Expression.evaluate(): Value? = EvaluateVisitor.visit(this)
+fun Expression.evaluate(): Value? = accept(EvaluateVisitor)
 
 object EvaluateVisitor : ASTVisitor<Value?> {
     override fun visit(e: BinaryExpression): Value? {

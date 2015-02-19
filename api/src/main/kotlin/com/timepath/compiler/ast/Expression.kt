@@ -13,9 +13,7 @@ abstract class Expression {
 
     abstract fun type(gen: Generator): Type
 
-    open fun reduce(): Expression? = this
-
-    fun <T> accept(visitor: ASTVisitor<T>): T = visitor.visit(this)
+    fun <T> accept(visitor: ASTVisitor<T>): T = visitor.visitReflective(this)
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure

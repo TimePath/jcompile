@@ -11,38 +11,8 @@ class SwitchExpression(val test: Expression, add: List<Expression>, override val
 
     override fun type(gen: Generator) = test.type(gen)
 
-    class object {
-        val uid = AtomicInteger()
-    }
-
-    {
+    ;{
         addAll(add)
-    }
-
-    override fun reduce(): Expression {
-        val jumps = linkedListOf<Expression>()
-        val default = linkedListOf<Expression>()
-        val cases = LoopExpression(checkBefore = false, predicate = ConstantExpression(0), body = BlockExpression(transform {
-            when (it) {
-                is SwitchExpression -> it.reduce()
-                is Case -> {
-                    val expr = it.expr
-                    fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replaceAll("[^a-zA-Z_0-9]", "_")}"
-                    val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
-                    val goto = GotoExpression(label)
-                    if (expr == null) {
-                        default.add(goto)
-                    } else {
-                        val test = BinaryExpression.Eq(test, expr)
-                        val jump = ConditionalExpression(test, false, goto)
-                        jumps.add(jump)
-                    }
-                    LabelExpression(label) // replace with a label so goto will be filled in later
-                }
-                else -> it
-            }
-        }))
-        return BlockExpression(jumps + default + listOf(cases));
     }
 
     class Case(

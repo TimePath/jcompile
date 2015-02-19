@@ -8,7 +8,7 @@ import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 // TODO: push up
-fun Expression.doGenerate(gen: Generator): List<IR> = GeneratorVisitor(gen).visit(this)
+fun Expression.doGenerate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
 
 class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: BinaryExpression) = e.handler(gen)(gen, e.left, e.right)
@@ -390,7 +390,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
 
     override fun visit(e: UnaryExpression.BitNot) = visit(e : UnaryExpression)
 
-    override fun visit(e: UnaryExpression.Cast) = visit(e.operand)
+    override fun visit(e: UnaryExpression.Cast) = e.operand.accept(this)
 
     override fun visit(e: UnaryExpression.Dereference) = visit(e : UnaryExpression)
 

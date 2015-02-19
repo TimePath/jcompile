@@ -21,7 +21,6 @@ abstract class UnaryExpression(val op: String, val operand: Expression, override
     class Cast(val type: Type, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
         override fun toString(): String = "(($type) $operand)"
         override fun type(gen: Generator): Type = type
-        override fun reduce(): Expression? = operand.reduce()
     }
 
     abstract class Post(op: String, operand: Expression, ctx: ParserRuleContext? = null) : UnaryExpression(op, operand, ctx) {

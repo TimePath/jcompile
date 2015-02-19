@@ -13,7 +13,10 @@ fun main(args: Array<String>) {
             }
 }
 
-fun <T> ASTVisitor<T>.visit(e: Expression): T {
+/**
+ * Prefer Expression.accept(this)
+ */
+fun <T> ASTVisitor<T>.visitReflective(e: Expression): T {
     val method = javaClass.getMethod("visit", e.javaClass)
     try {
         val result = method.invoke(this, e)
