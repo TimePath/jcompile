@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 // TODO: conditional goto
 class GotoExpression(val id: String, override val ctx: ParserRuleContext? = null) : Expression() {
-    override fun type(gen: Generator) = throw UnsupportedOperationException()
+    override fun type(gen: Generator) = Type.Void
 
     override fun toString(): String = "goto $id"
 
@@ -30,7 +30,7 @@ class ReturnStatement(val returnValue: Expression?, override val ctx: ParserRule
 
 // TODO: on labels
 class ContinueStatement(override val ctx: ParserRuleContext? = null) : Expression() {
-    override fun type(gen: Generator) = throw UnsupportedOperationException()
+    override fun type(gen: Generator) = Type.Void
 
     override fun toString(): String = "continue"
 
@@ -38,7 +38,7 @@ class ContinueStatement(override val ctx: ParserRuleContext? = null) : Expressio
 
 // TODO: on labels
 class BreakStatement(override val ctx: ParserRuleContext? = null) : Expression() {
-    override fun type(gen: Generator) = throw UnsupportedOperationException()
+    override fun type(gen: Generator) = Type.Void
 
     override fun toString(): String = "break"
 

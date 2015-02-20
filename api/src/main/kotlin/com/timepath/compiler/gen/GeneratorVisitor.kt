@@ -373,7 +373,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: SwitchExpression): List<IR> {
-        throw UnsupportedOperationException()
+        return e.reduce()!!.accept(this)
     }
 
     override fun visit(e: SwitchExpression.Case): List<IR> {

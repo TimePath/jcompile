@@ -18,10 +18,20 @@ abstract class Type {
             is kotlin.Boolean -> Bool
             is kotlin.String -> String
             is com.timepath.compiler.Vector -> Vector
+            is kotlin.Char -> Int
             else -> throw NullPointerException()
         }
 
-        fun handle(operation: Operation): Type.OperationHandler {
+        fun handle(operation: Operation): OperationHandler {
+            if (operation.op == ",") {
+                return OperationHandler(operation.right!!) { gen, left, right ->
+                    with(linkedListOf<IR>()) {
+                        addAll(left.doGenerate(gen))
+                        addAll(right!!.doGenerate(gen))
+                        this
+                    }
+                }
+            }
             operation.left.handle(operation)?.let {
                 return it
             }
@@ -87,13 +97,14 @@ abstract class Type {
             // TODO: other storeps
             when {
                 left is IndexExpression -> {
-                    val typeL = left.left.type(gen)
-                    val tmp = left.left.doGenerate(gen)
-                    addAll(tmp)
-                    val refE = tmp.last().ret
-
+                    // TODO: returning arrays
+                    // val typeL = left.left.type(gen)
+                    // val tmp = left.left.doGenerate(gen)
+                    // addAll(tmp)
+                    // val refE = tmp.last().ret
+                    // val memoryReference = MemoryReference(refE, typeL)
+                    val memoryReference = left.left
                     realInstr = Instruction.STOREP_FLOAT
-                    val memoryReference = MemoryReference(refE, typeL)
                     leftR = IndexExpression(memoryReference, left.right)
                     leftL = IndexExpression(memoryReference, left.right).let {
                         it.instr = Instruction.ADDRESS
@@ -135,13 +146,6 @@ abstract class Type {
 
     object Void : Type() {
         override val ops = mapOf(
-                Operation(",", this, this) to OperationHandler(this) { gen, left, right ->
-                    with(linkedListOf<IR>()) {
-                        addAll(left.doGenerate(gen))
-                        addAll(right!!.doGenerate(gen))
-                        this
-                    }
-                },
                 Operation("&&", this, this) to OperationHandler(Bool) { gen, left, right ->
                     // TODO: Instruction.AND when no side effects
                     ConditionalExpression(left, true,
@@ -169,15 +173,39 @@ abstract class Type {
         }
     }
 
-    object Bool : Type() {
+    object Bool : Number() {
         override val ops: Map<Operation, OperationHandler>
             get() = mapOf(
                     Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_FLOAT),
                     Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_FLOAT),
                     Operation("!", this) to OperationHandler(Bool) { gen, self, _ ->
                         BinaryExpression.Eq(ConstantExpression(0f), self).doGenerate(gen)
-                    }
+                    },
+                    Operation("-", this) to OperationHandler(this) { gen, self, _ ->
+                        BinaryExpression.Subtract(ConstantExpression(0f), self).doGenerate(gen)
+                    },
+                    Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
+                    Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_FLOAT),
+                    Operation("*", this, Float) to DefaultHandler(Float, Instruction.MUL_FLOAT),
+                    Operation("*", this, Int) to DefaultHandler(Float, Instruction.MUL_FLOAT),
+                    Operation("|", this, Float) to DefaultHandler(Int, Instruction.BITOR),
+                    Operation("&", this, Int) to DefaultHandler(Int, Instruction.BITAND),
+                    Operation("<=", this, this) to DefaultHandler(Bool, Instruction.LE),
+                    Operation("<", this, this) to DefaultHandler(Bool, Instruction.LT),
+                    Operation(">=", this, this) to DefaultHandler(Bool, Instruction.GE),
+                    Operation(">", this, this) to DefaultHandler(Bool, Instruction.GT)
             )
+
+        override fun handle(op: Operation): OperationHandler? {
+            super.handle(op)?.let {
+                return it
+            }
+            // TODO: remove
+            if (op.right != Bool) {
+                return super.handle(op.copy(right = Bool))
+            }
+            return null
+        }
 
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
             return listOf(DeclarationExpression(name, this, value))
@@ -192,6 +220,9 @@ abstract class Type {
             if (op.right == Float) {
                 return Float.handle(op.copy(left = Float))
             }
+            if (op.right == Bool) {
+                return super.handle(op.copy(right = Int))
+            }
             return null
         }
     }
@@ -201,7 +232,7 @@ abstract class Type {
             super.handle(op)?.let {
                 return it
             }
-            if (op.right == Int) {
+            if (op.right == Int || op.right == Bool) {
                 return super.handle(op.copy(right = Float))
             }
             return null
@@ -288,9 +319,11 @@ abstract class Type {
                         MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).doGenerate(gen)
                     },
                     // TODO
-                    //                Operation("<<", this, this) to DefaultHandler(Instruction.BITOR),
-                    //                Operation(">>", this, this) to DefaultHandler(Instruction.BITOR),
-                    //                Operation("**", this, this) to DefaultHandler(Instruction.BITOR),
+                    Operation("<<", this, this) to DefaultHandler(Int, Instruction.BITOR),
+                    // TODO
+                    Operation(">>", this, this) to DefaultHandler(Int, Instruction.BITOR),
+                    // TODO
+                    Operation("**", this, this) to DefaultHandler(Float, Instruction.BITOR),
                     Operation("+=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT) { left, right ->
                         BinaryExpression.Add(left, right)
                     },
@@ -340,11 +373,26 @@ abstract class Type {
                 Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC),
                 Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_VEC),
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_VEC),
+                Operation("+", this) to OperationHandler(this) { gen, self, _ ->
+                    self.doGenerate(gen)
+                },
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_VEC),
                 Operation("*", this, Float) to DefaultHandler(this, Instruction.MUL_VEC_FLOAT),
                 Operation("*", this, Int) to DefaultHandler(this, Instruction.MUL_VEC_FLOAT),
                 Operation("*=", this, Float) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
                     BinaryExpression.Multiply(left, right)
+                },
+                Operation("*=", this, Int) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
+                    BinaryExpression.Multiply(left, right)
+                },
+                Operation("/", this, Float) to OperationHandler(this) { gen, left, right ->
+                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).doGenerate(gen)
+                },
+                Operation("/", this, Int) to OperationHandler(this) { gen, left, right ->
+                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).doGenerate(gen)
+                },
+                Operation("/=", this, Float) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
+                    BinaryExpression.Divide(left, right)
                 },
                 Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_VEC),
                 Operation("+=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
@@ -353,6 +401,13 @@ abstract class Type {
                 Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_VEC),
                 Operation("-=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
                     BinaryExpression.Subtract(left, right)
+                },
+                Operation("*", this, this) to OperationHandler(Float) { gen, left, right ->
+                    BinaryExpression.Add(BinaryExpression.Add(
+                            BinaryExpression.Multiply(MemberExpression(left, "x"), MemberExpression(left, "x")),
+                            BinaryExpression.Multiply(MemberExpression(left, "y"), MemberExpression(left, "y"))),
+                            BinaryExpression.Multiply(MemberExpression(left, "z"), MemberExpression(left, "z"))
+                    ).doGenerate(gen)
                 },
                 Operation("|", this, this) to OperationHandler(this) { gen, left, right ->
                     with(linkedListOf<IR>()) {
@@ -375,6 +430,58 @@ abstract class Type {
                 },
                 Operation("|=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
                     BinaryExpression.BitOr(left, right)
+                },
+                Operation("&", this, this) to OperationHandler(this) { gen, left, right ->
+                    with(linkedListOf<IR>()) {
+                        val ref = gen.allocator.allocateReference(type = this@Vector)
+                        val genL = left.doGenerate(gen)
+                        addAll(genL)
+                        val genR = right!!.doGenerate(gen)
+                        addAll(genR)
+                        val lhs = genL.last()
+                        val rhs = genR.last()
+                        for (i in 0..2) {
+                            val component = MemoryReference(ref.ref + i, type = Float)
+                            addAll(BinaryExpression.Assign(component, BinaryExpression.BitAnd(
+                                    MemoryReference(lhs.ret + i, type = Float),
+                                    MemoryReference(rhs.ret + i, type = Float)
+                            )).doGenerate(gen))
+                        }
+                        this
+                    }
+                },
+                Operation("&=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
+                    BinaryExpression.BitAnd(left, right)
+                },
+                Operation("~", this) to OperationHandler(this) { gen, self, _ ->
+                    with(linkedListOf<IR>()) {
+                        val ref = gen.allocator.allocateReference(type = this@Vector)
+                        val genL = self.doGenerate(gen)
+                        addAll(genL)
+                        val lhs = genL.last()
+                        for (i in 0..2) {
+                            val component = MemoryReference(ref.ref + i, type = Float)
+                            addAll(BinaryExpression.Assign(component, UnaryExpression.BitNot(
+                                    MemoryReference(lhs.ret + i, type = Float)
+                            )).doGenerate(gen))
+                        }
+                        this
+                    }
+                },
+                Operation("-", this) to OperationHandler(this) { gen, self, _ ->
+                    with(linkedListOf<IR>()) {
+                        val ref = gen.allocator.allocateReference(type = this@Vector)
+                        val genL = self.doGenerate(gen)
+                        addAll(genL)
+                        val lhs = genL.last()
+                        for (i in 0..2) {
+                            val component = MemoryReference(ref.ref + i, type = Float)
+                            addAll(BinaryExpression.Assign(component, UnaryExpression.Minus(
+                                    MemoryReference(lhs.ret + i, type = Float)
+                            )).doGenerate(gen))
+                        }
+                        this
+                    }
                 }
         )
     }
@@ -416,7 +523,9 @@ abstract class Type {
 
     data class Field(val type: Type) : Pointer() {
         override val ops = mapOf(
-                Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FIELD)
+                Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FIELD),
+                Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_FUNC),
+                Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_FUNC)
         )
 
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<DeclarationExpression> {
@@ -452,17 +561,30 @@ abstract class Type {
     }
 
     data class Array(val type: Type, val sizeExpr: Expression) : Pointer() {
+        val index = OperationHandler(type) { gen, left, right ->
+            when (left) {
+                is MemberExpression -> {
+                    val field = ReferenceExpression((left.right as ConstantExpression).value.value as kotlin.String)
+                    IndexExpression(left.left, IndexExpression(field, right!!)).doGenerate(gen)
+                }
+                is ReferenceExpression -> {
+                    val s = generateAccessorName(left.id)
+                    val indexer = MethodCallExpression(ReferenceExpression(s), listOf(right!!))
+                    MethodCallExpression(indexer, listOf(ConstantExpression(0))).doGenerate(gen)
+                }
+                else -> throw UnsupportedOperationException()
+            }
+        }
         override val ops = mapOf(
                 Operation("sizeof", this) to OperationHandler(Int) { gen, self, _ ->
                     sizeExpr.doGenerate(gen)
                 },
-                Operation("[]", this, Int) to OperationHandler(type) { gen, left, right ->
-                    val s = generateAccessorName((left as ReferenceExpression).id)
-                    val indexer = MethodCallExpression(ReferenceExpression(s), listOf(right!!))
-                    MethodCallExpression(indexer, listOf(ConstantExpression(0))).doGenerate(gen)
-                }
+                Operation("[]", this, Int) to index,
+                // TODO: remove
+                Operation("[]", this, Float) to index
         )
 
+        // FIXME
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<Expression> {
             val size = (sizeExpr.evaluate()?.value as kotlin.Number).toInt()
             val intRange = size.indices

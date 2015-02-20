@@ -30,6 +30,7 @@ import com.timepath.compiler.ast.ReturnStatement
 import com.timepath.compiler.ast.UnaryExpression
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.gen.Generator
+import com.timepath.compiler.gen.reduce
 import org.antlr.v4.runtime.misc.Utils
 
 class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) {

@@ -71,7 +71,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val parameterDeclarations = parameterList?.parameterDeclaration()
         val typeArgs = parameterDeclarations?.map { it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type() } ?: emptyList()
         val vararg = parameterVarargs?.declarationSpecifiers()?.type()
-        val function = Type.Function(type, typeArgs.requireNoNulls(), vararg)
+        val function = Type.Function(type, typeArgs.requireNoNulls().filter { it != Type.Void }, vararg)
         return function
     }
 
@@ -659,6 +659,6 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                 else -> constExpr
             })
         }
-        return listOf(ConstantExpression("FIXME_${text}", ctx = ctx))
+        return listOf(UnaryExpression.Cast(Type.Void, ReferenceExpression("FIXME_${text}", ctx = ctx)))
     }
 }
