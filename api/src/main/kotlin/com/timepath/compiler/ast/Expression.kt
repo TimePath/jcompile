@@ -1,11 +1,8 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.Type
-import com.timepath.compiler.Value
 import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.gen.IR
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.compiler.gen.GeneratorVisitor
 
 abstract class Expression {
 

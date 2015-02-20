@@ -3,8 +3,6 @@ package com.timepath.compiler.ast
 import kotlin.properties.Delegates
 import com.timepath.compiler.Type
 import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.gen.IR
-import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 class MethodCallExpression(val function: Expression,

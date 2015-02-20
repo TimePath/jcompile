@@ -5,7 +5,6 @@ import com.timepath.compiler.Type
 import com.timepath.compiler.ast.*
 import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
-import org.antlr.v4.runtime.ParserRuleContext
 
 // TODO: push up
 fun Expression.doGenerate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
