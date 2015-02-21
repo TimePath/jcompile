@@ -7,8 +7,11 @@ import java.util.Stack
 import com.timepath.Logger
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Value
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.types.bool_t
+import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.string_t
 
 class Allocator(val opts: CompilerOptions) {
 
@@ -122,9 +125,9 @@ class Allocator(val opts: CompilerOptions) {
 
     {
         push("<builtin>")
-        allocateReference("false", Type.Bool, Value(0f))
-        allocateReference("true", Type.Bool, Value(1f))
-        allocateReference("_", Type.Function(Type.String, listOf(Type.String))) // TODO: not really a function
+        allocateReference("false", bool_t, Value(0f))
+        allocateReference("true", bool_t, Value(1f))
+        allocateReference("_", function_t(string_t, listOf(string_t))) // TODO: not really a function
     }
 
     private inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
@@ -153,7 +156,7 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Return the index to a constant referring to this function
      */
-    fun allocateFunction(id: String? = null, type: Type.Function): Entry {
+    fun allocateFunction(id: String? = null, type: function_t): Entry {
         val name = id ?: "fun${funCounter++}"
         val i = functions.size()
         // index the function will have
@@ -181,8 +184,8 @@ class Allocator(val opts: CompilerOptions) {
      */
     fun allocateConstant(value: Value, type: Type, id: String? = null): Entry {
         if (value.any is String) {
-            val string = allocateString(value.any)
-            return allocateConstant(Value(string.ref), Type.String, "str(${string.name})")
+            val str = allocateString(value.any)
+            return allocateConstant(Value(str.ref), string_t, "str(${str.name})")
         }
         val name: String = when {
             id != null -> id
@@ -214,7 +217,7 @@ class Allocator(val opts: CompilerOptions) {
         }
         val i = stringCounter
         stringCounter += name.length() + 1
-        return strings.allocate(name, i, null, Type.String)
+        return strings.allocate(name, i, null, string_t)
     }
 
     override fun toString(): String {

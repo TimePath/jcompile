@@ -1,7 +1,7 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import org.antlr.v4.runtime.ParserRuleContext
 
 // TODO: conditional goto

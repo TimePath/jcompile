@@ -7,13 +7,13 @@ import java.util.Date
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
-import com.timepath.compiler.Type
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.reduce
 import com.timepath.compiler.gen.type
 import org.antlr.v4.runtime.misc.Utils
+import com.timepath.compiler.types.*
 
 class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) {
 
@@ -33,19 +33,19 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
         return map { action(it) + append }.joinToString(join)
     }
 
-    fun Type.pprint(id: kotlin.String? = null, indirection: Int = 0): String {
+    fun Type.pprint(id: String? = null, indirection: Int = 0): String {
         val cname = this.toString()
         val stars = "*".repeat(indirection)
         return when (this) {
-            is Type.Array -> {
+            is array_t -> {
                 val expression = when (this.sizeExpr) {
                     is ConstantExpression -> (this.sizeExpr.value.any as Float).toInt().toString()
                     else -> this.sizeExpr.toString()
                 }
                 "${type.pprint()} $id[$expression]"
             }
-            is Type.Field -> "${type.pprint(id, indirection + 1)}"
-            is Type.Function -> "${type.pprint()}($stars*$id)(${argTypes.map {
+            is field_t -> "${type.pprint(id, indirection + 1)}"
+            is function_t -> "${type.pprint()}($stars*$id)(${argTypes.map {
                 it.pprint()
             }.joinToString(", ")})"
             else -> {
@@ -91,7 +91,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
                 }
                 val declType = type
                 when (declType) {
-                    is Type.Function -> {
+                    is function_t -> {
                         val ret = declType.type
                         val args = declType.argTypes
                         "${ret.pprint()} $id(${args.map { it.pprint() }.join(", ")})" + when {
@@ -146,7 +146,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
                 }
             }
             is BinaryExpression.Eq -> {
-                if (left.type(gen) == Type.String && right.type(gen) == Type.String) {
+                if (left.type(gen) == string_t && right.type(gen) == string_t) {
                     "(strcmp(${left.pprint()}, ${right.pprint()}) == 0)"
                 } else {
                     "(${left.pprint()} $op ${right.pprint()})"

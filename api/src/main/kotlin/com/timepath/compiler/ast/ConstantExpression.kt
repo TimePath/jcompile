@@ -1,6 +1,6 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.Value
 import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext

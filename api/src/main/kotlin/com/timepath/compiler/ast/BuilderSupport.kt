@@ -1,6 +1,7 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.function_t
 
 fun ast(configure: (BlockExpression.() -> Unit)? = null): BlockExpression {
     val block = BlockExpression()
@@ -25,7 +26,7 @@ fun BlockExpression.ref(id: String): ReferenceExpression {
     return ReferenceExpression(id)
 }
 
-fun BlockExpression.func(returnType: Type.Function, name: String,
+fun BlockExpression.func(returnType: function_t, name: String,
                          configure: (BlockExpression.() -> Unit)? = null): FunctionExpression {
     val functionLiteral = initChild(FunctionExpression(name, returnType))
     functionLiteral.initChild(BlockExpression(), configure)

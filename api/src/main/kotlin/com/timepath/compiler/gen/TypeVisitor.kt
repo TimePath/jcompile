@@ -1,7 +1,14 @@
 package com.timepath.compiler.gen
 
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.types.void_t
+import com.timepath.compiler.types.entity_t
+import com.timepath.compiler.types.field_t
+import com.timepath.compiler.types.array_t
+import com.timepath.compiler.types.float_t
+import com.timepath.compiler.types.struct_t
+import com.timepath.compiler.types.function_t
 
 // TODO: push up
 fun Expression.type(gen: Generator): Type = accept(TypeVisitor(gen))
@@ -11,7 +18,7 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.type(): Type = accept(this@TypeVisitor)
 
-    override fun visit(e: Nop) = Type.Void
+    override fun visit(e: Nop) = void_t
 
     override fun visit(e: BinaryExpression) = e.handler(gen).type
     override fun visit(e: BinaryExpression.Add) = visit(e: BinaryExpression)
@@ -47,13 +54,13 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
 
     override fun visit(e: BlockExpression): Type {
         // TODO: return children.last().type(gen)
-        return Type.Void
+        return void_t
     }
 
     override fun visit(e: ConditionalExpression): Type {
         val type = e.pass.type()
         return when (e.fail) {
-            null -> Type.Void // Type.Nullable(type)
+            null -> void_t // NullableType(type)
             else -> type
         }
     }
@@ -63,9 +70,9 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
     override fun visit(e: IndexExpression): Type {
         val typeL = e.left.type()
         return when (typeL) {
-            is Type.Entity ->
-                (e.right.type() as Type.Field).type
-            is Type.Array ->
+            is entity_t ->
+                (e.right.type() as field_t).type
+            is array_t ->
                 typeL.type
             else -> visit(e:BinaryExpression)
         }
@@ -74,20 +81,20 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
     override fun visit(e: MemberExpression): Type {
         val lhs = e.left.type()
         return when (lhs) {
-            is Type.Entity -> {
+            is entity_t -> {
                 // TODO: field namespace
                 val rhs = ReferenceExpression(e.field).type()
                 when (rhs) {
-                    is Type.Field ->
+                    is field_t ->
                         rhs.type
-                    is Type.Array ->
-                        rhs.copy(type = (rhs.type as Type.Field).type)
+                    is array_t ->
+                        rhs.copy(type = (rhs.type as field_t).type)
                     else -> throw UnsupportedOperationException()
                 }
             }
-            is Type.Struct -> {
+            is struct_t -> {
                 // TODO: struct member return type
-                Type.Float
+                float_t
             }
         // TODO: vec_[xyz]
         //            else -> throw UnsupportedOperationException("field access on type $lhs")
@@ -97,28 +104,28 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
 
     override fun visit(e: FunctionExpression) = e.signature
 
-    override fun visit(e: GotoExpression) = Type.Void
+    override fun visit(e: GotoExpression) = void_t
 
-    override fun visit(e: ReturnStatement) = e.returnValue?.type() ?: Type.Void
+    override fun visit(e: ReturnStatement) = e.returnValue?.type() ?: void_t
 
-    override fun visit(e: BreakStatement) = Type.Void
+    override fun visit(e: BreakStatement) = void_t
 
-    override fun visit(e: ContinueStatement) = Type.Void
+    override fun visit(e: ContinueStatement) = void_t
 
-    override fun visit(e: LoopExpression) = Type.Void
+    override fun visit(e: LoopExpression) = void_t
 
-    override fun visit(e: MethodCallExpression) = (e.function.type() as Type.Function).type
+    override fun visit(e: MethodCallExpression) = (e.function.type() as function_t).type
 
     // FIXME
     override fun visit(e: SwitchExpression) = e.test.type()
 
-    override fun visit(e: SwitchExpression.Case) = e.expr?.type() ?: Type.Void
+    override fun visit(e: SwitchExpression.Case) = e.expr?.type() ?: void_t
 
     // FIXME
     override fun visit(e: ReferenceExpression): Type {
         gen.allocator[e.id]?.let { return it.type }
         // probably a vector component
-        return Type.Float
+        return float_t
         // throw NullPointerException("Reference $id not found")
     }
 

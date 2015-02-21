@@ -1,8 +1,9 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.compiler.types.struct_t
 
 // TODO: namespace
 open class ReferenceExpression(val id: String, override val ctx: ParserRuleContext? = null) : Expression() {
@@ -22,7 +23,7 @@ class ParameterExpression(id: String,
                                override val ctx: ParserRuleContext? = null) : DeclarationExpression(id, type)
 
 class StructDeclarationExpression(id: String,
-                                  val struct: Type.Struct,
+                                  val struct: struct_t,
                                   override val ctx: ParserRuleContext? = null) : DeclarationExpression(id, struct, null)
 
 class MemoryReference(val ref: Int, val type: Type, override val ctx: ParserRuleContext? = null) : Expression() {

@@ -1,10 +1,12 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.gen.type
+import com.timepath.compiler.types.string_t
+import com.timepath.compiler.types.Operation
 
 /**
  * dynamic:
@@ -25,6 +27,6 @@ class MemberExpression(left: Expression, val field: String, ctx: ParserRuleConte
 
     var instr = Instruction.LOAD_FLOAT
 
-    override fun handler(gen: Generator) = Type.handle(Type.Operation(op, left.type(gen), Type.String))
+    override fun handler(gen: Generator) = Type.handle(Operation(op, left.type(gen), string_t))
 
 }

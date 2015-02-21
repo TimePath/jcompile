@@ -1,10 +1,12 @@
 package com.timepath.compiler.gen
 
 import java.util.LinkedList
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.ast.*
 import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
+import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.entity_t
 
 // TODO: push up
 fun Expression.generate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
@@ -154,7 +156,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
                 Generator.logger.warning("redefining $id")
             }
 
-            val global = gen.allocator.allocateFunction(id, type = type(gen) as Type.Function)
+            val global = gen.allocator.allocateFunction(id, type = type(gen) as function_t)
             val f = Function(
                     firstStatement = if (builtin == null)
                         0 // to be filled in later
@@ -218,7 +220,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
         with(e) {
             with(linkedListOf<IR>()) {
                 val typeL = left.type(gen)
-                if (typeL is Type.Entity) {
+                if (typeL is entity_t) {
                     val genL = left.generate(gen)
                     addAll(genL)
                     val genR = right.generate(gen)

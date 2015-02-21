@@ -4,8 +4,11 @@ import com.timepath.Logger
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.PrintVisitor
+import com.timepath.compiler.types.void_t
+import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.float_t
 
 val logger = Logger.new()
 
@@ -13,19 +16,19 @@ fun main(args: Array<String>) {
 
     val root = ast {
         val print = const(-1)
-        func(Type.Function(Type.Void, emptyList(), null), "test") {
+        func(function_t(void_t, emptyList(), null), "test") {
             def("asd", 1)
             add(
                     ConditionalExpression(
                             ConstantExpression(1), true,
-                            DeclarationExpression("yay", Type.Float, ConstantExpression(1))
+                            DeclarationExpression("yay", float_t, ConstantExpression(1))
                     )
             )
             add(
                     ConditionalExpression(
                             ConstantExpression(2), true,
                             BlockExpression(listOf(
-                                    DeclarationExpression("yay2", Type.Float, ConstantExpression(1))
+                                    DeclarationExpression("yay2", float_t, ConstantExpression(1))
                             ))
                     )
             )
@@ -53,8 +56,8 @@ fun main(args: Array<String>) {
             }
             ret()
         }
-        func(Type.Function(Type.Void, emptyList(), null), "test")
-        func(Type.Function(Type.Void, emptyList(), null), "main") {
+        func(function_t(void_t, emptyList(), null), "test")
+        func(function_t(void_t, emptyList(), null), "main") {
             call(ref("test"))
             ret()
         }

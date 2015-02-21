@@ -1,5 +1,7 @@
 package com.timepath.compiler
 
+import com.timepath.compiler.types.*
+
 class TypeRegistry {
 
     private val types = linkedMapOf<String, Type>()
@@ -13,13 +15,13 @@ class TypeRegistry {
     }
 
     {
-        set("void", Type.Void)
-        set("float", Type.Float)
-        set("vector", Type.Vector)
-        set("string", Type.String)
-        set("entity", Type.Entity)
-        set("int", Type.Int)
-        set("bool", Type.Bool)
+        set("void", void_t)
+        set("float", float_t)
+        set("vector", vector_t)
+        set("string", string_t)
+        set("entity", entity_t)
+        set("int", int_t)
+        set("bool", bool_t)
     }
 
 }

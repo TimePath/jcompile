@@ -1,7 +1,7 @@
 package com.timepath.compiler.ast
 
 import kotlin.properties.Delegates
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 

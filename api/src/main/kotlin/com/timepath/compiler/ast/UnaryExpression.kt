@@ -1,9 +1,10 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.Type
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.gen.type
+import com.timepath.compiler.types.Operation
 
 abstract class UnaryExpression(val op: String, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
 
@@ -13,7 +14,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, override
 
     override fun toString(): String = "$op($operand)"
 
-    fun handler(gen: Generator) = Type.handle(Type.Operation(op, operand.type(gen)))
+    fun handler(gen: Generator) = Type.handle(Operation(op, operand.type(gen)))
 
     class Cast(val type: Type, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
         override fun toString(): String = "(($type) $operand)"
