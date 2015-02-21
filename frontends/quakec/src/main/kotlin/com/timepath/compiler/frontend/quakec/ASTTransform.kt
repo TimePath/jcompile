@@ -167,7 +167,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
             when (initializer) {
                 is ConstantExpression -> {
                     val value = initializer.evaluate()!!
-                    val s = value.value.toString()
+                    val s = value.any.toString()
                     if (s.startsWith('#')) {
                         // FIXME: HACK
                         val i = s.substring(1).toInt()

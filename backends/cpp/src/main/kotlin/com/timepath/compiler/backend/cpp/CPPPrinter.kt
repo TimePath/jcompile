@@ -39,7 +39,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
         return when (this) {
             is Type.Array -> {
                 val expression = when (this.sizeExpr) {
-                    is ConstantExpression -> (this.sizeExpr.value.value as Float).toInt().toString()
+                    is ConstantExpression -> (this.sizeExpr.value.any as Float).toInt().toString()
                     else -> this.sizeExpr.toString()
                 }
                 "${type.pprint()} $id[$expression]"
@@ -81,7 +81,7 @@ class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) 
                     "if (${test.pprint()})\n${pass.pprint(";")}" + if (fail == null) "" else "\nelse\n${fail.pprint(";")}"
             }
             is ConstantExpression -> {
-                pprintConst(value.value)
+                pprintConst(value.any)
             }
             is DeclarationExpression -> {
                 val v = if (value != null) {

@@ -65,9 +65,8 @@ class Generator(val opts: CompilerOptions) {
                 }
             }
             val merge = {(it: Entry): Unit ->
-                val wrapped = it.value
                 val k = it.ref
-                val v = wrapped.value
+                val v = it.value?.any
                 when (v) {
                     is Int -> intData.put(k, v)
                     is Float -> floatData.put(k, v)

@@ -565,7 +565,7 @@ abstract class Type {
         val index = OperationHandler(type) { gen, left, right ->
             when (left) {
                 is MemberExpression -> {
-                    val field = ReferenceExpression((left.right as ConstantExpression).value.value as kotlin.String)
+                    val field = ReferenceExpression((left.right as ConstantExpression).value.any as kotlin.String)
                     IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
                 }
                 is ReferenceExpression -> {
@@ -587,7 +587,7 @@ abstract class Type {
 
         // FIXME
         override fun declare(name: kotlin.String, value: ConstantExpression?): List<Expression> {
-            val size = (sizeExpr.evaluate()?.value as kotlin.Number).toInt()
+            val size = (sizeExpr.evaluate()!!.any as kotlin.Number).toInt()
             val intRange = size.indices
             return with(linkedListOf<Expression>()) {
                 add(DeclarationExpression(name, this@Array))

@@ -58,7 +58,7 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: ConstantExpression) = Type.from(e.value.value)
+    override fun visit(e: ConstantExpression) = Type.from(e.value.any)
 
     override fun visit(e: IndexExpression): Type {
         val typeL = e.left.type()

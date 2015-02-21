@@ -1,28 +1,18 @@
 package com.timepath.compiler
 
-class Value(val value: Any? = null) {
+class Value(val any: Any) {
 
     fun toBoolean(): Boolean = false
 
-    override fun toString(): String = "${value?.javaClass?.getSimpleName()}(${value?.toString()?.quote() ?: ""})"
+    override fun toString() = "${any.javaClass.getSimpleName()}(${any.toString().quote()})"
 
-    override fun equals(other: Any?): Boolean {
-        return when (other) {
-            !is Value -> false
-            else -> value == other.value
-        }
-    }
+    override fun equals(other: Any?) = (other is Value) && (any == other.any)
 
-    override fun hashCode(): Int {
-        return when {
-            value != null -> value.hashCode()
-            else -> 0
-        }
-    }
+    override fun hashCode() = any.hashCode()
 
     fun plus(other: Value?): Value? {
-        val lhs = value
-        val rhs = other!!.value
+        val lhs = any
+        val rhs = other!!.any
         return when {
             lhs is Float && rhs is Float -> Value(lhs + rhs)
             else -> throw UnsupportedOperationException("not supported")
@@ -30,8 +20,8 @@ class Value(val value: Any? = null) {
     }
 
     fun minus(other: Value?): Value? {
-        val lhs = value
-        val rhs = other!!.value
+        val lhs = any
+        val rhs = other!!.any
         return when {
             lhs is Float && rhs is Float -> Value(lhs - rhs)
             else -> throw UnsupportedOperationException("not supported")
@@ -39,8 +29,8 @@ class Value(val value: Any? = null) {
     }
 
     fun times(other: Value?): Value? {
-        val lhs = value
-        val rhs = other!!.value
+        val lhs = any
+        val rhs = other!!.any
         return when {
             lhs is Float && rhs is Float -> Value(lhs * rhs)
             else -> throw UnsupportedOperationException("not supported")
@@ -48,8 +38,8 @@ class Value(val value: Any? = null) {
     }
 
     fun div(other: Value?): Value? {
-        val lhs = value
-        val rhs = other!!.value
+        val lhs = any
+        val rhs = other!!.any
         return when {
             lhs is Float && rhs is Float -> Value(lhs / rhs)
             else -> throw UnsupportedOperationException("not supported")
@@ -57,8 +47,8 @@ class Value(val value: Any? = null) {
     }
 
     fun mod(other: Value?): Value? {
-        val lhs = value
-        val rhs = other!!.value
+        val lhs = any
+        val rhs = other!!.any
         return when {
             lhs is Float && rhs is Float -> Value(lhs % rhs)
             else -> throw UnsupportedOperationException("not supported")

@@ -25,7 +25,7 @@ class Allocator(val opts: CompilerOptions) {
                 /** Privately set */
                 var name: String,
                 val ref: Int,
-                val value: Value,
+                val value: Value?,
                 val type: Type) {
 
             fun tag(name: String) {
@@ -48,18 +48,17 @@ class Allocator(val opts: CompilerOptions) {
             get() = scope.size() >= 3
 
         fun allocate(id: String, ref: Int, value: Value?, type: Type): Entry {
-            val valueOrDefault = value ?: Value(null)
             // only consider uninitialized local references for now
-            if (opts.scopeFolding && insideFunc && !free.isEmpty() && valueOrDefault.value == null) {
+            if (opts.scopeFolding && insideFunc && !free.isEmpty() && value == null) {
                 val e = free.pop()
                 // add the entry to the current scope so it can be used again later on exit
                 scope.peek().add(e)
                 e.tag(id)
                 return e
             }
-            val e = Entry(id, ref, valueOrDefault, type)
+            val e = Entry(id, ref, value, type)
             pool.add(e)
-            if (!scope.empty() && valueOrDefault.value == null) {
+            if (!scope.empty() && value == null) {
                 scope.peek().add(e)
             }
             refs[e.ref] = e
@@ -181,15 +180,15 @@ class Allocator(val opts: CompilerOptions) {
      * Reserve space for this constant
      */
     fun allocateConstant(value: Value, type: Type, id: String? = null): Entry {
-        if (value.value is String) {
-            val string = allocateString(value.value)
+        if (value.any is String) {
+            val string = allocateString(value.any)
             return allocateConstant(Value(string.ref), Type.String, "str(${string.name})")
         }
         val name: String = when {
             id != null -> id
-            else -> when (value.value) {
-                is Int -> "${value.value}i"
-                is Float -> "${value.value}f"
+            else -> when (value.any) {
+                is Int -> "${value.any}i"
+                is Float -> "${value.any}f"
                 else -> "$value"
             }
         }
