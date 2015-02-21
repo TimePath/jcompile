@@ -15,8 +15,6 @@ abstract class BinaryExpression(val op: String, val left: Expression, val right:
 
     override fun toString(): String = "($left $op $right)"
 
-    open fun handler(gen: Generator) = Type.handle(Operation(op, left.type(gen), right.type(gen)))
-
     class Comma(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression(",", left, right, ctx)
 
     class Assign(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("=", left, right, ctx)

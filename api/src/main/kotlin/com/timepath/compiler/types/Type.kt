@@ -22,6 +22,8 @@ trait Type {
             else -> throw NoWhenBranchMatchedException()
         }
 
+        fun type(operation: Operation) = handle(operation).type
+
         fun handle(operation: Operation): OperationHandler {
             if (operation.op == ",") {
                 return OperationHandler(operation.right!!) { gen, left, right ->

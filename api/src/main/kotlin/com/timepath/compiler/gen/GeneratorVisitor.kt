@@ -7,6 +7,7 @@ import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.types.function_t
 import com.timepath.compiler.types.entity_t
+import com.timepath.compiler.types.Operation
 
 // TODO: push up
 fun Expression.generate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
@@ -16,66 +17,36 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
-    override fun visit(e: BinaryExpression) = e.handler(gen)(gen, e.left, e.right)
-
+    override fun visit(e: BinaryExpression) = Type.handle(Operation(e.op, e.left.type(gen), e.right.type(gen)))(gen, e.left, e.right)
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.AddAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.And) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.AndAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Assign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.BitAnd) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.BitOr) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Comma) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Divide) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.DivideAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Eq) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.ExclusiveOr) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.ExclusiveOrAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Ge) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Gt) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Le) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Lsh) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.LshAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Lt) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Modulo) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.ModuloAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Multiply) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.MultiplyAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Ne) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Or) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.OrAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Rsh) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.RshAssign) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.Subtract) = visit(e : BinaryExpression)
-
     override fun visit(e: BinaryExpression.SubtractAssign) = visit(e : BinaryExpression)
 
     override fun visit(e: BlockExpression): List<IR> {
@@ -385,34 +356,18 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
         return listOf(CaseIR(e.expr))
     }
 
-    override fun visit(e: UnaryExpression): List<IR> {
-        with(e) {
-            return handler(gen)(gen, operand, null)
-        }
-    }
-
+    override fun visit(e: UnaryExpression) = Type.handle(Operation(e.op, e.operand.type(gen)))(gen, e.operand, null)
     override fun visit(e: UnaryExpression.Address) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.BitNot) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()
-
     override fun visit(e: UnaryExpression.Dereference) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.Minus) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.Not) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.Plus) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.Post) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.PostDecrement) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.PostIncrement) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.PreDecrement) = visit(e : UnaryExpression)
-
     override fun visit(e: UnaryExpression.PreIncrement) = visit(e : UnaryExpression)
 
 }

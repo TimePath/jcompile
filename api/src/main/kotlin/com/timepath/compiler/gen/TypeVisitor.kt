@@ -1,14 +1,7 @@
 package com.timepath.compiler.gen
 
-import com.timepath.compiler.types.Type
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.types.void_t
-import com.timepath.compiler.types.entity_t
-import com.timepath.compiler.types.field_t
-import com.timepath.compiler.types.array_t
-import com.timepath.compiler.types.float_t
-import com.timepath.compiler.types.struct_t
-import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.*
 
 // TODO: push up
 fun Expression.type(gen: Generator): Type = accept(TypeVisitor(gen))
@@ -20,7 +13,7 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
 
     override fun visit(e: Nop) = void_t
 
-    override fun visit(e: BinaryExpression) = e.handler(gen).type
+    override fun visit(e: BinaryExpression) = Type.type(Operation(e.op, e.left.type(), e.right.type()))
     override fun visit(e: BinaryExpression.Add) = visit(e: BinaryExpression)
     override fun visit(e: BinaryExpression.AddAssign) = visit(e: BinaryExpression)
     override fun visit(e: BinaryExpression.And) = visit(e: BinaryExpression)
@@ -137,7 +130,7 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
 
     override fun visit(e: UnaryExpression.Cast) = e.type
 
-    override fun visit(e: UnaryExpression) = e.handler(gen).type
+    override fun visit(e: UnaryExpression) = Type.type(Operation(e.op, e.operand.type()))
     override fun visit(e: UnaryExpression.Address) = visit(e: UnaryExpression)
     override fun visit(e: UnaryExpression.BitNot) = visit(e: UnaryExpression)
     override fun visit(e: UnaryExpression.Dereference) = visit(e: UnaryExpression)

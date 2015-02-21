@@ -26,7 +26,4 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
 
     var instr = Instruction.LOAD_FLOAT
-
-    override fun handler(gen: Generator) = Type.handle(Operation(op, left.type(gen), string_t))
-
 }
