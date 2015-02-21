@@ -1,6 +1,5 @@
 package com.timepath.compiler
 
-import java.util.Date
 import java.io.File
 import com.timepath.Logger
 import com.timepath.compiler.frontend.quakec.QCC
@@ -12,12 +11,10 @@ import org.anarres.cpp.Feature
 val logger = Logger.new()
 
 fun time(name: String, action: () -> Unit) {
-    val start = Date()
-    kotlin.util.measureTimeMillis {
-
-    }
+    val start = System.currentTimeMillis()
     action()
-    logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
+    val end = System.currentTimeMillis()
+    logger.info("$name: ${(end - start).toDouble() / 1000} seconds")
 }
 
 fun main(args: Array<String>) {
