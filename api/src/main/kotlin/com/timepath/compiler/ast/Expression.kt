@@ -8,8 +8,6 @@ abstract class Expression {
 
     abstract val ctx: ParserRuleContext?
 
-    abstract fun type(gen: Generator): Type
-
     fun <T> accept(visitor: ASTVisitor<T>): T = visitor.visitReflective(this)
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
@@ -54,7 +52,5 @@ abstract class Expression {
 /**
  * Lonely semicolon
  */
-class Nop(override val ctx: ParserRuleContext? = null) : Expression() {
-    override fun type(gen: Generator): Type = throw UnsupportedOperationException()
-}
+class Nop(override val ctx: ParserRuleContext? = null) : Expression()
 

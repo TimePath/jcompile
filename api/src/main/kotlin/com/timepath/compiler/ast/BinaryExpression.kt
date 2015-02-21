@@ -3,6 +3,7 @@ package com.timepath.compiler.ast
 import com.timepath.compiler.Type
 import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext as PRC
+import com.timepath.compiler.gen.type
 
 abstract class BinaryExpression(val op: String, val left: Expression, val right: Expression, override val ctx: PRC? = null) : Expression() {
 
@@ -14,8 +15,6 @@ abstract class BinaryExpression(val op: String, val left: Expression, val right:
     override fun toString(): String = "($left $op $right)"
 
     open fun handler(gen: Generator) = Type.handle(Type.Operation(op, left.type(gen), right.type(gen)))
-
-    override fun type(gen: Generator) = handler(gen).type
 
     class Comma(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression(",", left, right, ctx)
 

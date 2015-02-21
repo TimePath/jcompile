@@ -131,6 +131,6 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
     public fun compile(roots: List<List<Expression>> = ast()): Any {
         val gen = Generator(opts)
         val ir = gen.generate(roots.flatMap { it })
-        return ir.generateProgs()
+        return ir
     }
 }

@@ -4,6 +4,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.Type
 import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.compiler.gen.type
 
 /**
  * dynamic:
@@ -13,17 +14,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression("[]", left, right, ctx) {
 
     var instr = Instruction.LOAD_FLOAT
-
-    override fun type(gen: Generator): Type {
-        val typeL = left.type(gen)
-        return when (typeL) {
-            is Type.Entity ->
-                (right.type(gen) as Type.Field).type
-            is Type.Array ->
-                typeL.type
-            else -> super.type(gen)
-        }
-    }
 }
 
 /**
@@ -34,30 +24,6 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
 
     var instr = Instruction.LOAD_FLOAT
-
-    override fun type(gen: Generator): Type {
-        val lhs = left.type(gen)
-        return when (lhs) {
-            is Type.Entity -> {
-                // TODO: field namespace
-                val rhs = ReferenceExpression(field).type(gen)
-                when (rhs) {
-                    is Type.Field ->
-                        rhs.type
-                    is Type.Array ->
-                        rhs.copy(type = (rhs.type as Type.Field).type)
-                    else -> throw UnsupportedOperationException()
-                }
-            }
-            is Type.Struct -> {
-                // TODO: struct member return type
-                Type.Float
-            }
-        // TODO: vec_[xyz]
-        //            else -> throw UnsupportedOperationException("field access on type $lhs")
-            else -> lhs
-        }
-    }
 
     override fun handler(gen: Generator) = Type.handle(Type.Operation(op, left.type(gen), Type.String))
 

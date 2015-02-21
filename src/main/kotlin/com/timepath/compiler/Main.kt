@@ -4,7 +4,7 @@ import java.util.Date
 import java.io.File
 import com.timepath.Logger
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.q1vm.ProgramData
+import com.timepath.compiler.gen.Generator
 import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.q1vm.util.IOWrapper
 import org.anarres.cpp.Feature
@@ -37,7 +37,8 @@ fun main(args: Array<String>) {
                         .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
                         .define(project.define)
                 val compiled = compiler.compile()
-                ProgramDataWriter(IOWrapper.File(File("out", project.out), write = true)).write(compiled as ProgramData)
+                ProgramDataWriter(IOWrapper.File(File("out", project.out), write = true))
+                        .write((compiled as Generator.ASM).generateProgs())
             }
         }
     }

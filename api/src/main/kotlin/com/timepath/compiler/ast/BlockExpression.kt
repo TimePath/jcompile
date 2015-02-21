@@ -11,9 +11,4 @@ class BlockExpression(add: List<Expression>? = null, override val ctx: ParserRul
         }
     }
 
-    override fun type(gen: Generator): Type {
-        return Type.Void
-        // TODO: return children.last().type(gen)
-    }
-
 }

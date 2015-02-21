@@ -6,9 +6,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 class SwitchExpression(val test: Expression, add: List<Expression>, override val ctx: ParserRuleContext? = null) : Expression() {
 
-    override fun type(gen: Generator) = test.type(gen)
-
-            ;{
+    {
         addAll(add)
     }
 
@@ -18,7 +16,6 @@ class SwitchExpression(val test: Expression, add: List<Expression>, override val
              */
             val expr: Expression?,
             override val ctx: ParserRuleContext? = null) : Expression() {
-        override fun type(gen: Generator) = expr?.type(gen) ?: Type.Void
 
     }
 

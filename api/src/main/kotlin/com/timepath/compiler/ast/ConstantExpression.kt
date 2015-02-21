@@ -8,8 +8,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 class ConstantExpression(any: Any, override val ctx: ParserRuleContext? = null) : Expression() {
     val value = Value(any)
 
-    override fun type(gen: Generator) = Type.from(value.value)
-
     override fun toString(): String = value.toString()
 
 }

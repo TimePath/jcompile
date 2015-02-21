@@ -14,6 +14,4 @@ class LoopExpression(val predicate: Expression,
         add(body)
     }
 
-    override fun type(gen: Generator) = Type.Void
-
 }

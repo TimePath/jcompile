@@ -8,29 +8,11 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Type
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.BlockExpression
-import com.timepath.compiler.ast.BreakStatement
-import com.timepath.compiler.ast.ConditionalExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.ContinueStatement
-import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.ast.FunctionExpression
-import com.timepath.compiler.ast.GotoExpression
-import com.timepath.compiler.ast.IndexExpression
-import com.timepath.compiler.ast.LabelExpression
-import com.timepath.compiler.ast.LoopExpression
-import com.timepath.compiler.ast.MemberExpression
-import com.timepath.compiler.ast.MethodCallExpression
-import com.timepath.compiler.ast.Nop
-import com.timepath.compiler.ast.ParameterExpression
-import com.timepath.compiler.ast.ReferenceExpression
-import com.timepath.compiler.ast.ReturnStatement
-import com.timepath.compiler.ast.UnaryExpression
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.reduce
+import com.timepath.compiler.gen.type
 import org.antlr.v4.runtime.misc.Utils
 
 class CPPPrinter(val gen: Generator, val all: List<Expression>, val ns: String) {

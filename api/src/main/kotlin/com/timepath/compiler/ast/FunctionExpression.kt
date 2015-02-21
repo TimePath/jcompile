@@ -21,6 +21,4 @@ class FunctionExpression(val id: String? = null,
         }
     }
 
-    override fun type(gen: Generator) = signature
-
 }

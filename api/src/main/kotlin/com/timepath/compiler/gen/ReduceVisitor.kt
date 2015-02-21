@@ -18,6 +18,9 @@ public fun Expression.reduce(): Expression? = accept(ReduceVisitor)
 
 object ReduceVisitor : ASTVisitor<Expression?> {
 
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun Expression.reduce(): Expression? = accept(this@ReduceVisitor)
+
     override fun default(e: Expression) = e
 
     val uid = AtomicInteger()

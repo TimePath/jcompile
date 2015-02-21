@@ -29,7 +29,7 @@ class Generator(val opts: CompilerOptions) {
         roots.forEach {
             it.transform { it.reduce() }
         }
-        return ASM(BlockExpression(roots).doGenerate(this))
+        return ASM(BlockExpression(roots).generate(this))
     }
 
     inner class ASM(val ir: List<IR>) {

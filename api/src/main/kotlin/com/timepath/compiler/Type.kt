@@ -6,8 +6,9 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.IR
-import com.timepath.compiler.gen.doGenerate
+import com.timepath.compiler.gen.generate
 import com.timepath.q1vm.Instruction
+import com.timepath.compiler.gen.type
 
 abstract class Type {
 
@@ -26,8 +27,8 @@ abstract class Type {
             if (operation.op == ",") {
                 return OperationHandler(operation.right!!) { gen, left, right ->
                     with(linkedListOf<IR>()) {
-                        addAll(left.doGenerate(gen))
-                        addAll(right!!.doGenerate(gen))
+                        addAll(left.generate(gen))
+                        addAll(right!!.generate(gen))
                         this
                     }
                 }
@@ -66,9 +67,9 @@ abstract class Type {
     class DefaultHandler(type: Type, instr: Instruction) : OperationHandler(type, { gen, left, right ->
         right!!
         with(linkedListOf<IR>()) {
-            val genLeft = left.doGenerate(gen)
+            val genLeft = left.generate(gen)
             addAll(genLeft)
-            val genRight = right.doGenerate(gen)
+            val genRight = right.generate(gen)
             addAll(genRight)
             val out = gen.allocator.allocateReference(type = type)
             add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$left $instr $right"))
@@ -78,7 +79,7 @@ abstract class Type {
 
     class DefaultUnaryHandler(type: Type, instr: Instruction) : OperationHandler(type, { gen, self, _ ->
         with(linkedListOf<IR>()) {
-            val genLeft = self.doGenerate(gen)
+            val genLeft = self.generate(gen)
             addAll(genLeft)
             val out = gen.allocator.allocateReference(type = type)
             add(IR(instr, array(genLeft.last().ret, out.ref), out.ref, name = "$self"))
@@ -114,7 +115,7 @@ abstract class Type {
                 left is MemberExpression -> {
                     val typeL = left.left.type(gen)
                     // get the entity
-                    val tmp = left.left.doGenerate(gen)
+                    val tmp = left.left.generate(gen)
                     addAll(tmp)
                     val refE = tmp.last().ret
 
@@ -132,9 +133,9 @@ abstract class Type {
                     leftL = left
                 }
             }
-            val lhs = leftL.doGenerate(gen)
+            val lhs = leftL.generate(gen)
             addAll(lhs)
-            val rhs = (op(leftR, right!!) ?: right).doGenerate(gen)
+            val rhs = (op(leftR, right!!) ?: right).generate(gen)
             addAll(rhs)
 
             val lvalue = lhs.last()
@@ -153,7 +154,7 @@ abstract class Type {
                             pass = ConditionalExpression(right!!, true,
                                     fail = ConstantExpression(0),
                                     pass = ConstantExpression(1f))
-                    ).doGenerate(gen)
+                    ).generate(gen)
                 },
                 // TODO: perl behaviour
                 Operation("||", this, this) to OperationHandler(Bool) { gen, left, right ->
@@ -163,7 +164,7 @@ abstract class Type {
                             fail = ConditionalExpression(right!!, true,
                                     pass = ConstantExpression(1f),
                                     fail = ConstantExpression(0))
-                    ).doGenerate(gen)
+                    ).generate(gen)
                 },
                 Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT)
         )
@@ -179,10 +180,10 @@ abstract class Type {
                     Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_FLOAT),
                     Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_FLOAT),
                     Operation("!", this) to OperationHandler(Bool) { gen, self, _ ->
-                        BinaryExpression.Eq(ConstantExpression(0f), self).doGenerate(gen)
+                        BinaryExpression.Eq(ConstantExpression(0f), self).generate(gen)
                     },
                     Operation("-", this) to OperationHandler(this) { gen, self, _ ->
-                        BinaryExpression.Subtract(ConstantExpression(0f), self).doGenerate(gen)
+                        BinaryExpression.Subtract(ConstantExpression(0f), self).generate(gen)
                     },
                     Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
                     Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_FLOAT),
@@ -246,29 +247,29 @@ abstract class Type {
                     Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
                     Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_FLOAT),
                     Operation("&", this) to OperationHandler(this) { gen, self, _ ->
-                        BinaryExpression.Divide(self, ConstantExpression(1)).doGenerate(gen)
+                        BinaryExpression.Divide(self, ConstantExpression(1)).generate(gen)
                     },
                     Operation("*", this) to OperationHandler(this) { gen, self, _ ->
-                        BinaryExpression.Multiply(self, ConstantExpression(1)).doGenerate(gen)
+                        BinaryExpression.Multiply(self, ConstantExpression(1)).generate(gen)
                     },
                     Operation("+", this) to OperationHandler(this) { gen, self, _ ->
-                        self.doGenerate(gen)
+                        self.generate(gen)
                     },
                     Operation("-", this) to OperationHandler(this) { gen, self, _ ->
-                        BinaryExpression.Subtract(ConstantExpression(0f), self).doGenerate(gen)
+                        BinaryExpression.Subtract(ConstantExpression(0f), self).generate(gen)
                     },
 
                     Operation("*", this, this) to DefaultHandler(this, Instruction.MUL_FLOAT),
                     Operation("*", this, Vector) to DefaultHandler(Vector, Instruction.MUL_FLOAT_VEC),
                     Operation("/", this, this) to DefaultHandler(this, Instruction.DIV_FLOAT),
                     Operation("%", this, this) to OperationHandler(this) { gen, left, right ->
-                        MethodCallExpression(ReferenceExpression("__builtin_mod"), listOf(left, right!!)).doGenerate(gen)
+                        MethodCallExpression(ReferenceExpression("__builtin_mod"), listOf(left, right!!)).generate(gen)
                     },
 
                     // pre
                     Operation("++", this) to OperationHandler(this) { gen, self, _ ->
                         val one = UnaryExpression.Cast(Type.Int, ConstantExpression(1f))
-                        BinaryExpression.Assign(self, BinaryExpression.Add(self, one)).doGenerate(gen)
+                        BinaryExpression.Assign(self, BinaryExpression.Add(self, one)).generate(gen)
                     },
                     // post
                     Operation("++", this, this) to OperationHandler(this) { gen, self, _ ->
@@ -278,14 +279,14 @@ abstract class Type {
                             val assign = BinaryExpression.Assign(self, add)
                             // FIXME
                             val sub = BinaryExpression.Subtract(assign, one)
-                            addAll(sub.doGenerate(gen))
+                            addAll(sub.generate(gen))
                             this
                         }
                     },
                     // pre
                     Operation("--", this) to OperationHandler(this) { gen, self, _ ->
                         val one = UnaryExpression.Cast(Type.Int, ConstantExpression(1f))
-                        BinaryExpression.Assign(self, BinaryExpression.Subtract(self, one)).doGenerate(gen)
+                        BinaryExpression.Assign(self, BinaryExpression.Subtract(self, one)).generate(gen)
                     },
                     // post
                     Operation("--", this, this) to OperationHandler(this) { gen, self, _ ->
@@ -295,7 +296,7 @@ abstract class Type {
                             val assign = BinaryExpression.Assign(self, sub)
                             // FIXME
                             val add = BinaryExpression.Add(assign, one)
-                            addAll(add.doGenerate(gen))
+                            addAll(add.generate(gen))
                             this
                         }
                     },
@@ -308,15 +309,15 @@ abstract class Type {
                     Operation("<=", this, this) to DefaultHandler(Bool, Instruction.LE),
 
                     Operation("!", this) to OperationHandler(Bool) { gen, self, _ ->
-                        BinaryExpression.Eq(ConstantExpression(0f), self).doGenerate(gen)
+                        BinaryExpression.Eq(ConstantExpression(0f), self).generate(gen)
                     },
                     Operation("~", this) to OperationHandler(this) { gen, self, _ ->
-                        BinaryExpression.Subtract(ConstantExpression(-1f), self).doGenerate(gen)
+                        BinaryExpression.Subtract(ConstantExpression(-1f), self).generate(gen)
                     },
                     Operation("&", this, this) to DefaultHandler(this, Instruction.BITAND),
                     Operation("|", this, this) to DefaultHandler(this, Instruction.BITOR),
                     Operation("^", this, this) to OperationHandler(this) { gen, left, right ->
-                        MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).doGenerate(gen)
+                        MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).generate(gen)
                     },
                     // TODO
                     Operation("<<", this, this) to DefaultHandler(Int, Instruction.BITOR),
@@ -374,7 +375,7 @@ abstract class Type {
                 Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_VEC),
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_VEC),
                 Operation("+", this) to OperationHandler(this) { gen, self, _ ->
-                    self.doGenerate(gen)
+                    self.generate(gen)
                 },
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_VEC),
                 Operation("*", this, Float) to DefaultHandler(this, Instruction.MUL_VEC_FLOAT),
@@ -386,10 +387,10 @@ abstract class Type {
                     BinaryExpression.Multiply(left, right)
                 },
                 Operation("/", this, Float) to OperationHandler(this) { gen, left, right ->
-                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).doGenerate(gen)
+                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).generate(gen)
                 },
                 Operation("/", this, Int) to OperationHandler(this) { gen, left, right ->
-                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).doGenerate(gen)
+                    BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).generate(gen)
                 },
                 Operation("/=", this, Float) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
                     BinaryExpression.Divide(left, right)
@@ -407,14 +408,14 @@ abstract class Type {
                             BinaryExpression.Multiply(MemberExpression(left, "x"), MemberExpression(left, "x")),
                             BinaryExpression.Multiply(MemberExpression(left, "y"), MemberExpression(left, "y"))),
                             BinaryExpression.Multiply(MemberExpression(left, "z"), MemberExpression(left, "z"))
-                    ).doGenerate(gen)
+                    ).generate(gen)
                 },
                 Operation("|", this, this) to OperationHandler(this) { gen, left, right ->
                     with(linkedListOf<IR>()) {
                         val ref = gen.allocator.allocateReference(type = this@Vector)
-                        val genL = left.doGenerate(gen)
+                        val genL = left.generate(gen)
                         addAll(genL)
-                        val genR = right!!.doGenerate(gen)
+                        val genR = right!!.generate(gen)
                         addAll(genR)
                         val lhs = genL.last()
                         val rhs = genR.last()
@@ -423,7 +424,7 @@ abstract class Type {
                             addAll(BinaryExpression.Assign(component, BinaryExpression.BitOr(
                                     MemoryReference(lhs.ret + i, type = Float),
                                     MemoryReference(rhs.ret + i, type = Float)
-                            )).doGenerate(gen))
+                            )).generate(gen))
                         }
                         this
                     }
@@ -434,9 +435,9 @@ abstract class Type {
                 Operation("&", this, this) to OperationHandler(this) { gen, left, right ->
                     with(linkedListOf<IR>()) {
                         val ref = gen.allocator.allocateReference(type = this@Vector)
-                        val genL = left.doGenerate(gen)
+                        val genL = left.generate(gen)
                         addAll(genL)
-                        val genR = right!!.doGenerate(gen)
+                        val genR = right!!.generate(gen)
                         addAll(genR)
                         val lhs = genL.last()
                         val rhs = genR.last()
@@ -445,7 +446,7 @@ abstract class Type {
                             addAll(BinaryExpression.Assign(component, BinaryExpression.BitAnd(
                                     MemoryReference(lhs.ret + i, type = Float),
                                     MemoryReference(rhs.ret + i, type = Float)
-                            )).doGenerate(gen))
+                            )).generate(gen))
                         }
                         this
                     }
@@ -456,14 +457,14 @@ abstract class Type {
                 Operation("~", this) to OperationHandler(this) { gen, self, _ ->
                     with(linkedListOf<IR>()) {
                         val ref = gen.allocator.allocateReference(type = this@Vector)
-                        val genL = self.doGenerate(gen)
+                        val genL = self.generate(gen)
                         addAll(genL)
                         val lhs = genL.last()
                         for (i in 0..2) {
                             val component = MemoryReference(ref.ref + i, type = Float)
                             addAll(BinaryExpression.Assign(component, UnaryExpression.BitNot(
                                     MemoryReference(lhs.ret + i, type = Float)
-                            )).doGenerate(gen))
+                            )).generate(gen))
                         }
                         this
                     }
@@ -471,14 +472,14 @@ abstract class Type {
                 Operation("-", this) to OperationHandler(this) { gen, self, _ ->
                     with(linkedListOf<IR>()) {
                         val ref = gen.allocator.allocateReference(type = this@Vector)
-                        val genL = self.doGenerate(gen)
+                        val genL = self.generate(gen)
                         addAll(genL)
                         val lhs = genL.last()
                         for (i in 0..2) {
                             val component = MemoryReference(ref.ref + i, type = Float)
                             addAll(BinaryExpression.Assign(component, UnaryExpression.Minus(
                                     MemoryReference(lhs.ret + i, type = Float)
-                            )).doGenerate(gen))
+                            )).generate(gen))
                         }
                         this
                     }
@@ -506,13 +507,13 @@ abstract class Type {
                 Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_ENT),
                 Operation(".", this, String) to OperationHandler(this) { gen, left, right ->
                     // TODO: names to fields
-                    ConstantExpression(0).doGenerate(gen)
+                    ConstantExpression(0).generate(gen)
                 },
                 Operation("==", this, this) to DefaultHandler(Bool, Instruction.EQ_ENT),
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_ENT),
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_ENT),
                 Operation("(int)", this) to OperationHandler(Int) { gen, self, _ ->
-                    MemoryReference(self.doGenerate(gen).last().ret, Int).doGenerate(gen)
+                    MemoryReference(self.generate(gen).last().ret, Int).generate(gen)
                 }
         )
 
@@ -544,7 +545,7 @@ abstract class Type {
                 Operation("!=", this, this) to DefaultHandler(Bool, Instruction.NE_FUNC),
                 Operation("!", this) to DefaultUnaryHandler(Bool, Instruction.NOT_FUNC),
                 Operation("&", this) to OperationHandler(Float) { gen, self, _ ->
-                    BinaryExpression.Divide(MemoryReference(self.doGenerate(gen).last().ret, Float), ConstantExpression(1)).doGenerate(gen)
+                    BinaryExpression.Divide(MemoryReference(self.generate(gen).last().ret, Float), ConstantExpression(1)).generate(gen)
                 }
         )
 
@@ -565,19 +566,19 @@ abstract class Type {
             when (left) {
                 is MemberExpression -> {
                     val field = ReferenceExpression((left.right as ConstantExpression).value.value as kotlin.String)
-                    IndexExpression(left.left, IndexExpression(field, right!!)).doGenerate(gen)
+                    IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
                 }
                 is ReferenceExpression -> {
                     val s = generateAccessorName(left.id)
                     val indexer = MethodCallExpression(ReferenceExpression(s), listOf(right!!))
-                    MethodCallExpression(indexer, listOf(ConstantExpression(0))).doGenerate(gen)
+                    MethodCallExpression(indexer, listOf(ConstantExpression(0))).generate(gen)
                 }
                 else -> throw UnsupportedOperationException()
             }
         }
         override val ops = mapOf(
                 Operation("sizeof", this) to OperationHandler(Int) { gen, self, _ ->
-                    sizeExpr.doGenerate(gen)
+                    sizeExpr.generate(gen)
                 },
                 Operation("[]", this, Int) to index,
                 // TODO: remove

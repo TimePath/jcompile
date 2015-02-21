@@ -7,9 +7,13 @@ import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
 
 // TODO: push up
-fun Expression.doGenerate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
+fun Expression.generate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
 
 class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
+
     override fun visit(e: BinaryExpression) = e.handler(gen)(gen, e.left, e.right)
 
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
@@ -75,7 +79,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: BlockExpression): List<IR> {
         gen.allocator.push(this)
         val list = e.children.flatMap {
-            it.doGenerate(gen)
+            it.generate(gen)
         }
         gen.allocator.pop()
         return list
@@ -89,11 +93,11 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: ConditionalExpression): List<IR> {
         with(e) {
             val ret = linkedListOf<IR>()
-            val genPred = test.doGenerate(gen)
+            val genPred = test.generate(gen)
             ret.addAll(genPred)
-            val genTrue = pass.doGenerate(gen)
+            val genTrue = pass.generate(gen)
             val trueCount = genTrue.count { it.real }
-            val genFalse = fail?.doGenerate(gen)
+            val genFalse = fail?.generate(gen)
             if (genFalse == null) {
                 // No else, jump to the instruction after the body
                 ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0)))
@@ -150,7 +154,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
                 Generator.logger.warning("redefining $id")
             }
 
-            val global = gen.allocator.allocateFunction(id, type = type(gen))
+            val global = gen.allocator.allocateFunction(id, type = type(gen) as Type.Function)
             val f = Function(
                     firstStatement = if (builtin == null)
                         0 // to be filled in later
@@ -170,8 +174,8 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
                 vararg?.let { add(it) }
                 this
             }
-            val genParams = params.flatMap { it.doGenerate(gen) }
-            val children = children.flatMap { it.doGenerate(gen) }
+            val genParams = params.flatMap { it.generate(gen) }
+            val children = children.flatMap { it.generate(gen) }
             run {
                 // Calculate label jumps
                 val labelIndices = linkedMapOf<String, Int>()
@@ -215,9 +219,9 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
             with(linkedListOf<IR>()) {
                 val typeL = left.type(gen)
                 if (typeL is Type.Entity) {
-                    val genL = left.doGenerate(gen)
+                    val genL = left.generate(gen)
                     addAll(genL)
-                    val genR = right.doGenerate(gen)
+                    val genR = right.generate(gen)
                     addAll(genR)
                     val out = gen.allocator.allocateReference(type = type(gen))
                     add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
@@ -235,15 +239,15 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
 
     override fun visit(e: LoopExpression): List<IR> {
         with(e) {
-            val genInit = initializer?.flatMap { it.doGenerate(gen) }
+            val genInit = initializer?.flatMap { it.generate(gen) }
 
-            val genPred = predicate.doGenerate(gen)
+            val genPred = predicate.generate(gen)
             val predCount = genPred.count { it.real }
 
-            val genBody = children.flatMap { it.doGenerate(gen) }
+            val genBody = children.flatMap { it.generate(gen) }
             val bodyCount = genBody.count { it.real }
 
-            val genUpdate = update?.flatMap { it.doGenerate(gen) }
+            val genUpdate = update?.flatMap { it.generate(gen) }
             val updateCount = genUpdate?.count { it.real } ?: 0
 
             val totalCount = bodyCount + updateCount + predCount
@@ -283,9 +287,9 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     override fun visit(e: MemberExpression): LinkedList<IR> {
         with(e) {
             return with(linkedListOf<IR>()) {
-                val genL = left.doGenerate(gen)
+                val genL = left.generate(gen)
                 addAll(genL)
-                val genR = ConstantExpression(0).doGenerate(gen) // TODO: field by name
+                val genR = ConstantExpression(0).generate(gen) // TODO: field by name
                 addAll(genR)
                 val out = gen.allocator.allocateReference(type = type(gen))
                 add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
@@ -304,7 +308,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
             if (args.size() > 8) {
                 Generator.logger.warning("${function} takes ${args.size()} parameters")
             }
-            val args = args.take(8).map { it.doGenerate(gen) }
+            val args = args.take(8).map { it.generate(gen) }
             fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
             var i = 0
             val prepare: List<IR> = args.map {
@@ -313,7 +317,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
             }
             val global = gen.allocator.allocateReference(type = type(gen))
             with(linkedListOf<IR>()) {
-                val genF = function.doGenerate(gen)
+                val genF = function.generate(gen)
                 addAll(genF)
                 addAll(args.flatMap { it })
                 addAll(prepare)
@@ -332,7 +336,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
         val memoryReference = MemoryReference(Instruction.OFS_PARAM(e.index), e.type)
         return with(linkedListOf<IR>()) {
             addAll(visit(e : DeclarationExpression))
-            addAll(BinaryExpression.Assign(ReferenceExpression(e.id), memoryReference).doGenerate(gen))
+            addAll(BinaryExpression.Assign(ReferenceExpression(e.id), memoryReference).generate(gen))
             this
         }
     }
@@ -347,7 +351,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: ReturnStatement): List<IR> {
-        val genRet = e.returnValue?.doGenerate(gen)
+        val genRet = e.returnValue?.generate(gen)
         val ret = linkedListOf<IR>()
         val args = array(0, 0, 0)
         if (genRet != null) {
@@ -362,7 +366,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
         with(e) {
             val fields: List<IR> = struct.fields.flatMap {
                 it.value.declare("${id}_${it.key}", null).flatMap {
-                    it.doGenerate(gen)
+                    it.generate(gen)
                 }
             }
             val allocator = gen.allocator
@@ -372,7 +376,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: SwitchExpression): List<IR> {
-        return e.reduce()!!.accept(this)
+        return e.reduce()!!.generate()
     }
 
     override fun visit(e: SwitchExpression.Case): List<IR> {
@@ -389,7 +393,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
 
     override fun visit(e: UnaryExpression.BitNot) = visit(e : UnaryExpression)
 
-    override fun visit(e: UnaryExpression.Cast) = e.operand.accept(this)
+    override fun visit(e: UnaryExpression.Cast) = e.operand.generate()
 
     override fun visit(e: UnaryExpression.Dereference) = visit(e : UnaryExpression)
 

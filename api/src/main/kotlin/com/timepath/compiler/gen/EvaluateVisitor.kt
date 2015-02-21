@@ -11,6 +11,10 @@ import com.timepath.compiler.ast.*
 fun Expression.evaluate(): Value? = accept(EvaluateVisitor)
 
 object EvaluateVisitor : ASTVisitor<Value?> {
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun Expression.evaluate(): Value? = accept(this@EvaluateVisitor)
+
     override fun visit(e: BinaryExpression): Value? {
         throw UnsupportedOperationException()
     }

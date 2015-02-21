@@ -15,7 +15,6 @@ class MethodCallExpression(val function: Expression,
         }
     }
 
-    override fun type(gen: Generator): Type = (function.type(gen) as Type.Function).type
 
     val args: List<Expression> by Delegates.lazy {
         children.filterIsInstance<Expression>()
