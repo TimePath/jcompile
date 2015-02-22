@@ -6,6 +6,7 @@ import com.timepath.compiler.ast.MemoryReference
 import com.timepath.compiler.gen.generate
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
 
@@ -25,7 +26,7 @@ data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type
             }
     )
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

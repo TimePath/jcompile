@@ -11,8 +11,9 @@ import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
+import com.timepath.compiler.api.CompileState
 
-class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() {
+class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
     class object {
         val logger = Logger.new()
@@ -50,7 +51,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         val direct = when {
         // varargs
             typeSpec.pointer()?.getText()?.length() == 3 -> void_t
-            else -> types[typeSpec.directTypeSpecifier().children[0].getText()]
+            else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]
         }
         var indirect = if (functional != null && !old) {
             functional.functionType(direct)
@@ -151,7 +152,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
         if (typedef) {
             val type = type(ctx.declarationSpecifiers().declarationSpecifier())
             ctx.initDeclaratorList().initDeclarator().forEach {
-                types[it.getText()] = type!!
+                state.types[it.getText()] = type!!
             }
             return emptyList()
         }
@@ -196,7 +197,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
                     val parameterTypeList = it.declarator().parameterTypeList()
                     if (arraySize != null) {
                         val sizeExpr = arraySize.accept(this).single()
-                        array_t(type!!, sizeExpr).declare(id)
+                        array_t(type!!, sizeExpr).declare(id, state = state)
                     } else {
                         parameterTypeList.functionType(type!!).declare(id)
                     }
@@ -497,7 +498,7 @@ class ASTTransform(val types: TypeRegistry) : QCBaseVisitor<List<Expression>>() 
 
     override fun visitCastExpression(ctx: QCParser.CastExpressionContext): List<Expression> {
         if (ctx.terminal) {
-            val type = types[ctx.typeName().getText()]
+            val type = state.types[ctx.typeName().getText()]
             val expr = ctx.castExpression().accept(this).single()
             return listOf(UnaryExpression.Cast(type, expr))
         }

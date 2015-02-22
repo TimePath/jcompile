@@ -3,6 +3,7 @@ package com.timepath.compiler.types
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 object string_t : pointer_t() {
     override fun handle(op: Operation) = ops[op]
@@ -13,7 +14,7 @@ object string_t : pointer_t() {
             Operation("!", this) to DefaultUnaryHandler(bool_t, Instruction.NOT_STR)
     )
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

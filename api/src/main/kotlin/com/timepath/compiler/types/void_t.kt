@@ -5,6 +5,7 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.gen.generate
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 object void_t : Type {
     override fun handle(op: Operation) = ops[op]
@@ -31,7 +32,7 @@ object void_t : Type {
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT)
     )
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

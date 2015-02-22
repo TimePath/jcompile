@@ -15,6 +15,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.preproc.CustomPreprocessor
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
+import com.timepath.compiler.api.CompileState
 
 public class Compiler(val parser: Frontend, val opts: CompilerOptions = CompilerOptions()) {
 
@@ -96,15 +97,16 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
         }
     }
 
+    val state = CompileState(gen = Generator(opts))
+
     fun ast(): List<List<Expression>> {
         val roots = linkedListOf<List<Expression>>()
-        val types = TypeRegistry()
         for (include in includes) {
             logger.info(include.path)
             preprocessor.addInput(include.source)
             val stream = ANTLRInputStream(preview(CppReader(preprocessor)))
             stream.name = include.path
-            val root = parser.parse(stream, types)
+            val root = parser.parse(stream, state)
             roots.add(root.children)
             //            debug("printing parse tree", writeParse) {
             //                val listener = TreePrinterListener(rules!!)
@@ -128,9 +130,5 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
         return roots
     }
 
-    public fun compile(roots: List<List<Expression>> = ast()): Any {
-        val gen = Generator(opts)
-        val ir = gen.generate(roots.flatMap { it })
-        return ir
-    }
+    public fun compile(roots: List<List<Expression>> = ast()): Any = state.gen.generate(roots.flatMap { it })
 }

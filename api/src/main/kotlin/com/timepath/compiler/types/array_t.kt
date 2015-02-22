@@ -15,6 +15,7 @@ import com.timepath.compiler.ast.UnaryExpression
 import com.timepath.compiler.ast.BinaryExpression
 import com.timepath.compiler.ast.ConditionalExpression
 import com.timepath.compiler.ast.ReturnStatement
+import com.timepath.compiler.api.CompileState
 
 data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
 
@@ -45,8 +46,8 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
     )
 
     // FIXME
-    override fun declare(name: String, value: ConstantExpression?): List<Expression> {
-        val size = (sizeExpr.evaluate()!!.any as Number).toInt()
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<Expression> {
+        val size = (sizeExpr.evaluate(state)!!.any as Number).toInt()
         val intRange = size.indices
         return with(linkedListOf<Expression>()) {
             add(DeclarationExpression(name, this@array_t))

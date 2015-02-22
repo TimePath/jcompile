@@ -2,27 +2,24 @@ package com.timepath.compiler.gen
 
 import com.timepath.compiler.Value
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.api.CompileState
 
 /**
  * Used in constant folding
  *
  * @return A constant or null if it could change at runtime
  */
-fun Expression.evaluate(): Value? = accept(EvaluateVisitor)
+fun Expression.evaluate(state: CompileState? = null): Value? = accept(EvaluateVisitor(state))
 
-object EvaluateVisitor : ASTVisitor<Value?> {
+class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.evaluate(): Value? = accept(this@EvaluateVisitor)
 
     override fun visit(e: BinaryExpression.Add): Value? = e.left.evaluate()?.plus(e.right.evaluate())
-
     override fun visit(e: BinaryExpression.Divide): Value? = e.left.evaluate()?.div(e.right.evaluate())
-
     override fun visit(e: BinaryExpression.Modulo): Value? = e.left.evaluate()?.mod(e.right.evaluate())
-
     override fun visit(e: BinaryExpression.Multiply): Value? = e.left.evaluate()?.times(e.right.evaluate())
-
     override fun visit(e: BinaryExpression.Subtract): Value? = e.left.evaluate()?.minus(e.right.evaluate())
 
     override fun visit(e: ConditionalExpression): Value? {
@@ -35,6 +32,15 @@ object EvaluateVisitor : ASTVisitor<Value?> {
     }
 
     override fun visit(e: ConstantExpression): Value? = e.value
+
+    override fun visit(e: ReferenceExpression): Value? {
+        if(state != null) {
+            state.gen.allocator[e.id]?.let {
+                return it.value
+            }
+        }
+        return super.visit(e)
+    }
 
     override fun visit(e: UnaryExpression.Cast): Value? = e.operand.evaluate()
 

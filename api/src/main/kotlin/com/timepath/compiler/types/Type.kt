@@ -8,6 +8,7 @@ import com.timepath.compiler.gen.IR
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.Vector
 import com.timepath.q1vm.Instruction
+import com.timepath.compiler.api.CompileState
 
 trait Type {
 
@@ -46,7 +47,7 @@ trait Type {
 
     override fun toString() = javaClass.getSimpleName().toLowerCase()
 
-    fun declare(name: String, value: ConstantExpression? = null): List<Expression>
+    fun declare(name: String, value: ConstantExpression? = null, state: CompileState? = null): List<Expression>
 
     fun handle(op: Operation): OperationHandler?
 

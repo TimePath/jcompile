@@ -10,6 +10,7 @@ import com.timepath.compiler.ast.ReferenceExpression
 import com.timepath.compiler.ast.UnaryExpression
 import com.timepath.compiler.gen.IR
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 open class number_t : Type {
     override fun handle(op: Operation) = ops[op]
@@ -130,7 +131,7 @@ open class number_t : Type {
         )
     }
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

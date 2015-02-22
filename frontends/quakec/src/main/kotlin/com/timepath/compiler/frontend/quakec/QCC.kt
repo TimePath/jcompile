@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
+import com.timepath.compiler.api.CompileState
 
 object QCC : Frontend {
     public val rules: Array<String> = QCParser.ruleNames
@@ -30,7 +31,7 @@ object QCC : Frontend {
         return tree
     }
 
-    override fun parse(stream: ANTLRInputStream, types: TypeRegistry): Expression {
-        return tree(stream).accept(ASTTransform(types)).single()
+    override fun parse(stream: ANTLRInputStream, state: CompileState): Expression {
+        return tree(stream).accept(ASTTransform(state)).single()
     }
 }

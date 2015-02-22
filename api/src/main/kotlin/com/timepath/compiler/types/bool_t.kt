@@ -5,6 +5,7 @@ import com.timepath.compiler.ast.BinaryExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.gen.generate
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 object bool_t : number_t() {
     val ops: Map<Operation, OperationHandler>
@@ -40,7 +41,7 @@ object bool_t : number_t() {
         return null
     }
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

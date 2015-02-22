@@ -3,6 +3,7 @@ package com.timepath.compiler.types
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 data class field_t(val type: Type) : pointer_t() {
 
@@ -15,7 +16,7 @@ data class field_t(val type: Type) : pointer_t() {
             Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC)
     )
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

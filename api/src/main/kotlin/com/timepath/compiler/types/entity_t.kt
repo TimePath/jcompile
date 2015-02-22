@@ -5,6 +5,7 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.gen.generate
 import com.timepath.compiler.ast.MemoryReference
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.api.CompileState
 
 object entity_t : pointer_t() {
     override fun handle(op: Operation) = ops[op]
@@ -22,7 +23,7 @@ object entity_t : pointer_t() {
             }
     )
 
-    override fun declare(name: String, value: ConstantExpression?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }
