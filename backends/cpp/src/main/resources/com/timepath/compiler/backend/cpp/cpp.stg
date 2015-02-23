@@ -1,0 +1,143 @@
+Module(root, files) ::= <<
+cmake_minimum_required(VERSION 2.8)
+project(<root>)
+add_executable(<root>
+    <files; separator="\n">
+)
+# target_compile_features(<root> PRIVATE cxx_explicit_conversions)
+add_definitions(-std=c++11)
+>>
+
+
+
+File(includes, namespace, code) ::= <<
+#pragma once
+
+<includes:{it|#include "<it>"}; separator="\n">
+
+namespace <namespace> {
+    <code; separator=";\n">
+}
+>>
+
+
+
+type_void_t(it, id)     ::= "void<if(id)> <id><endif>"
+type_bool_t(it, id)     ::= "bool<if(id)> <id><endif>"
+type_int_t(it, id)      ::= "int<if(id)> <id><endif>"
+type_string_t(it, id)   ::= "string<if(id)> <id><endif>"
+type_array_t(it, id)    ::= "<it.type><if(id)> <id><endif>[<it.sizeExpr>]"
+type_float_t(it, id)    ::= "float<if(id)> <id><endif>"
+type_vector_t(it, id)   ::= "vector<if(id)> <id><endif>"
+type_entity_t(it, id)   ::= "entity<if(id)> <id><endif>"
+type_field_t(it, id)    ::= ".<it.type><if(id)> <id><endif>"
+type_function_t(it, id) ::= <%<it.type>(<it.argTypes; separator=", ">)<if(id)> <id><endif>%>
+
+
+
+Nop(e)                          ::= ";"
+
+Add(e)                          ::= "<e.left> + <e.right>"
+AddAssign(e)                    ::= "<e.left> += <e.right>"
+And(e)                          ::= "<e.left> && <e.right>"
+AndAssign(e)                    ::= "<e.left> &= <e.right>"
+Assign(e)                       ::= "<e.left> = <e.right>"
+BitAnd(e)                       ::= "<e.left> & <e.right>"
+BitOr(e)                        ::= "<e.left> | <e.right>"
+Cast(e)                         ::= "(<e.type>) <e.operand>"
+Comma(e)                        ::= "<e.left> , <e.right>"
+Divide(e)                       ::= "<e.left> / <e.right>"
+DivideAssign(e)                 ::= "<e.left> /= <e.right>"
+ExclusiveOr(e)                  ::= "<e.left> ^ <e.right>"
+ExclusiveOrAssign(e)            ::= "<e.left> ^= <e.right>"
+Eq(e)                           ::= "<e.left> == <e.right>"
+Ge(e)                           ::= "<e.left> >= <e.right>"
+Gt(e)                           ::= "<e.left> > <e.right>"
+IndexExpression(e)              ::= "<e.left>[<e.right>]"
+Le(e)                           ::= "<e.left> \<= <e.right>"
+Lsh(e)                          ::= "<e.left> \<\< <e.right>"
+LshAssign(e)                    ::= "<e.left> \<\<= <e.right>"
+Lt(e)                           ::= "<e.left> \< <e.right>"
+MemberExpression(e)             ::= "<e.left>[<e.right.value.any>]"
+Modulo(e)                       ::= "<e.left> % <e.right>"
+Multiply(e)                     ::= "<e.left> * <e.right>"
+MultiplyAssign(e)               ::= "<e.left> *= <e.right>"
+Ne(e)                           ::= "<e.left> != <e.right>"
+Or(e)                           ::= "<e.left> || <e.right>"
+OrAssign(e)                     ::= "<e.left> |= <e.right>"
+Rsh(e)                          ::= "<e.left> >> <e.right>"
+RshAssign(e)                    ::= "<e.left> >>= <e.right>"
+Subtract(e)                     ::= "<e.left> - <e.right>"
+SubtractAssign(e)               ::= "<e.left> -= <e.right>"
+
+
+Address(e)                      ::= "&<e.operand>"
+BitNot(e)                       ::= "~<e.operand>"
+Dereference(e)                  ::= "*<e.operand>"
+Minus(e)                        ::= "-<e.operand>"
+Not(e)                          ::= "!<e.operand>"
+Plus(e)                         ::= "+<e.operand>"
+PostDecrement(e)                ::= "<e.operand>--"
+PostIncrement(e)                ::= "<e.operand>++"
+PreDecrement(e)                 ::= "--<e.operand>"
+PreIncrement(e)                 ::= "++<e.operand>"
+
+
+BlockExpression(e)              ::= <<
+{
+    <e.children:{it|<it>;}; separator="\n">
+}
+>>
+
+BreakStatement(e)               ::= "break"
+
+ConditionalExpression(e)        ::= <<
+<if(e.expression)>
+<e.test> ? <e.pass> : <e.fail>
+<else>
+if (<e.test>) <e.pass><if(e.fail)> else <e.fail><endif><endif>
+>>
+
+ConstantExpression(e)           ::= <<
+<e.value>
+>>
+
+ContinueStatement(e)            ::= "continue"
+
+DeclarationExpression(e)        ::= <<
+<e.type; format={<e.id>}><if(e.value)> = <e.value><endif>
+>>
+
+FunctionExpression(e)           ::= <<
+<e.signature.type> <e.id>(<e.params; separator=", ">) <BlockExpression(e)>
+>>
+
+ParameterExpression             ::= DeclarationExpression
+
+GotoExpression(e)               ::= "goto <e.id>"
+
+LabelExpression(e)              ::= "<e.id>:"
+
+LoopExpression(e)               ::= <%
+<if(e.checkBefore)>
+do <BlockExpression(e)> while (<e.predicate>)
+<else>
+for (<e.initializer; separator=", ">; <e.predicate>; <e.update; separator=", ">) <BlockExpression(e)>
+<endif>
+%>
+
+MethodCallExpression(e)         ::= <<
+<e.function>(<e.args; separator=", ">)
+>>
+
+ReferenceExpression(e)          ::= "<e.id>"
+
+ReturnStatement(e)              ::= <<
+return<if(e.returnValue)> <e.returnValue><endif>
+>>
+
+StructDeclarationExpression(e)  ::= "<e.id>"
+
+SwitchExpression(e)             ::= "switch (<e.test>) <BlockExpression(e)>"
+
+Case(e)                         ::= "<if(e.expr)>case <e.expr><else>default<endif>:"
