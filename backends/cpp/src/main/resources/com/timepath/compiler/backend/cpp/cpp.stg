@@ -157,12 +157,12 @@ comp_if(e, s)   ::= "<if(s)><\n><endif><e>"
 comp_wrap(e, s) ::= "{<\n>    <e>;<\n>}"
 compound(e, s)  ::= "<(comp.(e:class()))(e, s)>"
 
-ConditionalExpression(e)        ::= <<
+ConditionalExpression(e)        ::= <%
 <if(e.expression)>
 <e.test> ? <e.pass> : <e.fail>
 <else>
 if (<e.test>) <e.pass:compound(true)><if(e.fail)> else <e.fail:compound(false)><endif><endif>
->>
+%>
 
 ConstantExpression(e)           ::= "<e.value:literal()>"
 
@@ -172,9 +172,16 @@ DeclarationExpression(e)        ::= "<e:declare()>"
 StructDeclarationExpression     ::= DeclarationExpression
 ParameterExpression             ::= DeclarationExpression
 
-FunctionExpression(e)           ::= <<
-<e.signature.type:typename()> <e.id>(<e.params; separator=", "><if(e.vararg)>, <e.vararg><endif>)<if(e.children)> <BlockExpression(e)><endif>
->>
+func ::= [
+    "function_t"    :   "func_ptr",
+    default         :   "func_simple"
+]
+func_idparams(e)    ::= <%<e.id>(<e.params; separator=", "><if(e.vararg)>, <e.vararg><endif>)%>
+func_simple(e, t)   ::= <%<t:typename()> <func_idparams(e)>%>
+func_ptr(e, t)      ::= <%<t.type:typename()> (*<func_idparams(e)>)(<t.argTypes:typename(); separator=", ">)%>
+function(e)         ::= <%<(func.(e.signature.type:class()))(e, e.signature.type)>%>
+
+FunctionExpression(e)           ::= "<e:function()><if(e.children)> <BlockExpression(e)><endif>"
 
 GotoExpression(e)               ::= "goto <e.id>"
 
