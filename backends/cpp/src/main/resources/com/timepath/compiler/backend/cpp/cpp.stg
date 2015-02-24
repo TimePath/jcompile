@@ -190,8 +190,10 @@ LabelExpression(e)              ::= "<e.id>:"
 LoopExpression(e)               ::= <%
 <if(!e.checkBefore)>
 do <BlockExpression(e)> while (<e.predicate>)
-<else>
+<elseif(e.initializer && e.update)>
 for (<e.initializer; separator=", ">; <e.predicate>; <e.update; separator=", ">) <BlockExpression(e)>
+<else>
+while (<e.predicate>) <BlockExpression(e)>
 <endif>
 %>
 
