@@ -47,13 +47,13 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
 
     // FIXME
     override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<Expression> {
-        val size = (sizeExpr.evaluate(state)!!.any as Number).toInt()
-        val intRange = size.indices
+        val sizeVal = sizeExpr.evaluate(state)
+        val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
         return with(linkedListOf<Expression>()) {
             add(DeclarationExpression(name, this@array_t))
             add(DeclarationExpression("${name}_size", int_t, ConstantExpression(size.toFloat())))
             add(generateAccessor(name))
-            intRange.forEachIndexed {(i, _) ->
+            size.indices.forEachIndexed {(i, _) ->
                 addAll(generateComponent(name, i))
             }
             this
@@ -76,8 +76,8 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
         val accessor = generateAccessorName(id)
         return FunctionExpression(
                 accessor,
-                function_t(function_t(float_t, listOf(float_t, float_t), null), listOf(float_t), null),
-                listOf(ParameterExpression("index", float_t, 0)),
+                function_t(function_t(type, listOf(bool_t, type), null), listOf(int_t), null),
+                listOf(ParameterExpression("index", int_t, 0)),
                 add = listOf(ReturnStatement(
                         UnaryExpression.Dereference(BinaryExpression.Add(
                                 UnaryExpression.Address(
@@ -107,10 +107,10 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
             val fieldReference = ReferenceExpression(field)
             add(FunctionExpression(
                     accessor,
-                    function_t(float_t, listOf(float_t, float_t), null),
+                    function_t(type, listOf(bool_t, type), null),
                     listOf(
-                            ParameterExpression("mode", float_t, 0),
-                            ParameterExpression("value", float_t, 1)
+                            ParameterExpression("mode", bool_t, 0),
+                            ParameterExpression("value", type, 1)
                     ),
                     add = listOf(ReturnStatement(ConditionalExpression(
                             ReferenceExpression("mode"), true,
