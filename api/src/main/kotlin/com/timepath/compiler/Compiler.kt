@@ -16,6 +16,7 @@ import com.timepath.compiler.preproc.CustomPreprocessor
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import com.timepath.compiler.api.CompileState
+import java.net.URL
 
 public class Compiler(val parser: Frontend, val opts: CompilerOptions = CompilerOptions()) {
 
@@ -50,17 +51,31 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
 
     val includes = LinkedList<Include>()
 
-    data class Include(val name: String,
-                       val path: String,
-                       val source: Source)
+    data trait Include {
+        val name: String
+        val path: String
+        val source: Source
+    }
 
-    fun Include(input: String, name: String): Include = Include(name, name, StringLexerSource(input))
+    fun Include(input: String, name: String): Include = object : Include {
+        override val name = name
+        override val path = name
+        override val source: Source
+            get() = StringLexerSource(input)
+    }
+
     public fun include(input: String, name: String): Compiler {
         includes.add(Include(input, name))
         return this
     }
 
-    fun Include(file: File): Include = Include(file.name, file.canonicalPath, FileLexerSource(file))
+    fun Include(file: File): Include = object : Include {
+        override val name = file.name
+        override val path = file.canonicalPath
+        override val source: Source
+            get() = FileLexerSource(file)
+    }
+
     public fun include(file: File): Compiler {
         includes.add(Include(file))
         return this
@@ -75,9 +90,18 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
         return this
     }
 
+    fun Include(url: URL): Include = object : Include {
+        override val name = url.getPath().substringAfterLast('/')
+        override val path = url.getPath()
+        override val source: Source
+            get() = object : LexerSource(url.openStream().buffered().reader(), true) {
+                override fun getName() = name
+                override fun getPath() = path
+            }
+    }
+
     {
-        val predefs = this.javaClass.getResourceAsStream("/predefs.qc")
-        includes.add(Include("predefs.qc", "<predefs>", InputLexerSource(predefs)))
+        includes.add(Include(this.javaClass.getResource("/predefs.qc")))
     }
 
     val exec = if (debugThreads)
