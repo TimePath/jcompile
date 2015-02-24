@@ -181,7 +181,7 @@ GotoExpression(e)               ::= "goto <e.id>"
 LabelExpression(e)              ::= "<e.id>:"
 
 LoopExpression(e)               ::= <%
-<if(e.checkBefore)>
+<if(!e.checkBefore)>
 do <BlockExpression(e)> while (<e.predicate>)
 <else>
 for (<e.initializer; separator=", ">; <e.predicate>; <e.update; separator=", ">) <BlockExpression(e)>
