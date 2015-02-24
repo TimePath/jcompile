@@ -87,14 +87,9 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                     module.add("files", listOf(predef.name) + map.keySet())
                     it.write(module.render())
                 }
-                val include = linkedListOf(predef)
-                val accumulate = linkedListOf<Expression>()
-                for ((f, code) in map) {
-                    accumulate.addAll(code)
-                    val file = File(projOut, f)
+                fun write(file: File, include: List<File>, code: List<Expression>) {
                     val parent = file.getParentFile()
                     parent.mkdirs()
-                    val header = /* f.endsWith(".h") */ true
                     FileOutputStream(file).writer().buffered().use {
                         val st = templates.getInstanceOf("File")!!
                         st.add("includes", include.map {
@@ -104,9 +99,14 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                         st.add("code", code)
                         it.write(st.render())
                     }
-                    if (header)
-                        include.add(File(projOut, f))
                 }
+                val include = listOf(predef)
+                val accumulate = linkedListOf<Expression>()
+                for ((f, code) in map) {
+                    write(File(projOut, f), include, code)
+                    accumulate.addAll(code)
+                }
+                write(File(projOut, "all.cpp"), include, accumulate)
             }
         }
     }
