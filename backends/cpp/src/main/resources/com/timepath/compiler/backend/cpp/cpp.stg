@@ -68,6 +68,29 @@ declare(e)          ::= <%<(decls.(e.type:class()))(e)>%>
 
 
 
+lits ::= [
+    "Value"         :   "lit_unwrap",
+    "Boolean"       :   "lit_simple",
+    "Integer"       :   "lit_simple",
+    "Float"         :   "lit_float",
+    "Vector"        :   "lit_vector",
+    "Character"     :   "lit_char",
+    "String"        :   "lit_string",
+
+    default         :   "lit_default"
+]
+lit_unwrap(it)      ::= <%<it.any:literal()>%>
+lit_simple(it)      ::= <%<it>%>
+lit_float(it)       ::= <%<it>f%>
+lit_vector(it)      ::= <%(vector) {<it.x:literal()>, <it.y:literal()>, <it.z:literal()>}%>
+lit_char(it)        ::= <%'<it>'%>
+lit_string(it)      ::= <%"<it>"%>
+lit_default(it)     ::= <%/* TODO: <it:class()> */<lit_simple(it)>%>
+
+literal(it)         ::= <%<(lits.(it:class()))(it)>%>
+
+
+
 Nop(e)                          ::= ";"
 
 Add(e)                          ::= "<e.left> + <e.right>"
@@ -131,9 +154,7 @@ ConditionalExpression(e)        ::= <<
 if (<e.test>) <e.pass><if(e.fail)> else <e.fail><endif><endif>
 >>
 
-ConstantExpression(e)           ::= <<
-<e.value>
->>
+ConstantExpression(e)           ::= "<e.value:literal()>"
 
 ContinueStatement(e)            ::= "continue"
 
