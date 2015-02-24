@@ -7,12 +7,16 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.types.*
 import org.stringtemplate.v4.*
 
 class CPPPrinter(val templ: STGroup) : ASTVisitor<String> {
     override fun default(e: Expression): String {
-        return templ.getInstanceOf(e.javaClass.getSimpleName())
+        val s = e.javaClass.getSimpleName()
+        val ST = templ.getInstanceOf(s)
+        if (ST == null) {
+            throw NullPointerException("Missing template: $s")
+        }
+        return ST
                 .add("e", e)
                 .render()
     }
@@ -44,12 +48,6 @@ fun main(args: Array<String>) {
     val printer = CPPPrinter(templates)
     templates.registerRenderer(javaClass<Expression>(), {(it, format, locale) ->
         (it as Expression).accept(printer)
-    })
-    templates.registerRenderer(javaClass<Type>(), {(it, format, locale) ->
-        templates.getInstanceOf("type_" + it.javaClass.getSimpleName())
-                .add("it", it)
-                .add("id", format)
-                .render()
     })
     out.mkdirs()
     time("Total time") {
@@ -86,7 +84,7 @@ ${subprojects.map { "add_subdirectory(${it.out})" }.join("\n")}
                 FileOutputStream(File(projOut, "CMakeLists.txt")).writer().buffered().use {
                     val module = templates.getInstanceOf("Module")!!
                     module.add("root", project.root)
-                    module.add("files", listOf(predef) + map.keySet())
+                    module.add("files", listOf(predef.name) + map.keySet())
                     it.write(module.render())
                 }
                 val include = linkedListOf(predef)

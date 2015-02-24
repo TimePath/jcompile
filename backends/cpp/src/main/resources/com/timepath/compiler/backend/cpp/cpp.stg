@@ -22,16 +22,49 @@ namespace <namespace> {
 
 
 
-type_void_t(it, id)     ::= "void<if(id)> <id><endif>"
-type_bool_t(it, id)     ::= "bool<if(id)> <id><endif>"
-type_int_t(it, id)      ::= "int<if(id)> <id><endif>"
-type_string_t(it, id)   ::= "string<if(id)> <id><endif>"
-type_array_t(it, id)    ::= "<it.type><if(id)> <id><endif>[<it.sizeExpr>]"
-type_float_t(it, id)    ::= "float<if(id)> <id><endif>"
-type_vector_t(it, id)   ::= "vector<if(id)> <id><endif>"
-type_entity_t(it, id)   ::= "entity<if(id)> <id><endif>"
-type_field_t(it, id)    ::= ".<it.type><if(id)> <id><endif>"
-type_function_t(it, id) ::= <%<it.type>(<it.argTypes; separator=", ">)<if(id)> <id><endif>%>
+class(it) ::= "<it.class.simpleName>"
+
+
+
+native ::= [
+    "void_t"    :   "void",
+    "bool_t"    :   "bool",
+    "int_t"     :   "int",
+    "float_t"   :   "float",
+    "vector_t"  :   "vector",
+    "entity_t"  :   "entity",
+    "string_t"  :   "string",
+
+    default     :   "auto"
+]
+
+typename(t) ::= <%<native.(t:class())>%>
+
+
+
+decls ::= [
+    "void_t"        :   "decl_simple",
+    "bool_t"        :   "decl_simple",
+    "int_t"         :   "decl_simple",
+    "float_t"       :   "decl_simple",
+    "vector_t"      :   "decl_simple",
+    "entity_t"      :   "decl_simple",
+    "string_t"      :   "decl_simple",
+
+    "array_t"       :   "decl_array",
+    "field_t"       :   "decl_field",
+    "function_t"    :   "decl_function",
+
+    default         :   "decl_default"
+]
+decl_simple(e)      ::= <%<e.type:typename()><if(e.id)> <e.id><endif><if(e.value)> = <e.value><endif>%>
+decl_array(e)       ::= <%<e.type.type:typename()><if(e.id)> <e.id><endif>[<e.sizeExpr>]%>
+decl_field(e)       ::= <%<e.type.type:typename()><if(e.id)> *<e.id><else>*<endif>%>
+decl_function(e)    ::= <%<e.type.type:typename()> <e.id>(<e.argTypes:typename(); separator=", ">)%>
+decl_functionptr(e) ::= <%<e.type.type:typename()> (*<e.id>)(<e.argTypes:typename(); separator=", ">)%>
+decl_default        ::= decl_simple
+
+declare(e)          ::= <%<(decls.(e.type:class()))(e)>%>
 
 
 
@@ -44,7 +77,7 @@ AndAssign(e)                    ::= "<e.left> &= <e.right>"
 Assign(e)                       ::= "<e.left> = <e.right>"
 BitAnd(e)                       ::= "<e.left> & <e.right>"
 BitOr(e)                        ::= "<e.left> | <e.right>"
-Cast(e)                         ::= "(<e.type>) <e.operand>"
+Cast(e)                         ::= "(<e.type:typename()>) <e.operand>"
 Comma(e)                        ::= "<e.left> , <e.right>"
 Divide(e)                       ::= "<e.left> / <e.right>"
 DivideAssign(e)                 ::= "<e.left> /= <e.right>"
@@ -104,15 +137,12 @@ ConstantExpression(e)           ::= <<
 
 ContinueStatement(e)            ::= "continue"
 
-DeclarationExpression(e)        ::= <<
-<e.type; format={<e.id>}><if(e.value)> = <e.value><endif>
->>
+DeclarationExpression(e)        ::= "<e:declare()>"
+ParameterExpression             ::= DeclarationExpression
 
 FunctionExpression(e)           ::= <<
-<e.signature.type> <e.id>(<e.params; separator=", ">) <BlockExpression(e)>
+<e.signature.type:typename()> <e.id>(<e.params; separator=", ">) <BlockExpression(e)>
 >>
-
-ParameterExpression             ::= DeclarationExpression
 
 GotoExpression(e)               ::= "goto <e.id>"
 
