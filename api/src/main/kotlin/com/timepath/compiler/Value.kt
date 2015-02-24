@@ -1,5 +1,7 @@
 package com.timepath.compiler
 
+import com.timepath.compiler.types.*
+
 class Value(val any: Any) {
 
     fun toBoolean(): Boolean = false
@@ -10,48 +12,91 @@ class Value(val any: Any) {
 
     override fun hashCode() = any.hashCode()
 
-    fun plus(other: Value?): Value? {
+    fun plus(other: Value): Value {
         val lhs = any
-        val rhs = other!!.any
-        return when {
-            lhs is Float && rhs is Float -> Value(lhs + rhs)
-            else -> throw UnsupportedOperationException("not supported")
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs + rhs)
+                is Int -> return Value(lhs + rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs + rhs)
+            }
         }
+        throw UnsupportedOperationException("not supported")
     }
 
-    fun minus(other: Value?): Value? {
+    fun minus(other: Value): Value {
         val lhs = any
-        val rhs = other!!.any
-        return when {
-            lhs is Float && rhs is Float -> Value(lhs - rhs)
-            else -> throw UnsupportedOperationException("not supported")
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs - rhs)
+                is Int -> return Value(lhs - rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs - rhs)
+            }
         }
+        throw UnsupportedOperationException("not supported")
     }
 
-    fun times(other: Value?): Value? {
+    fun times(other: Value): Value {
         val lhs = any
-        val rhs = other!!.any
-        return when {
-            lhs is Float && rhs is Float -> Value(lhs * rhs)
-            else -> throw UnsupportedOperationException("not supported")
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs * rhs)
+                is Int -> return Value(lhs * rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs * rhs)
+            }
         }
+        throw UnsupportedOperationException("not supported")
     }
 
-    fun div(other: Value?): Value? {
+    fun div(other: Value): Value {
         val lhs = any
-        val rhs = other!!.any
-        return when {
-            lhs is Float && rhs is Float -> Value(lhs / rhs)
-            else -> throw UnsupportedOperationException("not supported")
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs / rhs)
+                is Int -> return Value(lhs / rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs / rhs)
+            }
         }
+        throw UnsupportedOperationException("not supported")
     }
 
-    fun mod(other: Value?): Value? {
+    fun mod(other: Value): Value {
         val lhs = any
-        val rhs = other!!.any
-        return when {
-            lhs is Float && rhs is Float -> Value(lhs % rhs)
-            else -> throw UnsupportedOperationException("not supported")
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs % rhs)
+                is Int -> return Value(lhs % rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs % rhs)
+            }
         }
+        throw UnsupportedOperationException("not supported")
     }
+
+    fun cast(type: Type): Value {
+        val lhs = any
+        when (lhs) {
+            is Number -> when (type) {
+                is float_t -> return Value(lhs.toFloat())
+                is int_t -> return Value(lhs.toInt().toFloat()) // FIXME: There are no real ints, truncate instead
+            }
+        }
+        throw UnsupportedOperationException("not supported")
+    }
+
+    fun minus() = Value(0f) - this
 }

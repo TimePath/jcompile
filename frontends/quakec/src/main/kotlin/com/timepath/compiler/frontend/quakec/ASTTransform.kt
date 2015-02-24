@@ -2,7 +2,6 @@ package com.timepath.compiler.frontend.quakec
 
 import java.util.regex.Pattern
 import com.timepath.Logger
-import com.timepath.compiler.TypeRegistry
 import com.timepath.compiler.Vector
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
@@ -12,6 +11,7 @@ import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.Value
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
@@ -166,31 +166,33 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             val id = declarator.getText()
             val initializer = it.initializer()?.accept(this)?.single()
             when (initializer) {
-                is ConstantExpression -> {
-                    val value = initializer.evaluate()!!
-                    val s = value.any.toString()
-                    if (s.startsWith('#')) {
-                        // FIXME: HACK
-                        val i = s.substring(1).toInt()
-                        // Similar to function definition
-                        val old = it.declarator().parameterTypeList() == null
-                        val parameterTypeList = if (old) {
-                            ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
-                        } else {
-                            it.declarator().parameterTypeList()
-                        }
-                        val retType = ctx.declarationSpecifiers().type(old)
-                        val params = parameterTypeList.functionArgs(ctx)
-                        val vararg = parameterTypeList.functionVararg(ctx)
-                        val signature = parameterTypeList.functionType(retType!!);
-                        listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx))
-                    } else {
-                        type!!.declare(id, initializer)
-                    }
-                }
                 is Expression -> {
-                    type!!.declare(id).flatMap {
-                        listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
+                    val value = initializer.evaluate()
+                    if (value != null) {
+                        // constant
+                        val s = value.any.toString()
+                        if (s.startsWith('#')) {
+                            // FIXME: HACK
+                            val i = s.substring(1).toInt()
+                            // Similar to function definition
+                            val old = it.declarator().parameterTypeList() == null
+                            val parameterTypeList = if (old) {
+                                ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
+                            } else {
+                                it.declarator().parameterTypeList()
+                            }
+                            val retType = ctx.declarationSpecifiers().type(old)
+                            val params = parameterTypeList.functionArgs(ctx)
+                            val vararg = parameterTypeList.functionVararg(ctx)
+                            val signature = parameterTypeList.functionType(retType!!);
+                            listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx))
+                        } else {
+                            type!!.declare(id, ConstantExpression(value))
+                        }
+                    } else {
+                        type!!.declare(id).flatMap {
+                            listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
+                        }
                     }
                 }
                 else -> {

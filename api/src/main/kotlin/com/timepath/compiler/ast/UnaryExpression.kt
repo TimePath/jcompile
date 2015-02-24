@@ -14,7 +14,7 @@ abstract class UnaryExpression(val op: String, val operand: Expression, override
 
     override fun toString(): String = "$op($operand)"
 
-    class Cast(val type: Type, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
+    class Cast(val type: Type, operand: Expression, ctx: ParserRuleContext? = null) : UnaryExpression("($type)", operand, ctx) {
         override fun toString(): String = "(($type) $operand)"
     }
 

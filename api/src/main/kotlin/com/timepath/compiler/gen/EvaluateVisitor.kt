@@ -16,11 +16,34 @@ class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.evaluate(): Value? = accept(this@EvaluateVisitor)
 
-    override fun visit(e: BinaryExpression.Add): Value? = e.left.evaluate()?.plus(e.right.evaluate())
-    override fun visit(e: BinaryExpression.Divide): Value? = e.left.evaluate()?.div(e.right.evaluate())
-    override fun visit(e: BinaryExpression.Modulo): Value? = e.left.evaluate()?.mod(e.right.evaluate())
-    override fun visit(e: BinaryExpression.Multiply): Value? = e.left.evaluate()?.times(e.right.evaluate())
-    override fun visit(e: BinaryExpression.Subtract): Value? = e.left.evaluate()?.minus(e.right.evaluate())
+    override fun default(e: Expression) = null
+
+    inline fun eval(e: BinaryExpression, action: (l: Value, r: Value) -> Value): Value? {
+        val l = e.left.evaluate()
+        val r = e.right.evaluate()
+        return when {
+            l == null, r == null -> null
+            else -> action(l, r)
+        }
+    }
+
+    override fun visit(e: BinaryExpression.Add) = eval(e) { l, r -> l + r }
+    override fun visit(e: BinaryExpression.Divide) = eval(e) { l, r -> l / r }
+    override fun visit(e: BinaryExpression.Modulo) = eval(e) { l, r -> l % r }
+    override fun visit(e: BinaryExpression.Multiply) = eval(e) { l, r -> l * r }
+    override fun visit(e: BinaryExpression.Subtract) = eval(e) { l, r -> l - r }
+
+    inline fun eval(e: UnaryExpression, action: (v: Value) -> Value): Value? {
+        val v = e.operand.evaluate()
+        return when (v) {
+            null -> null
+            else -> action(v)
+        }
+    }
+
+    override fun visit(e: UnaryExpression.Cast) = eval(e) { it.cast(e.type) }
+
+    override fun visit(e: UnaryExpression.Minus) = eval(e) { -it }
 
     override fun visit(e: ConditionalExpression): Value? {
         val result = e.test.evaluate()
@@ -41,7 +64,5 @@ class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
         }
         return super.visit(e)
     }
-
-    override fun visit(e: UnaryExpression.Cast): Value? = e.operand.evaluate()
 
 }
