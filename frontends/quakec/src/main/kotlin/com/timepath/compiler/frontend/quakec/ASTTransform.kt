@@ -187,10 +187,10 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                             val signature = parameterTypeList.functionType(retType!!);
                             listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx))
                         } else {
-                            type!!.declare(id, ConstantExpression(value))
+                            type!!.declare(id, ConstantExpression(value), state = state)
                         }
                     } else {
-                        type!!.declare(id).flatMap {
+                        type!!.declare(id, state = state).flatMap {
                             listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
                         }
                     }
@@ -201,7 +201,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                         val sizeExpr = arraySize.accept(this).single()
                         array_t(type!!, sizeExpr).declare(id, state = state)
                     } else {
-                        parameterTypeList.functionType(type!!).declare(id)
+                        parameterTypeList.functionType(type!!).declare(id, state = state)
                     }
                 }
             }

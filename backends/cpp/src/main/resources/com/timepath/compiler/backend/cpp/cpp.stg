@@ -59,7 +59,7 @@ decls ::= [
 ]
 decl_simple(e)      ::= <%<e.type:typename()><if(e.id)> <e.id><endif><if(e.value)> = <e.value><endif>%>
 decl_array(e)       ::= <%<e.type.type:typename()><if(e.id)> <e.id><endif>[<e.type.sizeExpr>]%>
-decl_field(e)       ::= <%<e.type.type:typename()><if(e.id)> *<e.id><else>*<endif>%>
+decl_field(e)       ::= <%<e.type.type:typename()><if(e.id)> *<e.id><else>*<endif><if(e.value)> = (<e.type.type:typename()>*) <e.value><endif>%>
 decl_function(e)    ::= <%<e.type.type:typename()> <e.id>(<e.argTypes:typename(); separator=", ">)%>
 decl_functionptr(e) ::= <%<e.type.type:typename()> (*<e.id>)(<e.argTypes:typename(); separator=", ">)%>
 decl_default        ::= decl_simple

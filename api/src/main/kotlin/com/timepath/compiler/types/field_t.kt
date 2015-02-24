@@ -17,6 +17,6 @@ data class field_t(val type: Type) : pointer_t() {
     )
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
-        return listOf(DeclarationExpression(name, this, value))
+        return listOf(DeclarationExpression(name, this, state!!.field[name]))
     }
 }
