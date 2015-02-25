@@ -37,5 +37,5 @@ dependencies {
     compile project(':api')
     compile project(':frontends:quakec')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-    compile 'org.antlr:stringtemplate:4.0.2'
+    compile 'org.antlr:ST4:4.0.8'
 }
