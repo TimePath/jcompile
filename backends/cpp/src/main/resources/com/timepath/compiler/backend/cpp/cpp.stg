@@ -42,28 +42,32 @@ typename(t) ::= <%<native.(t:class())>%>
 
 
 
-decls ::= [
-    "void_t"        :   "decl_simple",
-    "bool_t"        :   "decl_simple",
-    "int_t"         :   "decl_simple",
-    "float_t"       :   "decl_simple",
-    "vector_t"      :   "decl_simple",
-    "entity_t"      :   "decl_simple",
-    "string_t"      :   "decl_simple",
+_decls ::= [
+    "array_t"               :   "_decl_array",
+    "field_t"               :   "_decl_field",
+    "function_t"            :   "_decl_function",
 
-    "array_t"       :   "decl_array",
-    "field_t"       :   "decl_field",
-    "function_t"    :   "decl_function",
-
-    default         :   "decl_default"
+    default                 :   "_decl_simple"
 ]
-decl_simple(e)      ::= <%<e.type:typename()><if(e.id)> <e.id><endif><if(e.value)> = <e.value><endif>%>
-decl_array(e)       ::= <%<e.type.type:typename()><if(e.id)> <e.id><endif>[<e.type.sizeExpr>]%>
-decl_field(e)       ::= <%<e.type.type:typename()><if(e.id)> *<e.id><else>*<endif><if(e.value)> = (<e.type.type:typename()>*) <e.value><endif>%>
-decl_function(e)    ::= <%<e.type.type:typename()> <e.id>(<e.argTypes:typename(); separator=", ">)%>
-decl_functionptr(e) ::= <%<e.type.type:typename()> (*<e.id>)(<e.argTypes:typename(); separator=", ">)%>
-decl_default        ::= decl_simple
+_decl_simple(t,id,v)        ::= <%<t:typename()><if(id)> <id><endif><if(v)> = <v><endif>%>
 
+_decl_array(t,id,v)         ::= <%<t.type:_declare(id, false)>[<v>]%>
+
+_decl_field_(t,id,v)        ::= <%<t.type:_declare(id:{x| *<if(x)><x><endif>}, v)>%>
+_decl_field(t,id,v)         ::= <%<t:_decl_field_(id, false)><if(v)> = (<t:_decl_field_(false, false)>) <v><endif>%>
+
+_decl_function(t,id,v)      ::= <%<t.type:_declare(id:{x|(*<if(x)><x><endif>)}, false)>(<t.argTypes:_declare(false, false); separator=", "><if(t.argTypes && t.vararg)>, <endif><t.vararg>)%>
+
+_declare(t,id,v)            ::= <%<(_decls.(t:class()))(t, id, v)>%>
+
+decls ::= [
+    "array_t"       :   "decl_array",
+    "function_t"    :   "decl_function",
+    default         :   "decl_simple"
+]
+decl_simple(e)      ::= <%<_declare(e.type, e.id, e.value)>%>
+decl_array(e)       ::= <%<_declare(e.type, e.id, e.type.sizeExpr)>%>
+decl_function(e)    ::= <%<_declare(e.type, e.id, false)>%>
 declare(e)          ::= <%<(decls.(e.type:class()))(e)>%>
 
 
@@ -172,14 +176,7 @@ DeclarationExpression(e)        ::= "<e:declare()>"
 StructDeclarationExpression     ::= DeclarationExpression
 ParameterExpression             ::= DeclarationExpression
 
-func ::= [
-    "function_t"    :   "func_ptr",
-    default         :   "func_simple"
-]
-func_idparams(e)    ::= <%<e.id>(<e.params; separator=", "><if(e.vararg)>, <e.vararg><endif>)%>
-func_simple(e, t)   ::= <%<t:typename()> <func_idparams(e)>%>
-func_ptr(e, t)      ::= <%<t.type:typename()> (*<func_idparams(e)>)(<t.argTypes:typename(); separator=", ">)%>
-function(e)         ::= <%<(func.(e.signature.type:class()))(e, e.signature.type)>%>
+function(e)                     ::= <%<e.signature.type:_declare(e.id:{x|<x>(<e.params; separator=", "><if(e.params && e.vararg)>, <endif><e.vararg>)}, false)>%>
 
 FunctionExpression(e)           ::= "<e:function()><if(e.children)> <BlockExpression(e)><endif>"
 
