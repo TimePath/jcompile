@@ -26,7 +26,7 @@ class(it) ::= "<it.class.simpleName>"
 
 
 
-native ::= [
+typename ::= [
     "void_t"    :   "void",
     "bool_t"    :   "bool",
     "int_t"     :   "int",
@@ -37,61 +37,39 @@ native ::= [
 
     default     :   key
 ]
-
-typename(t) ::= <%<native.(t:class())>%>
-
+typename(t) ::= "<typename.(t:class())>"
 
 
-_decls ::= [
-    "array_t"               :   "_decl_array",
-    "field_t"               :   "_decl_field",
-    "function_t"            :   "_decl_function",
 
-    default                 :   "_decl_simple"
+_declare_field(t, id, v) ::= <%<t.type:_declare(id:{x| *<if(x)><x><endif>}, v)>%>
+_declare ::= [
+    "array_t"       :   {<t.type:_declare(id, false)>[<v>]},
+    "field_t"       :   {<t:_declare_field(id, false)><if(v)> = (<t:_declare_field(false, false)>) <v><endif>},
+    "function_t"    :   {<t.type:_declare(id:{x|(*<if(x)><x><endif>)}, false)>(<t.argTypes:_declare(false, false); separator=", "><if(t.argTypes && t.vararg)>, <endif><t.vararg>)},
+
+    default         :   {<t:typename()><if(id)> <id><endif><if(v)> = <v><endif>}
 ]
-_decl_simple(t,id,v)        ::= <%<t:typename()><if(id)> <id><endif><if(v)> = <v><endif>%>
+_declare(t, id, v) ::= "<_declare.(t:class())>"
 
-_decl_array(t,id,v)         ::= <%<t.type:_declare(id, false)>[<v>]%>
-
-_decl_field_(t,id,v)        ::= <%<t.type:_declare(id:{x| *<if(x)><x><endif>}, v)>%>
-_decl_field(t,id,v)         ::= <%<t:_decl_field_(id, false)><if(v)> = (<t:_decl_field_(false, false)>) <v><endif>%>
-
-_decl_function(t,id,v)      ::= <%<t.type:_declare(id:{x|(*<if(x)><x><endif>)}, false)>(<t.argTypes:_declare(false, false); separator=", "><if(t.argTypes && t.vararg)>, <endif><t.vararg>)%>
-
-_declare(t,id,v)            ::= <%<(_decls.(t:class()))(t, id, v)>%>
-
-decls ::= [
-    "array_t"       :   "decl_array",
-    "function_t"    :   "decl_function",
-    default         :   "decl_simple"
+declare ::= [
+    "array_t"       :   {<_declare(e.type, e.id, e.type.sizeExpr)>},
+    "function_t"    :   {<_declare(e.type, e.id, false)>},
+    default         :   {<_declare(e.type, e.id, e.value)>}
 ]
-decl_simple(e)      ::= <%<_declare(e.type, e.id, e.value)>%>
-decl_array(e)       ::= <%<_declare(e.type, e.id, e.type.sizeExpr)>%>
-decl_function(e)    ::= <%<_declare(e.type, e.id, false)>%>
-declare(e)          ::= <%<(decls.(e.type:class()))(e)>%>
+declare(e) ::= "<declare.(e.type:class())>"
 
 
 
-lits ::= [
-    "Value"         :   "lit_unwrap",
-    "Boolean"       :   "lit_simple",
-    "Integer"       :   "lit_simple",
-    "Float"         :   "lit_float",
-    "Vector"        :   "lit_vector",
-    "Character"     :   "lit_char",
-    "String"        :   "lit_string",
+literal ::= [
+    "Value"     :   {<it.any:literal()>},
+    "Float"     :   {<it>f},
+    "Vector"    :   {(vector) {<it.x:literal()>, <it.y:literal()>, <it.z:literal()>\}},
+    "Character" :   {'<it>'},
+    "String"    :   {"<it>"},
 
-    default         :   "lit_default"
+    default     :   {<it>}
 ]
-lit_unwrap(it)      ::= <%<it.any:literal()>%>
-lit_simple(it)      ::= <%<it>%>
-lit_float(it)       ::= <%<it>f%>
-lit_vector(it)      ::= <%(vector) {<it.x:literal()>, <it.y:literal()>, <it.z:literal()>}%>
-lit_char(it)        ::= <%'<it>'%>
-lit_string(it)      ::= <%"<it>"%>
-lit_default(it)     ::= <%/* TODO: <it:class()> */<lit_simple(it)>%>
-
-literal(it)         ::= <%<(lits.(it:class()))(it)>%>
+literal(it) ::= "<literal.(it:class())>"
 
 
 
@@ -118,13 +96,16 @@ Le(e)                           ::= "(<e.left> \<= <e.right>)"
 Lsh(e)                          ::= "(<e.left> \<\< <e.right>)"
 LshAssign(e)                    ::= "(<e.left> \<\<= <e.right>)"
 Lt(e)                           ::= "(<e.left> \< <e.right>)"
-mem ::= [
-    "x"     :   {<e.left>.x},
-    "y"     :   {<e.left>.y},
-    "z"     :   {<e.left>.z},
-    default :   {<e.left>[<e.right.value.any>]}
+
+member ::= [
+    "x"     :   {.x},
+    "y"     :   {.y},
+    "z"     :   {.z},
+    default :   {[<r.value.any>]}
 ]
-MemberExpression(e)             ::= "(<mem.(e.right.value.any)>)"
+member(e, r) ::= "<member.(r.value.any)>"
+
+MemberExpression(e)             ::= "(<e.left><e:member(e.right)>)"
 Modulo(e)                       ::= "(<e.left> % <e.right>)"
 Multiply(e)                     ::= "(<e.left> * <e.right>)"
 MultiplyAssign(e)               ::= "(<e.left> *= <e.right>)"
@@ -157,15 +138,12 @@ BlockExpression(e)              ::= <<
 
 BreakStatement(e)               ::= "break"
 
-comp ::= [
-    "BlockExpression"       :   "comp_nop",
-    "ConditionalExpression" :   "comp_if",
-    default                 :   "comp_wrap"
+compound ::= [
+    "BlockExpression"       :   {<e>},
+    "ConditionalExpression" :   {<if(s)><\n><endif><e>},
+    default                 :   {{<\n>    <e>;<\n>\}}
 ]
-comp_nop(e, s)  ::= "<e>"
-comp_if(e, s)   ::= "<if(s)><\n><endif><e>"
-comp_wrap(e, s) ::= "{<\n>    <e>;<\n>}"
-compound(e, s)  ::= "<(comp.(e:class()))(e, s)>"
+compound(e, s) ::= "<compound.(e:class())>"
 
 ConditionalExpression(e)        ::= <%
 <if(e.expression)>
