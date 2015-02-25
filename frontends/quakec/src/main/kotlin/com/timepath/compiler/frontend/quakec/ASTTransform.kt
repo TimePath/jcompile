@@ -208,13 +208,26 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                         val retType = ctx.declarationSpecifiers().type(old)
                         val params = parameterTypeList.functionArgs(ctx)
                         val vararg = parameterTypeList.functionVararg(ctx)
-                        val signature = parameterTypeList.functionType(retType!!);
-                        if (old) {
-                            // function pointer
-                            signature.declare(id, state = state)
-                        } else {
-                            // function prototype
-                            listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, ctx = ctx))
+                        val signature = parameterTypeList.functionType(retType!!.let {
+                            when (retType) {
+                                is field_t -> retType.type
+                                else -> it
+                            }
+                        }).let {
+                            when (retType) {
+                                is field_t -> field_t(it)
+                                else -> it
+                            }
+                        }
+                        when (parameterTypeList) {
+                            null ->
+                                type!!.declare(id, state = state)
+                            else -> when {
+                                signature is function_t -> // function prototype
+                                    listOf(FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx))
+                                else -> // function pointer
+                                    signature.declare(id, state = state)
+                            }
                         }
                     }
                 }
