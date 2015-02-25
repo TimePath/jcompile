@@ -11,7 +11,6 @@ import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.Value
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
@@ -196,12 +195,27 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                     }
                 }
                 else -> {
-                    val parameterTypeList = it.declarator().parameterTypeList()
                     if (arraySize != null) {
                         val sizeExpr = arraySize.accept(this).single()
                         array_t(type!!, sizeExpr).declare(id, state = state)
                     } else {
-                        parameterTypeList.functionType(type!!).declare(id, state = state)
+                        val old = it.declarator().parameterTypeList() == null
+                        val parameterTypeList = if (old) {
+                            ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
+                        } else {
+                            it.declarator().parameterTypeList()
+                        }
+                        val retType = ctx.declarationSpecifiers().type(old)
+                        val params = parameterTypeList.functionArgs(ctx)
+                        val vararg = parameterTypeList.functionVararg(ctx)
+                        val signature = parameterTypeList.functionType(retType!!);
+                        if (old) {
+                            // function pointer
+                            signature.declare(id, state = state)
+                        } else {
+                            // function prototype
+                            listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, ctx = ctx))
+                        }
                     }
                 }
             }
