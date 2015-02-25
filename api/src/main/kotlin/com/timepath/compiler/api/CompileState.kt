@@ -12,10 +12,12 @@ data class CompileState(
 ) {
     trait FieldCounter {
         fun get(name: String): ConstantExpression
+        fun contains(name: String): Boolean
     }
 
-    val field = object : FieldCounter {
+    val fields = object : FieldCounter {
         val map = LinkedHashMap<String, Int>()
         override fun get(name: String) = ConstantExpression(Value(map.getOrPut(name) { map.size() }))
+        override fun contains(name: String) = name in map
     }
 }
