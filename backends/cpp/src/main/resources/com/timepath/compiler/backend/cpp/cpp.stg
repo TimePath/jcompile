@@ -176,7 +176,13 @@ DeclarationExpression(e)        ::= "<e:declare()>"
 StructDeclarationExpression     ::= DeclarationExpression
 ParameterExpression             ::= DeclarationExpression
 
-function(e)                     ::= <%<e.signature.type:_declare(e.id:{x|<x>(<e.params; separator=", "><if(e.params && e.vararg)>, <endif><e.vararg>)}, false)>%>
+function(e)                     ::= <%
+<e.signature.type:_declare(e.id:{x|<x>(
+    <if(e.params)><e.params; separator=", "><else><e.signature.argTypes:_declare(false, false); separator=", "><endif>
+    <if((e.params || e.signature.argTypes) && (e.vararg || e.signature.vararg))>, <endif>
+    <if(e.vararg)><e.vararg><else><e.signature.vararg:_declare(false, false)><endif>
+)}, false)>
+%>
 
 FunctionExpression(e)           ::= "<e:function()><if(e.children)> <BlockExpression(e)><endif>"
 
