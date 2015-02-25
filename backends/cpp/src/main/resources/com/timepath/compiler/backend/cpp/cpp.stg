@@ -118,7 +118,13 @@ Le(e)                           ::= "(<e.left> \<= <e.right>)"
 Lsh(e)                          ::= "(<e.left> \<\< <e.right>)"
 LshAssign(e)                    ::= "(<e.left> \<\<= <e.right>)"
 Lt(e)                           ::= "(<e.left> \< <e.right>)"
-MemberExpression(e)             ::= "(<e.left>[<e.right.value.any>])"
+mem ::= [
+    "x"     :   {<e.left>.x},
+    "y"     :   {<e.left>.y},
+    "z"     :   {<e.left>.z},
+    default :   {<e.left>[<e.right.value.any>]}
+]
+MemberExpression(e)             ::= "(<mem.(e.right.value.any)>)"
 Modulo(e)                       ::= "(<e.left> % <e.right>)"
 Multiply(e)                     ::= "(<e.left> * <e.right>)"
 MultiplyAssign(e)               ::= "(<e.left> *= <e.right>)"
