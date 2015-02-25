@@ -191,7 +191,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                         }
                     } else {
                         type!!.declare(id, state = state).flatMap {
-                            listOf(it, BinaryExpression.Assign(it, initializer, ctx = ctx))
+                            listOf(it, BinaryExpression.Assign(ReferenceExpression((it as DeclarationExpression).id), initializer, ctx = ctx))
                         }
                     }
                 }
