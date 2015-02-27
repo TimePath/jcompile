@@ -11,8 +11,21 @@ import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 import com.timepath.compiler.api.CompileState
+import java.util.ArrayList
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun listOf<T>() = ArrayList<T>()
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun emptyList<T>() = ArrayList<T>()
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun listOf<T>(vararg values: T) = ArrayList<T>(values.size()).let {
+        it.addAll(values)
+        it
+    }
 
     class object {
         val logger = Logger.new()
@@ -78,16 +91,18 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     fun ParameterTypeListContext.functionArgs(ctx: ParserRuleContext): List<Expression> {
         [suppress("UNNECESSARY_SAFE_CALL")]
         val paramDeclarations = this?.parameterList()?.parameterDeclaration() ?: emptyList()
-        val params = paramDeclarations.mapIndexed {(i, it) ->
+        var i = 0
+        val params = paramDeclarations.flatMapTo(listOf<Expression>()) {
             val paramId = it.declarator()?.getText()
-            if (paramId != null) {
-                val type = it.declarationSpecifiers().type()
-                val param = ParameterExpression(paramId, type!!, index = i, ctx = ctx)
-                listOf(param)
-            } else {
-                emptyList()
+            when (paramId) {
+                null -> emptyList<Expression>()
+                else -> {
+                    val type = it.declarationSpecifiers().type()
+                    val param = ParameterExpression(paramId, type!!, index = i++, ctx = ctx)
+                    listOf(param)
+                }
             }
-        }.flatMap { it }
+        }
         return params
     }
 
@@ -107,7 +122,8 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     override fun defaultResult(): List<Expression> = emptyList()
 
     override fun aggregateResult(aggregate: List<Expression>, nextResult: List<Expression>): List<Expression> {
-        return aggregate + nextResult
+        (aggregate as MutableList).addAll(nextResult)
+        return aggregate
     }
 
     override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext): List<Expression> {
@@ -142,7 +158,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         val declarations = ctx.initDeclaratorList()?.initDeclarator()
         if (declarations == null) {
             val enum = ctx.enumSpecifier()
-            return enum.enumeratorList().enumerator().map {
+            return enum.enumeratorList().enumerator().mapTo(listOf<Expression>()) {
                 val id = it.enumerationConstant().getText()
                 int_t.declare(id).single()
             }
@@ -156,7 +172,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             return emptyList()
         }
         val type = ctx.declarationSpecifiers().type()
-        return declarations.flatMap {
+        return declarations.flatMapTo(listOf<Expression>()) {
             var declarator = it.declarator()
             while (declarator.declarator() != null) {
                 declarator = declarator.declarator()
@@ -236,7 +252,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     }
 
     override fun visitCustomLabel(ctx: QCParser.CustomLabelContext): List<Expression> {
-        with(linkedListOf<Expression>()) {
+        with(listOf<Expression>()) {
             add(LabelExpression(ctx.Identifier().getText(), ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
@@ -244,7 +260,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     }
 
     override fun visitCaseLabel(ctx: QCParser.CaseLabelContext): List<Expression> {
-        with(linkedListOf<Expression>()) {
+        with(listOf<Expression>()) {
             add(SwitchExpression.Case(ctx.constantExpression().accept(this@ASTTransform).single(), ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
@@ -252,7 +268,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     }
 
     override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext): List<Expression> {
-        with(linkedListOf<Expression>()) {
+        with(listOf<Expression>()) {
             add(SwitchExpression.Case(null, ctx = ctx))
             addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
             return this
@@ -363,8 +379,10 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.ModAssign -> BinaryExpression.ModuloAssign(ref, value, ctx = ctx)
                 else -> null
             }
-            if (op != null) return listOf(op)
-            return emptyList()
+            return when (op) {
+                null -> emptyList()
+                else -> listOf(op)
+            }
         }
         return super.visitAssignmentExpression(ctx)
     }
@@ -447,10 +465,9 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.NotEqual -> BinaryExpression.Ne(left, right, ctx = ctx)
                 else -> null
             }
-            if (op != null) {
-                return listOf(op)
-            } else {
-                return emptyList()
+            return when (op) {
+                null -> emptyList()
+                else -> listOf(op)
             }
         }
         return super.visitEqualityExpression(ctx)
@@ -469,10 +486,9 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.GreaterEqual -> BinaryExpression.Ge(left, right, ctx = ctx)
                 else -> null
             }
-            if (op != null) {
-                return listOf(op)
-            } else {
-                return emptyList()
+            return when (op) {
+                null -> emptyList()
+                else -> listOf(op)
             }
         }
         return super.visitRelationalExpression(ctx)
@@ -501,7 +517,10 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.Minus -> BinaryExpression.Subtract(left, right, ctx = ctx)
                 else -> null
             }
-            return if (op != null) listOf(op) else emptyList()
+            return when (op) {
+                null -> emptyList()
+                else -> listOf(op)
+            }
         }
         return super.visitAdditiveExpression(ctx)
     }
@@ -518,7 +537,10 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.Mod -> BinaryExpression.Modulo(left, right, ctx = ctx)
                 else -> null
             }
-            return if (op != null) listOf(op) else emptyList()
+            return when (op) {
+                null -> emptyList()
+                else -> listOf(op)
+            }
         }
         return super.visitMultiplicativeExpression(ctx)
     }
