@@ -19,6 +19,7 @@ import com.timepath.compiler.api.CompileState
 
 data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
 
+    override val simpleName = "array_t"
     override fun toString() = "$type[$sizeExpr]"
 
     val index = OperationHandler(type) { gen, left, right ->

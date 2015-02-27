@@ -8,6 +8,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
 object bool_t : number_t() {
+    override val simpleName = "bool_t"
     val ops: Map<Operation, OperationHandler>
         get() = mapOf(
                 Operation("==", this, this) to DefaultHandler(bool_t, Instruction.EQ_FLOAT),

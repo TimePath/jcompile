@@ -1,7 +1,5 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 
 class LoopExpression(val predicate: Expression,
@@ -13,5 +11,7 @@ class LoopExpression(val predicate: Expression,
     {
         add(body)
     }
+    override val simpleName = "LoopExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
 }

@@ -1,7 +1,5 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 
 class ConditionalExpression(val test: Expression,
@@ -17,6 +15,8 @@ class ConditionalExpression(val test: Expression,
             add(fail)
         }
     }
+    override val simpleName = "ConditionalExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "($test ? $pass : $fail)"
 

@@ -8,6 +8,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
 object entity_t : pointer_t() {
+    override val simpleName = "entity_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_ENT),

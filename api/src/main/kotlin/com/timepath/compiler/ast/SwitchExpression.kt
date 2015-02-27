@@ -1,7 +1,5 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 
 class SwitchExpression(val test: Expression, add: List<Expression>, override val ctx: ParserRuleContext? = null) : Expression() {
@@ -9,6 +7,8 @@ class SwitchExpression(val test: Expression, add: List<Expression>, override val
     {
         addAll(add)
     }
+    override val simpleName = "SwitchExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     class Case(
             /**
@@ -16,6 +16,8 @@ class SwitchExpression(val test: Expression, add: List<Expression>, override val
              */
             val expr: Expression?,
             override val ctx: ParserRuleContext? = null) : Expression() {
+        override val simpleName = "Case"
+        override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     }
 

@@ -1,7 +1,5 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.types.function_t
 
@@ -21,5 +19,7 @@ class FunctionExpression(val id: String? = null,
             addAll(add)
         }
     }
+    override val simpleName = "FunctionExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
 }

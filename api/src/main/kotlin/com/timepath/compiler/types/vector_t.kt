@@ -10,6 +10,7 @@ import com.timepath.compiler.ast.MemoryReference
 import com.timepath.compiler.ast.UnaryExpression
 
 object vector_t : struct_t(mapOf("x" to float_t, "y" to float_t, "z" to float_t)) {
+    override val simpleName = "vector_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_VEC),

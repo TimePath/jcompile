@@ -13,7 +13,7 @@ import com.timepath.compiler.gen.type
 
 class CPPPrinter(val templ: STGroup) : ASTVisitor<String> {
     override fun default(e: Expression): String {
-        val s = e.javaClass.getSimpleName()
+        val s = e.simpleName
         val ST = templ.getInstanceOf(s)
         if (ST == null) {
             throw NullPointerException("Missing template: $s")

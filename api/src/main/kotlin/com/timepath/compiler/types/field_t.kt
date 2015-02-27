@@ -13,6 +13,7 @@ data class field_t(val type: Type) : pointer_t() {
         val logger = Logger.new()
     }
 
+    override val simpleName = "field_t"
     override fun toString() = ".$type"
 
     override fun handle(op: Operation) = ops[op]

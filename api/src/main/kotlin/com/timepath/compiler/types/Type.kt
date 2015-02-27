@@ -1,6 +1,5 @@
 package com.timepath.compiler.types
 
-import com.timepath.compiler
 import com.timepath.compiler.gen.generate
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.type
@@ -9,8 +8,9 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.Vector
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.Named
 
-trait Type {
+trait Type: Named {
 
     class object {
         fun from(any: Any?): Type = when (any) {

@@ -6,6 +6,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
 object string_t : pointer_t() {
+    override val simpleName = "string_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_STR),

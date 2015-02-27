@@ -1,12 +1,7 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.compiler.gen.type
-import com.timepath.compiler.types.string_t
-import com.timepath.compiler.types.Operation
 
 /**
  * dynamic:
@@ -14,6 +9,8 @@ import com.timepath.compiler.types.Operation
  */
 // TODO: arrays
 class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression("[]", left, right, ctx) {
+    override val simpleName = "IndexExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr = Instruction.LOAD_FLOAT
 }
@@ -24,6 +21,8 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
  */
 // TODO: structs
 class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
+    override val simpleName = "MemberExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr = Instruction.LOAD_FLOAT
 }

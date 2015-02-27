@@ -8,6 +8,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
 object void_t : Type {
+    override val simpleName = "void_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
             Operation("&&", this, this) to OperationHandler(bool_t) { gen, left, right ->

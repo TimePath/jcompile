@@ -9,6 +9,9 @@ class ConstantExpression(any: Any, override val ctx: ParserRuleContext? = null) 
         else -> Value(any)
     }
 
+    override val simpleName = "ConstantExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+
     override fun toString(): String = value.toString()
 
 }

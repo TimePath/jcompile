@@ -13,6 +13,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
 open class number_t : Type {
+    override val simpleName = "number_t"
     override fun handle(op: Operation) = ops[op]
     private val ops by Delegates.lazy {
         mapOf(
@@ -137,6 +138,7 @@ open class number_t : Type {
 }
 
 object int_t : number_t() {
+    override val simpleName = "int_t"
     override fun handle(op: Operation): OperationHandler? {
         super.handle(op)?.let { return it }
         if (op.right == float_t) {
@@ -150,6 +152,7 @@ object int_t : number_t() {
 }
 
 object float_t : number_t() {
+    override val simpleName = "float_t"
     override fun handle(op: Operation): OperationHandler? {
         super.handle(op)?.let { return it }
         if (op.right == int_t || op.right == bool_t) {

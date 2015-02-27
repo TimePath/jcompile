@@ -1,14 +1,13 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
+import com.timepath.compiler.Named
 
-abstract class Expression {
+abstract class Expression: Named {
 
     abstract val ctx: ParserRuleContext?
 
-    fun <T> accept(visitor: ASTVisitor<T>): T = visitor.visitReflective(this)
+    abstract fun <T> accept(visitor: ASTVisitor<T>): T
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure
@@ -52,5 +51,8 @@ abstract class Expression {
 /**
  * Lonely semicolon
  */
-class Nop(override val ctx: ParserRuleContext? = null) : Expression()
+class Nop(override val ctx: ParserRuleContext? = null) : Expression() {
+    override val simpleName = "Nop"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+}
 

@@ -22,7 +22,7 @@ namespace <namespace> {
 
 
 
-class(it) ::= "<it.class.simpleName>"
+class(it) ::= "<it.simpleName>"
 
 
 
@@ -69,7 +69,7 @@ literal ::= [
 
     default     :   {<it>}
 ]
-literal(it) ::= "<literal.(it:class())>"
+literal(it) ::= "<literal.(it.class.simpleName)>"
 
 
 

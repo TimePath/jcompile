@@ -1,8 +1,6 @@
 package com.timepath.compiler.ast
 
 import kotlin.properties.Delegates
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.gen.Generator
 import org.antlr.v4.runtime.ParserRuleContext
 
 class MethodCallExpression(val function: Expression,
@@ -14,7 +12,8 @@ class MethodCallExpression(val function: Expression,
             addAll(add)
         }
     }
-
+    override val simpleName = "MethodCallExpression"
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     val args: List<Expression> by Delegates.lazy {
         children.filterIsInstance<Expression>()
