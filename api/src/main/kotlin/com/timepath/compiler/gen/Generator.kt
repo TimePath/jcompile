@@ -14,6 +14,7 @@ import com.timepath.q1vm.ProgramData.Header
 import com.timepath.q1vm.ProgramData.Header.Section
 import com.timepath.q1vm.StringManager
 import com.timepath.q1vm.Statement
+import com.timepath.compiler.Pointer
 
 class Generator(val opts: CompilerOptions) {
 
@@ -68,7 +69,8 @@ class Generator(val opts: CompilerOptions) {
                 val k = it.ref
                 val v = it.value?.any
                 when (v) {
-                    is Int -> intData.put(k, v)
+                    is Pointer -> intData.put(k, v.int)
+                    is Int -> floatData.put(k, v.toFloat())
                     is Float -> floatData.put(k, v)
                 }
             }

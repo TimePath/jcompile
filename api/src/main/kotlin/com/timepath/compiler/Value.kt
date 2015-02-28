@@ -92,11 +92,11 @@ class Value(val any: Any) {
         when (lhs) {
             is Number -> when (type) {
                 is float_t -> return Value(lhs.toFloat())
-                is int_t -> return Value(lhs.toInt().toFloat()) // FIXME: There are no real ints, truncate instead
+                is int_t -> return Value(lhs.toInt())
             }
         }
         throw UnsupportedOperationException("not supported")
     }
 
-    fun minus() = Value(0f) - this
+    fun minus() = Value(0) - this
 }

@@ -29,10 +29,10 @@ object vector_t : struct_t(mapOf("x" to float_t, "y" to float_t, "z" to float_t)
                 BinaryExpression.Multiply(left, right)
             },
             Operation("/", this, float_t) to OperationHandler(this) { gen, left, right ->
-                BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).generate(gen)
+                BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1), right!!)).generate(gen)
             },
             Operation("/", this, int_t) to OperationHandler(this) { gen, left, right ->
-                BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1f), right!!)).generate(gen)
+                BinaryExpression.Multiply(left, BinaryExpression.Divide(ConstantExpression(1), right!!)).generate(gen)
             },
             Operation("/=", this, float_t) to DefaultAssignHandler(this, Instruction.STORE_VEC) { left, right ->
                 BinaryExpression.Divide(left, right)

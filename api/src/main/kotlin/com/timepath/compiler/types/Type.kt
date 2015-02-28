@@ -9,6 +9,7 @@ import com.timepath.compiler.Vector
 import com.timepath.q1vm.Instruction
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.Named
+import com.timepath.compiler.Pointer
 
 trait Type: Named {
 
@@ -20,6 +21,7 @@ trait Type: Named {
             is String -> string_t
             is Vector -> vector_t
             is Char -> int_t
+            is Pointer -> int_t
             else -> throw NoWhenBranchMatchedException()
         }
 

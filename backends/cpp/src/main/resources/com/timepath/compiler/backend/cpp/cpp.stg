@@ -62,7 +62,9 @@ declare(e) ::= "<declare.(e.type:class())>"
 
 literal ::= [
     "Value"     :   {<it.any:literal()>},
+    "Pointer"   :   {<it.int:literal()>},
     "Float"     :   {<it>f},
+    "Int"       :   {<it>},
     "Vector"    :   {(vector) {<it.x:literal()>, <it.y:literal()>, <it.z:literal()>\}},
     "Character" :   {'<it>'},
     "String"    :   {"<it>"},

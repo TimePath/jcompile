@@ -52,7 +52,7 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
         val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
         return with(linkedListOf<Expression>()) {
             add(DeclarationExpression(name, this@array_t))
-            add(DeclarationExpression("${name}_size", int_t, ConstantExpression(size.toFloat())))
+            add(DeclarationExpression("${name}_size", int_t, ConstantExpression(size)))
             add(generateAccessor(name))
             size.indices.forEachIndexed {(i, _) ->
                 addAll(generateComponent(name, i))
@@ -85,7 +85,7 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
                                         ReferenceExpression(accessor)
                                 ),
                                 BinaryExpression.Add(
-                                        ConstantExpression(1f),
+                                        ConstantExpression(1),
                                         ReferenceExpression("index")
                                 )
                         ))

@@ -8,6 +8,7 @@ import com.timepath.q1vm.Instruction
 import com.timepath.compiler.types.function_t
 import com.timepath.compiler.types.entity_t
 import com.timepath.compiler.types.Operation
+import com.timepath.compiler.Pointer
 
 // TODO: push up
 fun Expression.generate(gen: Generator): List<IR> = accept(GeneratorVisitor(gen))
@@ -262,7 +263,7 @@ class GeneratorVisitor(val gen: Generator) : ASTVisitor<List<IR>> {
             return with(linkedListOf<IR>()) {
                 val genL = left.generate(gen)
                 addAll(genL)
-                val genR = ConstantExpression(0).generate(gen) // TODO: field by name
+                val genR = ConstantExpression(Pointer(0)).generate(gen) // TODO: field by name
                 addAll(genR)
                 val out = gen.allocator.allocateReference(type = type(gen))
                 add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))

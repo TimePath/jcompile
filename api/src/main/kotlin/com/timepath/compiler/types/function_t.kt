@@ -7,6 +7,7 @@ import com.timepath.compiler.gen.generate
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.Pointer
 
 data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
 
@@ -23,7 +24,7 @@ data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type
             Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC),
             Operation("!", this) to DefaultUnaryHandler(bool_t, Instruction.NOT_FUNC),
             Operation("&", this) to OperationHandler(float_t) { gen, self, _ ->
-                BinaryExpression.Divide(MemoryReference(self.generate(gen).last().ret, float_t), ConstantExpression(1)).generate(gen)
+                BinaryExpression.Divide(MemoryReference(self.generate(gen).last().ret, float_t), ConstantExpression(Pointer(1))).generate(gen)
             }
     )
 

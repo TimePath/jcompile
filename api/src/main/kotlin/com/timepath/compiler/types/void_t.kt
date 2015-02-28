@@ -17,16 +17,16 @@ object void_t : Type {
                         fail = ConstantExpression(0),
                         pass = ConditionalExpression(right!!, true,
                                 fail = ConstantExpression(0),
-                                pass = ConstantExpression(1f))
+                                pass = ConstantExpression(1))
                 ).generate(gen)
             },
             // TODO: perl behaviour
             Operation("||", this, this) to OperationHandler(bool_t) { gen, left, right ->
                 // TODO: Instruction.OR when no side effects
                 ConditionalExpression(left, true,
-                        pass = ConstantExpression(1f),
+                        pass = ConstantExpression(1),
                         fail = ConditionalExpression(right!!, true,
-                                pass = ConstantExpression(1f),
+                                pass = ConstantExpression(1),
                                 fail = ConstantExpression(0))
                 ).generate(gen)
             },

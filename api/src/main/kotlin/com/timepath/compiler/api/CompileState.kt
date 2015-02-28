@@ -3,8 +3,8 @@ package com.timepath.compiler.api
 import com.timepath.compiler.TypeRegistry
 import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.Value
 import java.util.LinkedHashMap
+import com.timepath.compiler.Pointer
 
 data class CompileState(
         val types: TypeRegistry = TypeRegistry(),
@@ -17,7 +17,7 @@ data class CompileState(
 
     val fields = object : FieldCounter {
         val map = LinkedHashMap<String, Int>()
-        override fun get(name: String) = ConstantExpression(Value(map.getOrPut(name) { map.size() }))
+        override fun get(name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
         override fun contains(name: String) = name in map
     }
 }

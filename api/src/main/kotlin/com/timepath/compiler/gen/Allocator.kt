@@ -12,6 +12,7 @@ import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
 import com.timepath.compiler.types.bool_t
 import com.timepath.compiler.types.function_t
 import com.timepath.compiler.types.string_t
+import com.timepath.compiler.Pointer
 
 class Allocator(val opts: CompilerOptions) {
 
@@ -125,8 +126,8 @@ class Allocator(val opts: CompilerOptions) {
 
     {
         push("<builtin>")
-        allocateReference("false", bool_t, Value(0f))
-        allocateReference("true", bool_t, Value(1f))
+        allocateReference("false", bool_t, Value(0))
+        allocateReference("true", bool_t, Value(1))
         allocateReference("_", function_t(string_t, listOf(string_t))) // TODO: not really a function
     }
 
@@ -161,7 +162,7 @@ class Allocator(val opts: CompilerOptions) {
         val i = functions.size()
         // index the function will have
         val function = functions.allocate(name, i, null, type)
-        val const = allocateConstant(Value(function.ref), type, "fun($name)")
+        val const = allocateConstant(Value(Pointer(function.ref)), type, "fun($name)")
         scope.peek().lookup[name] = const
         return const
     }
@@ -185,7 +186,7 @@ class Allocator(val opts: CompilerOptions) {
     fun allocateConstant(value: Value, type: Type, id: String? = null): Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
-            return allocateConstant(Value(str.ref), string_t, "str(${str.name})")
+            return allocateConstant(Value(Pointer(str.ref)), string_t, "str(${str.name})")
         }
         val name: String = when {
             id != null -> id

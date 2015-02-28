@@ -11,6 +11,7 @@ import com.timepath.compiler.ast.UnaryExpression
 import com.timepath.compiler.gen.IR
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.Pointer
 
 open class number_t : Type {
     override val simpleName = "number_t"
@@ -21,16 +22,16 @@ open class number_t : Type {
                 Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_FLOAT),
                 Operation("&", this) to OperationHandler(this) { gen, self, _ ->
-                    BinaryExpression.Divide(self, ConstantExpression(1)).generate(gen)
+                    BinaryExpression.Divide(self, ConstantExpression(Pointer(1))).generate(gen)
                 },
                 Operation("*", this) to OperationHandler(this) { gen, self, _ ->
-                    BinaryExpression.Multiply(self, ConstantExpression(1)).generate(gen)
+                    BinaryExpression.Multiply(self, ConstantExpression(Pointer(1))).generate(gen)
                 },
                 Operation("+", this) to OperationHandler(this) { gen, self, _ ->
                     self.generate(gen)
                 },
                 Operation("-", this) to OperationHandler(this) { gen, self, _ ->
-                    BinaryExpression.Subtract(ConstantExpression(0f), self).generate(gen)
+                    BinaryExpression.Subtract(ConstantExpression(0), self).generate(gen)
                 },
 
                 Operation("*", this, this) to DefaultHandler(this, Instruction.MUL_FLOAT),
@@ -42,12 +43,12 @@ open class number_t : Type {
 
                 // pre
                 Operation("++", this) to OperationHandler(this) { gen, self, _ ->
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1f))
+                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     BinaryExpression.Assign(self, BinaryExpression.Add(self, one)).generate(gen)
                 },
                 // post
                 Operation("++", this, this) to OperationHandler(this) { gen, self, _ ->
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1f))
+                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     with(linkedListOf<IR>()) {
                         val add = BinaryExpression.Add(self, one)
                         val assign = BinaryExpression.Assign(self, add)
@@ -59,12 +60,12 @@ open class number_t : Type {
                 },
                 // pre
                 Operation("--", this) to OperationHandler(this) { gen, self, _ ->
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1f))
+                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     BinaryExpression.Assign(self, BinaryExpression.Subtract(self, one)).generate(gen)
                 },
                 // post
                 Operation("--", this, this) to OperationHandler(this) { gen, self, _ ->
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1f))
+                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     with(linkedListOf<IR>()) {
                         val sub = BinaryExpression.Subtract(self, one)
                         val assign = BinaryExpression.Assign(self, sub)
@@ -86,7 +87,7 @@ open class number_t : Type {
                     BinaryExpression.Eq(ConstantExpression(0f), self).generate(gen)
                 },
                 Operation("~", this) to OperationHandler(this) { gen, self, _ ->
-                    BinaryExpression.Subtract(ConstantExpression(-1f), self).generate(gen)
+                    BinaryExpression.Subtract(ConstantExpression(-1), self).generate(gen)
                 },
                 Operation("&", this, this) to DefaultHandler(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandler(this, Instruction.BITOR),

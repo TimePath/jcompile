@@ -14,10 +14,10 @@ object bool_t : number_t() {
                 Operation("==", this, this) to DefaultHandler(bool_t, Instruction.EQ_FLOAT),
                 Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FLOAT),
                 Operation("!", this) to OperationHandler(bool_t) { gen, self, _ ->
-                    BinaryExpression.Eq(ConstantExpression(0f), self).generate(gen)
+                    BinaryExpression.Eq(ConstantExpression(0), self).generate(gen)
                 },
                 Operation("-", this) to OperationHandler(this) { gen, self, _ ->
-                    BinaryExpression.Subtract(ConstantExpression(0f), self).generate(gen)
+                    BinaryExpression.Subtract(ConstantExpression(0), self).generate(gen)
                 },
                 Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandler(this, Instruction.SUB_FLOAT),
