@@ -61,12 +61,10 @@ class CompilerSpecs : Spek() {{
                     val actual = PrintVisitor.render(BlockExpression(roots!!.last(), null))
                     compare("AST", it.name + ".xml", actual)
                 }
-                var ctx: Generator?
                 var asm: ASM?
                 it("should compile") {
                     logger.info("Compiling $it")
-                    ctx = Generator(compiler.opts)
-                    asm = ctx!!.generate(roots!!.flatMap { it })
+                    asm = compiler.state.gen.generate(roots!!.flatMap { it })
                     asm!!.ir.map { ir ->
                         if (ir.real)
                             "$ir"
@@ -75,7 +73,7 @@ class CompilerSpecs : Spek() {{
                     }.filterNotNull().joinToString("\n").let { actual ->
                         compare("ASM", it.name + ".asm", actual)
                     }
-                    ctx!!.allocator.toString().let { actual ->
+                    compiler.state.allocator.toString().let { actual ->
                         compare("allocation", it.name + ".txt", actual)
                     }
                 }

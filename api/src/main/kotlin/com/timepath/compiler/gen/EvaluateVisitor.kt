@@ -58,7 +58,7 @@ class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
 
     override fun visit(e: ReferenceExpression): Value? {
         if(state != null) {
-            state.gen.allocator[e.id]?.let {
+            state.allocator[e.id]?.let {
                 return it.value
             }
         }

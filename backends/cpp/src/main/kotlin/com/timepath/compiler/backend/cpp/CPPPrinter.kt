@@ -51,7 +51,7 @@ fun project(project: Project) {
         override fun getProperty(interpreter: Interpreter?, self: ST?, o: Any?, property: Any?, propertyName: String?): Any? {
             val e = o as Expression
             return when(propertyName) {
-                "type" -> e.type(compiler.state.gen)
+                "type" -> e.type(compiler.state)
                 else -> super.getProperty(interpreter, self, o, property, propertyName)
             }
         }

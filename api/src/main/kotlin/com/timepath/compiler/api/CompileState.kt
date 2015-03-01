@@ -5,11 +5,15 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.ast.ConstantExpression
 import java.util.LinkedHashMap
 import com.timepath.compiler.Pointer
+import com.timepath.compiler.gen.Allocator
+import com.timepath.compiler.CompilerOptions
 
-data class CompileState(
-        val types: TypeRegistry = TypeRegistry(),
-        val gen: Generator
-) {
+data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
+
+    val types = TypeRegistry()
+    val allocator = Allocator(opts)
+    val gen = Generator(this)
+
     trait FieldCounter {
         fun get(name: String): ConstantExpression
         fun contains(name: String): Boolean

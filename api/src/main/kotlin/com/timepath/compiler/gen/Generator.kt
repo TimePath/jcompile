@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 import com.timepath.Logger
-import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
 import com.timepath.q1vm.Definition
@@ -15,8 +14,9 @@ import com.timepath.q1vm.ProgramData.Header.Section
 import com.timepath.q1vm.StringManager
 import com.timepath.q1vm.Statement
 import com.timepath.compiler.Pointer
+import com.timepath.compiler.api.CompileState
 
-class Generator(val opts: CompilerOptions) {
+class Generator(val state: CompileState) {
 
     val gotoLabels = linkedMapOf<IR, String>()
 
@@ -24,13 +24,12 @@ class Generator(val opts: CompilerOptions) {
         val logger = Logger.new()
     }
 
-    val allocator: Allocator = Allocator(opts)
 
     fun generate(roots: List<Expression>): ASM {
         roots.forEach {
             it.transform { it.reduce() }
         }
-        return ASM(BlockExpression(roots).generate(this))
+        return ASM(BlockExpression(roots).generate(state))
     }
 
     inner class ASM(val ir: List<IR>) {
@@ -74,18 +73,18 @@ class Generator(val opts: CompilerOptions) {
                     is Float -> floatData.put(k, v)
                 }
             }
-            allocator.references.all.forEach(merge)
-            allocator.constants.all.forEach(merge)
+            state.allocator.references.all.forEach(merge)
+            state.allocator.constants.all.forEach(merge)
 
             val globalData = {
-                val size = 4 * (opts.userStorageStart + (allocator.references.size() + allocator.constants.size()))
+                val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size()))
                 assert(size >= globalData.position())
                 globalData.limit(size)
                 globalData.position(0)
                 globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
             }()
 
-            val stringManager = StringManager(allocator.strings.all.map { it.name })
+            val stringManager = StringManager(state.allocator.strings.all.map { it.name })
 
             val version = 6
             val crc = -1 // TODO: CRC16

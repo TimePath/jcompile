@@ -57,9 +57,9 @@ trait Type: Named {
 
 data class Operation(val op: String, val left: Type, val right: Type? = null)
 
-open class OperationHandler(val type: Type, protected val handle: (gen: Generator, left: Expression, right: Expression?) -> List<IR>) {
+open class OperationHandler(val type: Type, protected val handle: (state: CompileState, left: Expression, right: Expression?) -> List<IR>) {
 
-    fun invoke(gen: Generator, left: Expression, right: Expression? = null): List<IR> = handle(gen, left, right)
+    fun invoke(state: CompileState, left: Expression, right: Expression? = null): List<IR> = handle(state, left, right)
 }
 
 class DefaultHandler(type: Type, instr: Instruction) : OperationHandler(type, { gen, left, right ->

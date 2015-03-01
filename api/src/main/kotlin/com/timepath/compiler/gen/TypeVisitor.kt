@@ -2,11 +2,12 @@ package com.timepath.compiler.gen
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.types.*
+import com.timepath.compiler.api.CompileState
 
 // TODO: push up
-fun Expression.type(gen: Generator): Type = accept(TypeVisitor(gen))
+fun Expression.type(state: CompileState): Type = accept(TypeVisitor(state))
 
-class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
+class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.type(): Type = accept(this@TypeVisitor)
@@ -116,7 +117,7 @@ class TypeVisitor(val gen: Generator) : ASTVisitor<Type> {
 
     // FIXME
     override fun visit(e: ReferenceExpression): Type {
-        gen.allocator[e.id]?.let { return it.type }
+        state.allocator[e.id]?.let { return it.type }
         // probably a vector component
         return float_t
         // throw NullPointerException("Reference $id not found")

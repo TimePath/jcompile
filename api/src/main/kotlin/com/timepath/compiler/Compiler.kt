@@ -121,7 +121,7 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
         }
     }
 
-    val state = CompileState(gen = Generator(opts))
+    val state = CompileState(opts = opts)
 
     fun ast(): List<List<Expression>> {
         val roots = linkedListOf<List<Expression>>()

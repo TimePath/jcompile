@@ -5,7 +5,6 @@ import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Stack
 import com.timepath.Logger
-import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Value
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
@@ -13,6 +12,7 @@ import com.timepath.compiler.types.bool_t
 import com.timepath.compiler.types.function_t
 import com.timepath.compiler.types.string_t
 import com.timepath.compiler.Pointer
+import com.timepath.compiler.CompilerOptions
 
 class Allocator(val opts: CompilerOptions) {
 
