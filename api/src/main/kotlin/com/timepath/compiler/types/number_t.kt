@@ -12,6 +12,7 @@ import com.timepath.compiler.gen.IR
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.Pointer
+import com.timepath.compiler.ast.DynamicReferenceExpression
 
 open class number_t : Type {
     override val simpleName = "number_t"
@@ -38,7 +39,7 @@ open class number_t : Type {
                 Operation("*", this, vector_t) to DefaultHandler(vector_t, Instruction.MUL_FLOAT_VEC),
                 Operation("/", this, this) to DefaultHandler(this, Instruction.DIV_FLOAT),
                 Operation("%", this, this) to OperationHandler(this) { gen, left, right ->
-                    MethodCallExpression(ReferenceExpression("__builtin_mod"), listOf(left, right!!)).generate(gen)
+                    MethodCallExpression(DynamicReferenceExpression("__builtin_mod"), listOf(left, right!!)).generate(gen)
                 },
 
                 // pre
@@ -92,7 +93,7 @@ open class number_t : Type {
                 Operation("&", this, this) to DefaultHandler(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandler(this, Instruction.BITOR),
                 Operation("^", this, this) to OperationHandler(this) { gen, left, right ->
-                    MethodCallExpression(ReferenceExpression("__builtin_xor"), listOf(left, right!!)).generate(gen)
+                    MethodCallExpression(DynamicReferenceExpression("__builtin_xor"), listOf(left, right!!)).generate(gen)
                 },
                 // TODO
                 Operation("<<", this, this) to DefaultHandler(int_t, Instruction.BITOR),

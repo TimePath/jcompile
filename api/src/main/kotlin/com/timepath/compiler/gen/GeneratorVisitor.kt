@@ -125,7 +125,7 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
 
     override fun visit(e: FunctionExpression): List<IR> {
         with(e) {
-            if (id != null && id in state.allocator) {
+            if (id in state.allocator) {
                 Generator.logger.warning("redefining $id")
             }
 
@@ -138,7 +138,7 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
                     firstLocal = 0,
                     numLocals = 0,
                     profiling = 0,
-                    nameOffset = state.allocator.allocateString(id!!).ref,
+                    nameOffset = state.allocator.allocateString(id).ref,
                     fileNameOffset = 0,
                     numParams = 0,
                     sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
@@ -311,17 +311,28 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
         val memoryReference = MemoryReference(Instruction.OFS_PARAM(e.index), e.type)
         return with(linkedListOf<IR>()) {
             addAll(visit(e : DeclarationExpression))
-            addAll(BinaryExpression.Assign(ReferenceExpression(e.id), memoryReference).generate(state))
+            addAll(BinaryExpression.Assign(ReferenceExpression(e : DeclarationExpression), memoryReference).generate(state))
             this
         }
     }
 
     override fun visit(e: ReferenceExpression): List<IR> {
-        if (e.id !in state.allocator) {
-            Generator.logger.severe("unknown reference ${e.id}")
+        val id = e.refers.id
+        if (id !in state.allocator) {
+            Generator.logger.severe("unknown reference ${id}")
         }
         // FIXME: null references
-        val global = state.allocator[e.id]
+        val global = state.allocator[id]
+        return listOf(ReferenceIR(global?.ref ?: 0))
+    }
+
+    override fun visit(e: DynamicReferenceExpression): List<IR> {
+        val id = e.id
+        if (id !in state.allocator) {
+            Generator.logger.severe("unknown reference $id")
+        }
+        // FIXME: null references
+        val global = state.allocator[id]
         return listOf(ReferenceIR(global?.ref ?: 0))
     }
 

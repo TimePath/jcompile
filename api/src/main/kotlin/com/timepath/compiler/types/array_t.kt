@@ -16,6 +16,7 @@ import com.timepath.compiler.ast.BinaryExpression
 import com.timepath.compiler.ast.ConditionalExpression
 import com.timepath.compiler.ast.ReturnStatement
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.DynamicReferenceExpression
 
 data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
 
@@ -25,17 +26,18 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
     val index = OperationHandler(type) { gen, left, right ->
         when (left) {
             is MemberExpression -> {
-                val field = ReferenceExpression((left.right as ConstantExpression).value.any as String)
+                val field = DynamicReferenceExpression((left.right as ConstantExpression).value.any as String)
                 IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
             }
-            is ReferenceExpression -> {
+            is DynamicReferenceExpression -> {
                 val s = generateAccessorName(left.id)
-                val indexer = MethodCallExpression(ReferenceExpression(s), listOf(right!!))
+                val indexer = MethodCallExpression(DynamicReferenceExpression(s), listOf(right!!))
                 MethodCallExpression(indexer, listOf(ConstantExpression(0))).generate(gen)
             }
             else -> throw UnsupportedOperationException()
         }
     }
+
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
             Operation("sizeof", this) to OperationHandler(int_t) { gen, self, _ ->
@@ -75,22 +77,25 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
      */
     private fun generateAccessor(id: String): Expression {
         val accessor = generateAccessorName(id)
-        return FunctionExpression(
+        val index = ParameterExpression("index", int_t, 0)
+        val func = FunctionExpression(
                 accessor,
                 function_t(function_t(type, listOf(bool_t, type), null), listOf(int_t), null),
-                listOf(ParameterExpression("index", int_t, 0)),
-                add = listOf(ReturnStatement(
-                        UnaryExpression.Dereference(BinaryExpression.Add(
-                                UnaryExpression.Address(
-                                        ReferenceExpression(accessor)
-                                ),
-                                BinaryExpression.Add(
-                                        ConstantExpression(1),
-                                        ReferenceExpression("index")
-                                )
-                        ))
-                ))
+                listOf(index)
+
         )
+        func.addAll(listOf(ReturnStatement(
+                UnaryExpression.Dereference(BinaryExpression.Add(
+                        UnaryExpression.Address(
+                                ReferenceExpression(func)
+                        ),
+                        BinaryExpression.Add(
+                                ConstantExpression(1),
+                                ReferenceExpression(index)
+                        )
+                ))
+        )))
+        return func
     }
 
     /**
@@ -102,20 +107,22 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
      */
     private fun generateComponent(id: String, i: Int): List<Expression> {
         val accessor = "${generateAccessorName(id)}_${i}"
-        val field = "${accessor}_field"
         return with(linkedListOf<Expression>()) {
-            add(DeclarationExpression(field, type))
+            val field = DeclarationExpression("${accessor}_field", type)
+            add(field)
             val fieldReference = ReferenceExpression(field)
+            val mode = ParameterExpression("mode", bool_t, 0)
+            val value = ParameterExpression("value", type, 1)
             add(FunctionExpression(
                     accessor,
                     function_t(type, listOf(bool_t, type), null),
                     listOf(
-                            ParameterExpression("mode", bool_t, 0),
-                            ParameterExpression("value", type, 1)
+                            mode,
+                            value
                     ),
                     add = listOf(ReturnStatement(ConditionalExpression(
-                            ReferenceExpression("mode"), true,
-                            BinaryExpression.Assign(fieldReference, ReferenceExpression("value")),
+                            ReferenceExpression(mode), true,
+                            BinaryExpression.Assign(fieldReference, ReferenceExpression(value)),
                             fieldReference
                     )))
             ))

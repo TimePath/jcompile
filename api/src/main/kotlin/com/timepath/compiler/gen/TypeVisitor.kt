@@ -7,7 +7,7 @@ import com.timepath.compiler.api.CompileState
 // TODO: push up
 fun Expression.type(state: CompileState): Type = accept(TypeVisitor(state))
 
-class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
+private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.type(): Type = accept(this@TypeVisitor)
@@ -77,7 +77,7 @@ class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
         return when (lhs) {
             is entity_t -> {
                 // TODO: field namespace
-                val rhs = ReferenceExpression(e.field).type()
+                val rhs = DynamicReferenceExpression(e.field).type()
                 when (rhs) {
                     is field_t ->
                         rhs.type
@@ -96,7 +96,7 @@ class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: FunctionExpression) = e.signature
+    override fun visit(e: FunctionExpression) = e.type
 
     override fun visit(e: GotoExpression) = void_t
 
@@ -115,8 +115,10 @@ class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     override fun visit(e: SwitchExpression.Case) = e.expr?.type() ?: void_t
 
+    override fun visit(e: ReferenceExpression) = e.refers.type
+
     // FIXME
-    override fun visit(e: ReferenceExpression): Type {
+    override fun visit(e: DynamicReferenceExpression): Type {
         state.allocator[e.id]?.let { return it.type }
         // probably a vector component
         return float_t

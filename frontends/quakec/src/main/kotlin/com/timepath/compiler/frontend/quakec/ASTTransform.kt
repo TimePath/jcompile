@@ -206,7 +206,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                         }
                     } else {
                         type!!.declare(id, state = state).flatMap {
-                            listOf(it, BinaryExpression.Assign(ReferenceExpression((it as DeclarationExpression).id), initializer, ctx = ctx))
+                            listOf(it, BinaryExpression.Assign(ReferenceExpression(it as DeclarationExpression), initializer, ctx = ctx))
                         }
                     }
                 }
@@ -576,7 +576,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         }
         val typeName = ctx.typeName()
         if (typeName != null) {
-            return listOf(ReferenceExpression("TODO: sizeof(${typeName.getText()})", ctx = ctx))
+            return listOf(DynamicReferenceExpression("TODO: sizeof(${typeName.getText()})", ctx = ctx))
         }
         return super.visitUnaryExpression(ctx)
     }
@@ -665,7 +665,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         }
         val text = ctx.getText()
         if (ctx.Identifier() != null) {
-            return listOf(ReferenceExpression(text, ctx = ctx))
+            return listOf(DynamicReferenceExpression(text, ctx = ctx))
         }
         if (ctx.StringLiteral().isNotEmpty()) {
             val concat = ctx.StringLiteral()
@@ -711,6 +711,6 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 else -> constExpr
             })
         }
-        return listOf(UnaryExpression.Cast(void_t, ReferenceExpression("FIXME_${text}", ctx = ctx)))
+        return listOf(UnaryExpression.Cast(void_t, DynamicReferenceExpression("FIXME_${text}", ctx = ctx)))
     }
 }

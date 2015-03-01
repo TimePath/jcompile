@@ -163,10 +163,10 @@ StructDeclarationExpression     ::= DeclarationExpression
 ParameterExpression             ::= DeclarationExpression
 
 function(e)                     ::= <%
-<e.signature.type:_declare(e.id:{x|<x>(
-    <if(e.params)><e.params; separator=", "><else><e.signature.argTypes:_declare(false, false); separator=", "><endif>
-    <if((e.params || e.signature.argTypes) && (e.vararg || e.signature.vararg))>, <endif>
-    <if(e.vararg)><e.vararg><else><e.signature.vararg:_declare(false, false)><endif>
+<e.type.type:_declare(e.id:{x|<x>(
+    <if(e.params)><e.params; separator=", "><else><e.type.argTypes:_declare(false, false); separator=", "><endif>
+    <if((e.params || e.type.argTypes) && (e.vararg || e.type.vararg))>, <endif>
+    <if(e.vararg)><e.vararg><else><e.type.vararg:_declare(false, false)><endif>
 )}, false)>
 %>
 
@@ -190,7 +190,8 @@ MethodCallExpression(e)         ::= <<
 <e.function>(<e.args; separator=", ">)
 >>
 
-ReferenceExpression(e)          ::= "<e.id>"
+ReferenceExpression(e)          ::= "<e.refers.id>"
+DynamicReferenceExpression(e)   ::= "<e.id>"
 
 ReturnStatement(e)              ::= <<
 return<if(e.returnValue)> <e.returnValue><endif>

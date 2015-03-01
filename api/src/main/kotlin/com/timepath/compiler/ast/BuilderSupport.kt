@@ -22,8 +22,8 @@ fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
     return initChild(DeclarationExpression(name, Type.from(any), ConstantExpression(any)))
 }
 
-fun BlockExpression.ref(id: String): ReferenceExpression {
-    return ReferenceExpression(id)
+fun BlockExpression.ref(id: String): DynamicReferenceExpression {
+    return DynamicReferenceExpression(id)
 }
 
 fun BlockExpression.func(returnType: function_t, name: String,

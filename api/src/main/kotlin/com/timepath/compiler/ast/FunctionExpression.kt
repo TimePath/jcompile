@@ -6,13 +6,13 @@ import com.timepath.compiler.types.function_t
 /**
  * Replaced with a number during compilation
  */
-class FunctionExpression(val id: String? = null,
-                         val signature: function_t,
+class FunctionExpression(id: String? = null,
+                         type: function_t,
                          val params: List<Expression>? = null,
                          val vararg: Expression? = null,
                          add: List<Expression>? = null,
                          val builtin: Int? = null,
-                         override val ctx: ParserRuleContext? = null) : Expression() {
+                         override val ctx: ParserRuleContext? = null) : DeclarationExpression(id ?: "func", type) {
 
     {
         if (add != null) {

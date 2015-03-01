@@ -9,12 +9,12 @@ import com.timepath.compiler.api.CompileState
  *
  * @return A constant or null if it could change at runtime
  */
-fun Expression.evaluate(state: CompileState? = null): Value? = accept(EvaluateVisitor(state))
+fun Expression.evaluate(state: CompileState? = null) = accept(EvaluateVisitor(state))
 
-class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
+private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
 
     [suppress("NOTHING_TO_INLINE")]
-    inline fun Expression.evaluate(): Value? = accept(this@EvaluateVisitor)
+    inline fun Expression.evaluate() = accept(this@EvaluateVisitor)
 
     override fun default(e: Expression) = null
 
@@ -54,15 +54,8 @@ class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
         return if (result.toBoolean()) eval(e.pass) else eval(e.fail)
     }
 
-    override fun visit(e: ConstantExpression): Value? = e.value
+    override fun visit(e: ConstantExpression) = e.value
 
-    override fun visit(e: ReferenceExpression): Value? {
-        if(state != null) {
-            state.allocator[e.id]?.let {
-                return it.value
-            }
-        }
-        return super.visit(e)
-    }
+    override fun visit(e: ReferenceExpression) = e.refers.evaluate()
 
 }

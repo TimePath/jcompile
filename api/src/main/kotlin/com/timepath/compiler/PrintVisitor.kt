@@ -35,7 +35,7 @@ object PrintVisitor : ASTVisitor<Map<String, Any?>> {
 
     override fun visit(e: FunctionExpression): Map<String, Any?> = mapOf(
             "id" to e.id,
-            "type" to e.signature
+            "type" to e.type
     )
 
     override fun visit(e: GotoExpression): Map<String, Any?> = mapOf(
@@ -59,7 +59,7 @@ object PrintVisitor : ASTVisitor<Map<String, Any?>> {
     )
 
     override fun visit(e: ReferenceExpression): Map<String, Any?> = mapOf(
-            "id" to e.id
+            "id" to e.refers.id
     )
 
     override fun visit(e: DeclarationExpression): Map<String, Any?> = mapOf(
