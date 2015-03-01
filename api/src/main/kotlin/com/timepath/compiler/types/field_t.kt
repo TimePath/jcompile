@@ -28,6 +28,10 @@ data class field_t(val type: Type) : pointer_t() {
             logger.warning("redeclaring field $name")
             emptyList<Expression>()
         }
-        else -> listOf(DeclarationExpression(name, this, state.fields[name]))
+        else -> {
+            entity_t.fields[name] = this.type
+            // TODO: namespace entity
+            listOf(DeclarationExpression(name, this, state.fields[name]))
+        }
     }
 }

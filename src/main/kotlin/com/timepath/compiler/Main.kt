@@ -7,6 +7,7 @@ import com.timepath.compiler.gen.Generator
 import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.q1vm.util.IOWrapper
 import org.anarres.cpp.Feature
+import com.timepath.compiler.api.CompileState
 
 val logger = Logger.new()
 
@@ -30,7 +31,7 @@ fun main(args: Array<String>) {
         )
         defs.forEach { project ->
             time("Project time") {
-                val compiler = Compiler(QCC, opts)
+                val compiler = Compiler(QCC, CompileState(opts))
                         .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
                         .define(project.define)
                 val compiled = compiler.compile()
@@ -40,7 +41,7 @@ fun main(args: Array<String>) {
         }
     }
     time("GMQCC tests") {
-        val gmqcc = Compiler(QCC, opts)
+        val gmqcc = Compiler(QCC, CompileState(opts))
                 .define("GMQCC")
                 .define("__STD_GMQCC__")
         gmqcc.preprocessor.addFeatures(

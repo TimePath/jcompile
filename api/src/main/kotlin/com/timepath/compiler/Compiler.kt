@@ -11,14 +11,14 @@ import javax.swing.*
 import com.timepath.Logger
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.preproc.CustomPreprocessor
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
 import com.timepath.compiler.api.CompileState
 import java.net.URL
+import com.timepath.compiler.gen.type
 
-public class Compiler(val parser: Frontend, val opts: CompilerOptions = CompilerOptions()) {
+public class Compiler(val parser: Frontend, val state: CompileState = CompileState()) {
 
     class object {
         val logger = Logger.new()
@@ -120,8 +120,6 @@ public class Compiler(val parser: Frontend, val opts: CompilerOptions = Compiler
             }
         }
     }
-
-    val state = CompileState(opts = opts)
 
     fun ast(): List<List<Expression>> {
         val roots = linkedListOf<List<Expression>>()

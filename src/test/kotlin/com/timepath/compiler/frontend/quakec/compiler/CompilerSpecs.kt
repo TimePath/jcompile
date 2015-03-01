@@ -7,18 +7,18 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.gen.Generator.ASM
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.ProgramData
 import org.intellij.lang.annotations.Language
 import org.jetbrains.spek.api.Spek
 import com.timepath.compiler.PrintVisitor
+import com.timepath.compiler.api.CompileState
 
 val opts = CompilerOptions()
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
-    return Compiler(QCC, opts)
+    return Compiler(QCC, CompileState(opts))
             .include(input, "-")
             .compile() as ProgramData
 }
@@ -50,7 +50,7 @@ class CompilerSpecs : Spek() {{
                 .filter { it.exists() }
         tests.forEach {
             on(it.name) {
-                val compiler = Compiler(QCC, opts)
+                val compiler = Compiler(QCC, CompileState(opts))
                 compiler.include(File(resources, "defs.qh"))
                 compiler.include(it)
 

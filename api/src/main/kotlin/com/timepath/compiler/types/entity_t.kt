@@ -7,7 +7,8 @@ import com.timepath.compiler.ast.MemoryReference
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
 
-object entity_t : pointer_t() {
+// TODO: identify as reference
+object entity_t : struct_t() {
     override val simpleName = "entity_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
