@@ -12,7 +12,7 @@ import com.timepath.compiler.api.CompileState
 import java.util.ArrayList
 import java.util.Deque
 import java.util.LinkedList
-import java.util.HashMap
+import java.util.LinkedHashMap
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
@@ -29,12 +29,12 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         it
     }
 
-    data class Scope(val vars: MutableMap<String, DeclarationExpression> = HashMap())
+    data class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = LinkedHashMap())
 
     val scope: Deque<Scope> = LinkedList()
 
-    fun <R> scoped(block: () -> R): R {
-        scope.push(Scope())
+    fun <R> scoped(name: String, block: () -> R): R {
+        scope.push(Scope(name))
         try {
             return block()
         } finally {
@@ -49,6 +49,8 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         }
         return e
     }
+
+    fun resolve(id: String) = scope.first { id in it.vars }.vars[id]
 
     class object {
         val logger = Logger.new()
@@ -142,12 +144,12 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
 
     override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext) =
             BlockExpression(
-                    add = scoped { visitChildren(ctx) },
+                    add = scoped("file") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
 
     override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext) =
             BlockExpression(
-                    add = scoped { visitChildren(ctx) },
+                    add = scoped("block") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
 
     private fun DeclaratorContext.deepest(): DeclaratorContext {
@@ -158,7 +160,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         return declarator
     }
 
-    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext) = scoped {
+    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Expression> {
         val declaratorContext = ctx.declarator()
         val old = declaratorContext.parameterTypeList() == null
         val parameterTypeList = when {
@@ -170,11 +172,17 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!) as function_t,
                 params = parameterTypeList.functionArgs(ctx),
                 vararg = parameterTypeList.functionVararg(ctx),
-                add = scoped { visitChildren(ctx.compoundStatement()) },
                 ctx = ctx
         ).let {
             declare(it)
-            listOf(it)
+            scoped("params") {
+                it.params?.forEach { declare(it) }
+                it.vararg?.let { declare(it) }
+                scoped("body") {
+                    it.addAll(visitChildren(ctx.compoundStatement()))
+                }
+            }
+            return listOf(it)
         }
     }
 
@@ -308,7 +316,12 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             id = ctx.Identifier().getText(),
             ctx = ctx).let { listOf(it) }
 
-    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext) = scoped {
+    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext) = scoped("loop") {
+        val initializer = declare(when {
+            ctx.initD != null -> ctx.initD.accept(this)
+            ctx.initE != null -> ctx.initE.accept(this)
+            else -> null
+        })
         LoopExpression(
                 predicate = when (ctx.predicate) {
                     null -> ConstantExpression(1, ctx = ctx)
@@ -316,11 +329,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 },
                 body = ctx.statement().accept(this).single(),
                 checkBefore = !ctx.getText().startsWith("do"),
-                initializer = declare(when {
-                    ctx.initD != null -> ctx.initD.accept(this)
-                    ctx.initE != null -> ctx.initE.accept(this)
-                    else -> null
-                }),
+                initializer = initializer,
                 update = ctx.update?.let { it.accept(this) },
                 ctx = ctx).let { listOf(it) }
     }
@@ -633,7 +642,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         ctx.expression()?.let { return it.accept(this) }
         val text = ctx.getText()
         ctx.Identifier()?.let {
-            return DynamicReferenceExpression(text, ctx = ctx).let { listOf(it) }
+            return ReferenceExpression(resolve(text)!!, ctx = ctx).let { listOf(it) }
         }
         val str = ctx.StringLiteral()
         if (str.isNotEmpty()) {

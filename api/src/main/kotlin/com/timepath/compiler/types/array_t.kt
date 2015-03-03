@@ -29,8 +29,8 @@ data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
                 val field = DynamicReferenceExpression((left.right as ConstantExpression).value.any as String)
                 IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
             }
-            is DynamicReferenceExpression -> {
-                val s = generateAccessorName(left.id)
+            is ReferenceExpression -> {
+                val s = generateAccessorName(left.refers.id)
                 val indexer = MethodCallExpression(DynamicReferenceExpression(s), listOf(right!!))
                 MethodCallExpression(indexer, listOf(ConstantExpression(0))).generate(gen)
             }
