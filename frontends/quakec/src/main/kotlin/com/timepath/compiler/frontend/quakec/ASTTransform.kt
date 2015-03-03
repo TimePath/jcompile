@@ -1,6 +1,5 @@
 package com.timepath.compiler.frontend.quakec
 
-import java.util.regex.Pattern
 import com.timepath.Logger
 import com.timepath.compiler.Vector
 import com.timepath.compiler.ast.*
@@ -9,22 +8,46 @@ import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.tree.TerminalNode
 import com.timepath.compiler.api.CompileState
 import java.util.ArrayList
+import java.util.Deque
+import java.util.LinkedList
+import java.util.HashMap
+import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
-
-    [suppress("NOTHING_TO_INLINE")]
-    inline fun listOf<T>() = ArrayList<T>()
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun emptyList<T>() = ArrayList<T>()
 
     [suppress("NOTHING_TO_INLINE")]
+    inline fun listOf<T>() = ArrayList<T>()
+
+    [suppress("NOTHING_TO_INLINE")]
     inline fun listOf<T>(vararg values: T) = ArrayList<T>(values.size()).let {
         it.addAll(values)
         it
+    }
+
+    data class Scope(val vars: MutableMap<String, DeclarationExpression> = HashMap())
+
+    val scope: Deque<Scope> = LinkedList()
+
+    fun <R> scoped(block: () -> R): R {
+        scope.push(Scope())
+        try {
+            return block()
+        } finally {
+            scope.pop()
+        }
+    }
+
+    fun <R> declare(e: R): R {
+        val vars = scope.peek().vars
+        if (e is DeclarationExpression) {
+            vars[e.id] = e
+        }
+        return e
     }
 
     class object {
@@ -41,14 +64,12 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         logger.fine("{$token} $line,$col $file")
     }
 
-    fun QCParser.DeclarationSpecifiersContext.type(old: Boolean = false): Type? {
-        [suppress("SENSELESS_COMPARISON")]
+    fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false): Type? {
         if (this == null) return null
         return type(this.declarationSpecifier(), old)
     }
 
-    fun QCParser.DeclarationSpecifiers2Context.type(old: Boolean = false): Type? {
-        [suppress("SENSELESS_COMPARISON")]
+    fun QCParser.DeclarationSpecifiers2Context?.type(old: Boolean = false): Type? {
         if (this == null) return null
         return type(this.declarationSpecifier(), old)
     }
@@ -76,8 +97,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         return indirect
     }
 
-    fun ParameterTypeListContext.functionType(type: Type): Type {
-        [suppress("SENSELESS_COMPARISON")]
+    fun ParameterTypeListContext?.functionType(type: Type): Type {
         if (this == null) return type
         val parameterList = this.parameterList()
         val parameterVarargs = this.parameterVarargs()
@@ -88,8 +108,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         return function
     }
 
-    fun ParameterTypeListContext.functionArgs(ctx: ParserRuleContext): List<Expression> {
-        [suppress("UNNECESSARY_SAFE_CALL")]
+    fun ParameterTypeListContext?.functionArgs(ctx: ParserRuleContext): List<Expression> {
         val paramDeclarations = this?.parameterList()?.parameterDeclaration() ?: emptyList()
         var i = 0
         val params = paramDeclarations.flatMapTo(listOf<Expression>()) {
@@ -99,125 +118,125 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 else -> {
                     val type = it.declarationSpecifiers().type()
                     val param = ParameterExpression(paramId, type!!, index = i++, ctx = ctx)
-                    listOf(param)
+                    param.let { listOf(it) }
                 }
             }
         }
         return params
     }
 
-    fun ParameterTypeListContext.functionVararg(ctx: ParserRuleContext): Expression? {
-        [suppress("UNNECESSARY_SAFE_CALL")]
-        val varargs = this?.parameterVarargs()
-        val vararg = when (varargs) {
-            null -> null
-            else -> {
-                val type = varargs.declarationSpecifiers().type() ?: void_t
-                DeclarationExpression(varargs.Identifier()?.getText() ?: "...", type, null, ctx = ctx)
-            }
-        }
-        return vararg
+    fun ParameterTypeListContext?.functionVararg(ctx: ParserRuleContext) = this?.parameterVarargs()?.let {
+        DeclarationExpression(
+                id = it.Identifier()?.getText() ?: "...",
+                type = it.declarationSpecifiers().type() ?: void_t,
+                value = null,
+                ctx = ctx)
     }
 
-    override fun defaultResult(): List<Expression> = emptyList()
+    override fun defaultResult() = emptyList<Expression>()
 
     override fun aggregateResult(aggregate: List<Expression>, nextResult: List<Expression>): List<Expression> {
         (aggregate as MutableList).addAll(nextResult)
         return aggregate
     }
 
-    override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext): List<Expression> {
-        return listOf(BlockExpression(visitChildren(ctx), ctx = ctx))
-    }
+    override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext) =
+            BlockExpression(
+                    add = scoped { visitChildren(ctx) },
+                    ctx = ctx).let { listOf(it) }
 
-    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext): List<Expression> {
-        return listOf(BlockExpression(visitChildren(ctx), ctx = ctx))
-    }
+    override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext) =
+            BlockExpression(
+                    add = scoped { visitChildren(ctx) },
+                    ctx = ctx).let { listOf(it) }
 
-    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Expression> {
-        var declarator = ctx.declarator()
+    private fun DeclaratorContext.deepest(): DeclaratorContext {
+        var declarator = this
         while (declarator.declarator() != null) {
             declarator = declarator.declarator()
         }
-        val id = declarator.getText()
+        return declarator
+    }
 
-        val old = ctx.declarator().parameterTypeList() == null
-        val parameterTypeList = if (old) {
-            ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
-        } else {
-            ctx.declarator().parameterTypeList()
+    override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext) = scoped {
+        val declaratorContext = ctx.declarator()
+        val old = declaratorContext.parameterTypeList() == null
+        val parameterTypeList = when {
+            old -> ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
+            else -> declaratorContext.parameterTypeList()
         }
-        val retType = ctx.declarationSpecifiers().type(old)
-        val params = parameterTypeList.functionArgs(ctx)
-        val vararg = parameterTypeList.functionVararg(ctx)
-        val signature = parameterTypeList.functionType(retType!!);
-        return listOf(FunctionExpression(id, signature as function_t, params, vararg, visitChildren(ctx.compoundStatement()), ctx = ctx))
+        FunctionExpression(
+                id = declaratorContext.deepest().getText(),
+                type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!) as function_t,
+                params = parameterTypeList.functionArgs(ctx),
+                vararg = parameterTypeList.functionVararg(ctx),
+                add = scoped { visitChildren(ctx.compoundStatement()) },
+                ctx = ctx
+        ).let {
+            declare(it)
+            listOf(it)
+        }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
         val declarations = ctx.initDeclaratorList()?.initDeclarator()
         if (declarations == null) {
-            val enum = ctx.enumSpecifier()
-            return enum.enumeratorList().enumerator().mapTo(listOf<Expression>()) {
+            return ctx.enumSpecifier().enumeratorList().enumerator().mapTo(listOf<Expression>()) {
                 val id = it.enumerationConstant().getText()
-                int_t.declare(id).single()
+                int_t.declare(id).single().let { declare(it) }
             }
         }
-        val typedef = ctx.declarationSpecifiers().declarationSpecifier().firstOrNull { it.storageClassSpecifier()?.getText() == "typedef" } != null
-        if (typedef) {
-            val type = type(ctx.declarationSpecifiers().declarationSpecifier())
-            ctx.initDeclaratorList().initDeclarator().forEach {
-                state.types[it.getText()] = type!!
-            }
+        val specifiers = ctx.declarationSpecifiers().declarationSpecifier()
+        specifiers.firstOrNull { it.storageClassSpecifier()?.getText() == "typedef" }?.let {
+            val type = type(specifiers)!!
+            declarations.forEach { state.types[it.getText()] = type }
             return emptyList()
         }
         val type = ctx.declarationSpecifiers().type()
         return declarations.flatMapTo(listOf<Expression>()) {
-            var declarator = it.declarator()
-            while (declarator.declarator() != null) {
-                declarator = declarator.declarator()
-            }
-            val arraySize = it.declarator().assignmentExpression()
-            val id = declarator.getText()
+            val id = it.declarator().deepest().getText()
             val initializer = it.initializer()?.accept(this)?.single()
             when (initializer) {
                 is Expression -> {
                     val value = initializer.evaluate()
-                    if (value != null) {
-                        // constant
-                        val s = value.any.toString()
-                        if (s.startsWith('#')) {
-                            // FIXME: HACK
-                            val i = s.substring(1).toInt()
-                            // Similar to function definition
-                            val old = it.declarator().parameterTypeList() == null
-                            val parameterTypeList = if (old) {
-                                ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
-                            } else {
-                                it.declarator().parameterTypeList()
+                    when (value) {
+                        null -> {
+                            type!!.declare(id, state = state).flatMap {
+                                listOf(it, BinaryExpression.Assign(ReferenceExpression(it as DeclarationExpression), initializer, ctx = ctx))
                             }
-                            val retType = ctx.declarationSpecifiers().type(old)
-                            val params = parameterTypeList.functionArgs(ctx)
-                            val vararg = parameterTypeList.functionVararg(ctx)
-                            val signature = parameterTypeList.functionType(retType!!);
-                            listOf(FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx))
-                        } else {
-                            type!!.declare(id, ConstantExpression(value), state = state)
                         }
-                    } else {
-                        type!!.declare(id, state = state).flatMap {
-                            listOf(it, BinaryExpression.Assign(ReferenceExpression(it as DeclarationExpression), initializer, ctx = ctx))
+                        else -> {
+                            // constant
+                            val s = value.any.toString()
+                            if (s.startsWith('#')) {
+                                // FIXME: HACK
+                                val i = s.substring(1).toInt()
+                                // Similar to function definition
+                                val old = it.declarator().parameterTypeList() == null
+                                val parameterTypeList = when {
+                                    old -> specifiers.last().typeSpecifier().directTypeSpecifier().parameterTypeList()
+                                    else -> it.declarator().parameterTypeList()
+                                }
+                                val retType = ctx.declarationSpecifiers().type(old)
+                                val params = parameterTypeList.functionArgs(ctx)
+                                val vararg = parameterTypeList.functionVararg(ctx)
+                                val signature = parameterTypeList.functionType(retType!!);
+                                FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
+                            } else {
+                                type!!.declare(id, ConstantExpression(value), state = state)
+                            }
                         }
                     }
                 }
                 else -> {
+                    val arraySize = it.declarator().assignmentExpression()
                     if (arraySize != null) {
                         val sizeExpr = arraySize.accept(this).single()
                         array_t(type!!, sizeExpr).declare(id, state = state)
                     } else {
                         val old = it.declarator().parameterTypeList() == null
                         val parameterTypeList = if (old) {
-                            ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
+                            specifiers.last().typeSpecifier().directTypeSpecifier().parameterTypeList()
                         } else {
                             it.declarator().parameterTypeList()
                         }
@@ -240,328 +259,291 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                                 type!!.declare(id, state = state)
                             else -> when {
                                 signature is function_t -> // function prototype
-                                    listOf(FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx))
+                                    FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
                                 else -> // function pointer
                                     signature.declare(id, state = state)
                             }
                         }
                     }
                 }
+            }.let {
+                it.forEach { declare(it) }
+                it
             }
         }
     }
 
-    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext): List<Expression> {
-        with(listOf<Expression>()) {
-            add(LabelExpression(ctx.Identifier().getText(), ctx = ctx))
-            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
-            return this
-        }
+    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext) = with(listOf<Expression>()) {
+        val id = ctx.Identifier().getText()
+        LabelExpression(id, ctx = ctx).let { add(it) }
+        ctx.blockItem()?.accept(this@ASTTransform)?.let { addAll(it) }
+        this
     }
 
-    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext): List<Expression> {
-        with(listOf<Expression>()) {
-            add(SwitchExpression.Case(ctx.constantExpression().accept(this@ASTTransform).single(), ctx = ctx))
-            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
-            return this
-        }
+    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext) = with(listOf<Expression>()) {
+        val case = ctx.constantExpression().accept(this@ASTTransform).single()
+        SwitchExpression.Case(case, ctx = ctx).let { add(it) }
+        ctx.blockItem()?.accept(this@ASTTransform)?.let { addAll(it) }
+        this
     }
 
-    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext): List<Expression> {
-        with(listOf<Expression>()) {
-            add(SwitchExpression.Case(null, ctx = ctx))
-            addAll(ctx.blockItem()?.accept(this@ASTTransform) ?: emptyList())
-            return this
-        }
+    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext) = with(listOf<Expression>()) {
+        val default = null
+        SwitchExpression.Case(default, ctx = ctx).let { add(it) }
+        ctx.blockItem()?.accept(this@ASTTransform)?.let { addAll(it) }
+        this
     }
 
-    override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext): List<Expression> {
-        val expr = ctx.expression()
-        val retVal = expr?.accept(this)?.single()
-        return listOf(ReturnStatement(when {
-            retVal is Expression -> retVal : Expression
-            else -> null
-        }, ctx = ctx))
+    override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext) = ReturnStatement(
+            ctx.expression()?.accept(this)?.single(),
+            ctx = ctx).let { listOf(it) }
+
+    override fun visitBreakStatement(ctx: QCParser.BreakStatementContext) = BreakStatement(
+            ctx = ctx).let { listOf(it) }
+
+    override fun visitContinueStatement(ctx: QCParser.ContinueStatementContext) = ContinueStatement(
+            ctx = ctx).let { listOf(it) }
+
+    override fun visitGotoStatement(ctx: QCParser.GotoStatementContext) = GotoExpression(
+            id = ctx.Identifier().getText(),
+            ctx = ctx).let { listOf(it) }
+
+    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext) = scoped {
+        LoopExpression(
+                predicate = when (ctx.predicate) {
+                    null -> ConstantExpression(1, ctx = ctx)
+                    else -> ctx.predicate.accept(this).single()
+                },
+                body = ctx.statement().accept(this).single(),
+                checkBefore = !ctx.getText().startsWith("do"),
+                initializer = declare(when {
+                    ctx.initD != null -> ctx.initD.accept(this)
+                    ctx.initE != null -> ctx.initE.accept(this)
+                    else -> null
+                }),
+                update = ctx.update?.let { it.accept(this) },
+                ctx = ctx).let { listOf(it) }
     }
 
-    override fun visitBreakStatement(ctx: QCParser.BreakStatementContext): List<Expression> {
-        return listOf(BreakStatement(ctx = ctx))
-    }
+    override fun visitIfStatement(ctx: QCParser.IfStatementContext) = ConditionalExpression(
+            test = ctx.expression().accept(this).single(),
+            expression = false,
+            pass = ctx.statement()[0].accept(this).single(),
+            fail = when (ctx.statement().size()) {
+                1 -> null
+                else -> ctx.statement()[1]
+            }?.accept(this)?.single(),
+            ctx = ctx).let { listOf(it) }
 
-    override fun visitContinueStatement(ctx: QCParser.ContinueStatementContext): List<Expression> {
-        return listOf(ContinueStatement(ctx = ctx))
-    }
+    override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext) = SwitchExpression(
+            test = ctx.expression().accept(this).single(),
+            add = ctx.statement().accept(this),
+            ctx = ctx).let { listOf(it) }
 
-    override fun visitGotoStatement(ctx: QCParser.GotoStatementContext): List<Expression> {
-        return listOf(GotoExpression(ctx.Identifier().getText(), ctx = ctx))
-    }
-
-    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext): List<Expression> {
-        val predicate = ctx.predicate
-        val predicateExpr = when (predicate) {
-            null -> ConstantExpression(1, ctx = ctx)
-            else -> predicate.accept(this).single()
-        }
-
-        val bodyStmt = ctx.statement().accept(this).single()
-        val checkBefore = !ctx.getText().startsWith("do")
-        val initializer = when {
-            ctx.initD != null -> ctx.initD.accept(this)
-            ctx.initE != null -> ctx.initE.accept(this)
-            else -> null
-        }
-        val update = when (ctx.update) {
-            null -> null
-            else -> ctx.update.accept(this)
-        }
-        return listOf(LoopExpression(predicateExpr, bodyStmt, checkBefore, initializer, update, ctx = ctx))
-    }
-
-    override fun visitIfStatement(ctx: QCParser.IfStatementContext): List<Expression> {
-        val get = {(i: Int) -> ctx.statement()[i] }
-        val test = ctx.expression()
-        val yes = get(0)
-        val no = when (ctx.statement().size()) {
-            1 -> null
-            else -> get(1)
-        }
-        val testExpr = test.accept(this).single()
-        val yesExpr = yes.accept(this).single()
-        val noExpr = no?.accept(this)?.single()
-        return listOf(ConditionalExpression(testExpr, false, yesExpr, noExpr, ctx = ctx))
-    }
-
-    override fun visitSwitchStatement(ctx: QCParser.SwitchStatementContext): List<Expression> {
-        val testExpr = ctx.expression().accept(this).single()
-        val switch = SwitchExpression(testExpr, ctx.statement().accept(this), ctx = ctx)
-        return listOf(switch)
-    }
-
-    override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext): List<Expression> {
-        val expr = ctx.expression()
-        if (expr != null) {
-            return expr.accept(this)
-        }
-        // redundant semicolon
-        return listOf(Nop(ctx = ctx))
-    }
+    override fun visitExpressionStatement(ctx: QCParser.ExpressionStatementContext) =
+            ctx.expression()?.let { it.accept(this) } ?: Nop(ctx = ctx).let { listOf(it) }
 
     val QCParser.ExpressionContext.terminal: Boolean get() = expression() != null
 
-    override fun visitExpression(ctx: QCParser.ExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.expression().accept(this).single()
-            val right = ctx.assignmentExpression().accept(this).single()
-            return listOf(BinaryExpression.Comma(left, right, ctx = ctx))
-        }
-        return super.visitExpression(ctx)
-    }
+    override fun visitExpression(ctx: QCParser.ExpressionContext) = if (ctx.terminal) {
+        BinaryExpression.Comma(
+                left = ctx.expression().accept(this).single(),
+                right = ctx.assignmentExpression().accept(this).single(),
+                ctx = ctx).let { listOf(it) }
+    } else super.visitExpression(ctx)
 
     val QCParser.AssignmentExpressionContext.terminal: Boolean get() = assignmentExpression() != null
 
-    override fun visitAssignmentExpression(ctx: QCParser.AssignmentExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitAssignmentExpression(ctx: QCParser.AssignmentExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.unaryExpression().accept(this).single()
             val right = ctx.assignmentExpression().accept(this).single()
-            val ref = left
-            val value = right
-            val op = when (ctx.op.getType()) {
-                QCParser.Assign -> BinaryExpression.Assign(ref, value, ctx = ctx)
-                QCParser.OrAssign -> BinaryExpression.OrAssign(ref, value, ctx = ctx)
-                QCParser.XorAssign -> BinaryExpression.ExclusiveOrAssign(ref, value, ctx = ctx)
-                QCParser.AndAssign -> BinaryExpression.AndAssign(ref, value, ctx = ctx)
-                QCParser.LeftShiftAssign -> BinaryExpression.LshAssign(ref, value, ctx = ctx)
-                QCParser.RightShiftAssign -> BinaryExpression.RshAssign(ref, value, ctx = ctx)
-                QCParser.PlusAssign -> BinaryExpression.AddAssign(ref, value, ctx = ctx)
-                QCParser.MinusAssign -> BinaryExpression.SubtractAssign(ref, value, ctx = ctx)
-                QCParser.StarAssign -> BinaryExpression.MultiplyAssign(ref, value, ctx = ctx)
-                QCParser.DivAssign -> BinaryExpression.DivideAssign(ref, value, ctx = ctx)
-                QCParser.ModAssign -> BinaryExpression.ModuloAssign(ref, value, ctx = ctx)
-                else -> null
-            }
-            return when (op) {
-                null -> emptyList()
-                else -> listOf(op)
-            }
+            when (ctx.op.getType()) {
+                QCParser.Assign -> BinaryExpression.Assign(left, right, ctx = ctx)
+                QCParser.OrAssign -> BinaryExpression.OrAssign(left, right, ctx = ctx)
+                QCParser.XorAssign -> BinaryExpression.ExclusiveOrAssign(left, right, ctx = ctx)
+                QCParser.AndAssign -> BinaryExpression.AndAssign(left, right, ctx = ctx)
+                QCParser.LeftShiftAssign -> BinaryExpression.LshAssign(left, right, ctx = ctx)
+                QCParser.RightShiftAssign -> BinaryExpression.RshAssign(left, right, ctx = ctx)
+                QCParser.PlusAssign -> BinaryExpression.AddAssign(left, right, ctx = ctx)
+                QCParser.MinusAssign -> BinaryExpression.SubtractAssign(left, right, ctx = ctx)
+                QCParser.StarAssign -> BinaryExpression.MultiplyAssign(left, right, ctx = ctx)
+                QCParser.DivAssign -> BinaryExpression.DivideAssign(left, right, ctx = ctx)
+                QCParser.ModAssign -> BinaryExpression.ModuloAssign(left, right, ctx = ctx)
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        return super.visitAssignmentExpression(ctx)
+        else -> super.visitAssignmentExpression(ctx)
     }
 
     val QCParser.ConditionalExpressionContext.terminal: Boolean get() = expression().isNotEmpty()
 
-    override fun visitConditionalExpression(ctx: QCParser.ConditionalExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val condition = ctx.logicalOrExpression().accept(this).single()
-            val yes = ctx.expression(0).accept(this).single()
-            val no = ctx.expression(1).accept(this).single()
-            return listOf(ConditionalExpression(condition, true, yes, no, ctx = ctx))
+    override fun visitConditionalExpression(ctx: QCParser.ConditionalExpressionContext) = when {
+        ctx.terminal -> {
+            ConditionalExpression(
+                    test = ctx.logicalOrExpression().accept(this).single(),
+                    expression = true,
+                    pass = ctx.expression(0).accept(this).single(),
+                    fail = ctx.expression(1).accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitConditionalExpression(ctx)
+        else -> super.visitConditionalExpression(ctx)
     }
 
     val QCParser.LogicalOrExpressionContext.terminal: Boolean get() = logicalOrExpression() != null
 
-    override fun visitLogicalOrExpression(ctx: QCParser.LogicalOrExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.logicalOrExpression().accept(this).single()
-            val right = ctx.logicalAndExpression().accept(this).single()
-            return listOf(BinaryExpression.Or(left, right, ctx = ctx))
+    override fun visitLogicalOrExpression(ctx: QCParser.LogicalOrExpressionContext) = when {
+        ctx.terminal -> {
+            BinaryExpression.Or(
+                    left = ctx.logicalOrExpression().accept(this).single(),
+                    right = ctx.logicalAndExpression().accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitLogicalOrExpression(ctx)
+        else -> super.visitLogicalOrExpression(ctx)
     }
 
     val QCParser.LogicalAndExpressionContext.terminal: Boolean get() = logicalAndExpression() != null
 
-    override fun visitLogicalAndExpression(ctx: QCParser.LogicalAndExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.logicalAndExpression().accept(this).single()
-            val right = ctx.inclusiveOrExpression().accept(this).single()
-            return listOf(BinaryExpression.And(left, right, ctx = ctx))
+    override fun visitLogicalAndExpression(ctx: QCParser.LogicalAndExpressionContext) = when {
+        ctx.terminal -> {
+            BinaryExpression.And(
+                    left = ctx.logicalAndExpression().accept(this).single(),
+                    right = ctx.inclusiveOrExpression().accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitLogicalAndExpression(ctx)
+        else -> super.visitLogicalAndExpression(ctx)
     }
 
     val QCParser.InclusiveOrExpressionContext.terminal: Boolean get() = inclusiveOrExpression() != null
 
-    override fun visitInclusiveOrExpression(ctx: QCParser.InclusiveOrExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.inclusiveOrExpression().accept(this).single()
-            val right = ctx.exclusiveOrExpression().accept(this).single()
-            return listOf(BinaryExpression.BitOr(left, right, ctx = ctx))
+    override fun visitInclusiveOrExpression(ctx: QCParser.InclusiveOrExpressionContext) = when {
+        ctx.terminal -> {
+            BinaryExpression.BitOr(
+                    left = ctx.inclusiveOrExpression().accept(this).single(),
+                    right = ctx.exclusiveOrExpression().accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitInclusiveOrExpression(ctx)
+        else -> super.visitInclusiveOrExpression(ctx)
     }
 
     val QCParser.ExclusiveOrExpressionContext.terminal: Boolean get() = exclusiveOrExpression() != null
 
-    override fun visitExclusiveOrExpression(ctx: QCParser.ExclusiveOrExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.exclusiveOrExpression().accept(this).single()
-            val right = ctx.andExpression().accept(this).single()
-            return listOf(BinaryExpression.ExclusiveOr(left, right, ctx = ctx))
+    override fun visitExclusiveOrExpression(ctx: QCParser.ExclusiveOrExpressionContext) = when {
+        ctx.terminal -> {
+            BinaryExpression.ExclusiveOr(
+                    left = ctx.exclusiveOrExpression().accept(this).single(),
+                    right = ctx.andExpression().accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitExclusiveOrExpression(ctx)
+        else -> super.visitExclusiveOrExpression(ctx)
     }
 
     val QCParser.AndExpressionContext.terminal: Boolean get() = andExpression() != null
 
-    override fun visitAndExpression(ctx: QCParser.AndExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val left = ctx.andExpression().accept(this).single()
-            val right = ctx.equalityExpression().accept(this).single()
-            return listOf(BinaryExpression.BitAnd(left, right, ctx = ctx))
+    override fun visitAndExpression(ctx: QCParser.AndExpressionContext) = when {
+        ctx.terminal -> {
+            BinaryExpression.BitAnd(
+                    left = ctx.andExpression().accept(this).single(),
+                    right = ctx.equalityExpression().accept(this).single(),
+                    ctx = ctx).let { listOf(it) }
         }
-        return super.visitAndExpression(ctx)
+        else -> super.visitAndExpression(ctx)
     }
 
     val QCParser.EqualityExpressionContext.terminal: Boolean get() = equalityExpression() != null
 
-    override fun visitEqualityExpression(ctx: QCParser.EqualityExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitEqualityExpression(ctx: QCParser.EqualityExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.equalityExpression().accept(this).single()
             val right = ctx.relationalExpression().accept(this).single()
-            val op = when (ctx.op.getType()) {
+            when (ctx.op.getType()) {
                 QCParser.Equal -> BinaryExpression.Eq(left, right, ctx = ctx)
                 QCParser.NotEqual -> BinaryExpression.Ne(left, right, ctx = ctx)
-                else -> null
-            }
-            return when (op) {
-                null -> emptyList()
-                else -> listOf(op)
-            }
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        return super.visitEqualityExpression(ctx)
+        else -> super.visitEqualityExpression(ctx)
     }
 
     val QCParser.RelationalExpressionContext.terminal: Boolean get() = relationalExpression() != null
 
-    override fun visitRelationalExpression(ctx: QCParser.RelationalExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitRelationalExpression(ctx: QCParser.RelationalExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.relationalExpression().accept(this).single()
             val right = ctx.shiftExpression().accept(this).single()
-            val op = when (ctx.op.getType()) {
+            when (ctx.op.getType()) {
                 QCParser.Less -> BinaryExpression.Lt(left, right, ctx = ctx)
                 QCParser.LessEqual -> BinaryExpression.Le(left, right, ctx = ctx)
                 QCParser.Greater -> BinaryExpression.Gt(left, right, ctx = ctx)
                 QCParser.GreaterEqual -> BinaryExpression.Ge(left, right, ctx = ctx)
-                else -> null
-            }
-            return when (op) {
-                null -> emptyList()
-                else -> listOf(op)
-            }
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        return super.visitRelationalExpression(ctx)
+        else -> super.visitRelationalExpression(ctx)
     }
 
     val QCParser.ShiftExpressionContext.terminal: Boolean get() = shiftExpression() != null
 
-    override fun visitShiftExpression(ctx: QCParser.ShiftExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitShiftExpression(ctx: QCParser.ShiftExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.shiftExpression().accept(this).single()
             val right = ctx.additiveExpression().accept(this).single()
             // TODO
-            return listOf(BinaryExpression.Multiply(left, right, ctx = ctx))
+            BinaryExpression.Multiply(left, right, ctx = ctx).let { listOf(it) }
         }
-        return super.visitShiftExpression(ctx)
+        else -> super.visitShiftExpression(ctx)
     }
 
     val QCParser.AdditiveExpressionContext.terminal: Boolean get() = additiveExpression() != null
 
-    override fun visitAdditiveExpression(ctx: QCParser.AdditiveExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitAdditiveExpression(ctx: QCParser.AdditiveExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.additiveExpression().accept(this).single()
             val right = ctx.multiplicativeExpression().accept(this).single()
-            val op = when (ctx.op.getType()) {
+            when (ctx.op.getType()) {
                 QCParser.Plus -> BinaryExpression.Add(left, right, ctx = ctx)
                 QCParser.Minus -> BinaryExpression.Subtract(left, right, ctx = ctx)
-                else -> null
-            }
-            return when (op) {
-                null -> emptyList()
-                else -> listOf(op)
-            }
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        return super.visitAdditiveExpression(ctx)
+        else -> super.visitAdditiveExpression(ctx)
     }
 
     val QCParser.MultiplicativeExpressionContext.terminal: Boolean get() = multiplicativeExpression() != null
 
-    override fun visitMultiplicativeExpression(ctx: QCParser.MultiplicativeExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitMultiplicativeExpression(ctx: QCParser.MultiplicativeExpressionContext) = when {
+        ctx.terminal -> {
             val left = ctx.multiplicativeExpression().accept(this).single()
             val right = ctx.castExpression().accept(this).single()
-            val op = when (ctx.op.getType()) {
+            when (ctx.op.getType()) {
                 QCParser.Star -> BinaryExpression.Multiply(left, right, ctx = ctx)
                 QCParser.Div -> BinaryExpression.Divide(left, right, ctx = ctx)
                 QCParser.Mod -> BinaryExpression.Modulo(left, right, ctx = ctx)
-                else -> null
-            }
-            return when (op) {
-                null -> emptyList()
-                else -> listOf(op)
-            }
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        return super.visitMultiplicativeExpression(ctx)
+        else -> super.visitMultiplicativeExpression(ctx)
     }
 
     val QCParser.CastExpressionContext.terminal: Boolean get() = castExpression() != null
 
-    override fun visitCastExpression(ctx: QCParser.CastExpressionContext): List<Expression> {
-        if (ctx.terminal) {
-            val type = state.types[ctx.typeName().getText()]
-            val expr = ctx.castExpression().accept(this).single()
-            return listOf(UnaryExpression.Cast(type, expr))
+    override fun visitCastExpression(ctx: QCParser.CastExpressionContext) = when {
+        ctx.terminal -> {
+            UnaryExpression.Cast(
+                    type = state.types[ctx.typeName().getText()],
+                    operand = ctx.castExpression().accept(this).single(),
+                    ctx = ctx
+            ).let { listOf(it) }
         }
-        return super.visitCastExpression(ctx)
+        else -> super.visitCastExpression(ctx)
     }
 
     val QCParser.UnaryExpressionContext.terminal: Boolean get() = unaryExpression() != null
 
-    override fun visitUnaryExpression(ctx: QCParser.UnaryExpressionContext): List<Expression> {
-        if (ctx.terminal) {
+    override fun visitUnaryExpression(ctx: QCParser.UnaryExpressionContext) = when {
+        ctx.terminal -> {
             val expr = ctx.unaryExpression().accept(this).single()
-            val expand = when (ctx.op.getType()) {
+            when (ctx.op.getType()) {
                 QCParser.PlusPlus -> UnaryExpression.PreIncrement(expr, ctx = ctx)
                 QCParser.MinusMinus -> UnaryExpression.PreDecrement(expr, ctx = ctx)
                 QCParser.And -> UnaryExpression.Address(expr, ctx = ctx)
@@ -570,31 +552,22 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 QCParser.Minus -> UnaryExpression.Minus(expr, ctx = ctx)
                 QCParser.Tilde -> UnaryExpression.BitNot(expr, ctx = ctx)
                 QCParser.Not -> UnaryExpression.Not(expr, ctx = ctx)
-                else -> expr
-            }
-            return listOf(expand)
+                else -> throw NoWhenBranchMatchedException()
+            }.let { listOf(it) }
         }
-        val typeName = ctx.typeName()
-        if (typeName != null) {
-            return listOf(DynamicReferenceExpression("TODO: sizeof(${typeName.getText()})", ctx = ctx))
-        }
-        return super.visitUnaryExpression(ctx)
+        else -> super.visitUnaryExpression(ctx)
     }
 
-    override fun visitPostfixPrimary(ctx: QCParser.PostfixPrimaryContext): List<Expression> {
-        val left = ctx.primaryExpression().accept(this).single()
-        return listOf(left)
-    }
+    override fun visitPostfixPrimary(ctx: QCParser.PostfixPrimaryContext) = ctx.primaryExpression().accept(this)
 
-    override fun visitPostfixCall(ctx: QCParser.PostfixCallContext): List<Expression> {
-        val left = ctx.postfixExpression().accept(this).single()
+    override fun visitPostfixCall(ctx: QCParser.PostfixCallContext) = MethodCallExpression(
+            function = ctx.postfixExpression().accept(this).single(),
+            add = ctx.argumentExpressionList()?.assignmentExpression()?.let {
+                it.flatMap { it.accept(this) }.filterNotNull()
+            } ?: emptyList(),
+            ctx = ctx).let { listOf(it) }
 
-        val right = ctx.argumentExpressionList()
-                ?.assignmentExpression()
-                ?.flatMap { it.accept(this) }
-                ?.filterNotNull()
-        return listOf(MethodCallExpression(left, right ?: emptyList(), ctx = ctx))
-    }
+    val matchVecComponent = "(.+)_(x|y|z)$".toRegex()
 
     /**
      * static:
@@ -602,90 +575,80 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
      */
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
-        val right = ctx.Identifier()
-        val text = right.getText()
+        val text = ctx.Identifier().getText()
         val legacyVectors = true
-        val vecFields = listOf("x", "y", "z")
-        val vecRegex = Pattern.compile("(.+)_(${vecFields.join("|")})$")
-        val matcher = vecRegex.matcher(text)
-        return listOf(when {
+        val matcher = matchVecComponent.matcher(text)
+        return when {
             legacyVectors && matcher.matches() -> {
                 // `ent.vec_x` -> `ent.vec.x`
                 // hides similarly named fields, but so be it
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
-                MemberExpression(MemberExpression(left, vector), component, ctx = ctx)
+                MemberExpression(
+                        left = MemberExpression(
+                                left = left,
+                                field = vector),
+                        field = component,
+                        ctx = ctx)
             }
-            else -> {
-                MemberExpression(left, text, ctx = ctx)
-            }
-        })
+            else -> MemberExpression(left = left, field = text, ctx = ctx)
+        }.let { listOf(it) }
     }
 
     /**
      * dynamic:
      * entity.(field)
      */
-    override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext): List<Expression> {
-        val left = ctx.postfixExpression().accept(this).single()
-        val right = ctx.expression().accept(this).single()
-        // TODO
-        return listOf(IndexExpression(left, right, ctx = ctx))
-    }
+    override fun visitPostfixAddress(ctx: QCParser.PostfixAddressContext) = IndexExpression(
+            left = ctx.postfixExpression().accept(this).single(),
+            right = ctx.expression().accept(this).single(),
+            ctx = ctx).let { listOf(it) }
 
     /**
      * dynamic:
      * array[index]
      */
-    override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext): List<Expression> {
-        val left = ctx.postfixExpression().accept(this).single()
-        val right = ctx.expression().accept(this).single()
-        // TODO
-        return listOf(IndexExpression(left, right, ctx = ctx))
-    }
+    override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext) = IndexExpression(
+            left = ctx.postfixExpression().accept(this).single(),
+            right = ctx.expression().accept(this).single(),
+            ctx = ctx).let { listOf(it) }
 
     override fun visitPostfixIncr(ctx: QCParser.PostfixIncrContext): List<Expression> {
         val expr = ctx.postfixExpression().accept(this).single()
-        val expand = when (ctx.op.getType()) {
+        return when (ctx.op.getType()) {
             QCParser.PlusPlus -> UnaryExpression.PostIncrement(expr, ctx = ctx)
             QCParser.MinusMinus -> UnaryExpression.PostDecrement(expr, ctx = ctx)
-            else -> expr
-        }
-        return listOf(expand)
+            else -> throw NoWhenBranchMatchedException()
+        }.let { listOf(it) }
     }
 
-    val matchChar = Pattern.compile("'(.)'")
-    val matchVec = Pattern.compile("'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'")
-    val matchHex = Pattern.compile("0x([\\d0-F]+)")
+    val matchChar = "'(.)'".toRegex()
+    val matchVec = "'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'".toRegex()
+    val matchHex = "0x([\\d0-F]+)".toRegex()
+
+    [suppress("NOTHING_TO_INLINE")]
+    inline fun String.unquote() = substring(1, length() - 1)
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Expression> {
-        val expressionContext = ctx.expression()
-        if (expressionContext != null) {
-            return expressionContext.accept(this)
-        }
+        ctx.expression()?.let { return it.accept(this) }
         val text = ctx.getText()
-        if (ctx.Identifier() != null) {
-            return listOf(DynamicReferenceExpression(text, ctx = ctx))
+        ctx.Identifier()?.let {
+            return DynamicReferenceExpression(text, ctx = ctx).let { listOf(it) }
         }
-        if (ctx.StringLiteral().isNotEmpty()) {
-            val concat = ctx.StringLiteral()
-                    .fold("", {(ret: String, string: TerminalNode) ->
-                        val s = string.getText()
-                        ret + s.substring(1, s.length() - 1)
-                    })
-            return listOf(ConstantExpression(concat, ctx = ctx))
+        val str = ctx.StringLiteral()
+        if (str.isNotEmpty()) {
+            return ConstantExpression(StringBuilder { str.forEach { append(it.getText().unquote()) } }.toString(),
+                    ctx = ctx).let { listOf(it) }
         }
         if (text.startsWith('#')) {
-            return listOf(ConstantExpression(text, ctx = ctx))
+            return ConstantExpression(text, ctx = ctx).let { listOf(it) }
         }
-        if (ctx.Constant() != null) {
-            val constant = ctx.Constant()
-            val s = constant.getText()
+        ctx.Constant()?.let {
+            val s = it.getText()
             matchChar.let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
-                    val c1 = matcher.group(1)
-                    return listOf(ConstantExpression(c1.charAt(0), ctx = ctx))
+                    return ConstantExpression(matcher.group(1).charAt(0), ctx = ctx).let { listOf(it) }
                 }
             }
             matchVec.let {
@@ -694,23 +657,23 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                     val c1 = matcher.group(1).toFloat()
                     val c2 = matcher.group(2).toFloat()
                     val c3 = matcher.group(3).toFloat()
-                    return listOf(ConstantExpression(Vector(c1, c2, c3), ctx = ctx))
+                    return ConstantExpression(Vector(c1, c2, c3), ctx = ctx).let { listOf(it) }
                 }
             }
             matchHex.let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
                     val hex = Integer.parseInt(matcher.group(1), 16)
-                    return listOf(ConstantExpression(hex.toFloat(), ctx = ctx))
+                    return ConstantExpression(hex.toFloat(), ctx = ctx).let { listOf(it) }
                 }
             }
             val f = s.toFloat()
-            val constExpr = ConstantExpression(f, ctx = ctx)
-            return listOf(when {
-                f == f.toInt().toFloat() -> UnaryExpression.Cast(int_t, constExpr)
-                else -> constExpr
-            })
+            val i = f.toInt()
+            return (ConstantExpression(when (i.toFloat()) {
+                f -> i
+                else -> f
+            }, ctx = ctx)).let { listOf(it) }
         }
-        return listOf(UnaryExpression.Cast(void_t, DynamicReferenceExpression("FIXME_${text}", ctx = ctx)))
+        return UnaryExpression.Cast(void_t, DynamicReferenceExpression("FIXME_${text}", ctx = ctx)).let { listOf(it) }
     }
 }
