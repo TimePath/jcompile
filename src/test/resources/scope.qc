@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float glob1, glob2;
 void main() {
     glob1 = 1;

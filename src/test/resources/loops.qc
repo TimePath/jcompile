@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 void main() {
     {
         float test = 0;

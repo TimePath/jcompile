@@ -51,7 +51,6 @@ class CompilerSpecs : Spek() {{
         tests.forEach {
             on(it.name) {
                 val compiler = Compiler(QCC, CompileState(opts))
-                compiler.include(File(resources, "defs.qh"))
                 compiler.include(it)
 
                 var roots: List<List<Expression>>?

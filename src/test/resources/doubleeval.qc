@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float glob = 0;
 .float f;
 entity e;

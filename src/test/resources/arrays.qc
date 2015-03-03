@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float array[2];
 
 void main() {

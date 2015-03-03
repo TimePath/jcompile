@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float glob;
 
 float test(float x) {

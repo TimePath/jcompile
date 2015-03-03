@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float sum(float x, float y, float z) {
     return x + y + z;
 }

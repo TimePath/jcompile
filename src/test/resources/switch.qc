@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 float glob;
 
 void test(float n) {

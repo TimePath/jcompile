@@ -1,3 +1,5 @@
+#include "defs.qh"
+
 void main() {
     float a;
     a = 7 ? 1 : 0;
