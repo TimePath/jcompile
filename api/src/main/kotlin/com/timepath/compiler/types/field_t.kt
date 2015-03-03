@@ -23,15 +23,15 @@ data class field_t(val type: Type) : pointer_t() {
             Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC)
     )
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?) = when (name) {
-        in state!!.fields -> {
-            logger.warning("redeclaring field $name")
-            emptyList<Expression>()
-        }
-        else -> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState?) = when {
+        state!!.symbols.globalScope -> {
+            if (name in state.fields) {
+                logger.warning("redeclaring field $name")
+            }
             entity_t.fields[name] = this.type
             // TODO: namespace entity
-            listOf(DeclarationExpression(name, this, state.fields[name]))
+            DeclarationExpression(name, this, state.fields[name])
         }
-    }
+        else -> DeclarationExpression(name, this, value ?: ConstantExpression(0))
+    }.let { listOf(it) }
 }
