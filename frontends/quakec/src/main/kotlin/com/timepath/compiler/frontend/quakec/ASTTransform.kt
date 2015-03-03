@@ -2,18 +2,14 @@ package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
 import com.timepath.compiler.Vector
+import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.api.CompileState.SymbolTable
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
-import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
+import com.timepath.compiler.frontend.quakec.QCParser.*
 import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.types.*
-import org.antlr.v4.runtime.ParserRuleContext
-import com.timepath.compiler.api.CompileState
 import java.util.ArrayList
-import java.util.Deque
-import java.util.LinkedList
-import java.util.LinkedHashMap
-import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
+import org.antlr.v4.runtime.ParserRuleContext
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
@@ -29,28 +25,14 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         it
     }
 
-    data class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = LinkedHashMap())
-
-    val scope: Deque<Scope> = LinkedList()
-
-    fun <R> scoped(name: String, block: () -> R): R {
-        scope.push(Scope(name))
+    inline fun <R> SymbolTable.scope(name: String, block: () -> R): R {
+        push(name)
         try {
             return block()
         } finally {
-            scope.pop()
+            pop()
         }
     }
-
-    fun <R> declare(e: R): R {
-        val vars = scope.peek().vars
-        if (e is DeclarationExpression) {
-            vars[e.id] = e
-        }
-        return e
-    }
-
-    fun resolve(id: String) = scope.first { id in it.vars }.vars[id]
 
     class object {
         val logger = Logger.new()
@@ -144,12 +126,12 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
 
     override fun visitCompilationUnit(ctx: QCParser.CompilationUnitContext) =
             BlockExpression(
-                    add = scoped("file") { visitChildren(ctx) },
+                    add = /*state.symbols.scope("file") {*/visitChildren(ctx)/*}*/,
                     ctx = ctx).let { listOf(it) }
 
     override fun visitCompoundStatement(ctx: QCParser.CompoundStatementContext) =
             BlockExpression(
-                    add = scoped("block") { visitChildren(ctx) },
+                    add = state.symbols.scope("block") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
 
     private fun DeclaratorContext.deepest(): DeclaratorContext {
@@ -174,11 +156,11 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 vararg = parameterTypeList.functionVararg(ctx),
                 ctx = ctx
         ).let {
-            declare(it)
-            scoped("params") {
-                it.params?.forEach { declare(it) }
-                it.vararg?.let { declare(it) }
-                scoped("body") {
+            state.symbols.declare(it)
+            state.symbols.scope("params") {
+                it.params?.forEach { state.symbols.declare(it) }
+                it.vararg?.let { state.symbols.declare(it) }
+                state.symbols.scope("body") {
                     it.addAll(visitChildren(ctx.compoundStatement()))
                 }
             }
@@ -191,7 +173,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         if (declarations == null) {
             return ctx.enumSpecifier().enumeratorList().enumerator().mapTo(listOf<Expression>()) {
                 val id = it.enumerationConstant().getText()
-                int_t.declare(id).single().let { declare(it) }
+                int_t.declare(id).single().let { state.symbols.declare(it) }
             }
         }
         val specifiers = ctx.declarationSpecifiers().declarationSpecifier()
@@ -262,6 +244,10 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                                 else -> it
                             }
                         }
+                        val s = ctx.getText()
+                        if (s.startsWith(".") && "(" in s) {
+                            run {}
+                        }
                         when (parameterTypeList) {
                             null ->
                                 type!!.declare(id, state = state)
@@ -275,7 +261,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                     }
                 }
             }.let {
-                it.forEach { declare(it) }
+                it.forEach { state.symbols.declare(it) }
                 it
             }
         }
@@ -316,8 +302,8 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             id = ctx.Identifier().getText(),
             ctx = ctx).let { listOf(it) }
 
-    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext) = scoped("loop") {
-        val initializer = declare(when {
+    override fun visitIterationStatement(ctx: QCParser.IterationStatementContext) = state.symbols.scope("loop") {
+        val initializer = state.symbols.declare(when {
             ctx.initD != null -> ctx.initD.accept(this)
             ctx.initE != null -> ctx.initE.accept(this)
             else -> null
@@ -576,6 +562,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             } ?: emptyList(),
             ctx = ctx).let { listOf(it) }
 
+    val legacyVectors = true
     val matchVecComponent = "(.+)_(x|y|z)$".toRegex()
 
     /**
@@ -585,7 +572,6 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
         val text = ctx.Identifier().getText()
-        val legacyVectors = true
         val matcher = matchVecComponent.matcher(text)
         return when {
             legacyVectors && matcher.matches() -> {
@@ -642,7 +628,18 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         ctx.expression()?.let { return it.accept(this) }
         val text = ctx.getText()
         ctx.Identifier()?.let {
-            return ReferenceExpression(resolve(text)!!, ctx = ctx).let { listOf(it) }
+            val matcher = matchVecComponent.matcher(text)
+            if (legacyVectors && matcher.matches()) {
+                val vector = matcher.group(1)
+                val component = matcher.group(2)
+                state.symbols.resolve(vector)?.let {
+                    return MemberExpression(
+                            left = ReferenceExpression(it),
+                            field = component,
+                            ctx = ctx).let { listOf(it) }
+                }
+            }
+            return ReferenceExpression(state.symbols.resolve(text)!!, ctx = ctx).let { listOf(it) }
         }
         val str = ctx.StringLiteral()
         if (str.isNotEmpty()) {
