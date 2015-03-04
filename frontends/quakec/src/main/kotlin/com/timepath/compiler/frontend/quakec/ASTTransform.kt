@@ -34,10 +34,6 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         }
     }
 
-    class object {
-        val logger = Logger.new()
-    }
-
     private fun debug(ctx: ParserRuleContext) {
         val token = ctx.start
         val source = token.getTokenSource()
@@ -70,51 +66,53 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             typeSpec.pointer()?.getText()?.length() == 3 -> void_t
             else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]
         }
-        var indirect = if (functional != null && !old) {
-            functional.functionType(direct)
-        } else {
-            direct
-        }
+        var indirect = when {
+            functional != null && !old -> functional.functionType(direct)
+            else -> null
+        } ?: direct
         indirection.times {
             indirect = field_t(indirect)
         }
         return indirect
     }
 
-    fun ParameterTypeListContext?.functionType(type: Type): Type {
-        if (this == null) return type
-        val parameterList = this.parameterList()
-        val parameterVarargs = this.parameterVarargs()
-        val parameterDeclarations = parameterList?.parameterDeclaration()
-        val typeArgs = parameterDeclarations?.map { it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type() } ?: emptyList()
-        val vararg = parameterVarargs?.declarationSpecifiers()?.type()
-        val function = function_t(type, typeArgs.requireNoNulls().filter { it != void_t }, vararg)
-        return function
+    fun ParameterTypeListContext?.functionType(type: Type) = this?.let {
+        val argTypes = it.parameterList()?.parameterDeclaration()?.map {
+            (it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type())!!
+        }?.filter { it != void_t } ?: emptyList()
+        val vararg = it.parameterVarargs()?.let {
+            it.declarationSpecifiers()?.type()
+        }
+        function_t(type, argTypes, vararg)
     }
 
-    fun ParameterTypeListContext?.functionArgs(ctx: ParserRuleContext): List<Expression> {
-        val paramDeclarations = this?.parameterList()?.parameterDeclaration() ?: emptyList()
-        var i = 0
-        val params = paramDeclarations.flatMapTo(listOf<Expression>()) {
-            val paramId = it.declarator()?.getText()
-            when (paramId) {
-                null -> emptyList<Expression>()
-                else -> {
-                    val type = it.declarationSpecifiers().type()
-                    val param = ParameterExpression(paramId, type!!, index = i++, ctx = ctx)
-                    param.let { listOf(it) }
+    fun ParameterTypeListContext?.functionArgs(ctx: ParserRuleContext) = this?.let {
+        it.parameterList()?.parameterDeclaration()?.let {
+            it.mapIndexed { index, it ->
+                val type = (it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type())!!
+                it.declarator()?.getText()?.let { id ->
+                    ParameterExpression(id, type, index, ctx = ctx)
                 }
-            }
+            }.filterNotNull()
         }
-        return params
     }
 
     fun ParameterTypeListContext?.functionVararg(ctx: ParserRuleContext) = this?.parameterVarargs()?.let {
-        DeclarationExpression(
-                id = it.Identifier()?.getText() ?: "...",
-                type = it.declarationSpecifiers().type() ?: void_t,
-                value = null,
-                ctx = ctx)
+        val type = it.declarationSpecifiers().type() ?: void_t
+        val id = it.Identifier()?.getText() ?: "..."
+        DeclarationExpression(id, type, value = null, ctx = ctx)
+    }
+
+    fun DeclaratorContext.deepest(): DeclaratorContext {
+        var declarator = this
+        while (declarator.declarator() != null) {
+            declarator = declarator.declarator()
+        }
+        return declarator
+    }
+
+    class object {
+        val logger = Logger.new()
     }
 
     override fun defaultResult() = emptyList<Expression>()
@@ -133,14 +131,6 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             BlockExpression(
                     add = state.symbols.scope("block") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
-
-    private fun DeclaratorContext.deepest(): DeclaratorContext {
-        var declarator = this
-        while (declarator.declarator() != null) {
-            declarator = declarator.declarator()
-        }
-        return declarator
-    }
 
     override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Expression> {
         val declaratorContext = ctx.declarator()
@@ -161,7 +151,9 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 it.params?.forEach { state.symbols.declare(it) }
                 it.vararg?.let { state.symbols.declare(it) }
                 state.symbols.scope("body") {
-                    it.addAll(visitChildren(ctx.compoundStatement()))
+                    visitChildren(ctx.compoundStatement()).let { children ->
+                        it.addAll(children)
+                    }
                 }
             }
             return listOf(it)
@@ -182,17 +174,22 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             declarations.forEach { state.types[it.getText()] = type }
             return emptyList()
         }
-        val type = ctx.declarationSpecifiers().type()
+        val type = ctx.declarationSpecifiers().type()!!
         return declarations.flatMapTo(listOf<Expression>()) {
             val id = it.declarator().deepest().getText()
             val initializer = it.initializer()?.accept(this)?.single()
-            when (initializer) {
-                is Expression -> {
+            val arraySize = it.declarator().assignmentExpression()
+            when {
+                initializer is Expression -> {
                     val value = initializer.evaluate()
                     when (value) {
                         null -> {
-                            type!!.declare(id, state = state).flatMap {
-                                listOf(it, BinaryExpression.Assign(ReferenceExpression(it as DeclarationExpression), initializer, ctx = ctx))
+                            type.declare(id, state = state).flatMap {
+                                listOf(it,
+                                        BinaryExpression.Assign(
+                                                left = ReferenceExpression(it as DeclarationExpression),
+                                                right = initializer,
+                                                ctx = ctx))
                             }
                         }
                         else -> {
@@ -213,50 +210,28 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                                 val signature = parameterTypeList.functionType(retType!!);
                                 FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
                             } else {
-                                type!!.declare(id, ConstantExpression(value), state = state)
+                                type.declare(id, ConstantExpression(value), state = state)
                             }
                         }
                     }
                 }
+                arraySize != null -> {
+                    val sizeExpr = arraySize.accept(this).single()
+                    array_t(type, sizeExpr, state = state).declare(id)
+                }
                 else -> {
-                    val arraySize = it.declarator().assignmentExpression()
-                    if (arraySize != null) {
-                        val sizeExpr = arraySize.accept(this).single()
-                        array_t(type!!, sizeExpr).declare(id, state = state)
-                    } else {
-                        val old = it.declarator().parameterTypeList() == null
-                        val parameterTypeList = if (old) {
-                            specifiers.last().typeSpecifier().directTypeSpecifier().parameterTypeList()
-                        } else {
-                            it.declarator().parameterTypeList()
-                        }
-                        val retType = ctx.declarationSpecifiers().type(old)
-                        val params = parameterTypeList.functionArgs(ctx)
-                        val vararg = parameterTypeList.functionVararg(ctx)
-                        val signature = parameterTypeList.functionType(retType!!.let {
-                            when (retType) {
-                                is field_t -> retType.type
-                                else -> it
-                            }
-                        }).let {
-                            when (retType) {
-                                is field_t -> field_t(it)
-                                else -> it
-                            }
-                        }
-                        val s = ctx.getText()
-                        if (s.startsWith(".") && "(" in s) {
-                            run {}
-                        }
-                        when (parameterTypeList) {
-                            null ->
-                                type!!.declare(id, state = state)
-                            else -> when {
-                                signature is function_t -> // function prototype
-                                    FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
-                                else -> // function pointer
-                                    signature.declare(id, state = state)
-                            }
+                    val ptl = it.declarator().parameterTypeList()
+                    val params = ptl.functionArgs(ctx)
+                    val vararg = ptl.functionVararg(ctx)
+                    val signature = ptl.functionType(type) ?: type
+                    when (ptl) {
+                        null ->
+                            type.declare(id, state = state)
+                        else -> when {
+                            signature is function_t -> // function prototype
+                                FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
+                            else -> // function pointer
+                                signature.declare(id, state = state)
                         }
                     }
                 }

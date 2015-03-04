@@ -18,21 +18,23 @@ import com.timepath.compiler.ast.ReturnStatement
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.DynamicReferenceExpression
 
-data class array_t(val type: Type, val sizeExpr: Expression) : pointer_t() {
+data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 
     override val simpleName = "array_t"
     override fun toString() = "$type[$sizeExpr]"
 
     val index = OperationHandler(type) { gen, left, right ->
         when (left) {
+        // (ent.arr)[i] -> ent.(arr[i])
             is MemberExpression -> {
-                val field = DynamicReferenceExpression((left.right as ConstantExpression).value.any as String)
+                val field = ReferenceExpression(state.symbols.resolve(left.field)!!)
                 IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
             }
+        // arr[i] -> arr(i)(false)
             is ReferenceExpression -> {
-                val s = generateAccessorName(left.refers.id)
-                val indexer = MethodCallExpression(DynamicReferenceExpression(s), listOf(right!!))
-                MethodCallExpression(indexer, listOf(ConstantExpression(0))).generate(gen)
+                val accessor = ReferenceExpression(state.symbols.resolve(generateAccessorName(left.refers.id))!!)
+                val indexer = MethodCallExpression(accessor, listOf(right!!))
+                MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate(gen)
             }
             else -> throw UnsupportedOperationException()
         }
