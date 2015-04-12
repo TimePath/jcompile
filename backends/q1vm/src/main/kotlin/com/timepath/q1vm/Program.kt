@@ -10,7 +10,7 @@ public class Program(val data: ProgramData) {
 
     val world = data.entities.spawn()
 
-    class object {
+    companion object {
         val logger = Logger.new()
     }
 
@@ -27,7 +27,7 @@ public class Program(val data: ProgramData) {
         var sp = -1
         var stmt = -1
         var fn: Function? = null
-        val push = {(it: Function) ->
+        val push = { it: Function ->
             stack add Frame(sp, stmt, fn)
 
             // TODO: Store locals to support recursion

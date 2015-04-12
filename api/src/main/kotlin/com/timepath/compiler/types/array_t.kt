@@ -58,7 +58,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             add(DeclarationExpression(name, this@array_t))
             add(DeclarationExpression("${name}_size", int_t, ConstantExpression(size)))
             add(generateAccessor(name))
-            size.indices.forEachIndexed {(i, _) ->
+            size.indices.forEachIndexed { i, _ ->
                 addAll(generateComponent(name, i))
             }
             this

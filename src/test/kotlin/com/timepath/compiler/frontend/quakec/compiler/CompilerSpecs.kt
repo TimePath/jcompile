@@ -1,19 +1,24 @@
 package com.timepath.quakec.compiler
 
-import java.io.File
-import kotlin.test.assertEquals
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.CompilerOptions
-import com.timepath.compiler.ast.*
+import com.timepath.compiler.PrintVisitor
+import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.BlockExpression
+import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.gen.Generator.ASM
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.ProgramData
+import junit.framework.TestCase
+import junit.framework.TestSuite
 import org.intellij.lang.annotations.Language
-import org.jetbrains.spek.api.Spek
-import com.timepath.compiler.PrintVisitor
-import com.timepath.compiler.api.CompileState
+import org.junit.runner.RunWith
+import org.junit.runners.AllTests
+import java.io.File
+import kotlin.platform.platformStatic
+import kotlin.test.assertEquals
 
 val opts = CompilerOptions()
 
@@ -44,44 +49,57 @@ fun compare(what: String, name: String, actual: String) {
 
 val logger = Logger.new()
 
-class CompilerSpecs : Spek() {{
-    given("a compiler") {
-        val tests = File(resources, "all.src").readLines().map { File(resources, it) }
-                .filter { it.exists() }
-        tests.forEach {
-            on(it.name) {
-                val compiler = Compiler(QCC, CompileState(opts))
-                compiler.include(it)
+inline fun given(given: String, on: TestSuite.() -> Unit) = TestSuite("given $given").let { it.on(); it }
+inline fun TestSuite.on(what: String, assertions: ((String, () -> Unit) -> Unit) -> Unit) = TestSuite("$what.it").let {
+    assertions { assertion, run ->
+        it.addTest(object : TestCase("$assertion ($what)") {
+            override fun runTest() = run()
+        })
+    }
+    addTest(it)
+}
 
-                var roots: List<List<Expression>>?
-                it("should parse") {
-                    logger.info("Parsing $it")
-                    roots = compiler.ast()
-                    val actual = PrintVisitor.render(BlockExpression(roots!!.last(), null))
-                    compare("AST", it.name + ".xml", actual)
-                }
-                var asm: ASM?
-                it("should compile") {
-                    logger.info("Compiling $it")
-                    asm = compiler.state.gen.generate(roots!!.flatMap { it })
-                    asm!!.ir.map { ir ->
-                        if (ir.real)
-                            "$ir"
-                        else
-                            "/* $ir */"
-                    }.filterNotNull().joinToString("\n").let { actual ->
-                        compare("ASM", it.name + ".asm", actual)
+RunWith(javaClass<AllTests>())
+class CompilerSpecs {
+    companion object {
+        platformStatic fun suite() = given("a compiler") {
+            val tests = File(resources, "all.src").readLines().sequence()
+                    .map { File(resources, it) }
+                    .filter { it.exists() }
+            tests.forEach { test ->
+                on(test.name) {
+                    val compiler = Compiler(QCC, CompileState(opts))
+                    compiler.include(test)
+
+                    var roots: List<List<Expression>>
+                    it("should parse") {
+                        logger.info("Parsing $test")
+                        roots = compiler.ast()
+                        val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
+                        compare("AST", test.name + ".xml", actual)
                     }
-                    compiler.state.allocator.toString().let { actual ->
-                        compare("allocation", it.name + ".txt", actual)
+                    var asm: ASM
+                    it("should compile") {
+                        logger.info("Compiling $test")
+                        asm = compiler.state.gen.generate(roots.flatMap { it })
+                        asm.ir.map { ir ->
+                            if (ir.real)
+                                "$ir"
+                            else
+                                "/* $ir */"
+                        }.filterNotNull().joinToString("\n").let { actual ->
+                            compare("ASM", test.name + ".asm", actual)
+                        }
+                        compiler.state.allocator.toString().let { actual ->
+                            compare("allocation", test.name + ".txt", actual)
+                        }
                     }
-                }
-                it("should execute") {
-                    logger.info("Executing $it")
-                    Program(asm!!.generateProgs()).exec()
+                    it("should execute") {
+                        logger.info("Executing $test")
+                        Program(asm.generateProgs()).exec()
+                    }
                 }
             }
         }
     }
-}
 }

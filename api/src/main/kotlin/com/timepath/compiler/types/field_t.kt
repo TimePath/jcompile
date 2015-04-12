@@ -9,7 +9,7 @@ import com.timepath.compiler.ast.Expression
 
 data class field_t(val type: Type) : pointer_t() {
 
-    class object {
+    companion object {
         val logger = Logger.new()
     }
 

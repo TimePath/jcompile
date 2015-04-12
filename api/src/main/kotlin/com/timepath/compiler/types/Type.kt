@@ -13,7 +13,7 @@ import com.timepath.compiler.Pointer
 
 trait Type: Named {
 
-    class object {
+    companion object {
         fun from(any: Any?): Type = when (any) {
             is Float -> float_t
             is Int -> int_t

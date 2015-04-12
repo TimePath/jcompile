@@ -15,7 +15,7 @@ class GotoExpression(val id: String, override val ctx: ParserRuleContext? = null
  * Return can be assigned to, and has a constant address
  */
 class ReturnStatement(val returnValue: Expression?, override val ctx: ParserRuleContext? = null) : Expression() {
-    {
+    init {
         if (returnValue != null) {
             add(returnValue)
         }

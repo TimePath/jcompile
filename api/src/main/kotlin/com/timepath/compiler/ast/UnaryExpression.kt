@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 abstract class UnaryExpression(val op: String, val operand: Expression, override val ctx: ParserRuleContext? = null) : Expression() {
 
-    {
+    init {
         add(operand)
     }
 

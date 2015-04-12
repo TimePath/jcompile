@@ -111,7 +111,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         return declarator
     }
 
-    class object {
+    companion object {
         val logger = Logger.new()
     }
 

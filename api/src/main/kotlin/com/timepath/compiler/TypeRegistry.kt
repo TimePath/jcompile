@@ -14,7 +14,7 @@ class TypeRegistry {
         types[name] = t
     }
 
-    {
+    init {
         set("void", void_t)
         set("float", float_t)
         set("vector", vector_t)

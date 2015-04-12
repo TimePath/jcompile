@@ -56,7 +56,7 @@ fun project(project: Project) {
             }
         }
     })
-    templates.registerRenderer(javaClass<Expression>(), {(it, format, locale) ->
+    templates.registerRenderer(javaClass<Expression>(), { it, format, locale ->
         (it as Expression).accept(printer)
     })
 

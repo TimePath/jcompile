@@ -10,7 +10,7 @@ import org.anarres.cpp.Warning
 
 class CustomPreprocessor : Preprocessor() {
 
-    {
+    init {
         getSystemIncludePath().add("/usr/include")
         val now = Date()
         addWarnings(EnumSet.allOf(javaClass<Warning>()))

@@ -4,7 +4,7 @@ import java.lang.invoke.MethodHandles
 import java.util.logging.LogManager
 
 object Logger {
-    {
+    init {
         LogManager.getLogManager()
                 .readConfiguration(javaClass.getResourceAsStream("/logging.properties"));
     }

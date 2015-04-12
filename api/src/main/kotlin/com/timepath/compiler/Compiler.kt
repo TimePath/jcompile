@@ -20,7 +20,7 @@ import com.timepath.compiler.gen.type
 
 public class Compiler(val parser: Frontend, val state: CompileState = CompileState()) {
 
-    class object {
+    companion object {
         val logger = Logger.new()
         val debugThreads = true
         val debugPP = false
@@ -32,7 +32,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
                 area.setText(reader.readText())
                 val pane = JScrollPane(area)
                 pane.setPreferredSize(Dimension(500, 500))
-                JOptionPane.showMessageDialog(null, pane)
+                JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), pane)
             }
             return reader
         }
@@ -44,7 +44,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
         return this
     }
 
-    {
+    init {
         define("QCC_SUPPORT_INT")
         define("QCC_SUPPORT_BOOL")
     }
@@ -100,7 +100,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
             }
     }
 
-    {
+    init {
         includes.add(Include(this.javaClass.getResource("/predefs.qc")))
     }
 

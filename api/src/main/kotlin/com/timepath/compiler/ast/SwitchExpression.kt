@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 
 class SwitchExpression(val test: Expression, add: List<Expression>, override val ctx: ParserRuleContext? = null) : Expression() {
 
-    {
+    init {
         addAll(add)
     }
     override val simpleName = "SwitchExpression"

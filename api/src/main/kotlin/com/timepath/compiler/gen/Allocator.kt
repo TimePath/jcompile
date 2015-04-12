@@ -16,7 +16,7 @@ import com.timepath.compiler.CompilerOptions
 
 class Allocator(val opts: CompilerOptions) {
 
-    class object {
+    companion object {
         val logger = Logger.new()
     }
 
@@ -124,7 +124,7 @@ class Allocator(val opts: CompilerOptions) {
         references.pop()
     }
 
-    {
+    init {
         push("<builtin>")
         allocateReference("false", bool_t, Value(0))
         allocateReference("true", bool_t, Value(1))

@@ -3,7 +3,7 @@ package com.timepath.compiler.ast
 import org.antlr.v4.runtime.ParserRuleContext
 
 class BlockExpression(add: List<Expression>? = null, override val ctx: ParserRuleContext? = null) : Expression() {
-    {
+    init {
         if (add != null) {
             addAll(add)
         }

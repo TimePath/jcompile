@@ -20,7 +20,7 @@ class Generator(val state: CompileState) {
 
     val gotoLabels = linkedMapOf<IR, String>()
 
-    class object {
+    companion object {
         val logger = Logger.new()
     }
 
@@ -64,7 +64,7 @@ class Generator(val state: CompileState) {
                     statements.add(Statement(it.instr!!, a, b, c))
                 }
             }
-            val merge = {(it: Entry): Unit ->
+            val merge = fun (it: Entry) {
                 val k = it.ref
                 val v = it.value?.any
                 when (v) {

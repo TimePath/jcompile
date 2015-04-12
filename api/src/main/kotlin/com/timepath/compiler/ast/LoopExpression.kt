@@ -8,7 +8,7 @@ class LoopExpression(val predicate: Expression,
                      val initializer: List<Expression>? = null,
                      val update: List<Expression>? = null,
                      override val ctx: ParserRuleContext? = null) : Expression() {
-    {
+    init {
         add(body)
     }
     override val simpleName = "LoopExpression"

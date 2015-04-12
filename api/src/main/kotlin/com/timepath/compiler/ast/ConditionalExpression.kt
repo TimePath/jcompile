@@ -8,7 +8,7 @@ class ConditionalExpression(val test: Expression,
                             val fail: Expression? = null,
                             override val ctx: ParserRuleContext? = null) : Expression() {
 
-    {
+    init {
         add(test)
         add(pass)
         if (fail != null) {

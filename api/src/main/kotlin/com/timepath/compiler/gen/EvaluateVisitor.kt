@@ -1,8 +1,8 @@
 package com.timepath.compiler.gen
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.ast.*
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.*
 
 /**
  * Used in constant folding
@@ -45,13 +45,11 @@ private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
 
     override fun visit(e: UnaryExpression.Minus) = eval(e) { -it }
 
-    override fun visit(e: ConditionalExpression): Value? {
-        val result = e.test.evaluate()
-        if (result == null) return null
-        val eval = @lambda {(it: Expression?): Value? ->
-            return@lambda if (it is Expression) it.evaluate() else null
+    override fun visit(e: ConditionalExpression) = e.test.evaluate()?.let {
+        when {
+            it.toBoolean() -> e.pass.evaluate()
+            else -> e.fail?.evaluate()
         }
-        return if (result.toBoolean()) eval(e.pass) else eval(e.fail)
     }
 
     override fun visit(e: ConstantExpression) = e.value

@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
                 Feature.DIGRAPHS,
                 Feature.TRIGRAPHS
         )
-        val include = {(filter: (file: File) -> Boolean) ->
+        val include = { filter: (file: File) -> Boolean ->
             val files = File("$xonotic/gmqcc/tests").listFiles(filter)
             if (files != null) {
                 files.sort()

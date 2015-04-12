@@ -105,7 +105,7 @@ data class ProgramData(val header: Header,
                        val strings: StringManager,
                        val globalData: ByteBuffer) {
 
-    {
+    init {
         statements.forEach { it.data = this }
         globalDefs.forEach { it.data = this }
         fieldDefs.forEach { it.data = this }

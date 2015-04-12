@@ -433,7 +433,7 @@ enum class Instruction {
         }
     }
 
-    class object {
+    companion object {
 
         /**
          * RETURN = 1, n = -1

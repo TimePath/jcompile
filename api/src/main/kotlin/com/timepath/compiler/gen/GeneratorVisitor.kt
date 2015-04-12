@@ -244,7 +244,7 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
             ret.add(IR(Instruction.IF, array(genPred.last().ret, -totalCount, 0)))
 
             // break/continue; jump to end
-            genBody.filter { it.real }.forEachIndexed {(i, IR) ->
+            genBody.filter { it.real }.forEachIndexed { i, IR ->
                 if (IR.instr == Instruction.GOTO && IR.args[0] == 0) {
                     val after = (bodyCount - 1) - i
                     IR.args[0] = after + 1 + when (IR.args[1]) {

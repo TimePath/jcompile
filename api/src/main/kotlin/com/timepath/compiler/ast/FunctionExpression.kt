@@ -14,7 +14,7 @@ class FunctionExpression(id: String? = null,
                          val builtin: Int? = null,
                          override val ctx: ParserRuleContext? = null) : DeclarationExpression(id ?: "func", type) {
 
-    {
+    init {
         if (add != null) {
             addAll(add)
         }

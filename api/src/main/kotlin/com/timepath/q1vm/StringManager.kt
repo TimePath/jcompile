@@ -16,7 +16,7 @@ class StringManager(list: Collection<String>,
      */
     private val constantSize: Int
 
-    {
+    init {
         constant = StringBuilder {
             for (s in list) {
                 append(s + "\u0000")

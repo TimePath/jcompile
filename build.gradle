@@ -45,8 +45,8 @@ buildscript {
             antlr               : '4.3',
             jcpp                : '1.4.8-SNAPSHOT',
             jetbrainsAnnotations: '12.0',
-            kotlin              : '0.10.195',
-            spek                : '0.1.145'
+            kotlin              : '0.11.91.1',
+            junit               : '4.12'
     ]
 
     repositories {
@@ -79,11 +79,13 @@ sourceSets {
     }
 }
 
+test { exclude '**/*$*' }
+
 dependencies {
     compile project('api')
     compile project('frontends:quakec')
     compile project('backends:q1vm')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
     compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
-    testCompile "org.jetbrains.spek:spek:${versions.spek}"
+    testCompile "junit:junit:${versions.junit}"
 }

@@ -61,7 +61,7 @@ data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
             return e
         }
 
-        {
+        init {
             stack.push(Scope("<builtin>"))
             declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
             declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))

@@ -7,7 +7,7 @@ class MethodCallExpression(val function: Expression,
                            add: List<Expression>? = null,
                            override val ctx: ParserRuleContext? = null) : Expression() {
 
-    {
+    init {
         if (add != null) {
             addAll(add)
         }
