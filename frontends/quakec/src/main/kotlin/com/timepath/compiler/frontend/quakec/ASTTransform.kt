@@ -5,11 +5,13 @@ import com.timepath.compiler.Vector
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.CompileState.SymbolTable
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.frontend.quakec.QCParser.*
+import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
+import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
+import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.types.*
-import java.util.ArrayList
 import org.antlr.v4.runtime.ParserRuleContext
+import java.util.ArrayList
 
 class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
@@ -97,10 +99,28 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         }
     }
 
-    fun ParameterTypeListContext?.functionVararg(ctx: ParserRuleContext) = this?.parameterVarargs()?.let {
-        val type = it.declarationSpecifiers().type() ?: void_t
-        val id = it.Identifier()?.getText() ?: "..."
-        DeclarationExpression(id, type, value = null, ctx = ctx)
+    fun ParameterTypeListContext?.functionVararg(ctx: ParserRuleContext): DeclarationExpression? {
+        this?.parameterVarargs()?.let { // 'type?...'
+            val type = it.declarationSpecifiers().type() ?: void_t
+            val id = it.Identifier()?.getText() ?: "va_count"
+            return DeclarationExpression(id, type, ctx = ctx)
+        }
+        this?.parameterList()?.parameterDeclaration()?.let {
+            if (it.isEmpty()) return null
+        }
+        // 'type?... count'
+        this?.parameterList()?.parameterDeclaration()?.let {
+            val specs = it.last().declarationSpecifiers2()?.declarationSpecifier()
+            if (specs == null) return null
+            val type = when {
+                specs.size() == 1 -> void_t
+                else -> type(listOf(specs.first()), false)!!
+            }
+            val id = specs.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().getText() }
+            if (id == null) return null
+            return DeclarationExpression(id, type, ctx = ctx)
+        }
+        return null
     }
 
     fun DeclaratorContext.deepest(): DeclaratorContext {
@@ -139,21 +159,21 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             old -> ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
             else -> declaratorContext.parameterTypeList()
         }
+        val vararg = parameterTypeList.functionVararg(ctx)
         FunctionExpression(
                 id = declaratorContext.deepest().getText(),
                 type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!) as function_t,
                 params = parameterTypeList.functionArgs(ctx),
-                vararg = parameterTypeList.functionVararg(ctx),
+                vararg = vararg,
                 ctx = ctx
         ).let {
             state.symbols.declare(it)
             state.symbols.scope("params") {
                 it.params?.forEach { state.symbols.declare(it) }
-                it.vararg?.let { state.symbols.declare(it) }
+                vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t)) }
                 state.symbols.scope("body") {
-                    visitChildren(ctx.compoundStatement()).let { children ->
-                        it.addAll(children)
-                    }
+                    val children = visitChildren(ctx.compoundStatement())
+                    it.addAll(children)
                 }
             }
             return listOf(it)
@@ -537,6 +557,13 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
             } ?: emptyList(),
             ctx = ctx).let { listOf(it) }
 
+    override fun visitPostfixVararg(ctx: QCParser.PostfixVarargContext): List<Expression> {
+        val type = state.types[ctx.typeName().getText()]
+        val va_args = state.symbols.resolve("VA_ARGS")!!
+        val va_arg = MethodCallExpression(va_args, ctx.expression().accept(this).single().let { listOf(it) }, ctx = ctx)
+        return UnaryExpression.Cast(type, va_arg, ctx = ctx).let { listOf(it) }
+    }
+
     val legacyVectors = true
     val matchVecComponent = "(.+)_(x|y|z)$".toRegex()
 
@@ -614,7 +641,11 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                             ctx = ctx).let { listOf(it) }
                 }
             }
-            return ReferenceExpression(state.symbols.resolve(text)!!, ctx = ctx).let { listOf(it) }
+            val symbol = state.symbols.resolve(text)
+            if (symbol == null) {
+                throw RuntimeException("Unable to resolve symbol $text")
+            }
+            return ReferenceExpression(symbol, ctx = ctx).let { listOf(it) }
         }
         val str = ctx.StringLiteral()
         if (str.isNotEmpty()) {
@@ -655,6 +686,6 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                 else -> f
             }, ctx = ctx)).let { listOf(it) }
         }
-        return UnaryExpression.Cast(void_t, DynamicReferenceExpression("FIXME_${text}", ctx = ctx)).let { listOf(it) }
+        throw RuntimeException("Unhandled primary expression")
     }
 }

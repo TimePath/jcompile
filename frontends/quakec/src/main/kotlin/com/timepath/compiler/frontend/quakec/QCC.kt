@@ -16,19 +16,8 @@ object QCC : Frontend {
         val lexer = QCLexer(input)
         val tokens = CommonTokenStream(lexer)
         val parser = QCParser(tokens)
-        parser.getInterpreter().setPredictionMode(PredictionMode.SLL)
-        val tree = try {
-            parser.compilationUnit() // STAGE 1
-        } catch (ignored: Exception) {
-            // rewind input stream
-            lexer.reset()
-            tokens.reset()
-            parser.reset()
-            parser.getInterpreter().setPredictionMode(PredictionMode.LL)
-            parser.compilationUnit() // STAGE 2
-            // if we parse ok, it's LL not SLL
-        }
-        return tree
+        parser.getInterpreter().setPredictionMode(PredictionMode.LL)
+        return parser.compilationUnit()
     }
 
     override fun parse(stream: ANTLRInputStream, state: CompileState): Expression {

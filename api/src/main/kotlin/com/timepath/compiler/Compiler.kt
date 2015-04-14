@@ -45,7 +45,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
     }
 
     init {
-        define("QCC_SUPPORT_INT")
+        // define("QCC_SUPPORT_INT")
         define("QCC_SUPPORT_BOOL")
     }
 

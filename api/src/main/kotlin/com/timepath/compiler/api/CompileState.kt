@@ -1,18 +1,16 @@
 package com.timepath.compiler.api
 
-import com.timepath.compiler.TypeRegistry
-import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.ast.ConstantExpression
-import java.util.LinkedHashMap
-import com.timepath.compiler.Pointer
-import com.timepath.compiler.gen.Allocator
 import com.timepath.compiler.CompilerOptions
+import com.timepath.compiler.Pointer
+import com.timepath.compiler.TypeRegistry
+import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.gen.Allocator
+import com.timepath.compiler.gen.Generator
+import com.timepath.compiler.types.*
 import java.util.Deque
+import java.util.LinkedHashMap
 import java.util.LinkedList
-import com.timepath.compiler.types.bool_t
-import com.timepath.compiler.types.function_t
-import com.timepath.compiler.types.string_t
 
 data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
 
@@ -63,6 +61,7 @@ data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
 
         init {
             stack.push(Scope("<builtin>"))
+            declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
             declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
             declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
             // TODO: not really a function

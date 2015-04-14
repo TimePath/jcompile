@@ -42,7 +42,7 @@ scripts.each { scriptName, className ->
 
 buildscript {
     ext.versions = [
-            antlr               : '4.3',
+            antlr               : '4.5',
             jcpp                : '1.4.8-SNAPSHOT',
             jetbrainsAnnotations: '12.0',
             kotlin              : '0.11.91.1',

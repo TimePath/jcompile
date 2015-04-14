@@ -161,6 +161,7 @@ unaryExpression
 
 postfixExpression
     :   primaryExpression                                   #postfixPrimary
+    |   '...' '(' expression ',' typeName ')'               #postfixVararg
     |   postfixExpression '(' argumentExpressionList? ')'   #postfixCall
     |   postfixExpression '[' expression ']'                #postfixIndex
     |   postfixExpression '.' Identifier                    #postfixField
@@ -176,7 +177,6 @@ argumentExpressionList
 primaryExpression
     :   Identifier
     |   Constant
-    |   '...' // varargs access
     // FIXME: hardcoded
     |   'float'
     |   'string'

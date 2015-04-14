@@ -1,8 +1,8 @@
 package com.timepath.compiler.gen
 
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.types.*
-import com.timepath.compiler.api.CompileState
 
 // TODO: push up
 fun Expression.type(state: CompileState): Type = accept(TypeVisitor(state))
@@ -117,12 +117,13 @@ private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     override fun visit(e: ReferenceExpression) = e.refers.type
 
-    // FIXME
+    // FIXME: hack
     override fun visit(e: DynamicReferenceExpression): Type {
         state.allocator[e.id]?.let { return it.type }
         // probably a vector component
-        return float_t
-        // throw NullPointerException("Reference $id not found")
+        //  return float_t
+        return field_t(float_t)
+        //  throw NullPointerException("Reference ${e.id} not found")
     }
 
     override fun visit(e: DeclarationExpression) = e.type

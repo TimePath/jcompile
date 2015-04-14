@@ -18,8 +18,8 @@ data class CompilerOptions(
          */
         // TODO: give generated functions locals
         // TODO: types per fold
-        val scopeFolding: Boolean = false,
+        val scopeFolding: Boolean = true,
         // TODO: types per fold
-        val mergeConstants: Boolean = false
+        val mergeConstants: Boolean = true
 
 )

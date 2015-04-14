@@ -20,7 +20,7 @@ fun time(name: String, action: () -> Unit) {
 
 fun main(args: Array<String>) {
     val opts = CompilerOptions()
-    val xonotic = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic"
+    val xonotic = "${System.getProperties()["user.home"]}/projects/xonotic/xonotic"
     time("Total time") {
         [data] class Project(val root: String, val define: String, val out: String)
 
