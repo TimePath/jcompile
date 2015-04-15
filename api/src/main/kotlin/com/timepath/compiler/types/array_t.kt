@@ -19,7 +19,12 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             }
         // arr[i] -> arr(i)(false)
             is ReferenceExpression -> {
-                val accessor = ReferenceExpression(state.symbols.resolve(generateAccessorName(left.refers.id))!!)
+                val s = generateAccessorName(left.refers.id)
+                val resolve = state.symbols.resolve(s)
+                if(resolve == null) {
+                    throw RuntimeException("Can't resolve $s")
+                }
+                val accessor = ReferenceExpression(resolve)
                 val indexer = MethodCallExpression(accessor, listOf(right!!))
                 MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate(gen)
             }
