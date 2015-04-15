@@ -8,6 +8,7 @@ class BlockExpression(add: List<Expression>? = null, override val ctx: ParserRul
             addAll(add)
         }
     }
+
     override val simpleName = "BlockExpression"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 }

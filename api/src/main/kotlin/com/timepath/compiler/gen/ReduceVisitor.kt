@@ -1,17 +1,7 @@
 package com.timepath.compiler.gen
 
-import com.timepath.compiler.ast.ASTVisitor
-import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.ast.SwitchExpression
-import com.timepath.compiler.ast.LoopExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.BlockExpression
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.ast.SwitchExpression.Case
-import com.timepath.compiler.ast.GotoExpression
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConditionalExpression
-import com.timepath.compiler.ast.LabelExpression
-import com.timepath.compiler.ast.UnaryExpression
 import java.util.concurrent.atomic.AtomicInteger
 
 public fun Expression.reduce(): Expression? = accept(ReduceVisitor)

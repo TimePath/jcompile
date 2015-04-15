@@ -15,6 +15,7 @@ class ConditionalExpression(val test: Expression,
             add(fail)
         }
     }
+
     override val simpleName = "ConditionalExpression"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 

@@ -1,10 +1,10 @@
 package com.timepath.q1vm
 
-import java.io.File
-import java.util.*
 import com.timepath.Logger
 import com.timepath.q1vm.util.IOWrapper
 import com.timepath.q1vm.util.ProgramDataReader
+import java.io.File
+import java.util.Stack
 
 public class Program(val data: ProgramData) {
 

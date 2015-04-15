@@ -1,22 +1,9 @@
 package com.timepath.compiler.types
 
-import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.ast.MemberExpression
-import com.timepath.compiler.ast.ReferenceExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.IndexExpression
-import com.timepath.compiler.gen.generate
-import com.timepath.compiler.ast.MethodCallExpression
-import com.timepath.compiler.gen.evaluate
-import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.ast.FunctionExpression
-import com.timepath.compiler.ast.ParameterExpression
-import com.timepath.compiler.ast.UnaryExpression
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConditionalExpression
-import com.timepath.compiler.ast.ReturnStatement
 import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.ast.DynamicReferenceExpression
+import com.timepath.compiler.ast.*
+import com.timepath.compiler.gen.evaluate
+import com.timepath.compiler.gen.generate
 
 data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 

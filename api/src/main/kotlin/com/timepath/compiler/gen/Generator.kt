@@ -1,20 +1,17 @@
 package com.timepath.compiler.gen
 
+import com.timepath.Logger
+import com.timepath.compiler.Pointer
+import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.BlockExpression
+import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
+import com.timepath.q1vm.*
+import com.timepath.q1vm.ProgramData.Header
+import com.timepath.q1vm.ProgramData.Header.Section
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
-import com.timepath.Logger
-import com.timepath.compiler.ast.*
-import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
-import com.timepath.q1vm.Definition
-import com.timepath.q1vm.Function
-import com.timepath.q1vm.ProgramData
-import com.timepath.q1vm.ProgramData.Header
-import com.timepath.q1vm.ProgramData.Header.Section
-import com.timepath.q1vm.StringManager
-import com.timepath.q1vm.Statement
-import com.timepath.compiler.Pointer
-import com.timepath.compiler.api.CompileState
 
 class Generator(val state: CompileState) {
 

@@ -1,18 +1,12 @@
 package com.timepath.compiler.types
 
-import kotlin.properties.Delegates
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.gen.generate
-import com.timepath.compiler.ast.MethodCallExpression
-import com.timepath.compiler.ast.ReferenceExpression
-import com.timepath.compiler.ast.UnaryExpression
-import com.timepath.compiler.gen.IR
-import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.Pointer
-import com.timepath.compiler.ast.DynamicReferenceExpression
+import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.*
+import com.timepath.compiler.gen.IR
+import com.timepath.compiler.gen.generate
+import com.timepath.q1vm.Instruction
+import kotlin.properties.Delegates
 
 open class number_t : Type {
     override val simpleName = "number_t"

@@ -1,9 +1,9 @@
 package com.timepath.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
 import com.timepath.compiler.Named
+import org.antlr.v4.runtime.ParserRuleContext
 
-abstract class Expression: Named {
+abstract class Expression : Named {
 
     abstract val ctx: ParserRuleContext?
 

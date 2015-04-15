@@ -1,6 +1,6 @@
 package com.timepath.compiler.gen
 
-import com.timepath.compiler.ast.*
+import com.timepath.compiler.ast.Expression
 import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
 

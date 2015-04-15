@@ -1,13 +1,9 @@
 package com.timepath.compiler.types
 
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.gen.generate
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.MemberExpression
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.gen.IR
-import com.timepath.compiler.ast.MemoryReference
-import com.timepath.compiler.ast.UnaryExpression
+import com.timepath.compiler.gen.generate
+import com.timepath.q1vm.Instruction
 
 // TODO: identify as value
 object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {

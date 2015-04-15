@@ -20,6 +20,7 @@ class ReturnStatement(val returnValue: Expression?, override val ctx: ParserRule
             add(returnValue)
         }
     }
+
     override val simpleName = "ReturnStatement"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 

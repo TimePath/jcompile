@@ -1,15 +1,19 @@
 package com.timepath.compiler.backend.cpp
 
+import com.timepath.Logger
+import com.timepath.compiler.Compiler
+import com.timepath.compiler.ast.ASTVisitor
+import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.frontend.quakec.QCC
+import com.timepath.compiler.gen.type
+import org.stringtemplate.v4.Interpreter
+import org.stringtemplate.v4.ST
+import org.stringtemplate.v4.STGroup
+import org.stringtemplate.v4.STGroupFile
+import org.stringtemplate.v4.misc.ObjectModelAdaptor
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
-import com.timepath.Logger
-import com.timepath.compiler.Compiler
-import com.timepath.compiler.ast.*
-import com.timepath.compiler.frontend.quakec.QCC
-import org.stringtemplate.v4.*
-import org.stringtemplate.v4.misc.ObjectModelAdaptor
-import com.timepath.compiler.gen.type
 
 class CPPPrinter(val templ: STGroup) : ASTVisitor<String> {
     override fun default(e: Expression): String {
@@ -50,7 +54,7 @@ fun project(project: Project) {
     templates.registerModelAdaptor(javaClass<Expression>(), object : ObjectModelAdaptor() {
         override fun getProperty(interpreter: Interpreter?, self: ST?, o: Any?, property: Any?, propertyName: String?): Any? {
             val e = o as Expression
-            return when(propertyName) {
+            return when (propertyName) {
                 "type" -> e.type(compiler.state)
                 else -> super.getProperty(interpreter, self, o, property, propertyName)
             }
@@ -96,6 +100,7 @@ fun project(project: Project) {
             it.write(st.render())
         }
     }
+
     val include = listOf(predef)
     val accumulate = linkedListOf<Expression>()
     for ((f, code) in map) {

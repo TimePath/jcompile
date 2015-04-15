@@ -1,13 +1,13 @@
 package com.timepath.compiler
 
-import java.io.File
 import com.timepath.Logger
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.gen.Generator
-import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.q1vm.util.IOWrapper
+import com.timepath.q1vm.util.ProgramDataWriter
 import org.anarres.cpp.Feature
-import com.timepath.compiler.api.CompileState
+import java.io.File
 
 val logger = Logger.new()
 

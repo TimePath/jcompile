@@ -1,11 +1,10 @@
 package com.timepath.compiler.types
 
-import com.timepath.q1vm.Instruction
+import com.timepath.Logger
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.api.CompileState
-import com.timepath.Logger
-import com.timepath.compiler.ast.Expression
+import com.timepath.q1vm.Instruction
 
 data class field_t(val type: Type) : pointer_t() {
 

@@ -7,6 +7,7 @@ class SwitchExpression(val test: Expression, add: List<Expression>, override val
     init {
         addAll(add)
     }
+
     override val simpleName = "SwitchExpression"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 

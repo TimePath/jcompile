@@ -1,17 +1,16 @@
 package com.timepath.compiler.types
 
-import com.timepath.compiler.gen.generate
-import com.timepath.compiler.gen.Generator
-import com.timepath.compiler.gen.type
-import com.timepath.compiler.gen.IR
-import com.timepath.compiler.ast.*
-import com.timepath.compiler.Vector
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.Named
 import com.timepath.compiler.Pointer
+import com.timepath.compiler.Vector
+import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.*
+import com.timepath.compiler.gen.IR
+import com.timepath.compiler.gen.generate
+import com.timepath.compiler.gen.type
+import com.timepath.q1vm.Instruction
 
-trait Type: Named {
+trait Type : Named {
 
     companion object {
         fun from(any: Any?): Type = when (any) {

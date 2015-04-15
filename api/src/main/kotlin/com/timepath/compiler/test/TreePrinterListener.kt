@@ -2,7 +2,10 @@ package com.timepath.compiler.test
 
 import com.timepath.compiler.quote
 import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.tree.*
+import org.antlr.v4.runtime.tree.ErrorNode
+import org.antlr.v4.runtime.tree.ParseTreeListener
+import org.antlr.v4.runtime.tree.TerminalNode
+import org.antlr.v4.runtime.tree.Trees
 
 class TreePrinterListener(val ruleNames: List<String>) : ParseTreeListener {
 

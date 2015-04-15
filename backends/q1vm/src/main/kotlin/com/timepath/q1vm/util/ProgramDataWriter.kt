@@ -1,7 +1,7 @@
 package com.timepath.q1vm.util
 
-import java.io.File
 import com.timepath.q1vm.ProgramData
+import java.io.File
 
 fun ProgramDataWriter(file: File) = ProgramDataWriter(IOWrapper.File(file, write = true))
 class ProgramDataWriter(val raf: IOWrapper) {

@@ -1,22 +1,23 @@
 package com.timepath.compiler
 
-import java.awt.Dimension
-import java.io.File
-import java.io.Reader
-import java.util.LinkedList
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.logging.Level
-import javax.swing.*
 import com.timepath.Logger
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.preproc.CustomPreprocessor
 import org.anarres.cpp.*
 import org.antlr.v4.runtime.ANTLRInputStream
-import com.timepath.compiler.api.CompileState
+import java.awt.Dimension
+import java.io.File
+import java.io.Reader
 import java.net.URL
-import com.timepath.compiler.gen.type
+import java.util.LinkedList
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import javax.swing.JOptionPane
+import javax.swing.JScrollPane
+import javax.swing.JTextArea
 
 public class Compiler(val parser: Frontend, val state: CompileState = CompileState()) {
 

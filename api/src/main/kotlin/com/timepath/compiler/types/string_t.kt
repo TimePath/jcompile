@@ -1,9 +1,9 @@
 package com.timepath.compiler.types
 
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.api.CompileState
+import com.timepath.q1vm.Instruction
 
 object string_t : pointer_t() {
     override val simpleName = "string_t"

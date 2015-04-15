@@ -1,12 +1,12 @@
 package com.timepath.compiler.preproc
 
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.EnumSet
 import org.anarres.cpp.DefaultPreprocessorListener
 import org.anarres.cpp.Preprocessor
 import org.anarres.cpp.Token
 import org.anarres.cpp.Warning
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.EnumSet
 
 class CustomPreprocessor : Preprocessor() {
 

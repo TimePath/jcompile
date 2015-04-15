@@ -1,15 +1,15 @@
 package com.timepath.compiler.gen
 
-import java.util.LinkedList
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.ast.*
-import com.timepath.q1vm.Function
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.types.function_t
-import com.timepath.compiler.types.entity_t
-import com.timepath.compiler.types.Operation
 import com.timepath.compiler.Pointer
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.*
+import com.timepath.compiler.types.Operation
+import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.entity_t
+import com.timepath.compiler.types.function_t
+import com.timepath.q1vm.Function
+import com.timepath.q1vm.Instruction
+import java.util.LinkedList
 
 // TODO: push up
 fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor(state))

@@ -1,11 +1,11 @@
 package com.timepath.compiler.types
 
-import com.timepath.q1vm.Instruction
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.gen.generate
-import com.timepath.compiler.ast.MemoryReference
-import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.api.CompileState
+import com.timepath.compiler.ast.ConstantExpression
+import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.ast.MemoryReference
+import com.timepath.compiler.gen.generate
+import com.timepath.q1vm.Instruction
 
 // TODO: identify as reference
 object entity_t : struct_t() {

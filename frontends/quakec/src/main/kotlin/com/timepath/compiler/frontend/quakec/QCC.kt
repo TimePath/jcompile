@@ -1,13 +1,12 @@
 package com.timepath.compiler.frontend.quakec
 
-import com.timepath.compiler.TypeRegistry
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
 import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
-import com.timepath.compiler.api.CompileState
+import org.antlr.v4.runtime.tree.ParseTree
 
 object QCC : Frontend {
     public val rules: Array<String> = QCParser.ruleNames

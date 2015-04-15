@@ -1,14 +1,10 @@
 package com.timepath.q1vm.util
 
+import com.timepath.q1vm.*
 import java.io.File
-import java.util.ArrayList
-import java.nio.ByteOrder
 import java.nio.ByteBuffer
-import com.timepath.q1vm.Definition
-import com.timepath.q1vm.Function
-import com.timepath.q1vm.ProgramData
-import com.timepath.q1vm.Statement
-import com.timepath.q1vm.StringManager
+import java.nio.ByteOrder
+import java.util.ArrayList
 
 fun ProgramDataReader(file: File) = ProgramDataReader(IOWrapper.File(file))
 class ProgramDataReader(val raf: IOWrapper) {

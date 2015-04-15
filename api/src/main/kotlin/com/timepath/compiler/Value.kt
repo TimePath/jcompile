@@ -1,6 +1,8 @@
 package com.timepath.compiler
 
-import com.timepath.compiler.types.*
+import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.float_t
+import com.timepath.compiler.types.int_t
 
 class Value(val any: Any) {
 

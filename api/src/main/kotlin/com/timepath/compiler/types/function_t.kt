@@ -1,13 +1,13 @@
 package com.timepath.compiler.types
 
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.Pointer
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.MemoryReference
-import com.timepath.compiler.gen.generate
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.Pointer
+import com.timepath.compiler.ast.MemoryReference
+import com.timepath.compiler.gen.generate
+import com.timepath.q1vm.Instruction
 
 data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
 
