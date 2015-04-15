@@ -5,10 +5,10 @@ import com.timepath.compiler.Vector
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.CompileState.SymbolTable
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backends.q1vm.gen.evaluate
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
-import com.timepath.compiler.gen.evaluate
 import com.timepath.compiler.types.*
 import org.antlr.v4.runtime.ParserRuleContext
 import java.util.ArrayList

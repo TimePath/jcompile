@@ -1,7 +1,8 @@
-package com.timepath.compiler.gen
+package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.types.*
 
 // TODO: push up
@@ -14,7 +15,7 @@ private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     override fun visit(e: Nop) = void_t
 
-    override fun visit(e: BinaryExpression) = Type.type(Operation(e.op, e.left.type(), e.right.type()))
+    override fun visit(e: BinaryExpression) = Types.type(Operation(e.op, e.left.type(), e.right.type()))
     override fun visit(e: BinaryExpression.Add) = visit(e: BinaryExpression)
     override fun visit(e: BinaryExpression.AddAssign) = visit(e: BinaryExpression)
     override fun visit(e: BinaryExpression.And) = visit(e: BinaryExpression)
@@ -59,7 +60,7 @@ private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: ConstantExpression) = Type.from(e.value.any)
+    override fun visit(e: ConstantExpression) = Types.from(e.value.any)
 
     override fun visit(e: IndexExpression): Type {
         val typeL = e.left.type()
@@ -134,7 +135,7 @@ private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
 
     override fun visit(e: UnaryExpression.Cast) = e.type
 
-    override fun visit(e: UnaryExpression) = Type.type(Operation(e.op, e.operand.type()))
+    override fun visit(e: UnaryExpression) = Types.type(Operation(e.op, e.operand.type()))
     override fun visit(e: UnaryExpression.Address) = visit(e: UnaryExpression)
     override fun visit(e: UnaryExpression.BitNot) = visit(e: UnaryExpression)
     override fun visit(e: UnaryExpression.Dereference) = visit(e: UnaryExpression)

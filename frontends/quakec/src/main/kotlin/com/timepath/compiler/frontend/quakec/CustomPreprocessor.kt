@@ -1,4 +1,4 @@
-package com.timepath.compiler.preproc
+package com.timepath.compiler.frontend.quakec
 
 import org.anarres.cpp.DefaultPreprocessorListener
 import org.anarres.cpp.Preprocessor

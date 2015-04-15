@@ -1,25 +1,23 @@
-package com.timepath.compiler.gen
+package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.compiler.Pointer
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.Type
-import com.timepath.compiler.types.entity_t
-import com.timepath.compiler.types.function_t
+import com.timepath.compiler.backends.q1vm.Q1VM
+import com.timepath.compiler.types.*
 import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
 import java.util.LinkedList
 
 // TODO: push up
-fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor(state))
+fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor(state as Q1VM.State))
 
-class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
+class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
-    override fun visit(e: BinaryExpression) = Type.handle(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
+    override fun visit(e: BinaryExpression) = Types.handle<List<IR>>(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
     override fun visit(e: BinaryExpression.AddAssign) = visit(e : BinaryExpression)
     override fun visit(e: BinaryExpression.And) = visit(e : BinaryExpression)
@@ -199,7 +197,8 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
                     val genR = right.generate(state)
                     addAll(genR)
                     val out = state.allocator.allocateReference(type = type(state))
-                    add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
+                    add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT,
+                            array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
                     return this
                 } else {
                     return visit(e : BinaryExpression)
@@ -267,7 +266,7 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
                 val genR = ConstantExpression(Pointer(0)).generate(state) // TODO: field by name
                 addAll(genR)
                 val out = state.allocator.allocateReference(type = type(state))
-                add(IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
+                add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
                 this
             }
         }
@@ -369,7 +368,7 @@ class GeneratorVisitor(val state: CompileState) : ASTVisitor<List<IR>> {
         return listOf(CaseIR(e.expr))
     }
 
-    override fun visit(e: UnaryExpression) = Type.handle(Operation(e.op, e.operand.type(state)))(state, e.operand, null)
+    override fun visit(e: UnaryExpression) = Types.handle<List<IR>>(Operation(e.op, e.operand.type(state)))(state, e.operand, null)
     override fun visit(e: UnaryExpression.Address) = visit(e : UnaryExpression)
     override fun visit(e: UnaryExpression.BitNot) = visit(e : UnaryExpression)
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()

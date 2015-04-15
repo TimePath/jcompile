@@ -37,6 +37,7 @@ sourceSets {
 
 dependencies {
     compile project(':api')
+    compile project(':backends:q1vm')
     compile project('grammar')
     compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
     compile "org.anarres:jcpp:${versions.jcpp}"

@@ -1,6 +1,5 @@
 package com.timepath.compiler.ast
 
-import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
 
 /**
@@ -12,7 +11,7 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
     override val simpleName = "IndexExpression"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
-    var instr = Instruction.LOAD_FLOAT
+    var instr: Any? = null
 }
 
 /**
@@ -24,5 +23,5 @@ class MemberExpression(left: Expression, val field: String, ctx: ParserRuleConte
     override val simpleName = "MemberExpression"
     override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
-    var instr = Instruction.LOAD_FLOAT
+    var instr: Any? = null
 }

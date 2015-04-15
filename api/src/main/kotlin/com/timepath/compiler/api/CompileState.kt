@@ -1,22 +1,17 @@
 package com.timepath.compiler.api
 
-import com.timepath.compiler.CompilerOptions
 import com.timepath.compiler.Pointer
-import com.timepath.compiler.TypeRegistry
+import com.timepath.compiler.types.TypeRegistry
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.gen.Allocator
-import com.timepath.compiler.gen.Generator
 import com.timepath.compiler.types.*
 import java.util.Deque
 import java.util.LinkedHashMap
 import java.util.LinkedList
 
-data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
+abstract class CompileState {
 
     val types = TypeRegistry()
-    val allocator = Allocator(opts)
-    val gen = Generator(this)
 
     trait FieldCounter {
         fun get(name: String): ConstantExpression
@@ -57,16 +52,6 @@ data class CompileState(val opts: CompilerOptions = CompilerOptions()) {
                 vars[e.id] = e
             }
             return e
-        }
-
-        init {
-            stack.push(Scope("<builtin>"))
-            declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
-            declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
-            declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
-            // TODO: not really a function
-            declare(DeclarationExpression("_", function_t(string_t, listOf(string_t))))
-            stack.push(Scope("<global>"))
         }
 
         override fun resolve(id: String) = stack.firstOrNull { id in it.vars }?.vars?.get(id)

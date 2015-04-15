@@ -1,6 +1,7 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.function_t
 
 fun ast(configure: (BlockExpression.() -> Unit)? = null): BlockExpression {
@@ -19,7 +20,7 @@ fun BlockExpression.const(value: Any): ConstantExpression {
 }
 
 fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
-    return initChild(DeclarationExpression(name, Type.from(any), ConstantExpression(any)))
+    return initChild(DeclarationExpression(name, Types.from(any), ConstantExpression(any)))
 }
 
 fun BlockExpression.ref(id: String): DynamicReferenceExpression {

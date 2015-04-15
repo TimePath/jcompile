@@ -1,4 +1,4 @@
-package com.timepath.compiler.gen
+package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.ast.SwitchExpression.Case

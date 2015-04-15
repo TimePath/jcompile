@@ -4,8 +4,8 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.ASTVisitor
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.backends.q1vm.gen.type
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.gen.type
 import org.stringtemplate.v4.Interpreter
 import org.stringtemplate.v4.ST
 import org.stringtemplate.v4.STGroup
@@ -45,7 +45,7 @@ val ns = "xon"
 
 fun project(project: Project) {
     val sourceRoot = File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}")
-    val compiler = Compiler(QCC)
+    val compiler = Compiler(QCC())
             .includeFrom(File(sourceRoot, "progs.src"))
             .define(project.define)
 

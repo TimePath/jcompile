@@ -5,7 +5,7 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.ast.StructDeclarationExpression
 
-data abstract class struct_t(vararg fields: Pair<String, Type>) : Type {
+data abstract class struct_t(vararg fields: Pair<String, Type>) : Type() {
     val fields = linkedMapOf(*fields)
     override val simpleName = "struct_t"
     override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {

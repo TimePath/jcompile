@@ -2,8 +2,8 @@ package com.timepath.compiler.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.gen.evaluate
-import com.timepath.compiler.gen.generate
+import com.timepath.compiler.backends.q1vm.gen.evaluate
+import com.timepath.compiler.backends.q1vm.gen.generate
 
 data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 

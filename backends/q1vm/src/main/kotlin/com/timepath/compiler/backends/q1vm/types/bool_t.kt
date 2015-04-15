@@ -4,12 +4,14 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BinaryExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.gen.generate
+import com.timepath.compiler.backends.q1vm.DefaultHandler
+import com.timepath.compiler.backends.q1vm.gen.IR
+import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.q1vm.Instruction
 
 object bool_t : number_t() {
     override val simpleName = "bool_t"
-    val ops: Map<Operation, OperationHandler>
+    val ops: Map<Operation, OperationHandler<List<IR>>>
         get() = mapOf(
                 Operation("==", this, this) to DefaultHandler(bool_t, Instruction.EQ_FLOAT),
                 Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FLOAT),
@@ -31,7 +33,7 @@ object bool_t : number_t() {
                 Operation(">", this, this) to DefaultHandler(bool_t, Instruction.GT)
         )
 
-    override fun handle(op: Operation): OperationHandler? {
+    override fun handle(op: Operation): OperationHandler<List<IR>>? {
         ops[op]?.let {
             return it
         }

@@ -1,10 +1,10 @@
-package com.timepath.compiler.gen
+package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.Logger
-import com.timepath.compiler.CompilerOptions
+import com.timepath.compiler.backends.q1vm.CompilerOptions
 import com.timepath.compiler.Pointer
 import com.timepath.compiler.Value
-import com.timepath.compiler.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.bool_t
 import com.timepath.compiler.types.function_t

@@ -4,6 +4,8 @@ import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
+import com.timepath.compiler.backends.q1vm.DefaultHandler
 import com.timepath.q1vm.Instruction
 
 data class field_t(val type: Type) : pointer_t() {

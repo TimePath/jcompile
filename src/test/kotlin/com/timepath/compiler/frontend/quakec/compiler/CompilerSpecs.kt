@@ -2,13 +2,15 @@ package com.timepath.quakec.compiler
 
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
-import com.timepath.compiler.CompilerOptions
+import com.timepath.compiler.backends.q1vm.CompilerOptions
 import com.timepath.compiler.PrintVisitor
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.backends.q1vm.Q1VM
+import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.gen.Generator.ASM
+import com.timepath.compiler.backends.q1vm.gen.Generator.ASM
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.ProgramData
 import junit.framework.TestCase
@@ -23,7 +25,7 @@ import kotlin.test.assertEquals
 val opts = CompilerOptions()
 
 fun compile([Language("QuakeC")] input: String): ProgramData {
-    return Compiler(QCC, CompileState(opts))
+    return Compiler(QCC(), Q1VM())
             .include(input, "-")
             .compile() as ProgramData
 }
@@ -68,7 +70,7 @@ class CompilerSpecs {
                     .filter { it.exists() }
             tests.forEach { test ->
                 on(test.name) {
-                    val compiler = Compiler(QCC, CompileState(opts))
+                    val compiler = Compiler(QCC(), Q1VM())
                     compiler.include(test)
 
                     var roots: List<List<Expression>>
@@ -81,7 +83,7 @@ class CompilerSpecs {
                     var asm: ASM
                     it("should compile") {
                         logger.info("Compiling $test")
-                        asm = compiler.state.gen.generate(roots.flatMap { it })
+                        asm = compiler.compile(roots) as ASM
                         asm.ir.map { ir ->
                             if (ir.real)
                                 "$ir"

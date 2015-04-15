@@ -1,4 +1,4 @@
-package com.timepath.compiler.gen
+package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.compiler.ast.Expression
 import com.timepath.q1vm.Function

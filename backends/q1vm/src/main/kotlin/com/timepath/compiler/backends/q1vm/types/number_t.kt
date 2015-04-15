@@ -3,12 +3,14 @@ package com.timepath.compiler.types
 import com.timepath.compiler.Pointer
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.gen.IR
-import com.timepath.compiler.gen.generate
+import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
+import com.timepath.compiler.backends.q1vm.DefaultHandler
+import com.timepath.compiler.backends.q1vm.gen.IR
+import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.q1vm.Instruction
 import kotlin.properties.Delegates
 
-open class number_t : Type {
+open class number_t : Type() {
     override val simpleName = "number_t"
     override fun handle(op: Operation) = ops[op]
     private val ops by Delegates.lazy {
@@ -135,7 +137,7 @@ open class number_t : Type {
 
 object int_t : number_t() {
     override val simpleName = "int_t"
-    override fun handle(op: Operation): OperationHandler? {
+    override fun handle(op: Operation): OperationHandler<out List<IR>>? {
         super.handle(op)?.let { return it }
         if (op.right == float_t) {
             return float_t.handle(op.copy(left = float_t))
@@ -149,7 +151,7 @@ object int_t : number_t() {
 
 object float_t : number_t() {
     override val simpleName = "float_t"
-    override fun handle(op: Operation): OperationHandler? {
+    override fun handle(op: Operation): OperationHandler<out List<IR>>? {
         super.handle(op)?.let { return it }
         if (op.right == int_t || op.right == bool_t) {
             return super.handle(op.copy(right = float_t))

@@ -1,47 +1,34 @@
 package com.timepath.compiler
 
 import com.timepath.Logger
-import com.timepath.compiler.api.CompileState
+import com.timepath.compiler
+import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.preproc.CustomPreprocessor
-import org.anarres.cpp.*
-import org.antlr.v4.runtime.ANTLRInputStream
-import java.awt.Dimension
+import org.anarres.cpp.FileLexerSource
+import org.anarres.cpp.LexerSource
+import org.anarres.cpp.Source
+import org.anarres.cpp.StringLexerSource
 import java.io.File
-import java.io.Reader
 import java.net.URL
 import java.util.LinkedList
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
-import javax.swing.JOptionPane
-import javax.swing.JScrollPane
-import javax.swing.JTextArea
 
-public class Compiler(val parser: Frontend, val state: CompileState = CompileState()) {
+public class Compiler(val parser: Frontend, val backend: Backend = Backend.Null) {
+
+    val state = backend.state
 
     companion object {
         val logger = Logger.new()
         val debugThreads = true
-        val debugPP = false
         val writeAST = false
         val writeParse = false
-        fun preview(reader: Reader): Reader {
-            if (debugPP) {
-                val area = JTextArea()
-                area.setText(reader.readText())
-                val pane = JScrollPane(area)
-                pane.setPreferredSize(Dimension(500, 500))
-                JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), pane)
-            }
-            return reader
-        }
     }
 
-    val preprocessor = CustomPreprocessor()
     fun define(name: String, value: String = "1"): Compiler {
-        preprocessor.addMacro(name, value)
+        parser.define(name, value)
         return this
     }
 
@@ -108,7 +95,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
     val exec = if (debugThreads)
         Executors.newSingleThreadExecutor()
     else
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), compiler.DaemonThreadFactory())
 
     inline fun debug(s: String, predicate: Boolean, inlineOptions(InlineOption.ONLY_LOCAL_RETURN) action: () -> Unit) {
         if (predicate) {
@@ -126,10 +113,7 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
         val roots = linkedListOf<List<Expression>>()
         for (include in includes) {
             logger.info(include.path)
-            preprocessor.addInput(include.source)
-            val stream = ANTLRInputStream(preview(CppReader(preprocessor)))
-            stream.name = include.path
-            val root = parser.parse(stream, state)
+            val root = parser.parse(include, state)
             roots.add(root.children)
             //            debug("printing parse tree", writeParse) {
             //                val listener = TreePrinterListener(rules!!)
@@ -149,9 +133,9 @@ public class Compiler(val parser: Frontend, val state: CompileState = CompileSta
             }
         }
         exec.shutdown()
-        exec.awaitTermination(java.lang.Long.MAX_VALUE, TimeUnit.NANOSECONDS)
+        exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
         return roots
     }
 
-    public fun compile(roots: List<List<Expression>> = ast()): Any = state.gen.generate(roots.flatMap { it })
+    public fun compile(roots: List<List<Expression>> = ast()): Any = backend.generate(roots.flatMap { it })
 }
