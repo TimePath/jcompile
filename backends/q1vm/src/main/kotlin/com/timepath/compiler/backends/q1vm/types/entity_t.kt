@@ -7,6 +7,7 @@ import com.timepath.compiler.ast.MemoryReference
 import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
 import com.timepath.compiler.backends.q1vm.DefaultHandler
 import com.timepath.compiler.backends.q1vm.DefaultUnaryHandler
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
@@ -14,7 +15,7 @@ import com.timepath.q1vm.Instruction
 // TODO: identify as reference
 object entity_t : struct_t() {
     override val simpleName = "entity_t"
-    override fun handle(op: Operation): OperationHandler<*>? = ops[op]
+    override fun handle(op: Operation): OperationHandler<Q1VM.State, *>? = ops[op]
     val ops = mapOf(
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_ENT),
             Operation(".", this, string_t) to OperationHandler(this) { gen, left, right ->

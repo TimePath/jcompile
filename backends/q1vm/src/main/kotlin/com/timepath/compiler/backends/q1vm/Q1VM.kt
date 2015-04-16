@@ -14,10 +14,7 @@ import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import java.util.LinkedHashMap
 
-val CompileState.allocator: Allocator get() = (this as Q1VM.State).allocator
-val CompileState.opts: CompilerOptions get() = (this as Q1VM.State).opts
-
-class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend {
+class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State> {
 
     override fun generate(roots: List<Expression>) = state.gen.generate(roots)
 
@@ -47,7 +44,7 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend {
 
             Types.handlers.add { it ->
                 if (it.op != ",") null else
-                    OperationHandler(it.right!!) { gen, left, right ->
+                    OperationHandler(it.right!!) { gen: Q1VM.State, left, right ->
                         with(linkedListOf<IR>()) {
                             addAll(left.generate(gen))
                             addAll(right!!.generate(gen))

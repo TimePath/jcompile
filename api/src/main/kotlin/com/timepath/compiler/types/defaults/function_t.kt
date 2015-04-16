@@ -15,7 +15,7 @@ data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type
         else -> ", $vararg..."
     }}) -> $type"
 
-    override fun handle(op: Operation): OperationHandler<*>? {
+    override fun handle(op: Operation): OperationHandler<*, *>? {
         handlers.forEach {
             it(op)?.let { return it }
         }
@@ -24,9 +24,9 @@ data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type
 
     companion object {
 
-        val handlers = linkedListOf<function_t.(Operation) -> OperationHandler<*>?>()
+        val handlers = linkedListOf<function_t.(Operation) -> OperationHandler<*, *>?>()
 
-        var ops = hashMapOf<Operation, OperationHandler<*>>()
+        var ops = hashMapOf<Operation, OperationHandler<*, *>>()
     }
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {

@@ -2,6 +2,7 @@ package com.timepath.compiler.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.gen.evaluate
 import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.compiler.types.defaults.function_t
@@ -12,7 +13,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
     override val simpleName = "array_t"
     override fun toString() = "$type[$sizeExpr]"
 
-    val index = OperationHandler(type) { gen, left, right ->
+    val index = OperationHandler(type) { gen: Q1VM.State, left, right ->
         when (left) {
         // (ent.arr)[i] -> ent.(arr[i])
             is MemberExpression -> {

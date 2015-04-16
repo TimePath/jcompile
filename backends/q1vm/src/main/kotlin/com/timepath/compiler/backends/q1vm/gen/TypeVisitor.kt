@@ -1,16 +1,15 @@
 package com.timepath.compiler.backends.q1vm.gen
 
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.allocator
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.types.*
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 
 // TODO: push up
-fun Expression.type(state: CompileState): Type = accept(TypeVisitor(state))
+fun Expression.type(state: Q1VM.State): Type = accept(TypeVisitor(state))
 
-private class TypeVisitor(val state: CompileState) : ASTVisitor<Type> {
+private class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun Expression.type(): Type = accept(this@TypeVisitor)

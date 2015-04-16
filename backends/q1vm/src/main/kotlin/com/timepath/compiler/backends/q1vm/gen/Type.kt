@@ -9,7 +9,7 @@ import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
 
 
-class DefaultHandler(type: Type, instr: Instruction) : OperationHandler<List<IR>>(type, { gen, left, right ->
+class DefaultHandler(type: Type, instr: Instruction) : OperationHandler<Q1VM.State, List<IR>>(type, { gen, left, right ->
     right!!
     with(linkedListOf<IR>()) {
         val genLeft = left.generate(gen)
@@ -22,7 +22,7 @@ class DefaultHandler(type: Type, instr: Instruction) : OperationHandler<List<IR>
     }
 })
 
-class DefaultUnaryHandler(type: Type, instr: Instruction) : OperationHandler<List<IR>>(type, { gen, self, _ ->
+class DefaultUnaryHandler(type: Type, instr: Instruction) : OperationHandler<Q1VM.State, List<IR>>(type, { gen, self, _ ->
     with(linkedListOf<IR>()) {
         val genLeft = self.generate(gen)
         addAll(genLeft)
@@ -35,7 +35,7 @@ class DefaultUnaryHandler(type: Type, instr: Instruction) : OperationHandler<Lis
 class DefaultAssignHandler(type: Type,
                            instr: Instruction,
                            op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
-: OperationHandler<List<IR>>(type, { gen, left, right ->
+: OperationHandler<Q1VM.State, List<IR>>(type, { gen, left, right ->
     with(linkedListOf<IR>()) {
         val realInstr: Instruction
         val leftL: Expression

@@ -5,20 +5,21 @@ import com.timepath.compiler.ast.BinaryExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backends.q1vm.DefaultHandler
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.gen.IR
 import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.q1vm.Instruction
 
 object bool_t : number_t() {
     override val simpleName = "bool_t"
-    val ops: Map<Operation, OperationHandler<List<IR>>>
+    val ops: Map<Operation, OperationHandler<Q1VM.State, List<IR>>>
         get() = mapOf(
                 Operation("==", this, this) to DefaultHandler(bool_t, Instruction.EQ_FLOAT),
                 Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FLOAT),
-                Operation("!", this) to OperationHandler(bool_t) { gen, self, _ ->
+                Operation("!", this) to OperationHandler(bool_t) { gen: Q1VM.State, self, _ ->
                     BinaryExpression.Eq(ConstantExpression(0), self).generate(gen)
                 },
-                Operation("-", this) to OperationHandler(this) { gen, self, _ ->
+                Operation("-", this) to OperationHandler(this) { gen: Q1VM.State, self, _ ->
                     BinaryExpression.Subtract(ConstantExpression(0), self).generate(gen)
                 },
                 Operation("+", this, this) to DefaultHandler(this, Instruction.ADD_FLOAT),
@@ -33,7 +34,7 @@ object bool_t : number_t() {
                 Operation(">", this, this) to DefaultHandler(bool_t, Instruction.GT)
         )
 
-    override fun handle(op: Operation): OperationHandler<List<IR>>? {
+    override fun handle(op: Operation): OperationHandler<Q1VM.State, List<IR>>? {
         ops[op]?.let {
             return it
         }

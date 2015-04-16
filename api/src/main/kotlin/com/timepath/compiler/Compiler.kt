@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
-public class Compiler(val parser: Frontend, val backend: Backend = Backend.Null) {
+public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Null) {
 
     val state = backend.state
 

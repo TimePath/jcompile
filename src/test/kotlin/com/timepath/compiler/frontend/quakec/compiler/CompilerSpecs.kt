@@ -6,7 +6,6 @@ import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backends.q1vm.CompilerOptions
 import com.timepath.compiler.backends.q1vm.Q1VM
-import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.backends.q1vm.gen.Generator.ASM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.test.PrintVisitor
@@ -91,6 +90,7 @@ class CompilerSpecs {
                         }.filterNotNull().joinToString("\n").let { actual ->
                             compare("ASM", test.name + ".asm", actual)
                         }
+                        compiler.state as Q1VM.State
                         compiler.state.allocator.toString().let { actual ->
                             compare("allocation", test.name + ".txt", actual)
                         }

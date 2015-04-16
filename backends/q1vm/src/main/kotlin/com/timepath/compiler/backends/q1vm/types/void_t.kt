@@ -5,6 +5,7 @@ import com.timepath.compiler.ast.ConditionalExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.q1vm.Instruction
 
@@ -12,7 +13,7 @@ object void_t : Type() {
     override val simpleName = "void_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("&&", this, this) to OperationHandler(bool_t) { gen, left, right ->
+            Operation("&&", this, this) to OperationHandler(bool_t) { gen: Q1VM.State, left, right ->
                 // TODO: Instruction.AND when no side effects
                 ConditionalExpression(left, true,
                         fail = ConstantExpression(0),
@@ -22,7 +23,7 @@ object void_t : Type() {
                 ).generate(gen)
             },
             // TODO: perl behaviour
-            Operation("||", this, this) to OperationHandler(bool_t) { gen, left, right ->
+            Operation("||", this, this) to OperationHandler(bool_t) { gen: Q1VM.State, left, right ->
                 // TODO: Instruction.OR when no side effects
                 ConditionalExpression(left, true,
                         pass = ConstantExpression(1),

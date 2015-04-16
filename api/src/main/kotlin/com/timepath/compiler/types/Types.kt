@@ -13,12 +13,12 @@ object Types {
 
     fun type(operation: Operation) = handle<Any>(operation).type
 
-    val handlers = linkedListOf<(Operation) -> OperationHandler<*>?>()
+    val handlers = linkedListOf<(Operation) -> OperationHandler<*, *>?>()
 
-    fun <T> handle(operation: Operation): OperationHandler<T> {
+    fun <T> handle(operation: Operation): OperationHandler<*, T> {
         handlers.forEach {
             it(operation)?.let {
-                (it as OperationHandler<T>).let { return it }
+                (it as OperationHandler<*, T>).let { return it }
             }
         }
         throw UnsupportedOperationException("$operation")

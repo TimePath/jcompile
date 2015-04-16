@@ -1,12 +1,10 @@
 package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.Logger
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backends.q1vm.allocator
+import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
-import com.timepath.compiler.backends.q1vm.opts
 import com.timepath.compiler.data.Pointer
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.ProgramData.Header
@@ -16,7 +14,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 
-class Generator(val state: CompileState) {
+class Generator(val state: Q1VM.State) {
 
     val gotoLabels = linkedMapOf<IR, String>()
 
