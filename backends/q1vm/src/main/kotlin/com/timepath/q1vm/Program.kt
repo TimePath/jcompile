@@ -1,9 +1,7 @@
 package com.timepath.q1vm
 
 import com.timepath.Logger
-import com.timepath.q1vm.util.IOWrapper
-import com.timepath.q1vm.util.ProgramDataReader
-import java.io.File
+import com.timepath.q1vm.util.set
 import java.util.Stack
 
 public class Program(val data: ProgramData) {
@@ -20,14 +18,14 @@ public class Program(val data: ProgramData) {
 
     data class Frame(val sp: Int,
                      val stmt: Int,
-                     val fn: Function?)
+                     val fn: ProgramData.Function?)
 
-    fun exec(start: Function) {
+    fun exec(start: ProgramData.Function) {
         val stack = Stack<Frame>()
         var sp = -1
         var stmt = -1
-        var fn: Function? = null
-        val push = { it: Function ->
+        var fn: ProgramData.Function? = null
+        val push = { it: ProgramData.Function ->
             stack add Frame(sp, stmt, fn)
 
             // TODO: Store locals to support recursion
@@ -86,6 +84,14 @@ public class Program(val data: ProgramData) {
 
     fun getFloat(i: Int) = data.globalFloatData[i]
     fun getString(i: Int) = data.strings[data.globalIntData[i]]
+
+    fun KBuiltin(name: String,
+                 parameterTypes: Array<Class<*>> = array(),
+                 varargsType: Class<*>? = null,
+                 callback: (args: List<*>) -> Any = {}) =
+            Builtin(name, parameterTypes, varargsType, object : Builtin.Handler {
+                override fun call(args: List<Any?>): Any = callback(args)
+            })
 
     val builtins: MutableMap<Int, Builtin> = linkedMapOf(
             1 to KBuiltin(
@@ -233,9 +239,4 @@ public class Program(val data: ProgramData) {
         }
     }
 
-}
-
-fun main(args: Array<String>) {
-    val data = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
-    Program(ProgramDataReader(IOWrapper.File(File("$data/progs.dat"))).read()).exec()
 }

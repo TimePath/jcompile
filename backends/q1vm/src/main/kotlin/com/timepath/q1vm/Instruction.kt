@@ -1,15 +1,14 @@
 package com.timepath.q1vm
 
+import com.timepath.q1vm.ProgramData.Statement
+import com.timepath.q1vm.util.not
+import com.timepath.q1vm.util.set
+import com.timepath.q1vm.util.toFloat
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
-fun FloatBuffer.set(index: Int, value: Float) = this.put(index, value)
-fun IntBuffer.set(index: Int, value: Int) = this.put(index, value)
-fun Float.not(): Boolean = this == 0f
-fun Int.not(): Boolean = this == 0
-fun Boolean.toFloat(): Float = if (this) 1f else 0f
-
 enum class Instruction {
+
 
     protected open fun stringify(it: Statement): Array<Any> = array("ILLEGAL")
     protected open fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {

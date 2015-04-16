@@ -7,6 +7,7 @@ import com.timepath.compiler.backends.q1vm.DefaultUnaryHandler
 import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.backends.q1vm.gen.IR
 import com.timepath.compiler.backends.q1vm.gen.generate
+import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
 
 // TODO: identify as value

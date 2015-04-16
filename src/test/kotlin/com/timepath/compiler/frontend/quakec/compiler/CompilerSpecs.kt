@@ -2,15 +2,14 @@ package com.timepath.quakec.compiler
 
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
-import com.timepath.compiler.backends.q1vm.CompilerOptions
-import com.timepath.compiler.PrintVisitor
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.backends.q1vm.CompilerOptions
 import com.timepath.compiler.backends.q1vm.Q1VM
 import com.timepath.compiler.backends.q1vm.allocator
-import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.backends.q1vm.gen.Generator.ASM
+import com.timepath.compiler.frontend.quakec.QCC
+import com.timepath.compiler.test.PrintVisitor
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.ProgramData
 import junit.framework.TestCase

@@ -21,5 +21,4 @@ data class CompilerOptions(
         val scopeFolding: Boolean = true,
         // TODO: types per fold
         val mergeConstants: Boolean = true
-
 )

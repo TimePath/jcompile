@@ -3,8 +3,9 @@ package com.timepath.q1vm.util
 import com.timepath.q1vm.ProgramData
 import java.io.File
 
-fun ProgramDataWriter(file: File) = ProgramDataWriter(IOWrapper.File(file, write = true))
 class ProgramDataWriter(val raf: IOWrapper) {
+
+    constructor(file: File) : this(IOWrapper.File(file, write = true))
 
     private fun writeSection(it: ProgramData.Header.Section) {
         raf.writeInt(it.offset)

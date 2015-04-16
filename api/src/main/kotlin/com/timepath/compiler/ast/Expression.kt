@@ -1,6 +1,6 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.Named
+import com.timepath.compiler.api.Named
 import org.antlr.v4.runtime.ParserRuleContext
 
 abstract class Expression : Named {
@@ -48,11 +48,5 @@ abstract class Expression : Named {
 
 }
 
-/**
- * Lonely semicolon
- */
-class Nop(override val ctx: ParserRuleContext? = null) : Expression() {
-    override val simpleName = "Nop"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
-}
+
 

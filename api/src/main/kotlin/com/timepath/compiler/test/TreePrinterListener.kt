@@ -1,6 +1,6 @@
 package com.timepath.compiler.test
 
-import com.timepath.compiler.quote
+import com.timepath.quote
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTreeListener

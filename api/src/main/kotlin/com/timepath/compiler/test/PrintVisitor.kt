@@ -1,4 +1,4 @@
-package com.timepath.compiler
+package com.timepath.compiler.test
 
 import com.timepath.compiler.ast.*
 

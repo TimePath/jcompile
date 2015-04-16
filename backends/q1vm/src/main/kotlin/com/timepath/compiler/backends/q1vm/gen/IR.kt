@@ -1,8 +1,8 @@
 package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.compiler.ast.Expression
-import com.timepath.q1vm.Function
 import com.timepath.q1vm.Instruction
+import com.timepath.q1vm.ProgramData
 
 open class IR(val instr: Instruction? = null,
               val args: Array<Int> = array(),
@@ -25,6 +25,6 @@ open class FakeIR(val repr: String) : IR() {
 }
 
 class ReferenceIR(override val ret: Int) : FakeIR("ref $ret")
-class FunctionIR(val function: Function) : FakeIR("function")
+class FunctionIR(val function: ProgramData.Function) : FakeIR("function")
 class LabelIR(val id: String) : FakeIR("label $id")
 class CaseIR(val expr: Expression?) : FakeIR("case $expr")

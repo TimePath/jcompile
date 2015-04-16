@@ -1,15 +1,16 @@
 package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
-import com.timepath.compiler.Vector
 import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.api.CompileState.SymbolTable
+import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backends.q1vm.gen.evaluate
+import com.timepath.compiler.data.Vector
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.types.*
+import com.timepath.compiler.types.defaults.function_t
 import org.antlr.v4.runtime.ParserRuleContext
 import java.util.ArrayList
 

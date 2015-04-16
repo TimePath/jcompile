@@ -1,13 +1,15 @@
 package com.timepath.q1vm.util
 
-import com.timepath.q1vm.*
+import com.timepath.q1vm.ProgramData
+import com.timepath.q1vm.StringManager
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 
-fun ProgramDataReader(file: File) = ProgramDataReader(IOWrapper.File(file))
 class ProgramDataReader(val raf: IOWrapper) {
+
+    constructor(file: File) : this(IOWrapper.File(file))
 
     private fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
         val ret = ArrayList<T>(section.count)
@@ -38,7 +40,7 @@ class ProgramDataReader(val raf: IOWrapper) {
         val ret = ProgramData(
                 header = header,
                 statements = iterData(header.statements) {
-                    Statement(
+                    ProgramData.Statement(
                             raf.readShort(),
                             raf.readShort(),
                             raf.readShort(),
@@ -46,21 +48,21 @@ class ProgramDataReader(val raf: IOWrapper) {
                     )
                 },
                 globalDefs = iterData(header.globalDefs) {
-                    Definition(
+                    ProgramData.Definition(
                             raf.readShort(),
                             raf.readShort(),
                             raf.readInt()
                     )
                 },
                 fieldDefs = iterData(header.fieldDefs) {
-                    Definition(
+                    ProgramData.Definition(
                             raf.readShort(),
                             raf.readShort(),
                             raf.readInt()
                     )
                 },
                 functions = iterData(header.functions) {
-                    Function(
+                    ProgramData.Function(
                             raf.readInt(),
                             raf.readInt(),
                             raf.readInt(),

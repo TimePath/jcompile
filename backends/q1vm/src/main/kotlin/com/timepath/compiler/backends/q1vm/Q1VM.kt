@@ -1,7 +1,5 @@
 package com.timepath.compiler.backends.q1vm
 
-import com.timepath.compiler.Pointer
-import com.timepath.compiler.Vector
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
@@ -9,8 +7,12 @@ import com.timepath.compiler.backends.q1vm.gen.Allocator
 import com.timepath.compiler.backends.q1vm.gen.Generator
 import com.timepath.compiler.backends.q1vm.gen.IR
 import com.timepath.compiler.backends.q1vm.gen.generate
+import com.timepath.compiler.data.Pointer
+import com.timepath.compiler.data.Vector
 import com.timepath.compiler.types.*
+import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
+import java.util.LinkedHashMap
 
 val CompileState.allocator: Allocator get() = (this as Q1VM.State).allocator
 val CompileState.opts: CompilerOptions get() = (this as Q1VM.State).opts
@@ -19,9 +21,20 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend {
 
     override fun generate(roots: List<Expression>) = state.gen.generate(roots)
 
+    trait FieldCounter {
+        fun get(name: String): ConstantExpression
+        fun contains(name: String): Boolean
+    }
+
     inner class State(val opts: CompilerOptions = CompilerOptions()) : CompileState() {
         val allocator = Allocator(opts)
         val gen = Generator(this)
+
+        val fields: FieldCounter = object : FieldCounter {
+            val map = LinkedHashMap<String, Int>()
+            override fun get(name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
+            override fun contains(name: String) = name in map
+        }
 
         init {
             Types.types[javaClass<java.lang.Boolean>()] = bool_t

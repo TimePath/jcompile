@@ -1,8 +1,6 @@
 package com.timepath.compiler.backends.q1vm
 
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.gen.Allocator
 import com.timepath.compiler.backends.q1vm.gen.IR
 import com.timepath.compiler.backends.q1vm.gen.generate
 import com.timepath.compiler.backends.q1vm.gen.type

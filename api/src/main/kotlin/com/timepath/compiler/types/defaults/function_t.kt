@@ -1,8 +1,11 @@
-package com.timepath.compiler.types
+package com.timepath.compiler.types.defaults
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.types.Operation
+import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Type
 
 data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
 

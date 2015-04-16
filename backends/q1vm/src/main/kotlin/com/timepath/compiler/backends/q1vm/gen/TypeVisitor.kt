@@ -4,6 +4,8 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.types.*
+import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.struct_t
 
 // TODO: push up
 fun Expression.type(state: CompileState): Type = accept(TypeVisitor(state))

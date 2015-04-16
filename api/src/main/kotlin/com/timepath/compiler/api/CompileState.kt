@@ -1,35 +1,24 @@
 package com.timepath.compiler.api
 
-import com.timepath.compiler.Pointer
-import com.timepath.compiler.types.TypeRegistry
-import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.types.*
+import com.timepath.compiler.types.Type
 import java.util.Deque
 import java.util.LinkedHashMap
 import java.util.LinkedList
 
-abstract class CompileState {
+public abstract class CompileState {
 
-    val types = TypeRegistry()
+    val types = object : TypeRegistry {
 
-    trait FieldCounter {
-        fun get(name: String): ConstantExpression
-        fun contains(name: String): Boolean
-    }
+        private val types = linkedMapOf<String, Type>()
 
-    val fields = object : FieldCounter {
-        val map = LinkedHashMap<String, Int>()
-        override fun get(name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
-        override fun contains(name: String) = name in map
-    }
+        override fun get(name: String): Type {
+            return types[name]
+        }
 
-    trait SymbolTable {
-        val globalScope: Boolean
-        fun push(name: String)
-        fun pop()
-        fun <R> declare(e: R): R
-        fun resolve(id: String): DeclarationExpression?
+        override fun set(name: String, t: Type) {
+            types[name] = t
+        }
     }
 
     val symbols = object : SymbolTable {

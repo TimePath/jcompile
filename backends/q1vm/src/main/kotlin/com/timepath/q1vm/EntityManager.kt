@@ -1,12 +1,13 @@
 package com.timepath.q1vm
 
+import com.timepath.q1vm.util.set
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.util.ArrayList
 import kotlin.properties.Delegates
 
-class EntityManager(val data: ProgramData) {
+private class EntityManager(val data: ProgramData) {
 
     private val entities = ArrayList<Entity?>()
     private val entitySize = data.header.entityFields

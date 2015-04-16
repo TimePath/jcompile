@@ -1,10 +1,11 @@
 package com.timepath.compiler
 
+import com.timepath.DaemonThreadFactory
 import com.timepath.Logger
-import com.timepath.compiler
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.test.PrintVisitor
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
@@ -95,7 +96,7 @@ public class Compiler(val parser: Frontend, val backend: Backend = Backend.Null)
     val exec = if (debugThreads)
         Executors.newSingleThreadExecutor()
     else
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), compiler.DaemonThreadFactory())
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
 
     inline fun debug(s: String, predicate: Boolean, inlineOptions(InlineOption.ONLY_LOCAL_RETURN) action: () -> Unit) {
         if (predicate) {

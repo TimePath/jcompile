@@ -1,16 +1,17 @@
 package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.Logger
-import com.timepath.compiler.Pointer
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backends.q1vm.allocator
 import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
 import com.timepath.compiler.backends.q1vm.opts
-import com.timepath.q1vm.*
+import com.timepath.compiler.data.Pointer
+import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.ProgramData.Header
 import com.timepath.q1vm.ProgramData.Header.Section
+import com.timepath.q1vm.StringManager
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
@@ -41,12 +42,12 @@ class Generator(val state: CompileState) {
         val floatData = globalData.asFloatBuffer()
 
         fun generateProgs(): ProgramData {
-            val globalDefs = ArrayList<Definition>()
-            val fieldDefs = ArrayList<Definition>()
-            fieldDefs.add(Definition(0, 0, 0)) // FIXME: temporary
+            val globalDefs = ArrayList<ProgramData.Definition>()
+            val fieldDefs = ArrayList<ProgramData.Definition>()
+            fieldDefs.add(ProgramData.Definition(0, 0, 0)) // FIXME: temporary
 
-            val statements = ArrayList<Statement>(ir.size())
-            val functions = ArrayList<Function>()
+            val statements = ArrayList<ProgramData.Statement>(ir.size())
+            val functions = ArrayList<ProgramData.Function>()
             ir.forEach {
                 if (it is FunctionIR) {
                     functions.add(
@@ -60,7 +61,7 @@ class Generator(val state: CompileState) {
                     val a = if (args.size() > 0) args[0] else 0
                     val b = if (args.size() > 1) args[1] else 0
                     val c = if (args.size() > 2) args[2] else 0
-                    statements.add(Statement(it.instr!!, a, b, c))
+                    statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
             val merge = fun (it: Entry) {

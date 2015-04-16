@@ -6,6 +6,8 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
 import com.timepath.compiler.backends.q1vm.DefaultHandler
+import com.timepath.compiler.backends.q1vm.Q1VM
+import com.timepath.compiler.types.defaults.pointer_t
 import com.timepath.q1vm.Instruction
 
 data class field_t(val type: Type) : pointer_t() {
@@ -26,6 +28,7 @@ data class field_t(val type: Type) : pointer_t() {
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState?) = when {
         state!!.symbols.globalScope -> {
+            state as Q1VM.State
             if (name in state.fields) {
                 logger.warning("redeclaring field $name")
             }

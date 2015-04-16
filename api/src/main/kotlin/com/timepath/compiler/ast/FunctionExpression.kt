@@ -1,6 +1,6 @@
 package com.timepath.compiler.ast
 
-import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.defaults.function_t
 import org.antlr.v4.runtime.ParserRuleContext
 
 /**

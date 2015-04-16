@@ -4,6 +4,8 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backends.q1vm.gen.evaluate
 import com.timepath.compiler.backends.q1vm.gen.generate
+import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.pointer_t
 
 data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 
@@ -21,7 +23,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             is ReferenceExpression -> {
                 val s = generateAccessorName(left.refers.id)
                 val resolve = state.symbols.resolve(s)
-                if(resolve == null) {
+                if (resolve == null) {
                     throw RuntimeException("Can't resolve $s")
                 }
                 val accessor = ReferenceExpression(resolve)

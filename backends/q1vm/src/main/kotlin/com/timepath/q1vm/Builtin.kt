@@ -2,22 +2,14 @@ package com.timepath.q1vm
 
 import java.util.ArrayList
 
-fun KBuiltin(name: String,
-             parameterTypes: Array<Class<*>> = array(),
-             varargsType: Class<*>? = null,
-             callback: (args: List<*>) -> Any = {}) =
-        Builtin(name, parameterTypes, varargsType, object : BuiltinHandler {
-            override fun call(args: List<Any?>): Any = callback(args)
-        })
-
-trait BuiltinHandler {
-    fun call(args: List<*>): Any
-}
-
 class Builtin(val name: String,
               val parameterTypes: Array<Class<*>> = array(),
               val varargsType: Class<*>? = null,
-              val callback: BuiltinHandler) {
+              val callback: Builtin.Handler) {
+
+    trait Handler {
+        fun call(args: List<*>): Any
+    }
 
     fun call(ctx: Program, parameterCount: Int): Any {
         var offset = Instruction.OFS_PARAM(0)

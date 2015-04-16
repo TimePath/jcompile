@@ -1,7 +1,7 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.types.Type
-import com.timepath.compiler.types.struct_t
+import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext
 
 open class ReferenceExpression(val refers: DeclarationExpression, override val ctx: ParserRuleContext? = null) : Expression() {

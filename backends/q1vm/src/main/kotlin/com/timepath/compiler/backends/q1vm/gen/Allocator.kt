@@ -2,12 +2,12 @@ package com.timepath.compiler.backends.q1vm.gen
 
 import com.timepath.Logger
 import com.timepath.compiler.backends.q1vm.CompilerOptions
-import com.timepath.compiler.Pointer
-import com.timepath.compiler.Value
 import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.data.Pointer
+import com.timepath.compiler.data.Value
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.bool_t
-import com.timepath.compiler.types.function_t
+import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.string_t
 import java.util.HashMap
 import java.util.LinkedHashMap

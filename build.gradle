@@ -23,7 +23,7 @@ def base = 'com.timepath.compiler'
 task createAllStartScripts() << {}
 def scripts = [
         'compile'  : "${base}.CompilerPackage",
-        'transpile': "${base}.backend.cpp.CppPackage"
+        'transpile': "${base}.backends.cpp.CppPackage"
 ]
 mainClassName = scripts['compile']
 scripts.each { scriptName, className ->

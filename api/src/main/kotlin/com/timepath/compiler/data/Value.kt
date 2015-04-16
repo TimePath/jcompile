@@ -1,8 +1,7 @@
-package com.timepath.compiler
+package com.timepath.compiler.data
 
 import com.timepath.compiler.types.Type
-//import com.timepath.compiler.types.float_t
-//import com.timepath.compiler.types.int_t
+import com.timepath.quote
 
 class Value(val any: Any) {
 
@@ -90,14 +89,14 @@ class Value(val any: Any) {
     }
 
     fun cast(type: Type): Value {
-// TODO
-//        val lhs = any
-//        when (lhs) {
-//            is Number -> when (type) {
-//                is float_t -> return Value(lhs.toFloat())
-//                is int_t -> return Value(lhs.toInt())
-//            }
-//        }
+        // TODO
+        //        val lhs = any
+        //        when (lhs) {
+        //            is Number -> when (type) {
+        //                is float_t -> return Value(lhs.toFloat())
+        //                is int_t -> return Value(lhs.toInt())
+        //            }
+        //        }
         throw UnsupportedOperationException("not supported")
     }
 

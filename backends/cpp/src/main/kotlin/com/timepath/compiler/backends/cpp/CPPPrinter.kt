@@ -1,4 +1,4 @@
-package com.timepath.compiler.backend.cpp
+package com.timepath.compiler.backends.cpp
 
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
@@ -49,7 +49,7 @@ fun project(project: Project) {
             .includeFrom(File(sourceRoot, "progs.src"))
             .define(project.define)
 
-    val templates = STGroupFile(javaClass<CPPPrinter>().getResource("/com/timepath/compiler/backend/cpp/cpp.stg"), "UTF-8", '<', '>')
+    val templates = STGroupFile(javaClass<CPPPrinter>().getResource("/com/timepath/compiler/backends/cpp/cpp.stg"), "UTF-8", '<', '>')
     val printer = CPPPrinter(templates)
     templates.registerModelAdaptor(javaClass<Expression>(), object : ObjectModelAdaptor() {
         override fun getProperty(interpreter: Interpreter?, self: ST?, o: Any?, property: Any?, propertyName: String?): Any? {
@@ -69,7 +69,7 @@ fun project(project: Project) {
     projOut.mkdirs()
     val predef = File(projOut, "progs.h")
     FileOutputStream(predef).writer().buffered().use {
-        val predefs = javaClass<CPPPrinter>().getResourceAsStream("/com/timepath/compiler/backend/cpp/predefs.hpp")
+        val predefs = javaClass<CPPPrinter>().getResourceAsStream("/com/timepath/compiler/backends/cpp/predefs.hpp")
         it.write("")
         it.appendln("namespace $ns {")
         predefs.reader().buffered().copyTo(it)
