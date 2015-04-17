@@ -1,43 +1,7 @@
-buildscript {
-    ext.versions = [
-            kotlin: '0.11.91.1',
-            antlr : '4.5',
-            jcpp  : '1.4.8-SNAPSHOT',
-    ]
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    // jcpp
-    maven {
-        url "http://repository.jetbrains.com/all"
-    }
-}
-
-apply plugin: 'kotlin'
-
-sourceSets {
-    main {
-        java { srcDirs = [] }
-    }
-    test {
-        java { srcDirs = [] }
-    }
-}
-
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+    compile 'org.reflections:reflections:0.9.9'
+
+    // TODO: remove these
     compile "org.anarres:jcpp:${versions.jcpp}"
     compile "org.antlr:antlr4-runtime:${versions.antlr}"
-    compile "org.reflections:reflections:0.9.9"
 }

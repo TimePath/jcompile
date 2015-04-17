@@ -4,9 +4,9 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backends.q1vm.CompilerOptions
-import com.timepath.compiler.backends.q1vm.Q1VM
-import com.timepath.compiler.backends.q1vm.gen.Generator.ASM
+import com.timepath.compiler.backend.q1vm.CompilerOptions
+import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.gen.Generator.ASM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.test.PrintVisitor
 import com.timepath.q1vm.Program
@@ -25,7 +25,7 @@ val opts = CompilerOptions()
 fun compile([Language("QuakeC")] input: String): ProgramData {
     return Compiler(QCC(), Q1VM())
             .include(input, "-")
-            .compile() as ProgramData
+            .compile().generateProgs()
 }
 
 fun exec([Language("QuakeC")] input: String) {
@@ -81,7 +81,7 @@ class CompilerSpecs {
                     var asm: ASM
                     it("should compile") {
                         logger.info("Compiling $test")
-                        asm = compiler.compile(roots) as ASM
+                        asm = compiler.compile(roots)
                         asm.ir.map { ir ->
                             if (ir.real)
                                 "$ir"
@@ -90,7 +90,6 @@ class CompilerSpecs {
                         }.filterNotNull().joinToString("\n").let { actual ->
                             compare("ASM", test.name + ".asm", actual)
                         }
-                        compiler.state as Q1VM.State
                         compiler.state.allocator.toString().let { actual ->
                             compare("allocation", test.name + ".txt", actual)
                         }

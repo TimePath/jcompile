@@ -2,9 +2,9 @@ package com.timepath.compiler.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.Q1VM
-import com.timepath.compiler.backends.q1vm.gen.evaluate
-import com.timepath.compiler.backends.q1vm.gen.generate
+import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.gen.evaluate
+import com.timepath.compiler.backend.q1vm.gen.generate
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.pointer_t
 

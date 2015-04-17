@@ -1,10 +1,10 @@
-package com.timepath.compiler.backends.q1vm.gen
+package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.Logger
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backends.q1vm.Q1VM
-import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.gen.Allocator.AllocationMap.Entry
 import com.timepath.compiler.data.Pointer
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.ProgramData.Header

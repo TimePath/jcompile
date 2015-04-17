@@ -1,8 +1,8 @@
-package com.timepath.compiler.backends.q1vm.gen
+package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.data.Pointer
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types

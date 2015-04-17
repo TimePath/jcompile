@@ -1,41 +1,4 @@
-buildscript {
-    ext.versions = [
-            kotlin: '0.11.91.1',
-    ]
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    // jcpp
-    maven {
-        url "http://repository.jetbrains.com/all"
-    }
-}
-
-apply plugin: 'kotlin'
-
-sourceSets {
-    main {
-        java { srcDirs = [] }
-    }
-    test {
-        java { srcDirs = [] }
-    }
-}
-
 dependencies {
-    compile project(':api')
     compile project(':frontends:quakec')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
     compile 'org.antlr:ST4:4.0.8'
 }

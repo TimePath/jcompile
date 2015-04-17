@@ -1,8 +1,8 @@
-package com.timepath.compiler.backends.q1vm.gen
+package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.Logger
-import com.timepath.compiler.backends.q1vm.CompilerOptions
-import com.timepath.compiler.backends.q1vm.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.backend.q1vm.CompilerOptions
+import com.timepath.compiler.backend.q1vm.gen.Allocator.AllocationMap.Entry
 import com.timepath.compiler.data.Pointer
 import com.timepath.compiler.data.Value
 import com.timepath.compiler.types.Type

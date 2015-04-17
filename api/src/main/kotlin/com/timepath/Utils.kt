@@ -1,6 +1,7 @@
 package com.timepath
 
 import java.lang.invoke.MethodHandles
+import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.logging.LogManager
@@ -11,6 +12,12 @@ class DaemonThreadFactory : ThreadFactory {
         setDaemon(true)
         this
     }
+}
+
+inline fun time(logger: java.util.logging.Logger, name: String, action: () -> Unit) {
+    val start = Date()
+    action()
+    logger.info("$name: ${(Date().getTime() - start.getTime()).toDouble() / 1000} seconds")
 }
 
 object Logger {

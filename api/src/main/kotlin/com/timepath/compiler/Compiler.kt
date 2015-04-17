@@ -3,6 +3,7 @@ package com.timepath.compiler
 import com.timepath.DaemonThreadFactory
 import com.timepath.Logger
 import com.timepath.compiler.api.Backend
+import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.test.PrintVisitor
@@ -17,7 +18,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
-public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Null) {
+public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
 
     val state = backend.state
 
@@ -28,7 +29,7 @@ public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Nu
         val writeParse = false
     }
 
-    fun define(name: String, value: String = "1"): Compiler {
+    fun define(name: String, value: String = "1"): Compiler<F, S, O, B> {
         parser.define(name, value)
         return this
     }
@@ -53,7 +54,7 @@ public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Nu
             get() = StringLexerSource(input)
     }
 
-    public fun include(input: String, name: String): Compiler {
+    public fun include(input: String, name: String): Compiler<F, S, O, B> {
         includes.add(Include(input, name))
         return this
     }
@@ -65,12 +66,12 @@ public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Nu
             get() = FileLexerSource(file)
     }
 
-    public fun include(file: File): Compiler {
+    public fun include(file: File): Compiler<F, S, O, B> {
         includes.add(Include(file))
         return this
     }
 
-    fun includeFrom(progs: File): Compiler {
+    fun includeFrom(progs: File): Compiler<F, S, O, B> {
         progs.readLines().drop(1).map {
             val name = it.replaceFirst("//.*", "").trim()
             val file = File(progs.getParent(), name)
@@ -138,5 +139,5 @@ public class Compiler(val parser: Frontend, val backend: Backend<*> = Backend.Nu
         return roots
     }
 
-    public fun compile(roots: List<List<Expression>> = ast()): Any = backend.generate(roots.flatMap { it })
+    public fun compile(roots: List<List<Expression>> = ast()): O = backend.generate(roots.flatMap { it })
 }

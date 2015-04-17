@@ -3,27 +3,11 @@ group = 'com.timepath'
 version = '0.1-SNAPSHOT'
 apply plugin: 'application'
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            artifact sourceJar {
-                classifier "sources"
-            }
-        }
-    }
-}
-
 def base = 'com.timepath.compiler'
 task createAllStartScripts() << {}
 def scripts = [
-        'compile'  : "${base}.CompilerPackage",
-        'transpile': "${base}.backends.cpp.CppPackage"
+        'compile'  : "${base}.Main",
+        'transpile': "${base}.backend.cpp.CPPPrinter"
 ]
 mainClassName = scripts['compile']
 scripts.each { scriptName, className ->
@@ -33,59 +17,71 @@ scripts.each { scriptName, className ->
         outputDir = new File(project.buildDir, 'scripts')
         classpath = jar.outputs.files + project.configurations.runtime
     }
-    applicationDistribution.into("bin") {
-        from(t)
+    applicationDistribution.into('bin') {
+        from t
         fileMode = 0755
     }
     createAllStartScripts.dependsOn(t)
 }
 
+task sourceJar(type: Jar) { from sourceSets.main.allSource }
+
+publishing.publications {
+    mavenJava(MavenPublication) {
+        from components.java
+        artifact sourceJar { classifier "sources" }
+    }
+}
+
 buildscript {
     ext.versions = [
-            antlr               : '4.5',
-            jcpp                : '1.4.8-SNAPSHOT',
-            jetbrainsAnnotations: '12.0',
             kotlin              : '0.11.91.1',
-            junit               : '4.12'
+            junit               : '4.12',
+            jetbrainsAnnotations: '12.0',
+            antlr               : '4.5',
+            jcpp                : '1.4.8',
     ]
 
     repositories {
         mavenLocal()
         mavenCentral()
+        // antlr4 plugin
+        jcenter()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
     }
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    // spek
-    maven {
-        url "http://repository.jetbrains.com/all"
+allprojects { p ->
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    apply plugin: 'kotlin'
+
+    sourceSets {
+        main.java.srcDirs = []
+        test.java.srcDirs = []
+    }
+
+    test.exclude '**/*$*'
+
+    dependencies {
+        if (p != project(':api'))
+            compile project(':api')
+
+        compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+        compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
+        testCompile "junit:junit:${versions.junit}"
     }
 }
-
-apply plugin: 'kotlin'
-
-sourceSets {
-    main {
-        java { srcDirs = [] }
-    }
-    test {
-        java { srcDirs = [] }
-    }
-}
-
-test { exclude '**/*$*' }
 
 dependencies {
-    compile project('api')
     compile project('frontends:quakec')
+    compile project('backends:cpp')
     compile project('backends:q1vm')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-    compile "com.intellij:annotations:${versions.jetbrainsAnnotations}"
-    testCompile "junit:junit:${versions.junit}"
 }

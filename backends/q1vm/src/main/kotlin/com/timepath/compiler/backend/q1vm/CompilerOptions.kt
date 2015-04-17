@@ -1,4 +1,4 @@
-package com.timepath.compiler.backends.q1vm
+package com.timepath.compiler.backend.q1vm
 
 data class CompilerOptions(
         /**

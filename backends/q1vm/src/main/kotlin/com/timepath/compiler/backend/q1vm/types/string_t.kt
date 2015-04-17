@@ -3,9 +3,9 @@ package com.timepath.compiler.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.backends.q1vm.DefaultAssignHandler
-import com.timepath.compiler.backends.q1vm.DefaultHandler
-import com.timepath.compiler.backends.q1vm.DefaultUnaryHandler
+import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
+import com.timepath.compiler.backend.q1vm.DefaultHandler
+import com.timepath.compiler.backend.q1vm.DefaultUnaryHandler
 import com.timepath.compiler.types.defaults.pointer_t
 import com.timepath.q1vm.Instruction
 

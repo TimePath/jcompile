@@ -1,12 +1,12 @@
-package com.timepath.compiler.backends.q1vm
+package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.gen.Allocator
-import com.timepath.compiler.backends.q1vm.gen.Generator
-import com.timepath.compiler.backends.q1vm.gen.IR
-import com.timepath.compiler.backends.q1vm.gen.generate
+import com.timepath.compiler.backend.q1vm.gen.Allocator
+import com.timepath.compiler.backend.q1vm.gen.Generator
+import com.timepath.compiler.backend.q1vm.gen.IR
+import com.timepath.compiler.backend.q1vm.gen.generate
 import com.timepath.compiler.data.Pointer
 import com.timepath.compiler.data.Vector
 import com.timepath.compiler.types.*
@@ -14,7 +14,7 @@ import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import java.util.LinkedHashMap
 
-class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State> {
+class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
 
     override fun generate(roots: List<Expression>) = state.gen.generate(roots)
 

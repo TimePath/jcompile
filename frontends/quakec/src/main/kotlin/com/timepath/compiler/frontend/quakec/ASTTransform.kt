@@ -4,7 +4,7 @@ import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backends.q1vm.gen.evaluate
+import com.timepath.compiler.backend.q1vm.gen.evaluate
 import com.timepath.compiler.data.Vector
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
@@ -163,7 +163,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         val vararg = parameterTypeList.functionVararg(ctx)
         FunctionExpression(
                 id = declaratorContext.deepest().getText(),
-                type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!) as function_t,
+                type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!)!!,
                 params = parameterTypeList.functionArgs(ctx),
                 vararg = vararg,
                 ctx = ctx
@@ -228,8 +228,8 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
                                 val retType = ctx.declarationSpecifiers().type(old)
                                 val params = parameterTypeList.functionArgs(ctx)
                                 val vararg = parameterTypeList.functionVararg(ctx)
-                                val signature = parameterTypeList.functionType(retType!!);
-                                FunctionExpression(id, signature as function_t, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
+                                val signature = parameterTypeList.functionType(retType!!)!!
+                                FunctionExpression(id, signature, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
                             } else {
                                 type.declare(id, ConstantExpression(value), state = state)
                             }

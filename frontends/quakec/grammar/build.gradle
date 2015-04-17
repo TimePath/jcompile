@@ -1,53 +1,23 @@
-apply plugin: 'java'
-
-buildscript {
-    repositories {
-        mavenLocal()
-        // antlr4 plugin
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
-    }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
 dependencies {
     compile "org.antlr:antlr4-runtime:${versions.antlr}"
-}
-
-apply plugin: 'me.champeau.gradle.antlr4'
-
-sourceSets {
-    generated {
-        java { srcDirs = ['src/generated/java'] }
-    }
-    main {
-        java { srcDirs = [] }
-        compileClasspath += generated.output
-        runtimeClasspath += generated.output
-    }
-    test {
-        java { srcDirs = [] }
-    }
 }
 
 configurations {
     generatedCompile.extendsFrom compile
 }
 
-jar {
-    from sourceSets.generated.output
+sourceSets {
+    generated.java.srcDirs = ['src/generated/java']
+    main.compileClasspath += generated.output
+    main.runtimeClasspath += generated.output
 }
+jar.from sourceSets.generated.output
+
+apply plugin: 'me.champeau.gradle.antlr4'
 
 // FIXME: autodetect
-String pkg = "com.timepath.compiler.frontend.quakec"
-antlr4.extraArgs = ["-package", pkg]
+String pkg = 'com.timepath.compiler.frontend.quakec'
+antlr4.extraArgs = ['-package', pkg]
 antlr4.output = file("${projectDir}/src/generated/java/${pkg.replace('.', '/')}")
 
 compileGeneratedJava.dependsOn antlr4
