@@ -1,11 +1,11 @@
 package com.timepath.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 // TODO: conditional goto
-class GotoExpression(val id: String, override val ctx: ParserRuleContext? = null) : Expression() {
+public class GotoExpression(val id: String, override val ctx: PRC? = null) : Expression() {
     override val simpleName = "GotoExpression"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "goto $id"
 
@@ -14,31 +14,29 @@ class GotoExpression(val id: String, override val ctx: ParserRuleContext? = null
 /**
  * Return can be assigned to, and has a constant address
  */
-class ReturnStatement(val returnValue: Expression?, override val ctx: ParserRuleContext? = null) : Expression() {
+public class ReturnStatement(val returnValue: Expression?, override val ctx: PRC? = null) : Expression() {
     init {
-        if (returnValue != null) {
-            add(returnValue)
-        }
+        returnValue?.let { add(it) }
     }
 
     override val simpleName = "ReturnStatement"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
 }
 
 // TODO: on labels
-class ContinueStatement(override val ctx: ParserRuleContext? = null) : Expression() {
+public class ContinueStatement(override val ctx: PRC? = null) : Expression() {
     override val simpleName = "ContinueStatement"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "continue"
 
 }
 
 // TODO: on labels
-class BreakStatement(override val ctx: ParserRuleContext? = null) : Expression() {
+public class BreakStatement(override val ctx: PRC? = null) : Expression() {
     override val simpleName = "BreakStatement"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "break"
 

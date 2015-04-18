@@ -1,9 +1,9 @@
-package com.timepath.compiler.data
+package com.timepath.compiler
 
 import com.timepath.compiler.types.Type
 import com.timepath.quote
 
-class Value(val any: Any) {
+public class Value(val any: Any) {
 
     fun toBoolean(): Boolean = false
 

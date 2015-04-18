@@ -2,12 +2,12 @@ package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.data.Pointer
+import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
-import com.timepath.compiler.types.entity_t
 import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 import java.util.LinkedList

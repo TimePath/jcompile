@@ -4,17 +4,21 @@ import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.Vector
 import com.timepath.compiler.backend.q1vm.gen.evaluate
-import com.timepath.compiler.data.Vector
+import com.timepath.compiler.backend.q1vm.types.array_t
+import com.timepath.compiler.backend.q1vm.types.field_t
+import com.timepath.compiler.backend.q1vm.types.int_t
+import com.timepath.compiler.backend.q1vm.types.void_t
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
-import com.timepath.compiler.types.*
+import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import org.antlr.v4.runtime.ParserRuleContext
 import java.util.ArrayList
 
-class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
+private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun emptyList<T>() = ArrayList<T>()
@@ -28,7 +32,7 @@ class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() 
         it
     }
 
-    inline fun <R> SymbolTable.scope(name: String, block: () -> R): R {
+    inline fun SymbolTable.scope<R>(name: String, block: () -> R): R {
         push(name)
         try {
             return block()

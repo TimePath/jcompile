@@ -3,13 +3,11 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.gen.Allocator
-import com.timepath.compiler.backend.q1vm.gen.Generator
-import com.timepath.compiler.backend.q1vm.gen.IR
-import com.timepath.compiler.backend.q1vm.gen.generate
-import com.timepath.compiler.data.Pointer
-import com.timepath.compiler.data.Vector
-import com.timepath.compiler.types.*
+import com.timepath.compiler.backend.q1vm.gen.*
+import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.types.Operation
+import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import java.util.LinkedHashMap
@@ -44,7 +42,7 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Gene
 
             Types.handlers.add { it ->
                 if (it.op != ",") null else
-                    OperationHandler(it.right!!) { gen: Q1VM.State, left, right ->
+                    OperationHandler(it.right!!) { gen: State, left, right ->
                         with(linkedListOf<IR>()) {
                             addAll(left.generate(gen))
                             addAll(right!!.generate(gen))

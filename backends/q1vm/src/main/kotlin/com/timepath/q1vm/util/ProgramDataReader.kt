@@ -11,7 +11,7 @@ class ProgramDataReader(val raf: IOWrapper) {
 
     constructor(file: File) : this(IOWrapper.File(file))
 
-    private fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
+    private fun iterData<T>(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
         val ret = ArrayList<T>(section.count)
         raf.offset = section.offset
         for (i in 0..section.count - 1) {

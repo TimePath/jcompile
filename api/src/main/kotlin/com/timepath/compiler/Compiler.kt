@@ -1,12 +1,10 @@
 package com.timepath.compiler
 
-import com.timepath.DaemonThreadFactory
 import com.timepath.Logger
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.test.PrintVisitor
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
@@ -14,101 +12,63 @@ import org.anarres.cpp.StringLexerSource
 import java.io.File
 import java.net.URL
 import java.util.LinkedList
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.logging.Level
 
 public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
 
-    val state = backend.state
-
     companion object {
         val logger = Logger.new()
-        val debugThreads = true
-        val writeAST = false
-        val writeParse = false
     }
 
-    fun define(name: String, value: String = "1"): Compiler<F, S, O, B> {
-        parser.define(name, value)
-        return this
-    }
+    val state = backend.state
+
+    val includes = LinkedList<Include>()
 
     init {
         // define("QCC_SUPPORT_INT")
         define("QCC_SUPPORT_BOOL")
+
+        includes.add(Include.new(this.javaClass.getResource("/predefs.qc")))
     }
 
-    val includes = LinkedList<Include>()
-
-    data trait Include {
-        val name: String
-        val path: String
-        val source: Source
+    fun define(name: String, value: String = "1") {
+        parser.define(name, value)
     }
 
-    fun Include(input: String, name: String): Include = object : Include {
-        override val name = name
-        override val path = name
-        override val source: Source
-            get() = StringLexerSource(input)
+    data class Include(
+            val name: String,
+            val path: String,
+            val source: Source
+    ) {
+        companion object {
+            fun new(input: String, name: String) = Include(name, name, StringLexerSource(input))
+
+            fun new(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
+
+            fun new(url: URL): Include {
+                val name = url.getPath().substringAfterLast('/')
+                val path = url.getPath()
+                return Include(name, path, object : LexerSource(url.openStream().buffered().reader(), true) {
+                    override fun getName() = name
+                    override fun getPath() = path
+                })
+            }
+        }
     }
 
-    public fun include(input: String, name: String): Compiler<F, S, O, B> {
-        includes.add(Include(input, name))
-        return this
+    public fun include(input: String, name: String) {
+        includes.add(Include.new(input, name))
     }
 
-    fun Include(file: File): Include = object : Include {
-        override val name = file.name
-        override val path = file.canonicalPath
-        override val source: Source
-            get() = FileLexerSource(file)
+    public fun include(file: File) {
+        includes.add(Include.new(file))
     }
 
-    public fun include(file: File): Compiler<F, S, O, B> {
-        includes.add(Include(file))
-        return this
-    }
-
-    fun includeFrom(progs: File): Compiler<F, S, O, B> {
+    fun includeFrom(progs: File) {
         progs.readLines().drop(1).map {
             val name = it.replaceFirst("//.*", "").trim()
             val file = File(progs.getParent(), name)
-            if (name.isNotEmpty() && file.exists()) Include(file) else null
+            if (name.isNotEmpty() && file.exists()) Include.new(file) else null
         }.filterNotNullTo(includes)
-        return this
-    }
-
-    fun Include(url: URL): Include = object : Include {
-        override val name = url.getPath().substringAfterLast('/')
-        override val path = url.getPath()
-        override val source: Source
-            get() = object : LexerSource(url.openStream().buffered().reader(), true) {
-                override fun getName() = name
-                override fun getPath() = path
-            }
-    }
-
-    init {
-        includes.add(Include(this.javaClass.getResource("/predefs.qc")))
-    }
-
-    val exec = if (debugThreads)
-        Executors.newSingleThreadExecutor()
-    else
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DaemonThreadFactory())
-
-    inline fun debug(s: String, predicate: Boolean, inlineOptions(InlineOption.ONLY_LOCAL_RETURN) action: () -> Unit) {
-        if (predicate) {
-            exec.submit {
-                try {
-                    action()
-                } catch (e: Throwable) {
-                    logger.log(Level.SEVERE, "Error $s", e)
-                }
-            }
-        }
     }
 
     fun ast(): List<List<Expression>> {
@@ -117,25 +77,7 @@ public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>
             logger.info(include.path)
             val root = parser.parse(include, state)
             roots.add(root.children)
-            //            debug("printing parse tree", writeParse) {
-            //                val listener = TreePrinterListener(rules!!)
-            //                ParseTreeWalker.DEFAULT.walk(listener, tree)
-            //                File("out", include.path + ".lisp").let {
-            //                    it.getParentFile().mkdirs()
-            //                    val s = listener.toString()
-            //                    it.writeText(s)
-            //                }
-            //            }
-            debug("printing AST", writeAST) {
-                File("out", include.path + ".xml").let {
-                    it.getParentFile().mkdirs()
-                    val s = PrintVisitor.render(root)
-                    it.writeText(s)
-                }
-            }
         }
-        exec.shutdown()
-        exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
         return roots
     }
 

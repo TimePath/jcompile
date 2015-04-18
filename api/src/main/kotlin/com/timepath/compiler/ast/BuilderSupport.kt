@@ -6,8 +6,7 @@ import com.timepath.compiler.types.defaults.function_t
 
 fun ast(configure: (BlockExpression.() -> Unit)? = null): BlockExpression {
     val block = BlockExpression()
-    if (configure != null)
-        block.configure()
+    configure?.let { block.it() }
     return block
 }
 

@@ -1,15 +1,15 @@
 package com.timepath.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 /**
  * dynamic:
  * array[index], entity.(field)
  */
 // TODO: arrays
-class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContext? = null) : BinaryExpression("[]", left, right, ctx) {
+public class IndexExpression(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("[]", left, right, ctx) {
     override val simpleName = "IndexExpression"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr: Any? = null
 }
@@ -19,9 +19,9 @@ class IndexExpression(left: Expression, right: Expression, ctx: ParserRuleContex
  * struct.field
  */
 // TODO: structs
-class MemberExpression(left: Expression, val field: String, ctx: ParserRuleContext? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
+public class MemberExpression(left: Expression, val field: String, ctx: PRC? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
     override val simpleName = "MemberExpression"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr: Any? = null
 }

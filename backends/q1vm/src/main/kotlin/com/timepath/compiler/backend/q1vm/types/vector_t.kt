@@ -1,11 +1,9 @@
-package com.timepath.compiler.types
+package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
-import com.timepath.compiler.backend.q1vm.DefaultHandler
-import com.timepath.compiler.backend.q1vm.DefaultUnaryHandler
-import com.timepath.compiler.backend.q1vm.gen.IR
-import com.timepath.compiler.backend.q1vm.gen.generate
+import com.timepath.compiler.backend.q1vm.gen.*
+import com.timepath.compiler.types.Operation
+import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
 

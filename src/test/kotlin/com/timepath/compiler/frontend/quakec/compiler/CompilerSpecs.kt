@@ -4,33 +4,18 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.gen.Generator.ASM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.test.PrintVisitor
 import com.timepath.q1vm.Program
-import com.timepath.q1vm.ProgramData
 import junit.framework.TestCase
 import junit.framework.TestSuite
-import org.intellij.lang.annotations.Language
 import org.junit.runner.RunWith
 import org.junit.runners.AllTests
 import java.io.File
 import kotlin.platform.platformStatic
 import kotlin.test.assertEquals
-
-val opts = CompilerOptions()
-
-fun compile([Language("QuakeC")] input: String): ProgramData {
-    return Compiler(QCC(), Q1VM())
-            .include(input, "-")
-            .compile().generateProgs()
-}
-
-fun exec([Language("QuakeC")] input: String) {
-    Program(compile(input)).exec("main")
-}
 
 val resources = File("src/test/resources")
 
@@ -43,7 +28,7 @@ fun compare(what: String, name: String, actual: String) {
         val temp = File(resources, "tmp/" + name)
         temp.getParentFile().mkdirs()
         temp.writeText(actual)
-        //        fail("Nothing to compare")
+        // fail("Nothing to compare")
     }
 }
 

@@ -48,9 +48,11 @@ class CPPPrinter(val templ: STGroup) : ASTVisitor<String> {
 
         fun project(root: File, project: Project) {
             val sourceRoot = File(root, project.root)
-            val compiler = Compiler(QCC(), Q1VM())
-                    .includeFrom(File(sourceRoot, "progs.src"))
-                    .define(project.define)
+            val compiler = Compiler(QCC(), Q1VM()).let {
+                it.includeFrom(File(sourceRoot, "progs.src"))
+                it.define(project.define)
+                it
+            }
 
             val templates = STGroupFile(STG, "UTF-8", '<', '>').let {
                 val printer = CPPPrinter(it)

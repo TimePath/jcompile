@@ -8,22 +8,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.EnumSet
 
-class CustomPreprocessor : Preprocessor() {
+private class CustomPreprocessor : Preprocessor() {
 
     init {
-        getSystemIncludePath().add("/usr/include")
-        val now = Date()
         addWarnings(EnumSet.allOf(javaClass<Warning>()))
         setListener(DefaultPreprocessorListener())
+        val now = Date()
         addMacro("__DATE__", SimpleDateFormat("\"MMM dd yyyy\"").format(now))
         addMacro("__TIME__", SimpleDateFormat("\"hh:mm:ss\"").format(now))
     }
 
-    override fun token(): Token? {
+    override fun token(): Token {
         try {
             return super.token()
         } catch (e: Exception) {
-            if (e.getMessage()!!.matches("Bad token \\[#@\\d+,\\d+\\]:\"#\"")) {
+            if (e.getMessage()?.matches("Bad token \\[#@\\d+,\\d+\\]:\"#\"") ?: false) {
                 return Token(Token.HASH, -1, -1, "#", null)
             }
             throw e
@@ -31,7 +30,9 @@ class CustomPreprocessor : Preprocessor() {
     }
 
     override fun pragma(name: Token, value: MutableList<Token>) {
-        if ("noref" == name.getText()) return
-        super.pragma(name, value)
+        when (name.getText()) {
+            "noref" -> return
+            else -> super.pragma(name, value)
+        }
     }
 }

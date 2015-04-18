@@ -35,7 +35,7 @@ public abstract class CompileState {
             stack.pop()
         }
 
-        override fun <R> declare(e: R): R {
+        override fun declare<R>(e: R): R {
             val vars = stack.peek().vars
             if (e is DeclarationExpression) {
                 vars[e.id] = e

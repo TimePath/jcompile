@@ -1,13 +1,10 @@
-package com.timepath.compiler.backend.q1vm
+package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.gen.IR
-import com.timepath.compiler.backend.q1vm.gen.generate
-import com.timepath.compiler.backend.q1vm.gen.type
+import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
-
 
 class DefaultHandler(type: Type, instr: Instruction) : OperationHandler<Q1VM.State, List<IR>>(type, { gen, left, right ->
     right!!

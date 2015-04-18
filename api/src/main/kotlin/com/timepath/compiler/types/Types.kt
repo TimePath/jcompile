@@ -1,6 +1,6 @@
 package com.timepath.compiler.types
 
-object Types {
+public object Types {
 
     val types = hashMapOf<Class<*>, Type>()
 
@@ -15,7 +15,7 @@ object Types {
 
     val handlers = linkedListOf<(Operation) -> OperationHandler<*, *>?>()
 
-    fun <T> handle(operation: Operation): OperationHandler<*, T> {
+    fun handle<T>(operation: Operation): OperationHandler<*, T> {
         handlers.forEach {
             it(operation)?.let {
                 (it as OperationHandler<*, T>).let { return it }

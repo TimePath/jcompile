@@ -1,20 +1,18 @@
 package com.timepath.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
 import kotlin.properties.Delegates
+import org.antlr.v4.runtime.ParserRuleContext as PRC
 
-class MethodCallExpression(val function: Expression,
-                           add: List<Expression>? = null,
-                           override val ctx: ParserRuleContext? = null) : Expression() {
+public class MethodCallExpression(val function: Expression,
+                                  add: List<Expression>? = null,
+                                  override val ctx: PRC? = null) : Expression() {
 
     init {
-        if (add != null) {
-            addAll(add)
-        }
+        add?.let { addAll(it) }
     }
 
     override val simpleName = "MethodCallExpression"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     val args: List<Expression> by Delegates.lazy {
         children.filterIsInstance<Expression>()

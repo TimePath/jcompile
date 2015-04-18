@@ -5,7 +5,7 @@ import com.timepath.compiler.api.Named
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.Expression
 
-abstract class Type : Named {
+public abstract class Type : Named {
 
     override fun toString() = javaClass.getSimpleName().toLowerCase()
 
@@ -14,6 +14,3 @@ abstract class Type : Named {
     abstract fun handle(op: Operation): OperationHandler<*, *>?
 
 }
-
-
-

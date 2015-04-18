@@ -2,7 +2,10 @@ package com.timepath.compiler.backend.q1vm.gen
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.types.*
+import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.types.Operation
+import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 

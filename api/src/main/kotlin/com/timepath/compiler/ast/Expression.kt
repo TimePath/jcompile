@@ -1,13 +1,13 @@
 package com.timepath.compiler.ast
 
 import com.timepath.compiler.api.Named
-import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.ParserRuleContext as PRC
 
-abstract class Expression : Named {
+public abstract class Expression : Named {
 
-    abstract val ctx: ParserRuleContext?
+    abstract val ctx: PRC?
 
-    abstract fun <T> accept(visitor: ASTVisitor<T>): T
+    abstract fun accept<T>(visitor: ASTVisitor<T>): T
 
     fun transform(transform: (Expression) -> Expression?): List<Expression> {
         // TODO: pure

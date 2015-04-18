@@ -1,23 +1,21 @@
 package com.timepath.compiler.ast
 
-import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.ParserRuleContext as PRC
 
-class ConditionalExpression(val test: Expression,
-                            val expression: Boolean,
-                            val pass: Expression,
-                            val fail: Expression? = null,
-                            override val ctx: ParserRuleContext? = null) : Expression() {
+public class ConditionalExpression(val test: Expression,
+                                   val expression: Boolean,
+                                   val pass: Expression,
+                                   val fail: Expression? = null,
+                                   override val ctx: PRC? = null) : Expression() {
 
     init {
         add(test)
         add(pass)
-        if (fail != null) {
-            add(fail)
-        }
+        fail?.let { add(it) }
     }
 
     override val simpleName = "ConditionalExpression"
-    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "($test ? $pass : $fail)"
 

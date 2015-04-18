@@ -2,7 +2,7 @@ package com.timepath.compiler.test
 
 import com.timepath.compiler.ast.*
 
-object PrintVisitor : ASTVisitor<Map<String, Any?>> {
+public object PrintVisitor : ASTVisitor<Map<String, Any?>> {
 
     public fun render(e: Expression): String = render(e, StringBuilder()).toString()
 

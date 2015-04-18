@@ -7,7 +7,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 
-data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
+public data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {
 
     override val simpleName = "function_t"
     override fun toString() = "($argTypes${when (vararg) {

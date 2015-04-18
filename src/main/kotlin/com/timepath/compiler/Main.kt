@@ -26,9 +26,11 @@ object Main {
             )
             defs.forEach { project ->
                 time(logger, "Project time") {
-                    val compiler = Compiler(QCC(), Q1VM())
-                            .includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
-                            .define(project.define)
+                    val compiler = Compiler(QCC(), Q1VM()).let {
+                        it.includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
+                        it.define(project.define)
+                        it
+                    }
                     val compiled = compiler.compile()
                     ProgramDataWriter(IOWrapper.File(File("out", project.out).let {
                         it.getParentFile().mkdirs()
@@ -42,9 +44,11 @@ object Main {
             val gmqcc = Compiler(QCC().let {
                 it.preprocessor.addFeatures(Feature.DIGRAPHS, Feature.TRIGRAPHS)
                 it
-            }, Q1VM())
-                    .define("GMQCC")
-                    .define("__STD_GMQCC__")
+            }, Q1VM()).let {
+                it.define("GMQCC")
+                it.define("__STD_GMQCC__")
+                it
+            }
             val include = { filter: (file: File) -> Boolean ->
                 val files = File("$xonotic/gmqcc/tests").listFiles(filter)
                 if (files != null) {

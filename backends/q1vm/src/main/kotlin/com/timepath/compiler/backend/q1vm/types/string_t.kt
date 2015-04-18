@@ -1,11 +1,12 @@
-package com.timepath.compiler.types
+package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
-import com.timepath.compiler.backend.q1vm.DefaultHandler
-import com.timepath.compiler.backend.q1vm.DefaultUnaryHandler
+import com.timepath.compiler.backend.q1vm.gen.DefaultAssignHandler
+import com.timepath.compiler.backend.q1vm.gen.DefaultHandler
+import com.timepath.compiler.backend.q1vm.gen.DefaultUnaryHandler
+import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.defaults.pointer_t
 import com.timepath.q1vm.Instruction
 
