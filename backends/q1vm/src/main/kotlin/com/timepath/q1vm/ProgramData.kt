@@ -27,13 +27,9 @@ data class ProgramData(val header: Header,
 
         var data: ProgramData? = null
 
-        fun invoke(data: ProgramData): Int {
-            return op(this, data)
-        }
+        fun invoke(data: ProgramData) = op(this, data)
 
-        override fun toString(): String {
-            return op.toString(this, data)
-        }
+        override fun toString() = op.toString(this, data)
 
     }
 
@@ -41,10 +37,9 @@ data class ProgramData(val header: Header,
                      val offset: Short,
                      val nameOffset: Int) {
 
-        var data: ProgramData? = null
+        var data: ProgramData by Delegates.notNull()
 
-        val name: String?
-            get() = data!!.strings[nameOffset]
+        val name: String? get() = data.strings[nameOffset]
 
         override fun toString(): String = """Definition {
     type=$type,

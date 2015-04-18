@@ -14,8 +14,7 @@ fun Expression.type(state: Q1VM.State): Type = accept(TypeVisitor(state))
 
 private class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
-    [suppress("NOTHING_TO_INLINE")]
-    inline fun Expression.type(): Type = accept(this@TypeVisitor)
+    fun Expression.type(): Type = accept(this@TypeVisitor)
 
     override fun visit(e: Nop) = void_t
 
@@ -51,10 +50,7 @@ private class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
     override fun visit(e: BinaryExpression.Subtract) = visit(e: BinaryExpression)
     override fun visit(e: BinaryExpression.SubtractAssign) = visit(e: BinaryExpression)
 
-    override fun visit(e: BlockExpression): Type {
-        // TODO: return children.last().type(gen)
-        return void_t
-    }
+    override fun visit(e: BlockExpression) = e.children.lastOrNull()?.type() ?: void_t
 
     override fun visit(e: ConditionalExpression): Type {
         val type = e.pass.type()

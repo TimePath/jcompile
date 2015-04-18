@@ -17,8 +17,7 @@ fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor
 
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
-    [suppress("NOTHING_TO_INLINE")]
-    inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
+    fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
     override fun visit(e: BinaryExpression) = Types.handle<List<IR>>(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
@@ -124,63 +123,61 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return listOf(ReferenceIR(global.ref))
     }
 
-    override fun visit(e: FunctionExpression): List<IR> {
-        with(e) {
-            if (id in state.allocator) {
-                Generator.logger.warning("redefining $id")
-            }
-
-            val global = state.allocator.allocateFunction(id, type = type(state) as function_t)
-            val f = ProgramData.Function(
-                    firstStatement = if (builtin == null)
-                        0 // to be filled in later
-                    else
-                        -builtin,
-                    firstLocal = 0,
-                    numLocals = 0,
-                    profiling = 0,
-                    nameOffset = state.allocator.allocateString(id).ref,
-                    fileNameOffset = 0,
-                    numParams = 0,
-                    sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
-            )
-            state.allocator.push(id)
-            val params = with(linkedListOf<Expression>()) {
-                params?.let { addAll(it) }
-                vararg?.let { add(it) }
-                this
-            }
-            val genParams = params.flatMap { it.generate(state) }
-            val children = children.flatMap { it.generate(state) }
-            run {
-                // Calculate label jumps
-                val labelIndices = linkedMapOf<String, Int>()
-                val jumpIndices = linkedMapOf<String, Int>()
-                children.fold(0, { i, it ->
-                    when {
-                        it is LabelIR -> {
-                            labelIndices[it.id] = i
-                        }
-                        it.instr == Instruction.GOTO && it.args[0] == 0 -> {
-                            jumpIndices[state.gen.gotoLabels[it]] = i
-                        }
-                    }
-                    if (it.real) i + 1 else i
-                })
-                val real = children.filter { it.real }
-                for ((s, i) in jumpIndices) {
-                    real[i].args[0] = labelIndices[s] - i
-                }
-            }
-            val list = (listOf(
-                    FunctionIR(f))
-                    + genParams
-                    + children
-                    + IR(instr = Instruction.DONE)
-                    + ReferenceIR(global.ref))
-            state.allocator.pop()
-            return list
+    override fun visit(e: FunctionExpression): List<IR> = with(e) {
+        if (id in state.allocator) {
+            Generator.logger.warning("redefining $id")
         }
+
+        val global = state.allocator.allocateFunction(id, type = type(state) as function_t)
+        val f = ProgramData.Function(
+                firstStatement = if (builtin == null)
+                    0 // to be filled in later
+                else
+                    -builtin,
+                firstLocal = 0,
+                numLocals = 0,
+                profiling = 0,
+                nameOffset = state.allocator.allocateString(id).ref,
+                fileNameOffset = 0,
+                numParams = 0,
+                sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
+        )
+        state.allocator.push(id)
+        val params = with(linkedListOf<Expression>()) {
+            params?.let { addAll(it) }
+            vararg?.let { add(it) }
+            this
+        }
+        val genParams = params.flatMap { it.generate(state) }
+        val children = children.flatMap { it.generate(state) }
+        run {
+            // Calculate label jumps
+            val labelIndices = linkedMapOf<String, Int>()
+            val jumpIndices = linkedMapOf<String, Int>()
+            children.fold(0, { i, it ->
+                when {
+                    it is LabelIR -> {
+                        labelIndices[it.id] = i
+                    }
+                    it.instr == Instruction.GOTO && it.args[0] == 0 -> {
+                        jumpIndices[state.gen.gotoLabels[it]] = i
+                    }
+                }
+                if (it.real) i + 1 else i
+            })
+            val real = children.filter { it.real }
+            for ((s, i) in jumpIndices) {
+                real[i].args[0] = labelIndices[s] - i
+            }
+        }
+        val list = (listOf(
+                FunctionIR(f))
+                + genParams
+                + children
+                + IR(instr = Instruction.DONE)
+                + ReferenceIR(global.ref))
+        state.allocator.pop()
+        list
     }
 
     override fun visit(e: GotoExpression): List<IR> {

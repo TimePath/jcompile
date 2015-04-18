@@ -14,14 +14,25 @@ import java.util.LinkedHashMap
 
 class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
 
+    override val state = State(opts)
     override fun generate(roots: List<Expression>) = state.gen.generate(roots)
+
+    init {
+        state.symbols.push("<builtin>")
+        state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
+        state.symbols.declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
+        state.symbols.declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
+        // TODO: not really a function
+        state.symbols.declare(DeclarationExpression("_", function_t(string_t, listOf(string_t))))
+        state.symbols.push("<global>")
+    }
 
     trait FieldCounter {
         fun get(name: String): ConstantExpression
         fun contains(name: String): Boolean
     }
 
-    inner class State(val opts: CompilerOptions = CompilerOptions()) : CompileState() {
+    inner class State(val opts: CompilerOptions) : CompileState() {
         val allocator = Allocator(opts)
         val gen = Generator(this)
 
@@ -40,7 +51,7 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Gene
             Types.types[javaClass<Vector>()] = vector_t
             Types.types[javaClass<Pointer>()] = int_t
 
-            Types.handlers.add { it ->
+            Types.handlers.add {
                 if (it.op != ",") null else
                     OperationHandler(it.right!!) { gen: State, left, right ->
                         with(linkedListOf<IR>()) {
@@ -73,18 +84,6 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Gene
             types["int"] = int_t
             types["bool"] = bool_t
         }
-    }
-
-    override val state = State(opts)
-
-    init {
-        state.symbols.push("<builtin>")
-        state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
-        state.symbols.declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
-        state.symbols.declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
-        // TODO: not really a function
-        state.symbols.declare(DeclarationExpression("_", function_t(string_t, listOf(string_t))))
-        state.symbols.push("<global>")
     }
 
 }

@@ -2,241 +2,157 @@ package com.timepath.q1vm
 
 import com.timepath.Logger
 import com.timepath.q1vm.util.set
-import java.util.Stack
+import java.util.Deque
 
 public class Program(val data: ProgramData) {
-
-    val world = data.entities.spawn()
 
     companion object {
         val logger = Logger.new()
     }
 
-    public fun exec(needle: String = "main") {
-        exec(data.functions.first { it.name == needle })
-    }
+    private val world = data.entities.spawn()
 
-    data class Frame(val sp: Int,
-                     val stmt: Int,
-                     val fn: ProgramData.Function?)
+    public fun exec(needle: String = "main"): Unit = exec(data.functions.first { it.name == needle })
 
-    fun exec(start: ProgramData.Function) {
-        val stack = Stack<Frame>()
-        var sp = -1
-        var stmt = -1
-        var fn: ProgramData.Function? = null
-        val push = { it: ProgramData.Function ->
-            stack add Frame(sp, stmt, fn)
-
-            // TODO: Store locals to support recursion
-
-            // Copy parameters
-
-            var k = it.firstLocal
-            for (i in 0..it.numParams - 1) {
-                for (j in 0..it.sizeof[i] - 1) {
-                    data.globalIntData[k++] = data.globalIntData[Instruction.OFS_PARAM(i) + j]
-                }
+    private fun exec(start: ProgramData.Function) {
+        class Frame(val func: ProgramData.Function, val comeFrom: Int) {
+            private val locals = IntArray(func.numLocals).let {
+                data.globalIntData.position(func.firstLocal)
+                data.globalIntData.get(it)
+                it
             }
 
-            sp = 0
-            stmt = it.firstStatement
-            fn = it
-        }
-        val pop = {
-            val it = stack.pop()
-
-            // TODO: Pop locals
-
-            sp = it.sp
-            stmt = it.stmt
-            fn = it.fn
+            fun restore() {
+                data.globalIntData.position(func.firstLocal)
+                data.globalIntData.put(locals)
+            }
         }
 
-        push(start)
-
-        while (!stack.empty()) {
-            val s = data.statements[stmt]
-            logger.fine(s.toString())
-
-            val ret = s(data).toInt()
-            if (ret == 0) {
-                // DONE, RETURN
-                pop()
+        val stack: Deque<Frame> = linkedListOf(Frame(func = start, comeFrom = -1))
+        var stmtIdx = stack.peek().func.firstStatement
+        while (stack.isNotEmpty()) {
+            val stmt = data.statements[stmtIdx]
+            logger.fine(stmt.toString())
+            val skip = stmt(data)
+            stmtIdx += skip
+            if (skip == 0) {
+                // Instruction.DONE, Instruction.RETURN
+                stack.pop().let {
+                    it.restore()
+                    stmtIdx = it.comeFrom
+                }
                 continue
             }
-
-            stmt += ret
-            when (s.op) {
-                Instruction.CALL0, Instruction.CALL1, Instruction.CALL2, Instruction.CALL3, Instruction.CALL4, Instruction.CALL5, Instruction.CALL6, Instruction.CALL7, Instruction.CALL8 -> {
-                    val function = data.functions[data.globalIntData[s.a]]
-                    val i = function.firstStatement
-                    if (i < 0) {
-                        builtin(-i, s.op.ordinal() - Instruction.CALL0.ordinal())
+            when (stmt.op) {
+                Instruction.CALL0, Instruction.CALL1, Instruction.CALL2, Instruction.CALL3, Instruction.CALL4,
+                Instruction.CALL5, Instruction.CALL6, Instruction.CALL7, Instruction.CALL8 -> {
+                    val nextFunc = data.functions[data.globalIntData[stmt.a]]
+                    val nextStmt = nextFunc.firstStatement
+                    if (nextStmt < 0) {
+                        val id = -nextStmt
+                        val paramCount = stmt.op.ordinal() - Instruction.CALL0.ordinal()
+                        invokeBuiltin(id, paramCount)
                     } else {
-                        push(function)
+                        stack.push(Frame(func = nextFunc, comeFrom = stmtIdx))
+                        // Copy parameters
+                        var i = nextFunc.firstLocal
+                        for (param in nextFunc.numParams.indices) {
+                            for (ofs in nextFunc.sizeof[param].toInt().indices) {
+                                data.globalIntData[i++] = data.globalIntData[Instruction.OFS_PARAM(param) + ofs]
+                            }
+                        }
+                        stmtIdx = nextStmt
                     }
                 }
             }
         }
-
     }
 
-    fun getFloat(i: Int) = data.globalFloatData[i]
-    fun getString(i: Int) = data.strings[data.globalIntData[i]]
+    private fun invokeBuiltin(id: Int, paramCount: Int) {
+        val builtin = builtins[id]
+        if (builtin == null) throw IndexOutOfBoundsException("Builtin $id not defined")
+        builtin.call(this, paramCount).let {
+            when (it) {
+                is Unit -> Unit
+                is Float -> data.globalFloatData.put(Instruction.OFS_PARAM(-1), it)
+                is Int -> data.globalIntData.put(Instruction.OFS_PARAM(-1), it)
+                is String -> data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(it))
+                else -> throw UnsupportedOperationException("Builtin returning ${it.javaClass}")
+            }
+        }
+    }
 
-    fun KBuiltin(name: String,
-                 parameterTypes: Array<Class<*>> = array(),
-                 varargsType: Class<*>? = null,
-                 callback: (args: List<*>) -> Any = {}) =
+    public fun KBuiltin(name: String,
+                        parameterTypes: Array<Class<*>> = array(),
+                        varargsType: Class<*>? = null,
+                        callback: (args: List<*>) -> Any = {}): Builtin =
             Builtin(name, parameterTypes, varargsType, object : Builtin.Handler {
                 override fun call(args: List<Any?>): Any = callback(args)
             })
 
-    val builtins: MutableMap<Int, Builtin> = linkedMapOf(
-            1 to KBuiltin(
-                    name = "print",
-                    varargsType = javaClass<String>(),
-                    callback = {
-                        logger.info(it.map { it.toString() }.join(""))
-                    }
-            ),
-            2 to KBuiltin(
-                    name = "ftos",
-                    parameterTypes = array(javaClass<Float>()),
-                    callback = {
-                        val f = it[0] as Float
-                        f.toString()
-                    }
-            ),
-            3 to KBuiltin(
-                    name = "spawn",
-                    callback = {
-                        val entityManager = this.data.entities
-                        entityManager.spawn()
-                    }
-            ),
-            4 to KBuiltin(
-                    name = "kill",
-                    parameterTypes = array(javaClass<Float>()),
-                    callback = {
-                        val e = it[0] as Int
-                        val entityManager = this.data.entities
-                        entityManager.kill(e)
-                    }
-            ),
-            5 to KBuiltin(
-                    name = "vtos"
-            ),
-            6 to KBuiltin(
-                    name = "error"
-            ),
-            7 to KBuiltin(
-                    name = "vlen"
-            ),
-            8 to KBuiltin(
-                    name = "etos"
-            ),
-            9 to KBuiltin(
-                    name = "stof",
-                    parameterTypes = array(javaClass<String>()),
-                    callback = {
-                        val s = it[0] as String
-                        s.toFloat()
-                    }
-            ),
-            10 to KBuiltin(
-                    name = "strcat",
-                    varargsType = javaClass<String>(),
-                    callback = {
-                        it.map { it.toString() }.join("")
-                    }
-            ),
-            11 to KBuiltin(
-                    name = "strcmp",
-                    parameterTypes = array(javaClass<String>(), javaClass<String>(), javaClass<Float>()),
-                    callback = {
-                        val first = (it[0] as String).iterator()
-                        val second = (it[1] as String).iterator()
-                        var size = if (it.size() == 3) it[2] as Int else -1
-                        var ret = 0
-                        while (size-- != 0 && (first.hasNext() || second.hasNext())) {
-                            ret = 0
-                            if (first.hasNext())
-                                ret += first.next()
-                            if (second.hasNext())
-                                ret -= second.next()
-                            if (ret != 0)
-                                break
-                        }
-                        ret
-                    }
-            ),
-            12 to KBuiltin(
-                    name = "normalize"
-            ),
-            13 to KBuiltin(
-                    name = "sqrt",
-                    parameterTypes = array(javaClass<Float>()),
-                    callback = {
-                        val n = it[0] as Float
-                        Math.sqrt(n.toDouble()).toFloat()
-                    }
-            ),
-            14 to KBuiltin(
-                    name = "floor",
-                    parameterTypes = array(javaClass<Float>()),
-                    callback = {
-                        val n = it[0] as Float
-                        Math.floor(n.toDouble()).toFloat()
-                    }
-            ),
-            15 to KBuiltin(
-                    name = "pow",
-                    parameterTypes = array(javaClass<Float>(), javaClass<Float>()),
-                    callback = {
-                        val base = it[0] as Float
-                        val exponent = it[1] as Float
-                        Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
-                    }
-            ),
-            16 to KBuiltin(
-                    name = "assert",
-                    parameterTypes = array(javaClass<Float>(), javaClass<String>()),
-                    callback = {
-                        val assertion = it[0] as Float
-                        val message = it[1] as String
-                        if (assertion == 0f)
-                            throw AssertionError(message)
-                    }
-            ),
-            17 to KBuiltin(
-                    name = "ftoi",
-                    parameterTypes = array(javaClass<Float>()),
-                    callback = {
-                        val f = it[0] as Float
-                        f.toInt()
-                    }
-            )
+    public val builtins: MutableMap<Int, Builtin> = linkedMapOf(
+            1 to KBuiltin("print", varargsType = javaClass<String>()) {
+                logger.info(it.map { it.toString() }.join(""))
+            },
+            2 to KBuiltin("ftos", array(javaClass<Float>())) {
+                val f = it[0] as Float
+                f.toString()
+            },
+            3 to KBuiltin("spawn") {
+                val entityManager = this.data.entities
+                entityManager.spawn()
+            },
+            4 to KBuiltin("kill", array(javaClass<Float>())) {
+                val e = it[0] as Int
+                val entityManager = this.data.entities
+                entityManager.kill(e)
+            },
+            5 to KBuiltin("vtos"),
+            6 to KBuiltin("error"),
+            7 to KBuiltin("vlen"),
+            8 to KBuiltin("etos"),
+            9 to KBuiltin("stof", array(javaClass<String>())) {
+                val s = it[0] as String
+                s.toFloat()
+            },
+            10 to KBuiltin("strcat", varargsType = javaClass<String>()) {
+                it.map { it.toString() }.join("")
+            },
+            11 to KBuiltin("strcmp", array(javaClass<String>(), javaClass<String>(), javaClass<Float>())) {
+                val first = (it[0] as String).iterator()
+                val second = (it[1] as String).iterator()
+                var size = if (it.size() == 3) it[2] as Int else -1
+                var ret = 0
+                while (size-- != 0 && (first.hasNext() || second.hasNext())) {
+                    ret = 0
+                    if (first.hasNext()) ret += first.next()
+                    if (second.hasNext()) ret -= second.next()
+                    if (ret != 0) break
+                }
+                ret
+            },
+            12 to KBuiltin("normalize"),
+            13 to KBuiltin("sqrt", array(javaClass<Float>())) {
+                val n = it[0] as Float
+                Math.sqrt(n.toDouble()).toFloat()
+            },
+            14 to KBuiltin("floor", array(javaClass<Float>())) {
+                val n = it[0] as Float
+                Math.floor(n.toDouble()).toFloat()
+            },
+            15 to KBuiltin("pow", array(javaClass<Float>(), javaClass<Float>())) {
+                val base = it[0] as Float
+                val exponent = it[1] as Float
+                Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
+            },
+            16 to KBuiltin("assert", array(javaClass<Float>(), javaClass<String>())) {
+                val assertion = it[0] as Float
+                val message = it[1] as String
+                if (assertion == 0f) throw AssertionError(message)
+            },
+            17 to KBuiltin("ftoi", array(javaClass<Float>())) {
+                val f = it[0] as Float
+                f.toInt()
+            }
     )
-
-    fun builtin(id: Int, parameterCount: Int) {
-        val builtin = builtins[id]
-        val ret = builtin?.call(this, parameterCount)
-        if (ret == null)
-            throw IndexOutOfBoundsException("Builtin $id not defined")
-
-        when (ret) {
-            is Float -> {
-                data.globalFloatData.put(Instruction.OFS_PARAM(-1), ret)
-            }
-            is Int -> {
-                data.globalIntData.put(Instruction.OFS_PARAM(-1), ret)
-            }
-            is String -> {
-                data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(ret))
-            }
-        }
-    }
-
 }

@@ -13,8 +13,7 @@ fun Expression.evaluate(state: CompileState? = null) = accept(EvaluateVisitor(st
 
 private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
 
-    [suppress("NOTHING_TO_INLINE")]
-    inline fun Expression.evaluate() = accept(this@EvaluateVisitor)
+    fun Expression.evaluate() = accept(this@EvaluateVisitor)
 
     override fun default(e: Expression) = null
 
@@ -22,7 +21,7 @@ private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
         val l = e.left.evaluate()
         val r = e.right.evaluate()
         return when {
-            l == null, r == null -> null
+            l == null || r == null -> null
             else -> action(l, r)
         }
     }

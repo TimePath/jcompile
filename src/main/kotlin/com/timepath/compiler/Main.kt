@@ -20,9 +20,9 @@ object Main {
             [data] class Project(val root: String, val define: String, val out: String)
 
             val defs = listOf(
-                    Project("menu", "MENUQC", "menuprogs.dat"),
-                    Project("client", "CSQC", "csprogs.dat"),
-                    Project("server", "SVQC", "progs.dat")
+                    Project("menu", "MENUQC", "menuprogs.dat")
+                    , Project("client", "CSQC", "csprogs.dat")
+                    , Project("server", "SVQC", "progs.dat")
             )
             defs.forEach { project ->
                 time(logger, "Project time") {
@@ -59,7 +59,7 @@ object Main {
                 }
             }
             include { it.name.endsWith(".qh") }
-            //        include { it.name.endsWith(".qc") }
+            // include { it.name.endsWith(".qc") }
             gmqcc.include(File("$xonotic/gmqcc/tests/fieldparams.qc"))
             gmqcc.compile()
         }

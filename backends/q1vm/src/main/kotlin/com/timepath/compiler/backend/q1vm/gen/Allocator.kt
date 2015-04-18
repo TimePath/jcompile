@@ -98,8 +98,10 @@ class Allocator(val opts: CompilerOptions) {
             val wasInside = insideFunc
             free.addAll(0, scope.pop())
             // forget old free vars
-            if (wasInside != insideFunc)
+            // FIXME: this leaks a lot of space
+            if (wasInside != insideFunc) {
                 free.clear()
+            }
         }
 
     }
@@ -152,7 +154,7 @@ class Allocator(val opts: CompilerOptions) {
         return null
     }
 
-    private var funCounter: Int = 0
+    private var funCounter = 0
 
     /**
      * Return the index to a constant referring to this function
@@ -167,7 +169,7 @@ class Allocator(val opts: CompilerOptions) {
         return const
     }
 
-    private var refCounter: Int = 0
+    private var refCounter = 0
 
     /**
      * Reserve space for this variable and add its name to the current scope

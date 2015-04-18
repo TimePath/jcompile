@@ -16,12 +16,11 @@ import java.util.ArrayList
 
 class Generator(val state: Q1VM.State) {
 
-    val gotoLabels = linkedMapOf<IR, String>()
-
     companion object {
         val logger = Logger.new()
     }
 
+    val gotoLabels = linkedMapOf<IR, String>()
 
     fun generate(roots: List<Expression>): ASM {
         roots.forEach {

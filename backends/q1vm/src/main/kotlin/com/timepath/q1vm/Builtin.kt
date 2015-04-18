@@ -11,6 +11,9 @@ class Builtin(val name: String,
         fun call(args: List<*>): Any
     }
 
+    fun Program.getFloat(i: Int) = data.globalFloatData[i]
+    fun Program.getString(i: Int) = data.strings[data.globalIntData[i]]
+
     fun call(ctx: Program, parameterCount: Int): Any {
         var offset = Instruction.OFS_PARAM(0)
         fun read(it: Any): Any? = when (it) {
