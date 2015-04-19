@@ -1,10 +1,9 @@
-package com.timepath.compiler.backend.q1vm.gen
+package com.timepath.compiler.backend.q1vm.gen.impl
 
-import com.timepath.Logger
 import com.timepath.compiler.Value
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.backend.q1vm.gen.iface.Allocator
 import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.string_t
 import com.timepath.compiler.types.Type
@@ -14,23 +13,19 @@ import java.util.LinkedHashMap
 import java.util.LinkedList
 import java.util.Stack
 
-class Allocator(val opts: CompilerOptions) {
-
-    companion object {
-        val logger = Logger.new()
-    }
+class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     /**
      * Maps names to pointers
      */
-    inner class AllocationMap {
+    inner class AllocationMapImpl : Allocator.AllocationMap {
 
-        inner data class Entry(
+        inner data class EntryImpl(
                 /** Privately set */
-                var name: String,
-                val ref: Int,
-                val value: Value?,
-                val type: Type) {
+                override var name: String,
+                override val ref: Int,
+                override val value: Value?,
+                override val type: Type) : Allocator.AllocationMap.Entry {
 
             fun tag(name: String) {
                 if (!this.name.split('|').contains(name))
@@ -38,12 +33,12 @@ class Allocator(val opts: CompilerOptions) {
             }
         }
 
-        private val free = LinkedList<Entry>()
-        private val pool = LinkedList<Entry>()
-        val all: List<Entry> = pool
-        private val refs = LinkedHashMap<Int, Entry>()
-        private val values = LinkedHashMap<Value, Entry>()
-        private val names = LinkedHashMap<String, Entry>()
+        private val free = LinkedList<EntryImpl>()
+        private val pool = LinkedList<EntryImpl>()
+        override val all: List<EntryImpl> = pool
+        private val refs = LinkedHashMap<Int, EntryImpl>()
+        private val values = LinkedHashMap<Value, EntryImpl>()
+        private val names = LinkedHashMap<String, Allocator.AllocationMap.Entry>()
 
         /**
          * Considered inside a function at this depth
@@ -51,7 +46,7 @@ class Allocator(val opts: CompilerOptions) {
         val insideFunc: Boolean
             get() = scope.size() >= 3
 
-        fun allocate(id: String, ref: Int, value: Value?, type: Type): Entry {
+        fun allocate(id: String, ref: Int, value: Value?, type: Type): EntryImpl {
             // only consider uninitialized local references for now
             if (opts.scopeFolding && insideFunc && !free.isEmpty() && value == null) {
                 val e = free.pop()
@@ -60,7 +55,7 @@ class Allocator(val opts: CompilerOptions) {
                 e.tag(id)
                 return e
             }
-            val e = Entry(id, ref, value, type)
+            val e = EntryImpl(id, ref, value, type)
             pool.add(e)
             if (!scope.empty() && value == null) {
                 scope.peek().add(e)
@@ -71,24 +66,24 @@ class Allocator(val opts: CompilerOptions) {
             return e
         }
 
-        fun contains(ref: Int) = ref in refs
-        fun get(ref: Int): Entry? = refs[ref]
+        override fun contains(ref: Int) = ref in refs
+        override fun get(ref: Int): EntryImpl? = refs[ref]
 
-        fun contains(value: Value) = value in values
-        fun get(value: Value): Entry? = values[value]
+        override fun contains(value: Value) = value in values
+        override fun get(value: Value): EntryImpl? = values[value]
 
-        fun contains(name: String) = name in names
-        fun get(name: String): Entry? = names[name]
-        fun set(name: String, value: Entry) {
+        override fun contains(name: String) = name in names
+        override fun get(name: String): Allocator.AllocationMap.Entry? = names[name]
+        override fun set(name: String, value: Allocator.AllocationMap.Entry) {
             names[name] = value
         }
 
-        fun size() = pool.size()
+        override fun size() = pool.size()
 
-        private val scope = Stack<LinkedList<Entry>>()
+        private val scope = Stack<LinkedList<EntryImpl>>()
 
         fun push() {
-            scope.push(LinkedList<Entry>())
+            scope.push(LinkedList<EntryImpl>())
         }
 
         /**
@@ -106,21 +101,21 @@ class Allocator(val opts: CompilerOptions) {
 
     }
 
-    val functions = AllocationMap()
-    val references = AllocationMap()
-    val constants = AllocationMap()
-    val strings = AllocationMap()
+    override val functions = AllocationMapImpl()
+    override val references = AllocationMapImpl()
+    override val constants = AllocationMapImpl()
+    override val strings = AllocationMapImpl()
 
-    data class Scope(val id: Any, val lookup: MutableMap<String, Entry> = HashMap())
+    data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = HashMap()) : Allocator.Scope
 
-    val scope = Stack<Scope>()
+    override val scope = Stack<Allocator.Scope>()
 
-    fun push(id: Any) {
+    override fun push(id: Any) {
         scope.push(Scope(id))
         references.push()
     }
 
-    fun pop() {
+    override fun pop() {
         if (!scope.empty())
             scope.pop()
         references.pop()
@@ -133,9 +128,9 @@ class Allocator(val opts: CompilerOptions) {
         allocateReference("_", function_t(string_t, listOf(string_t))) // TODO: not really a function
     }
 
-    private inline fun all(operation: (Scope) -> Unit) = scope.reverse().forEach(operation)
+    private inline fun all(operation: (Allocator.Scope) -> Unit) = scope.reverse().forEach(operation)
 
-    fun contains(name: String): Boolean {
+    override fun contains(name: String): Boolean {
         all {
             if (name in it.lookup) {
                 return true
@@ -144,7 +139,7 @@ class Allocator(val opts: CompilerOptions) {
         return false
     }
 
-    fun get(name: String): Entry? {
+    override fun get(name: String): Allocator.AllocationMap.Entry? {
         all {
             val i = it.lookup[name]
             if (i != null) {
@@ -159,7 +154,7 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Return the index to a constant referring to this function
      */
-    fun allocateFunction(id: String? = null, type: function_t): Entry {
+    override fun allocateFunction(id: String?, type: function_t): Allocator.AllocationMap.Entry {
         val name = id ?: "fun${funCounter++}"
         val i = functions.size()
         // index the function will have
@@ -174,7 +169,7 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Reserve space for this variable and add its name to the current scope
      */
-    fun allocateReference(id: String? = null, type: Type, value: Value? = null): Entry {
+    override fun allocateReference(id: String?, type: Type, value: Value?): Allocator.AllocationMap.Entry {
         val name = id ?: "ref${refCounter++}"
         val i = opts.userStorageStart + (references.size() + constants.size())
         val entry = references.allocate(name, i, value, type)
@@ -185,7 +180,7 @@ class Allocator(val opts: CompilerOptions) {
     /**
      * Reserve space for this constant
      */
-    fun allocateConstant(value: Value, type: Type, id: String? = null): Entry {
+    override fun allocateConstant(value: Value, type: Type, id: String?): Allocator.AllocationMap.Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
             return allocateConstant(Value(Pointer(str.ref)), string_t, "str(${str.name})")
@@ -211,7 +206,7 @@ class Allocator(val opts: CompilerOptions) {
 
     private var stringCounter = 0
 
-    fun allocateString(s: String): Entry {
+    override fun allocateString(s: String): Allocator.AllocationMap.Entry {
         val name = s
         // merge strings
         val existing = strings[name]

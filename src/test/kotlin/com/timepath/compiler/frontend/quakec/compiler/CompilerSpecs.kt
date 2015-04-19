@@ -5,7 +5,7 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.gen.Generator.ASM
+import com.timepath.compiler.backend.q1vm.gen.iface.Generator.ASM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.test.PrintVisitor
 import com.timepath.q1vm.Program

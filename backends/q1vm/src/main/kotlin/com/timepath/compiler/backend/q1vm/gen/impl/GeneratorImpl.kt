@@ -1,35 +1,30 @@
-package com.timepath.compiler.backend.q1vm.gen
+package com.timepath.compiler.backend.q1vm.gen.impl
 
-import com.timepath.Logger
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.gen.Allocator.AllocationMap.Entry
+import com.timepath.compiler.backend.q1vm.gen.*
+import com.timepath.compiler.backend.q1vm.gen.iface.Allocator
+import com.timepath.compiler.backend.q1vm.gen.iface.Generator
 import com.timepath.q1vm.ProgramData
-import com.timepath.q1vm.ProgramData.Header
-import com.timepath.q1vm.ProgramData.Header.Section
 import com.timepath.q1vm.StringManager
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 
-class Generator(val state: Q1VM.State) {
+class GeneratorImpl(val state: Q1VM.State) : Generator {
 
-    companion object {
-        val logger = Logger.new()
-    }
+    override val gotoLabels = linkedMapOf<IR, String>()
 
-    val gotoLabels = linkedMapOf<IR, String>()
-
-    fun generate(roots: List<Expression>): ASM {
+    override fun generate(roots: List<Expression>): Generator.ASM {
         roots.forEach {
             it.transform { it.reduce() }
         }
-        return ASM(BlockExpression(roots).generate(state))
+        return ASMImpl(BlockExpression(roots).generate(state))
     }
 
-    inner class ASM(val ir: List<IR>) {
+    inner class ASMImpl(override val ir: List<IR>) : Generator.ASM {
 
         /**
          * Ought to be enough, instructions can't address beyond this range anyway
@@ -38,7 +33,7 @@ class Generator(val state: Q1VM.State) {
         val intData = globalData.asIntBuffer()
         val floatData = globalData.asFloatBuffer()
 
-        fun generateProgs(): ProgramData {
+        override fun generateProgs(): ProgramData {
             val globalDefs = ArrayList<ProgramData.Definition>()
             val fieldDefs = ArrayList<ProgramData.Definition>()
             fieldDefs.add(ProgramData.Definition(0, 0, 0)) // FIXME: temporary
@@ -61,7 +56,7 @@ class Generator(val state: Q1VM.State) {
                     statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
-            val merge = fun (it: Entry) {
+            val merge = fun (it: Allocator.AllocationMap.Entry) {
                 val k = it.ref
                 val v = it.value?.any
                 when (v) {
@@ -96,16 +91,16 @@ class Generator(val state: Q1VM.State) {
             val stringsOffset = globalDataOffset + globalData.capacity() * 4
 
             return ProgramData(
-                    header = Header(
+                    header = ProgramData.Header(
                             version = version,
                             crc = crc,
                             entityFields = entityFields,
-                            statements = Section(statementsOffset, statements.size()),
-                            globalDefs = Section(globalDefsOffset, globalDefs.size()),
-                            fieldDefs = Section(fieldDefsOffset, fieldDefs.size()),
-                            functions = Section(functionsOffset, functions.size()),
-                            globalData = Section(stringsOffset, globalData.capacity()),
-                            stringData = Section(globalDataOffset, stringManager.constant.length())
+                            statements = ProgramData.Header.Section(statementsOffset, statements.size()),
+                            globalDefs = ProgramData.Header.Section(globalDefsOffset, globalDefs.size()),
+                            fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size()),
+                            functions = ProgramData.Header.Section(functionsOffset, functions.size()),
+                            globalData = ProgramData.Header.Section(stringsOffset, globalData.capacity()),
+                            stringData = ProgramData.Header.Section(globalDataOffset, stringManager.constant.length())
                     ),
                     statements = statements,
                     globalDefs = globalDefs,

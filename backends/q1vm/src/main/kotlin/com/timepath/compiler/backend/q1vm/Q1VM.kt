@@ -4,6 +4,9 @@ import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.gen.*
+import com.timepath.compiler.backend.q1vm.gen.iface.Allocator
+import com.timepath.compiler.backend.q1vm.gen.impl.AllocatorImpl
+import com.timepath.compiler.backend.q1vm.gen.iface.Generator
 import com.timepath.compiler.backend.q1vm.types.*
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
@@ -33,8 +36,8 @@ class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Gene
     }
 
     inner class State(val opts: CompilerOptions) : CompileState() {
-        val allocator = Allocator(opts)
-        val gen = Generator(this)
+        val allocator: Allocator = Allocator.new(opts)
+        val gen: Generator = Generator.new(this)
 
         val fields: FieldCounter = object : FieldCounter {
             val map = LinkedHashMap<String, Int>()

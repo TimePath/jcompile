@@ -1,5 +1,6 @@
 package com.timepath.compiler.backend.q1vm.gen
 
+import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Pointer
@@ -16,6 +17,10 @@ import java.util.LinkedList
 fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor(state as Q1VM.State))
 
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
+
+    companion object {
+        val logger = Logger.new()
+    }
 
     fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
@@ -117,7 +122,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: DeclarationExpression): List<IR> {
         if (e.id in state.allocator.scope.peek().lookup) {
-            Generator.logger.warning("redeclaring ${e.id}")
+            logger.warning("redeclaring ${e.id}")
         }
         val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate())
         return listOf(ReferenceIR(global.ref))
@@ -125,7 +130,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: FunctionExpression): List<IR> = with(e) {
         if (id in state.allocator) {
-            Generator.logger.warning("redefining $id")
+            logger.warning("redefining $id")
         }
 
         val global = state.allocator.allocateFunction(id, type = type(state) as function_t)
@@ -280,7 +285,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         with(e) {
             // TODO: increase this
             if (args.size() > 8) {
-                Generator.logger.warning("${function} takes ${args.size()} parameters")
+                logger.warning("${function} takes ${args.size()} parameters")
             }
             val args = args.take(8).map { it.generate(state) }
             fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
@@ -318,7 +323,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: ReferenceExpression): List<IR> {
         val id = e.refers.id
         if (id !in state.allocator) {
-            Generator.logger.severe("unknown reference ${id}")
+            logger.severe("unknown reference ${id}")
         }
         // FIXME: null references
         val global = state.allocator[id]
@@ -328,7 +333,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: DynamicReferenceExpression): List<IR> {
         val id = e.id
         if (id !in state.allocator) {
-            Generator.logger.severe("unknown reference $id")
+            logger.severe("unknown reference $id")
         }
         // FIXME: null references
         val global = state.allocator[id]
