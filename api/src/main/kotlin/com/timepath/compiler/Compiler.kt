@@ -24,7 +24,7 @@ public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>
     val includes = LinkedList<Include>()
 
     init {
-        // define("QCC_SUPPORT_INT")
+        define("QCC_SUPPORT_INT")
         define("QCC_SUPPORT_BOOL")
 
         includes.add(Include.new(this.javaClass.getResource("/predefs.qc")))
