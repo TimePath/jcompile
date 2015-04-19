@@ -3,8 +3,8 @@ package com.timepath.compiler.backend.q1vm.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.gen.evaluate
-import com.timepath.compiler.backend.q1vm.gen.generate
+import com.timepath.compiler.backend.q1vm.visitors.evaluate
+import com.timepath.compiler.backend.q1vm.visitors.generate
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
@@ -40,7 +40,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
 
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("sizeof", this) to OperationHandler(int_t) { gen, self, _ ->
+            Operation("sizeof", this) to OperationHandler(int_t) { gen: Q1VM.State, self, _ ->
                 sizeExpr.generate(gen)
             },
             Operation("[]", this, int_t) to index,

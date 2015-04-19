@@ -1,4 +1,4 @@
-package com.timepath.compiler.backend.q1vm.gen
+package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM

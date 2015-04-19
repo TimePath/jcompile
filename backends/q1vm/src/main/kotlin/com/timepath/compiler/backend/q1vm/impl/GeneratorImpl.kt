@@ -1,12 +1,11 @@
-package com.timepath.compiler.backend.q1vm.gen.impl
+package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.gen.*
-import com.timepath.compiler.backend.q1vm.gen.iface.Allocator
-import com.timepath.compiler.backend.q1vm.gen.iface.Generator
+import com.timepath.compiler.backend.q1vm.*
+import com.timepath.compiler.backend.q1vm.data.Pointer
+import com.timepath.compiler.backend.q1vm.visitors.generate
+import com.timepath.compiler.backend.q1vm.visitors.reduce
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.StringManager
 import java.nio.ByteBuffer

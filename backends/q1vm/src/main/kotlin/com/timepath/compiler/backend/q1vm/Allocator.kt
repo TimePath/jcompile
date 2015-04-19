@@ -1,8 +1,7 @@
-package com.timepath.compiler.backend.q1vm.gen.iface
+package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.backend.q1vm.CompilerOptions
-import com.timepath.compiler.backend.q1vm.gen.impl.AllocatorImpl
+import com.timepath.compiler.backend.q1vm.impl.AllocatorImpl
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import java.util.Stack

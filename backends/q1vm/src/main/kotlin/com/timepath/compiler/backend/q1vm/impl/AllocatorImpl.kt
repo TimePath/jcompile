@@ -1,9 +1,9 @@
-package com.timepath.compiler.backend.q1vm.gen.impl
+package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.Value
+import com.timepath.compiler.backend.q1vm.Allocator
 import com.timepath.compiler.backend.q1vm.CompilerOptions
-import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.gen.iface.Allocator
+import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.string_t
 import com.timepath.compiler.types.Type

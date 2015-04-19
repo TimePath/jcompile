@@ -4,8 +4,8 @@ import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.Vector
-import com.timepath.compiler.backend.q1vm.gen.evaluate
+import com.timepath.compiler.backend.q1vm.data.Vector
+import com.timepath.compiler.backend.q1vm.visitors.evaluate
 import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.field_t
 import com.timepath.compiler.backend.q1vm.types.int_t

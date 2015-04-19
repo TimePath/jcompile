@@ -1,9 +1,7 @@
-package com.timepath.compiler.backend.q1vm.gen.iface
+package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.gen.IR
-import com.timepath.compiler.backend.q1vm.gen.impl.GeneratorImpl
+import com.timepath.compiler.backend.q1vm.impl.GeneratorImpl
 import com.timepath.q1vm.ProgramData
 
 trait Generator {
