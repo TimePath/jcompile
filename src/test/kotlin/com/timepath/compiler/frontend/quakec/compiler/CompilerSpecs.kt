@@ -34,6 +34,12 @@ fun compare(what: String, name: String, actual: String) {
 
 val logger = Logger.new()
 
+/**
+ *  RunWith(javaClass<AllTests>())
+ *  class XSpecs {
+ *      companion object {
+ *          platformStatic fun suite() =
+ */
 inline fun given(given: String, on: TestSuite.() -> Unit) = TestSuite("given $given").let { it.on(); it }
 inline fun TestSuite.on(what: String, assertions: ((String, () -> Unit) -> Unit) -> Unit) = TestSuite("$what.it").let {
     assertions { assertion, run ->

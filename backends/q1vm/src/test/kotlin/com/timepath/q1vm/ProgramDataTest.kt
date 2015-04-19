@@ -1,4 +1,4 @@
-package com.timepath.quakec.vm.defs
+package com.timepath.q1vm
 
 import com.timepath.q1vm.util.ProgramDataReader
 import com.timepath.q1vm.util.ProgramDataWriter
