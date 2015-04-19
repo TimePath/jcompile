@@ -41,11 +41,14 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val functions = ArrayList<ProgramData.Function>()
             ir.forEach {
                 if (it is FunctionIR) {
-                    functions.add(
-                            if (it.function.firstStatement >= 0)
-                                it.function.copy(firstStatement = statements.size())
-                            else
-                                it.function)
+                    if (it.function.firstStatement < 0) {
+                        functions.add(it.function)
+                    } else {
+                        functions.add(it.function.copy(
+                                firstStatement = statements.size(),
+                                firstLocal = state.opts.userStorageStart)
+                        )
+                    }
                 }
                 if (it.real) {
                     val args = it.args

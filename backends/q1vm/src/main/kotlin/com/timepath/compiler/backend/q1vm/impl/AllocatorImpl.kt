@@ -94,13 +94,10 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         fun pop() {
             val wasInside = insideFunc
             free.addAll(0, scope.pop())
-            // forget old free vars
-            // FIXME: this leaks a lot of space
-            if (wasInside != insideFunc) {
+            if (!opts.overlapLocals && wasInside != insideFunc) {
                 free.clear()
             }
         }
-
     }
 
     override val functions = AllocationMapImpl()
@@ -118,8 +115,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     }
 
     override fun pop() {
-        if (!scope.empty())
-            scope.pop()
+        scope.pop()
         references.pop()
     }
 

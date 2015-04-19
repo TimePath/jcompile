@@ -4,7 +4,6 @@ import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
-import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
@@ -176,7 +175,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             }
         }
         val list = (listOf(
-                FunctionIR(f))
+                FunctionIR(f.copy(numLocals = state.allocator.references.size())))
                 + genParams
                 + children
                 + IR(instr = Instruction.DONE)

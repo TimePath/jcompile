@@ -20,5 +20,9 @@ data class CompilerOptions(
         // TODO: types per fold
         val scopeFolding: Boolean = true,
         // TODO: types per fold
-        val mergeConstants: Boolean = true
+        val mergeConstants: Boolean = true,
+        /**
+         * Disabling this makes each function use its own set of locals, which leaks a lot of space
+         */
+        val overlapLocals: Boolean = true
 )
