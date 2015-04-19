@@ -73,29 +73,9 @@ private class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: MemberExpression): Type {
-        val lhs = e.left.type()
-        return when (lhs) {
-            is entity_t -> {
-                // TODO: field namespace
-                val rhs = DynamicReferenceExpression(e.field).type()
-                when (rhs) {
-                    is field_t ->
-                        rhs.type
-                    is array_t ->
-                        rhs.copy(type = (rhs.type as field_t).type)
-                    else -> throw UnsupportedOperationException()
-                }
-            }
-            is struct_t -> {
-                // TODO: struct member return type
-                float_t
-            }
-        // TODO: vec_[xyz]
-        //            else -> throw UnsupportedOperationException("field access on type $lhs")
-            else -> lhs
-        }
-    }
+    override fun visit(e: MemberExpression) = e.field.type()
+
+    override fun visit(e: MemberReferenceExpression) = e.owner.fields[e.id]!!
 
     override fun visit(e: FunctionExpression) = e.type
 

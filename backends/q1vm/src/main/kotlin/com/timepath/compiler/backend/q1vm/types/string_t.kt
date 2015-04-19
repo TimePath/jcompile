@@ -20,7 +20,7 @@ object string_t : pointer_t() {
             Operation("!", this) to DefaultUnaryHandler(bool_t, Instruction.NOT_STR)
     )
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

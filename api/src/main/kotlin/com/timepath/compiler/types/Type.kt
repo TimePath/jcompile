@@ -9,7 +9,7 @@ public abstract class Type : Named {
 
     override fun toString() = javaClass.getSimpleName().toLowerCase()
 
-    abstract fun declare(name: String, value: ConstantExpression? = null, state: CompileState? = null): List<Expression>
+    abstract fun declare(name: String, value: ConstantExpression? = null, state: CompileState): List<Expression>
 
     abstract fun handle(op: Operation): OperationHandler<*, *>?
 

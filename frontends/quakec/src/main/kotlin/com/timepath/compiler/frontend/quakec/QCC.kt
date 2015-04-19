@@ -4,6 +4,7 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.backend.q1vm.Q1VM
 import org.anarres.cpp.CppReader
 import org.anarres.cpp.Preprocessor
 import org.antlr.v4.runtime.ANTLRInputStream
@@ -24,6 +25,6 @@ public class QCC : Frontend {
         preprocessor.addInput(include.source)
         val stream = ANTLRInputStream(CppReader(preprocessor))
         stream.name = include.path
-        return parse(stream).accept(ASTTransform(state)).single()
+        return parse(stream).accept(ASTTransform(state as Q1VM.State)).single()
     }
 }

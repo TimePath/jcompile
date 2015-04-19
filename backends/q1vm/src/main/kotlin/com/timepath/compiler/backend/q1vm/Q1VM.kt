@@ -39,7 +39,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val gen: Generator = Generator.new(this)
 
         val fields: FieldCounter = object : FieldCounter {
-            val map = LinkedHashMap<String, Int>()
+            val map: MutableMap<String, Int> = LinkedHashMap()
             override fun get(name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
             override fun contains(name: String) = name in map
         }

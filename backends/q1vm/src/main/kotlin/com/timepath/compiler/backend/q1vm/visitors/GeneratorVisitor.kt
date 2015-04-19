@@ -124,7 +124,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         if (e.id in state.allocator.scope.peek().lookup) {
             logger.warning("redeclaring ${e.id}")
         }
-        val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate())
+        val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
         return listOf(ReferenceIR(global.ref))
     }
 
@@ -194,19 +194,19 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: IndexExpression): List<IR> {
         with(e) {
-            with(linkedListOf<IR>()) {
+            return with(linkedListOf<IR>()) {
                 val typeL = left.type(state)
                 if (typeL is entity_t) {
-                    val genL = left.generate(state)
+                    val genL = left.generate()
                     addAll(genL)
-                    val genR = right.generate(state)
+                    val genR = right.generate()
                     addAll(genR)
-                    val out = state.allocator.allocateReference(type = type(state))
-                    add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT,
-                            array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
-                    return this
+                    val type = type(state)
+                    val out = state.allocator.allocateReference(type = type)
+                    add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
+                    this
                 } else {
-                    return visit(e : BinaryExpression)
+                    visit(e : BinaryExpression)
                 }
             }
         }
@@ -266,16 +266,20 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: MemberExpression): LinkedList<IR> {
         with(e) {
             return with(linkedListOf<IR>()) {
-                val genL = left.generate(state)
+                val genL = left.generate()
                 addAll(genL)
-                val genR = ConstantExpression(Pointer(0)).generate(state) // TODO: field by name
+                // check(e.field.owner is entity_t, "Field belongs to different type")
+                val genR = state.fields[e.field.id].generate()
                 addAll(genR)
-                val out = state.allocator.allocateReference(type = type(state))
+                val type = type(state)
+                val out = state.allocator.allocateReference(type = type)
                 add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
                 this
             }
         }
     }
+
+    override fun visit(e: MemberReferenceExpression) = state.fields[e.id].generate() // FIXME: other types
 
     override fun visit(e: MemoryReference): List<IR> {
         return listOf(ReferenceIR(e.ref))
@@ -355,12 +359,12 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: StructDeclarationExpression): List<IR> {
         with(e) {
             val fields: List<IR> = struct.fields.flatMap {
-                it.value.declare("${id}_${it.key}", null).flatMap {
+                it.value.declare("${id}_${it.key}", state = state).flatMap {
                     it.generate(state)
                 }
             }
             val allocator = state.allocator
-            allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!.copy(name = id, type = struct)
+            allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!.dup(name = id, type = struct)
             return fields
         }
     }

@@ -1,24 +1,23 @@
 package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.data.Vector
+import com.timepath.compiler.backend.q1vm.types.*
 import com.timepath.compiler.backend.q1vm.visitors.evaluate
-import com.timepath.compiler.backend.q1vm.types.array_t
-import com.timepath.compiler.backend.q1vm.types.field_t
-import com.timepath.compiler.backend.q1vm.types.int_t
-import com.timepath.compiler.backend.q1vm.types.void_t
+import com.timepath.compiler.backend.q1vm.visitors.type
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext
 import java.util.ArrayList
 
-private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Expression>>() {
+private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
     [suppress("NOTHING_TO_INLINE")]
     inline fun emptyList<T>() = ArrayList<T>()
@@ -175,7 +174,7 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
             state.symbols.declare(it)
             state.symbols.scope("params") {
                 it.params?.forEach { state.symbols.declare(it) }
-                vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t)) }
+                vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
                     val children = visitChildren(ctx.compoundStatement())
                     it.addAll(children)
@@ -190,7 +189,7 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
         if (declarations == null) {
             return ctx.enumSpecifier().enumeratorList().enumerator().mapTo(listOf<Expression>()) {
                 val id = it.enumerationConstant().getText()
-                int_t.declare(id).single().let { state.symbols.declare(it) }
+                int_t.declare(id, state = state).single().let { state.symbols.declare(it) }
             }
         }
         val specifiers = ctx.declarationSpecifiers().declarationSpecifier()
@@ -206,7 +205,7 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
             val arraySize = it.declarator().assignmentExpression()
             when {
                 initializer is Expression -> {
-                    val value = initializer.evaluate()
+                    val value = initializer.evaluate(state)
                     when (value) {
                         null -> {
                             type.declare(id, state = state).flatMap {
@@ -242,7 +241,7 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
                 }
                 arraySize != null -> {
                     val sizeExpr = arraySize.accept(this).single()
-                    array_t(type, sizeExpr, state = state).declare(id)
+                    array_t(type, sizeExpr, state = state).declare(id, state = state)
                 }
                 else -> {
                     val ptl = it.declarator().parameterTypeList()
@@ -589,11 +588,35 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
                 MemberExpression(
                         left = MemberExpression(
                                 left = left,
-                                field = vector),
-                        field = component,
+                                field = MemberReferenceExpression(entity_t, vector)), // TODO: other types?
+                        field = MemberReferenceExpression(vector_t, component),
                         ctx = ctx)
             }
-            else -> MemberExpression(left = left, field = text, ctx = ctx)
+        // TODO: other types
+            else -> {
+                val ltype = left.type(state)
+                if (ltype is struct_t) {
+                    val res = state.symbols.resolve(text)
+                    val efield = ltype.fields[text]
+                    if (efield != null) {
+                        // Favor fields
+                        MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                    } else if (res != null && ltype is entity_t) {
+                        // Fall back to locals and params
+                        // TODO: deprecate
+                        when {
+                            res.type is field_t -> IndexExpression(left = left, right = res, ctx = ctx)
+                        // This is fake for visitPostfixIndex
+                            res.type is array_t -> MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                            else -> throw UnsupportedOperationException("Applying $res to struct type $ltype")
+                        }
+                    } else {
+                        throw NullPointerException("Can't resolve $ltype.$text")
+                    }
+                } else {
+                    throw UnsupportedOperationException("Applying field to non-struct type $ltype")
+                }
+            }
         }.let { listOf(it) }
     }
 
@@ -610,10 +633,18 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
      * dynamic:
      * array[index]
      */
-    override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext) = IndexExpression(
-            left = ctx.postfixExpression().accept(this).single(),
-            right = ctx.expression().accept(this).single(),
-            ctx = ctx).let { listOf(it) }
+    override fun visitPostfixIndex(ctx: QCParser.PostfixIndexContext): ArrayList<IndexExpression> {
+        val left = ctx.postfixExpression().accept(this).single()
+        val right = ctx.expression().accept(this).single()
+        return when (left) {
+            is MemberExpression -> {
+                // (ent.arr)[i] -> ent.(arr[i])
+                val field = ReferenceExpression(state.symbols.resolve(left.field.id)!!)
+                IndexExpression(left = left.left, right = IndexExpression(field, right), ctx = ctx)
+            }
+            else -> IndexExpression(left = left, right = right, ctx = ctx)
+        }.let { listOf(it) }
+    }
 
     override fun visitPostfixIncr(ctx: QCParser.PostfixIncrContext): List<Expression> {
         val expr = ctx.postfixExpression().accept(this).single()
@@ -640,10 +671,16 @@ private class ASTTransform(val state: CompileState) : QCBaseVisitor<List<Express
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
                 state.symbols.resolve(vector)?.let {
-                    return MemberExpression(
-                            left = ReferenceExpression(it),
-                            field = component,
-                            ctx = ctx).let { listOf(it) }
+                    if (it.type is vector_t) {
+                        return MemberExpression(
+                                left = ReferenceExpression(it),
+                                field = MemberReferenceExpression(vector_t, component),
+                                ctx = ctx).let { listOf(it) }
+                    }
+                    if (it.type is field_t && it.type.type is vector_t) {
+                        // TODO: will this work?
+                        return MemberReferenceExpression(vector_t, text).let { listOf(it) }
+                    }
                 }
             }
             val symbol = state.symbols.resolve(text)

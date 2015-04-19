@@ -1,5 +1,7 @@
 package com.timepath.compiler.ast
 
+import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 /**
@@ -19,9 +21,19 @@ public class IndexExpression(left: Expression, right: Expression, ctx: PRC? = nu
  * struct.field
  */
 // TODO: structs
-public class MemberExpression(left: Expression, val field: String, ctx: PRC? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
+public class MemberExpression(left: Expression, val field: MemberReferenceExpression, ctx: PRC? = null) : BinaryExpression(".", left, ConstantExpression(field), ctx) {
     override val simpleName = "MemberExpression"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr: Any? = null
+}
+
+/**
+ * Pointer to member
+ */
+public open class MemberReferenceExpression(val owner: struct_t, val id: String, override val ctx: PRC? = null) : Expression() {
+    override val simpleName = "MemberReferenceExpression"
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+
+    override fun toString() = id
 }

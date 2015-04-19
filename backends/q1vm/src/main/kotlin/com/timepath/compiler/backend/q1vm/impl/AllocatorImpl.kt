@@ -31,6 +31,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 if (!this.name.split('|').contains(name))
                     this.name += "|$name"
             }
+
+            override fun dup(name: String, ref: Int, value: Value?, type: Type) = copy(name, ref, value, type)
         }
 
         private val free = LinkedList<EntryImpl>()

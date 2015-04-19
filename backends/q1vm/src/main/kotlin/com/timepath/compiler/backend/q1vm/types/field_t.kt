@@ -28,8 +28,8 @@ data class field_t(val type: Type) : pointer_t() {
             Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC)
     )
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?) = when {
-        state!!.symbols.globalScope -> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState) = when {
+        state.symbols.globalScope -> {
             state as Q1VM.State
             if (name in state.fields) {
                 logger.warning("redeclaring field $name")

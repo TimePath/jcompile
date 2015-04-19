@@ -18,11 +18,6 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
 
     val index = OperationHandler(type) { gen: Q1VM.State, left, right ->
         when (left) {
-        // (ent.arr)[i] -> ent.(arr[i])
-            is MemberExpression -> {
-                val field = ReferenceExpression(state.symbols.resolve(left.field)!!)
-                IndexExpression(left.left, IndexExpression(field, right!!)).generate(gen)
-            }
         // arr[i] -> arr(i)(false)
             is ReferenceExpression -> {
                 val s = generateAccessorName(left.refers.id)
@@ -49,7 +44,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
     )
 
     // FIXME
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<Expression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<Expression> {
         val sizeVal = sizeExpr.evaluate(state)
         val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
         return with(linkedListOf<Expression>()) {

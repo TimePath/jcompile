@@ -49,10 +49,14 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                 BinaryExpression.Subtract(left, right)
             },
             Operation("*", this, this) to OperationHandler(float_t) { gen, left, right ->
+                val x = MemberReferenceExpression(vector_t, "x")
+                val y = MemberReferenceExpression(vector_t, "y")
+                val z = MemberReferenceExpression(vector_t, "z")
+                right!!
                 BinaryExpression.Add(BinaryExpression.Add(
-                        BinaryExpression.Multiply(MemberExpression(left, "x"), MemberExpression(left, "x")),
-                        BinaryExpression.Multiply(MemberExpression(left, "y"), MemberExpression(left, "y"))),
-                        BinaryExpression.Multiply(MemberExpression(left, "z"), MemberExpression(left, "z"))
+                        BinaryExpression.Multiply(MemberExpression(left, x), MemberExpression(right, x)),
+                        BinaryExpression.Multiply(MemberExpression(left, y), MemberExpression(right, y))),
+                        BinaryExpression.Multiply(MemberExpression(left, z), MemberExpression(right, z))
                 ).generate(gen)
             },
             Operation("|", this, this) to OperationHandler(this) { gen, left, right ->

@@ -7,9 +7,9 @@ import com.timepath.compiler.ast.StructDeclarationExpression
 import com.timepath.compiler.types.Type
 
 public abstract data class struct_t(vararg fields: Pair<String, Type>) : Type() {
-    val fields = linkedMapOf(*fields)
+    val fields: MutableMap<String, Type> = linkedMapOf(*fields)
     override val simpleName = "struct_t"
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
         return listOf(StructDeclarationExpression(name, this))
     }
 }

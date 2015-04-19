@@ -46,7 +46,7 @@ object bool_t : number_t() {
         return null
     }
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }

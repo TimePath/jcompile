@@ -3,15 +3,16 @@ package com.timepath.compiler.backend.q1vm.visitors
 import com.timepath.compiler.Value
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.Q1VM
 
 /**
  * Used in constant folding
  *
  * @return A constant or null if it could change at runtime
  */
-fun Expression.evaluate(state: CompileState? = null) = accept(EvaluateVisitor(state))
+fun Expression.evaluate(state: CompileState) = accept(EvaluateVisitor(state as Q1VM.State))
 
-private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
+private class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
 
     fun Expression.evaluate() = accept(this@EvaluateVisitor)
 
@@ -52,6 +53,8 @@ private class EvaluateVisitor(val state: CompileState?) : ASTVisitor<Value?> {
     }
 
     override fun visit(e: ConstantExpression) = e.value
+
+    override fun visit(e: MemberReferenceExpression) = state.fields[e.id].evaluate() // TODO: other types
 
     override fun visit(e: ReferenceExpression) = e.refers.evaluate()
 

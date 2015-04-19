@@ -83,6 +83,7 @@ trait ASTVisitor<T> {
     fun visit(e: LabelExpression) = default(e)
     fun visit(e: LoopExpression) = default(e)
     fun visit(e: MemberExpression) = default(e)
+    fun visit(e: MemberReferenceExpression) = default(e)
     fun visit(e: MemoryReference) = default(e)
     fun visit(e: MethodCallExpression) = default(e)
     fun visit(e: Nop) = default(e)

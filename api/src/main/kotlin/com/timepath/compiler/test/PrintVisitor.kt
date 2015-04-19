@@ -46,6 +46,10 @@ public object PrintVisitor : ASTVisitor<Map<String, Any?>> {
             "id" to e.id
     )
 
+    override fun visit(e: MemberReferenceExpression): Map<String, Any?> = mapOf(
+            "id" to e.id
+    )
+
     override fun visit(e: MemoryReference): Map<String, Any?> = mapOf(
             "ref" to e.ref
     )

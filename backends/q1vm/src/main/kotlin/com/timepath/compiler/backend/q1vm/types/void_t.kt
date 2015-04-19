@@ -38,7 +38,7 @@ object void_t : Type() {
             Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT)
     )
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState?): List<DeclarationExpression> {
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
 }
