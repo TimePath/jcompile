@@ -82,7 +82,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
             val version = 6
             val crc = -1 // TODO: CRC16
-            val entityFields = fieldDefs.size() // TODO: good enough?
+            val entityFields = fieldDefs.size()
 
             val statementsOffset = 60
             val globalDefsOffset = statementsOffset + statements.size() * 8

@@ -16,7 +16,6 @@ data class CompilerOptions(
          * float y; // re-use x
          *
          */
-        // TODO: give generated functions locals
         // TODO: types per fold
         val scopeFolding: Boolean = true,
         // TODO: types per fold

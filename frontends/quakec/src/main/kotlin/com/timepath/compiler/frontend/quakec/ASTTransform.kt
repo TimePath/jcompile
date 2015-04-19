@@ -602,14 +602,13 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
                 }
             }
-        // TODO: other types
             else -> {
                 val res = state.symbols.resolve(text)
                 val efield = ltype.fields[text]
                 if (efield != null) {
                     // Favor fields
                     MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
-                } else if (res != null && ltype is entity_t) {
+                } else if (res != null && ltype is struct_t) {
                     // Fall back to locals and params
                     // TODO: deprecate
                     when {
