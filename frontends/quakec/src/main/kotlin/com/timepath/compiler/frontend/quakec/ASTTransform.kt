@@ -577,44 +577,49 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
      */
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
+        val ltype = left.type(state)
+        if (ltype !is struct_t) {
+            throw UnsupportedOperationException("Applying field to non-struct type $ltype")
+        }
         val text = ctx.Identifier().getText()
         val matcher = matchVecComponent.matcher(text)
         return when {
             legacyVectors && matcher.matches() -> {
-                // `ent.vec_x` -> `ent.vec.x`
+                // `ent.vec_x` -> `(ent.vec).x`
                 // hides similarly named fields, but so be it
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
-                MemberExpression(
-                        left = MemberExpression(
-                                left = left,
-                                field = MemberReferenceExpression(entity_t, vector)), // TODO: other types?
-                        field = MemberReferenceExpression(vector_t, component),
-                        ctx = ctx)
+                val res = state.symbols.resolve(vector)
+                if (res != null) {
+                    MemberExpression(
+                            left = MemberExpression(
+                                    left = left,
+                                    field = MemberReferenceExpression(ltype, vector)),
+                            field = MemberReferenceExpression(vector_t, component),
+                            ctx = ctx)
+                } else {
+                    // Use as written
+                    MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                }
             }
         // TODO: other types
             else -> {
-                val ltype = left.type(state)
-                if (ltype is struct_t) {
-                    val res = state.symbols.resolve(text)
-                    val efield = ltype.fields[text]
-                    if (efield != null) {
-                        // Favor fields
-                        MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
-                    } else if (res != null && ltype is entity_t) {
-                        // Fall back to locals and params
-                        // TODO: deprecate
-                        when {
-                            res.type is field_t -> IndexExpression(left = left, right = res, ctx = ctx)
-                        // This is fake for visitPostfixIndex
-                            res.type is array_t -> MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
-                            else -> throw UnsupportedOperationException("Applying $res to struct type $ltype")
-                        }
-                    } else {
-                        throw NullPointerException("Can't resolve $ltype.$text")
+                val res = state.symbols.resolve(text)
+                val efield = ltype.fields[text]
+                if (efield != null) {
+                    // Favor fields
+                    MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                } else if (res != null && ltype is entity_t) {
+                    // Fall back to locals and params
+                    // TODO: deprecate
+                    when {
+                        res.type is field_t -> IndexExpression(left = left, right = res, ctx = ctx)
+                    // This is fake for visitPostfixIndex
+                        res.type is array_t -> MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                        else -> throw UnsupportedOperationException("Applying $res to struct type $ltype")
                     }
                 } else {
-                    throw UnsupportedOperationException("Applying field to non-struct type $ltype")
+                    throw NullPointerException("Can't resolve $ltype.$text")
                 }
             }
         }.let { listOf(it) }
