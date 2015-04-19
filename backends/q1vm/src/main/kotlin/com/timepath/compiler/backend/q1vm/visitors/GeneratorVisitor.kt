@@ -24,7 +24,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
-    override fun visit(e: BinaryExpression) = Types.handle<List<IR>>(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
+    override fun visit(e: BinaryExpression) = Types.handle<Q1VM.State, List<IR>>(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
     override fun visit(e: BinaryExpression.AddAssign) = visit(e : BinaryExpression)
     override fun visit(e: BinaryExpression.And) = visit(e : BinaryExpression)
@@ -373,7 +373,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return listOf(CaseIR(e.expr))
     }
 
-    override fun visit(e: UnaryExpression) = Types.handle<List<IR>>(Operation(e.op, e.operand.type(state)))(state, e.operand, null)
+    override fun visit(e: UnaryExpression) = Types.handle<Q1VM.State, List<IR>>(Operation(e.op, e.operand.type(state)))(state, e.operand, null)
     override fun visit(e: UnaryExpression.Address) = visit(e : UnaryExpression)
     override fun visit(e: UnaryExpression.BitNot) = visit(e : UnaryExpression)
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()

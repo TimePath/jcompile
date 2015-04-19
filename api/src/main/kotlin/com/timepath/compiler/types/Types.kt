@@ -1,5 +1,7 @@
 package com.timepath.compiler.types
 
+import com.timepath.compiler.api.CompileState
+
 public object Types {
 
     val types = hashMapOf<Class<*>, Type>()
@@ -11,14 +13,14 @@ public object Types {
         throw NoWhenBranchMatchedException()
     }
 
-    fun type(operation: Operation) = handle<Any>(operation).type
+    fun type(operation: Operation) = handle<CompileState, Any>(operation).type
 
     val handlers = linkedListOf<(Operation) -> OperationHandler<*, *>?>()
 
-    fun handle<T>(operation: Operation): OperationHandler<*, T> {
+    fun handle<S : CompileState, T>(operation: Operation): OperationHandler<S, T> {
         handlers.forEach {
             it(operation)?.let {
-                (it as OperationHandler<*, T>).let { return it }
+                (it as? OperationHandler<S, T>)?.let { return it }
             }
         }
         throw UnsupportedOperationException("$operation")

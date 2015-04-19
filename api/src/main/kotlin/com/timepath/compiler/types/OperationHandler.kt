@@ -7,8 +7,7 @@ public open class OperationHandler<State : CompileState, T>(
         val type: Type,
         protected val handle: (state: State, left: Expression, right: Expression?) -> T
 ) {
-    fun invoke(state: CompileState, left: Expression, right: Expression? = null): T {
-        state as State // FIXME: Why do I have to assert this?
+    fun invoke(state: State, left: Expression, right: Expression? = null): T {
         return handle(state, left, right)
     }
 }
