@@ -8,6 +8,7 @@ import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.time
 import org.anarres.cpp.Feature
 import java.io.File
+import kotlin.concurrent.thread
 import kotlin.platform.platformStatic
 
 object Main {
@@ -32,11 +33,13 @@ object Main {
                         it
                     }
                     val compiled = compiler.compile()
-                    ProgramDataWriter(IOWrapper.File(File("out", project.out).let {
-                        it.getParentFile().mkdirs()
-                        it.createNewFile()
-                        it
-                    }, write = true)).write(compiled.generateProgs())
+                    thread {
+                        ProgramDataWriter(IOWrapper.File(File("out", project.out).let {
+                            it.getParentFile().mkdirs()
+                            it.createNewFile()
+                            it
+                        }, write = true)).write(compiled.generateProgs())
+                    }
                 }
             }
         }

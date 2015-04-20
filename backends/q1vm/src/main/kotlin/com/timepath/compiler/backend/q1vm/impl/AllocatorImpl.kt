@@ -27,9 +27,13 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 override val value: Value?,
                 override val type: Type) : Allocator.AllocationMap.Entry {
 
-            fun tag(name: String) {
-                if (!this.name.split('|').contains(name))
-                    this.name += "|$name"
+            val tags = name.split("|").toCollection(linkedSetOf<String>())
+
+            fun tag(tag: String) {
+                if (tag !in tags) {
+                    tags.add(tag)
+                    name += "|$tag"
+                }
             }
 
             override fun dup(name: String, ref: Int, value: Value?, type: Type) = copy(name, ref, value, type)

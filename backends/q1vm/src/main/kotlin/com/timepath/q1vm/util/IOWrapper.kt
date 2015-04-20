@@ -41,7 +41,7 @@ trait IOWrapper {
 
     fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
 
-    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { write(((v.toLong() ushr (it * 8)) and 255).toByte()) }
+    private fun _write(n: Int, v: Int) = n.indices.forEach { write((v ushr (it * 8)).toByte()) }
 
     fun write(b: Byte)
 
@@ -59,7 +59,7 @@ trait IOWrapper {
     }
 
     class File(file: io.File, write: Boolean = false) : IOWrapper {
-        val raf: io.RandomAccessFile = io.RandomAccessFile(file, if (write) "rw" else "r")
+        val raf = io.RandomAccessFile(file, if (write) "rw" else "r")
 
         override fun read(): Int = raf.read()
 
