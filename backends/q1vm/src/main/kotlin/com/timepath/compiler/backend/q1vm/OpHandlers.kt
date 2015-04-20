@@ -1,8 +1,6 @@
 package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.visitors.generate
-import com.timepath.compiler.backend.q1vm.visitors.type
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction

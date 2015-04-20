@@ -5,9 +5,9 @@ import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.data.Vector
+import com.timepath.compiler.backend.q1vm.evaluate
+import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.backend.q1vm.types.*
-import com.timepath.compiler.backend.q1vm.visitors.evaluate
-import com.timepath.compiler.backend.q1vm.visitors.type
 import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
 import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
 import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext

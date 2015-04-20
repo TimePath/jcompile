@@ -4,8 +4,6 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.ast.SwitchExpression.Case
 import java.util.concurrent.atomic.AtomicInteger
 
-public fun Expression.reduce(): Expression? = accept(ReduceVisitor)
-
 object ReduceVisitor : ASTVisitor<Expression?> {
 
     fun Expression.reduce(): Expression? = accept(this@ReduceVisitor)

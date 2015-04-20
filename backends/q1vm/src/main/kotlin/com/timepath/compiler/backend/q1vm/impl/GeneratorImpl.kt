@@ -4,8 +4,6 @@ import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
-import com.timepath.compiler.backend.q1vm.visitors.generate
-import com.timepath.compiler.backend.q1vm.visitors.reduce
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.StringManager
 import java.nio.ByteBuffer

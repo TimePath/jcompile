@@ -9,10 +9,7 @@ import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 
-// TODO: push up
-fun Expression.type(state: Q1VM.State): Type = accept(TypeVisitor(state))
-
-private class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
+class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     fun Expression.type(): Type = accept(this@TypeVisitor)
 

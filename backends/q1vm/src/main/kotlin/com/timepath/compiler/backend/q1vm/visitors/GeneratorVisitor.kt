@@ -10,10 +10,7 @@ import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
-import java.util.LinkedList
-
-// TODO: push up
-fun Expression.generate(state: CompileState): List<IR> = accept(GeneratorVisitor(state as Q1VM.State))
+import java.util.ArrayList
 
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
@@ -262,7 +259,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
     }
 
-    override fun visit(e: MemberExpression): LinkedList<IR> {
+    override fun visit(e: MemberExpression): List<IR> {
         with(e) {
             return with(linkedListOf<IR>()) {
                 val genL = left.generate()

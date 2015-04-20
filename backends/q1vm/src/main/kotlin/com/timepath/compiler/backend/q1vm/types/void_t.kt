@@ -6,7 +6,7 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.visitors.generate
+import com.timepath.compiler.backend.q1vm.generate
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type

@@ -10,9 +10,7 @@ import com.timepath.compiler.backend.q1vm.Q1VM
  *
  * @return A constant or null if it could change at runtime
  */
-fun Expression.evaluate(state: CompileState) = accept(EvaluateVisitor(state as Q1VM.State))
-
-private class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
+class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
 
     fun Expression.evaluate() = accept(this@EvaluateVisitor)
 

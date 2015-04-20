@@ -2,12 +2,8 @@ package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
-import com.timepath.compiler.backend.q1vm.DefaultHandler
-import com.timepath.compiler.backend.q1vm.IR
-import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
-import com.timepath.compiler.backend.q1vm.visitors.generate
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type

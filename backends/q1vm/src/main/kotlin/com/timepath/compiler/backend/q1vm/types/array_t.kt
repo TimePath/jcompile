@@ -3,8 +3,8 @@ package com.timepath.compiler.backend.q1vm.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.visitors.evaluate
-import com.timepath.compiler.backend.q1vm.visitors.generate
+import com.timepath.compiler.backend.q1vm.evaluate
+import com.timepath.compiler.backend.q1vm.generate
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
@@ -45,7 +45,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
 
     // FIXME
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<Expression> {
-        val sizeVal = sizeExpr.evaluate(state)
+        val sizeVal = sizeExpr.evaluate(state as Q1VM.State)
         val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
         return with(linkedListOf<Expression>()) {
             add(DeclarationExpression(name, this@array_t))

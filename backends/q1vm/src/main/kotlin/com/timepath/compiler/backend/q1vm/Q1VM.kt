@@ -6,13 +6,21 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.backend.q1vm.data.Vector
 import com.timepath.compiler.backend.q1vm.types.*
-import com.timepath.compiler.backend.q1vm.visitors.generate
+import com.timepath.compiler.backend.q1vm.visitors.EvaluateVisitor
+import com.timepath.compiler.backend.q1vm.visitors.GeneratorVisitor
+import com.timepath.compiler.backend.q1vm.visitors.ReduceVisitor
+import com.timepath.compiler.backend.q1vm.visitors.TypeVisitor
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import java.util.LinkedHashMap
+
+fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
+fun Expression.generate(state: Q1VM.State) = accept(state.generatorVisitor)
+fun Expression.reduce() = accept(ReduceVisitor)
+fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
 
@@ -35,6 +43,9 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
     }
 
     inner class State(val opts: CompilerOptions) : CompileState() {
+        val evaluateVisitor = EvaluateVisitor(this)
+        val generatorVisitor = GeneratorVisitor(this)
+        val typeVisitor = TypeVisitor(this)
         val allocator: Allocator = Allocator.new(opts)
         val gen: Generator = Generator.new(this)
 

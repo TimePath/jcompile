@@ -5,7 +5,7 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.ASTVisitor
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.visitors.type
+import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.time
 import org.stringtemplate.v4.Interpreter
