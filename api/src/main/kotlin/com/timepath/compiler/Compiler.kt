@@ -68,5 +68,5 @@ public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>
 
     fun ast() = parser.parse(includes, state)
 
-    public fun compile(roots: List<List<Expression>> = ast()): O = backend.generate(roots)
+    public fun compile(roots: Sequence<List<Expression>> = ast()): O = backend.generate(roots)
 }

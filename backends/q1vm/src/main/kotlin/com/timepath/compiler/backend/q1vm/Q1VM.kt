@@ -25,7 +25,7 @@ fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
 
     override val state = State(opts)
-    override fun generate(roots: List<List<Expression>>) = state.gen.generate(roots.flatMap { it })
+    override fun generate(roots: Sequence<List<Expression>>) = state.gen.generate(roots.flatMap { it.sequence() })
 
     init {
         state.symbols.push("<builtin>")

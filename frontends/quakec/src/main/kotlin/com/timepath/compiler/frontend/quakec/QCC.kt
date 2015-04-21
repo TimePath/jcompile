@@ -29,7 +29,7 @@ public class QCC : Frontend {
         return ret
     }
 
-    override fun parse(includes: List<Compiler.Include>, state: CompileState): List<List<Expression>> {
+    override fun parse(includes: List<Compiler.Include>, state: CompileState): Sequence<List<Expression>> {
         val pre = Executors.newSingleThreadExecutor().use {
             includes.map {
                 it to submit(Callable {
@@ -51,7 +51,7 @@ public class QCC : Frontend {
             }
         }
         val qs = state as Q1VM.State
-        return post.map { pair ->
+        return post.sequence().map { pair ->
             val (it, future) = pair
             logger.info(it.path)
             val ret = future.get().accept(ASTTransform(qs))

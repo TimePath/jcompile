@@ -71,7 +71,7 @@ class CPPPrinter(val templ: STGroup) : ASTVisitor<String> {
                 it
             }
 
-            val ast = compiler.ast()
+            val ast = compiler.ast().toList()
             val projOut = File(out, project.out)
             projOut.mkdirs()
             val predef = File(projOut, "progs.h")

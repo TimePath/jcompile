@@ -62,7 +62,7 @@ class CompilerSpecs {
                     val compiler = Compiler(QCC(), Q1VM())
                     compiler.include(test)
 
-                    var roots: List<List<Expression>>
+                    var roots: Sequence<List<Expression>>
                     it("should parse") {
                         logger.info("Parsing $test")
                         roots = compiler.ast()

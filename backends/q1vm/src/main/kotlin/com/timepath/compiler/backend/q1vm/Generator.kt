@@ -16,5 +16,5 @@ trait Generator {
         fun generateProgs(): ProgramData
     }
 
-    fun generate(roots: List<Expression>): ASM
+    fun generate(roots: Sequence<Expression>): ASM
 }
