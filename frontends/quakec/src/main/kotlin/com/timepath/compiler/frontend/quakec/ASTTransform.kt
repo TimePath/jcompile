@@ -23,7 +23,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     fun listOf<T>(): MutableList<T> = ArrayList()
     fun listOf<T>(vararg values: T): List<T> = ArrayList<T>(values.size()).let { it.addAll(values); it }
 
-    inline fun match<T, R>(it: T, body: (T) -> R) = when (it) {
+    inline fun match<T : Any, R>(it: T?, body: (T) -> R) = when (it) {
         null -> null
         is List<*> -> when {
             it.isEmpty() -> null
@@ -51,90 +51,74 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         logger.fine("{$token} $line,$col $file")
     }
 
-    fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false): Type? {
-        if (this == null) return null
-        return type(this.declarationSpecifier(), old)
-    }
-
-    fun QCParser.DeclarationSpecifiers2Context?.type(old: Boolean = false): Type? {
-        if (this == null) return null
-        return type(this.declarationSpecifier(), old)
-    }
-
-    fun type(list: List<DeclarationSpecifierContext>?, old: Boolean = false): Type? {
-        val decl = list?.lastOrNull { it.typeSpecifier() != null }
-        if (decl == null) return null
+    fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }
+    fun QCParser.DeclarationSpecifiers2Context?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }
+    fun type(list: List<DeclarationSpecifierContext>, old: Boolean = false) = list.lastOrNull { it.typeSpecifier() != null }?.let { type(it, old) }
+    fun type(decl: DeclarationSpecifierContext, old: Boolean = false): Type? {
         val typeSpec = decl.typeSpecifier()
-        val indirection = typeSpec.pointer()?.getText()?.length() ?: 0
-        val spec = typeSpec.directTypeSpecifier()
-        val functional = spec.parameterTypeList()
-        val direct = when {
+        val indirection = match(typeSpec.pointer()) { it.getText().length() } ?: 0
+        return when {
         // varargs
-            typeSpec.pointer()?.getText()?.length() == 3 -> void_t
+            indirection == 3 -> void_t
             else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]
-        }
-        var indirect = when {
-            functional != null && !old -> functional.functionType(direct)
-            else -> null
-        } ?: direct
-        indirection.times {
-            indirect = field_t(indirect)
-        }
-        return indirect
+        }.let { direct ->
+            when {
+                old -> null
+                else -> match(typeSpec.directTypeSpecifier().parameterTypeList()) { it.functionType(direct) }
+            } ?: direct
+        }.let { indirection.indices.fold(it) { it, _ -> field_t(it) } }
     }
 
     fun ParameterTypeListContext?.functionType(type: Type) = this?.let {
-        val argTypes = it.parameterList()?.parameterDeclaration()?.map {
-            (it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type())!!
-        }?.filter { it != void_t } ?: emptyList()
-        val vararg = it.parameterVarargs()?.let {
-            it.declarationSpecifiers()?.type()
+        val argTypes = match(it.parameterList()?.parameterDeclaration()) {
+            it.map { it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type()!! }
+        }?.let {
+            if (it.singleOrNull() != void_t) it
+            else null
+        } ?: emptyList()
+        if (argTypes.count { it == void_t } > 1) {
+            throw UnsupportedOperationException("Multiple void parameters specified")
         }
+        val vararg = match(it.parameterVarargs()) { it.declarationSpecifiers()?.type() }
         function_t(type, argTypes, vararg)
     }
 
-    fun ParameterTypeListContext?.functionArgs(ctx: ParserRuleContext) = this?.let {
-        it.parameterList()?.parameterDeclaration()?.let {
-            it.mapIndexed { index, it ->
-                val type = (it.declarationSpecifiers()?.type() ?: it.declarationSpecifiers2()?.type())!!
-                it.declarator()?.getText()?.let { id ->
-                    ParameterExpression(id, type, index, ctx = ctx)
-                }
-            }.filterNotNull()
-        }
-    }
-
-    fun ParameterTypeListContext?.functionVararg(ctx: ParserRuleContext): DeclarationExpression? {
-        this?.parameterVarargs()?.let { // 'type?...'
-            val type = it.declarationSpecifiers().type() ?: void_t
-            val id = it.Identifier()?.getText() ?: "va_count"
-            return DeclarationExpression(id, type, ctx = ctx)
-        }
-        this?.parameterList()?.parameterDeclaration()?.let {
-            if (it.isEmpty()) return null
-        }
-        // 'type?... count'
-        this?.parameterList()?.parameterDeclaration()?.let {
-            val specs = it.last().declarationSpecifiers2()?.declarationSpecifier()
-            if (specs == null) return null
-            val type = when {
-                specs.size() == 1 -> void_t
-                else -> type(listOf(specs.first()), false)!!
+    fun ParameterTypeListContext?.functionArgs() = match(this?.parameterList()?.parameterDeclaration()) {
+        it.mapIndexed { i, it ->
+            val type = (it.declarationSpecifiers()?.type() // named
+                    ?: it.declarationSpecifiers2()?.type() // anonymous
+                    )!!
+            match(it.declarator()) {
+                ParameterExpression(it.getText(), type, i, ctx = it)
             }
-            val id = specs.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().getText() }
-            if (id == null) return null
-            return DeclarationExpression(id, type, ctx = ctx)
-        }
-        return null
+        }.filterNotNull()
     }
 
-    fun DeclaratorContext.deepest(): DeclaratorContext {
-        var declarator = this
-        while (declarator.declarator() != null) {
-            declarator = declarator.declarator()
+    fun ParameterTypeListContext?.functionVararg(): DeclarationExpression? {
+        match(this?.parameterVarargs()) { // 'type?...'
+            return DeclarationExpression(id = it.Identifier()?.getText() ?: "va_count"
+                    , type = it.declarationSpecifiers()?.type() ?: void_t,
+                    ctx = it)
         }
-        return declarator
+        // And now the old style functions... (and builtins)
+        // FIXME: this is a mess
+        return match(this?.parameterList()?.parameterDeclaration()) {
+            // 'type ... id'
+            val vararg = it.last()
+            val specifiers = vararg.declarationSpecifiers2()?.declarationSpecifier()
+            if (specifiers == null) return null
+            check(specifiers.size() <= 2)
+            val type = when {
+                specifiers.size() == 2 -> type(specifiers.first(), false)!!
+                else -> void_t
+            }
+            val id = specifiers.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().getText() }
+            if (id == null) return null
+            DeclarationExpression(id, type, ctx = specifiers.first())
+        }
     }
+
+    fun DeclaratorContext.deepest() = sequence(this) { it.declarator() }.last()
 
     companion object {
         val logger = Logger.new()
@@ -158,31 +142,38 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     ctx = ctx).let { listOf(it) }
 
     override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Expression> {
-        val declaratorContext = ctx.declarator()
-        val old = declaratorContext.parameterTypeList() == null
+        val declarator = ctx.declarator()
+        val old = declarator.parameterTypeList() == null
+        val declSpecs = ctx.declarationSpecifiers()
         val parameterTypeList = when {
-            old -> ctx.declarationSpecifiers().declarationSpecifier().last().typeSpecifier().directTypeSpecifier().parameterTypeList()
-            else -> declaratorContext.parameterTypeList()
-        }
-        val vararg = parameterTypeList.functionVararg(ctx)
-        FunctionExpression(
-                id = declaratorContext.deepest().getText(),
-                type = parameterTypeList.functionType(ctx.declarationSpecifiers().type(old)!!)!!,
-                params = parameterTypeList.functionArgs(ctx),
+            old -> {
+                val specs = declSpecs!!.declarationSpecifier()
+                val typeSpec = specs.last { it.typeSpecifier() != null }.typeSpecifier()
+                typeSpec.directTypeSpecifier().parameterTypeList()
+            }
+            else -> declarator.parameterTypeList()
+        }!!
+        val type = parameterTypeList.functionType(declSpecs.type(old)!!)!!
+        val params = parameterTypeList.functionArgs()
+        val vararg = parameterTypeList.functionVararg()
+        return FunctionExpression(
+                id = declarator.deepest().getText(),
+                type = type,
+                params = params,
                 vararg = vararg,
                 ctx = ctx
         ).let {
             state.symbols.declare(it)
             state.symbols.scope("params") {
-                it.params?.forEach { state.symbols.declare(it) }
+                params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
                     val children = visitChildren(ctx.compoundStatement())
                     it.addAll(children)
                 }
             }
-            return listOf(it)
-        }
+            it
+        }.let { listOf(it) }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
@@ -230,8 +221,8 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                                     else -> it.declarator().parameterTypeList()
                                 }
                                 val retType = ctx.declarationSpecifiers().type(old)
-                                val params = parameterTypeList.functionArgs(ctx)
-                                val vararg = parameterTypeList.functionVararg(ctx)
+                                val params = parameterTypeList.functionArgs()
+                                val vararg = parameterTypeList.functionVararg()
                                 val signature = parameterTypeList.functionType(retType!!)!!
                                 FunctionExpression(id, signature, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
                             } else {
@@ -246,8 +237,8 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 }
                 else -> {
                     val ptl = it.declarator().parameterTypeList()
-                    val params = ptl.functionArgs(ctx)
-                    val vararg = ptl.functionVararg(ctx)
+                    val params = ptl.functionArgs()
+                    val vararg = ptl.functionVararg()
                     val signature = ptl.functionType(type) ?: type
                     when (ptl) {
                         null ->

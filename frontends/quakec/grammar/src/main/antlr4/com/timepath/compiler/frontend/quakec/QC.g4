@@ -52,11 +52,7 @@ externalDeclaration
     ;
 
 functionDefinition
-    :   declarationSpecifiers? declarator declarationList? '='? compoundStatement
-    ;
-
-declarationList
-    :   declaration+
+    :   declarationSpecifiers? declarator '='? compoundStatement
     ;
 
 //// expressions
