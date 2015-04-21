@@ -28,4 +28,8 @@ data class CompilerOptions(
          * Support vec_x as vec.x
          */
         , val legacyVectors: Boolean = true
+        /**
+         * Support `if not (expr)`
+         */
+        , val ifNot: Boolean = false
 )

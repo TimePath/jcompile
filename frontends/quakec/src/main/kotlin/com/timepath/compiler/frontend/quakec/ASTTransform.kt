@@ -319,8 +319,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val statements = ctx.statement()
         return ConditionalExpression(
                 test = ctx.expression().accept(this).single().let {
-                    if (ctx.getToken(QCParser.IfNot, 1) != null) UnaryExpression.Not(it)
-                    else it
+                    if (ctx.getToken(QCParser.IfNot, 0) == null) it
+                    else if (state.opts.ifNot) UnaryExpression.Not(it)
+                    else throw UnsupportedOperationException("`if not (expr)` is disabled")
                 },
                 expression = false,
                 pass = statements[0].accept(this).single(),
