@@ -41,9 +41,9 @@ trait IOWrapper {
 
     fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
 
-    private fun _write(n: Int, v: Int) = n.indices.forEach { write((v ushr (it * 8)).toByte()) }
+    private fun _write(n: Int, v: Int) = n.indices.forEach { doWrite((v ushr (it * 8)).toByte()) }
 
-    fun write(b: Byte)
+    fun doWrite(b: Byte)
 
     fun write(b: ByteArray)
 
@@ -67,7 +67,7 @@ trait IOWrapper {
             raf.read(b)
         }
 
-        override fun write(b: Byte) = raf.write(b.toInt())
+        override fun doWrite(b: Byte) = raf.write(b.toInt())
 
         override fun write(b: ByteArray) = raf.write(b)
 
@@ -83,7 +83,7 @@ trait IOWrapper {
             raf.get(b)
         }
 
-        override fun write(b: Byte) {
+        override fun doWrite(b: Byte) {
             raf.put(b)
         }
 

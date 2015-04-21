@@ -4,14 +4,9 @@ import com.timepath.compiler.api.CompileState
 
 public object Types {
 
-    val types = hashMapOf<Class<*>, Type>()
+    val types: MutableMap<Class<*>, Type> = hashMapOf()
 
-    fun from(any: Any?): Type {
-        val hashMap = types
-        val type = hashMap[any?.javaClass]
-        if (type != null) return type
-        throw NoWhenBranchMatchedException()
-    }
+    fun from(any: Any) = types[any.javaClass]!!
 
     fun type(operation: Operation) = handle<CompileState, Any>(operation).type
 

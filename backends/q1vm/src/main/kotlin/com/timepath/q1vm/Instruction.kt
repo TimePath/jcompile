@@ -6,6 +6,7 @@ import com.timepath.q1vm.util.set
 import com.timepath.q1vm.util.toFloat
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import kotlin.properties.Delegates
 
 enum class Instruction {
 
@@ -443,7 +444,8 @@ enum class Instruction {
          */
         fun OFS_PARAM(n: Int) = 4 + n * 3
 
-        fun from(i: Int) = Instruction.values()[i]
+        private val instructions by Delegates.lazy { Instruction.values() }
+        fun from(i: Int) = instructions[i]
 
     }
 
