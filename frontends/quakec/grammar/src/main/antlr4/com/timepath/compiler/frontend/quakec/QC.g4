@@ -177,9 +177,6 @@ argumentExpressionList
 primaryExpression
     :   Identifier
     |   Constant
-    // FIXME: hardcoded
-    |   'float'
-    |   'string'
     |   StringLiteral+
     |   '(' expression ')'
     |   genericSelection
