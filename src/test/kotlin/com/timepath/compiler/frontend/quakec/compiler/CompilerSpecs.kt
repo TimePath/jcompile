@@ -4,8 +4,8 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.Generator.ASM
+import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.test.PrintVisitor
 import com.timepath.q1vm.Program
@@ -41,6 +41,7 @@ val logger = Logger.new()
  *          platformStatic fun suite() =
  */
 inline fun given(given: String, on: TestSuite.() -> Unit) = TestSuite("given $given").let { it.on(); it }
+
 inline fun TestSuite.on(what: String, assertions: ((String, () -> Unit) -> Unit) -> Unit) = TestSuite("$what.it").let {
     assertions { assertion, run ->
         it.addTest(object : TestCase("$assertion ($what)") {
@@ -64,14 +65,14 @@ class CompilerSpecs {
 
                     var roots: Sequence<List<Expression>>
                     it("should parse") {
-                        logger.info("Parsing $test")
+                        logger.info { "Parsing $test" }
                         roots = compiler.ast()
                         val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
                         compare("AST", test.name + ".xml", actual)
                     }
                     var asm: ASM
                     it("should compile") {
-                        logger.info("Compiling $test")
+                        logger.info { "Compiling $test" }
                         asm = compiler.compile(roots)
                         asm.ir.map { ir ->
                             if (ir.real)
@@ -86,7 +87,7 @@ class CompilerSpecs {
                         }
                     }
                     it("should execute") {
-                        logger.info("Executing $test")
+                        logger.info { "Executing $test" }
                         Program(asm.generateProgs()).exec()
                     }
                 }

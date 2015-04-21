@@ -32,7 +32,7 @@ data class field_t(val type: Type) : pointer_t() {
         state.symbols.globalScope -> {
             state as Q1VM.State
             if (name in state.fields) {
-                logger.warning("redeclaring field $name")
+                logger.warning { "redeclaring field $name" }
             }
             entity_t.fields[name] = this.type
             // TODO: namespace entity

@@ -7,7 +7,6 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
-import com.timepath.compiler.types.defaults.struct_t
 
 class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 

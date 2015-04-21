@@ -2,7 +2,6 @@ package com.timepath.compiler.api
 
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.Expression
-import java.util.LinkedList
 
 public trait Frontend {
     public fun parse(includes: List<Compiler.Include>, state: CompileState): Sequence<List<Expression>>

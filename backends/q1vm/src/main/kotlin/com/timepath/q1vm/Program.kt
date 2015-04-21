@@ -32,7 +32,7 @@ public class Program(val data: ProgramData) {
         var stmtIdx = stack.peek().func.firstStatement
         while (stack.isNotEmpty()) {
             val stmt = data.statements[stmtIdx]
-            logger.fine(stmt.toString())
+            logger.fine { stmt.toString() }
             val skip = stmt(data)
             stmtIdx += skip
             if (skip == 0) {
@@ -92,7 +92,7 @@ public class Program(val data: ProgramData) {
 
     public val builtins: MutableMap<Int, Builtin> = linkedMapOf(
             1 to KBuiltin("print", varargsType = javaClass<String>()) {
-                logger.info(it.map { it.toString() }.join(""))
+                logger.info { it.map { it.toString() }.join("") }
             },
             2 to KBuiltin("ftos", array(javaClass<Float>())) {
                 val f = it[0] as Float

@@ -48,7 +48,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val line = token.getLine()
         val col = token.getCharPositionInLine()
         val file = source.getSourceName()
-        logger.fine("{$token} $line,$col $file")
+        logger.fine { "{$token} $line,$col $file" }
     }
 
     fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }

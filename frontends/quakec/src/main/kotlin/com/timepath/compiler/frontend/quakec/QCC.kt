@@ -53,7 +53,7 @@ public class QCC : Frontend {
         val qs = state as Q1VM.State
         return post.sequence().map { pair ->
             val (it, future) = pair
-            logger.info(it.path)
+            logger.info { it.path }
             val ret = future.get().accept(ASTTransform(qs))
             ret.single().children
         }

@@ -1,7 +1,6 @@
 package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
 
