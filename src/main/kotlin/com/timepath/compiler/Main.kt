@@ -45,7 +45,7 @@ object Main {
         }
         time(logger, "GMQCC tests") {
             val gmqcc = Compiler(QCC().let {
-                it.preprocessor.addFeatures(Feature.DIGRAPHS, Feature.TRIGRAPHS)
+                it.cpp.addFeatures(Feature.DIGRAPHS, Feature.TRIGRAPHS)
                 it
             }, Q1VM()).let {
                 it.define("GMQCC")

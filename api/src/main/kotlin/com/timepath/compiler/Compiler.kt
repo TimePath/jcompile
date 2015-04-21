@@ -1,6 +1,5 @@
 package com.timepath.compiler
 
-import com.timepath.Logger
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
@@ -15,10 +14,6 @@ import java.util.LinkedList
 
 public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
 
-    companion object {
-        val logger = Logger.new()
-    }
-
     val state = backend.state
 
     val includes = LinkedList<Include>()
@@ -27,7 +22,7 @@ public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>
         define("QCC_SUPPORT_INT")
         define("QCC_SUPPORT_BOOL")
 
-        includes.add(Include.new(this.javaClass.getResource("/predefs.qc")))
+        includes.add(Include.new(javaClass.getResource("/predefs.qc")))
     }
 
     fun define(name: String, value: String = "1") {
@@ -71,15 +66,7 @@ public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>
         }.filterNotNullTo(includes)
     }
 
-    fun ast(): List<List<Expression>> {
-        val roots = linkedListOf<List<Expression>>()
-        for (include in includes) {
-            logger.info(include.path)
-            val root = parser.parse(include, state)
-            roots.add(root.children)
-        }
-        return roots
-    }
+    fun ast() = parser.parse(includes, state)
 
-    public fun compile(roots: List<List<Expression>> = ast()): O = backend.generate(roots.flatMap { it })
+    public fun compile(roots: List<List<Expression>> = ast()): O = backend.generate(roots)
 }
