@@ -1,9 +1,6 @@
 package com.timepath.compiler.frontend.quakec
 
-import org.anarres.cpp.DefaultPreprocessorListener
-import org.anarres.cpp.Preprocessor
-import org.anarres.cpp.Token
-import org.anarres.cpp.Warning
+import org.anarres.cpp.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.EnumSet
@@ -16,6 +13,7 @@ private class CustomPreprocessor : Preprocessor() {
         val now = Date()
         addMacro("__DATE__", SimpleDateFormat("\"MMM dd yyyy\"").format(now))
         addMacro("__TIME__", SimpleDateFormat("\"hh:mm:ss\"").format(now))
+        addFeature(Feature.LINEMARKERS)
     }
 
     override fun token(): Token {

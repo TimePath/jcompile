@@ -32,6 +32,8 @@ public fun ParserRuleContext.debug(): String {
     return "$file:$line:$col"
 }
 
+public fun String.unquote(): String = substring(1, length() - 1)
+
 public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
     val start = System.currentTimeMillis()
     val ret = action()

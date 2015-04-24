@@ -14,6 +14,7 @@ import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
+import com.timepath.unquote
 import org.antlr.v4.runtime.ParserRuleContext
 import java.util.ArrayList
 
@@ -705,7 +706,6 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             }, ctx = ctx)).let { listOf(it) }
         }
         match(ctx.StringLiteral()) {
-            fun String.unquote() = substring(1, length() - 1)
             return ConstantExpression(StringBuilder { it.forEach { append(it.getText().unquote()) } }.toString(),
                     ctx = ctx).let { listOf(it) }
         }

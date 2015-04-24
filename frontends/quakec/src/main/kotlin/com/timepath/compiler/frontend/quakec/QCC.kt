@@ -44,7 +44,7 @@ public class QCC : Frontend {
                 it to submit(Callable {
                     val stream = ANTLRInputStream(future.get())
                     stream.name = it.path
-                    val lexer = QCLexer(stream)
+                    val lexer = CustomLexer(stream)
                     val parser = QCParser(lexer.let { CommonTokenStream(it) })
                     parser.compilationUnit()
                 })

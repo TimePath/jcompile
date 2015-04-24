@@ -769,31 +769,31 @@ GMQCCEscapeSequence
 //// ignore
 
 LineDirective
-    :   '#' Whitespace? DecimalConstant Whitespace? StringLiteral ~[\r\n]*
-        -> skip
+    :   ('#' | '#line') Whitespace+ DecimalConstant Whitespace+ StringLiteral ~[\r\n]*
+        -> channel(Whitespace)
     ;
 
 PragmaDirective
-    :   '#' Whitespace? 'pragma' Whitespace ~[\r\n]*
-        -> skip
+    :   '#' Whitespace* 'pragma' Whitespace ~[\r\n]*
+        -> channel(Whitespace)
     ;
 
 Whitespace
     :   [ \t]+
-        -> skip
+        -> channel(Whitespace)
     ;
 
 Newline
     :   '\r'? '\n'
-        -> skip
+        -> channel(Whitespace)
     ;
 
 BlockComment
     :   '/*' .*? '*/'
-        -> skip
+        -> channel(Whitespace)
     ;
 
 LineComment
     :   '//' ~[\r\n]*
-        -> skip
+        -> channel(Whitespace)
     ;
