@@ -1,0 +1,23 @@
+dependencies {
+    compile "org.antlr:antlr4-runtime:${versions.antlr}"
+}
+
+configurations {
+    generatedCompile.extendsFrom compile
+}
+
+sourceSets {
+    generated.java.srcDirs = ['src/generated/java']
+    main.compileClasspath += generated.output
+    main.runtimeClasspath += generated.output
+}
+jar.from sourceSets.generated.output
+
+apply plugin: 'me.champeau.gradle.antlr4'
+
+// FIXME: autodetect
+String pkg = 'com.timepath.compiler.frontend.kotlin'
+antlr4.extraArgs = ['-package', pkg]
+antlr4.output = file("${projectDir}/src/generated/java/${pkg.replace('.', '/')}")
+
+compileGeneratedJava.dependsOn antlr4
