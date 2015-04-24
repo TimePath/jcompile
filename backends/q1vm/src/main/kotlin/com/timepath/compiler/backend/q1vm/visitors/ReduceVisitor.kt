@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object ReduceVisitor : ASTVisitor<Expression?> {
 
-    fun Expression.reduce(): Expression? = accept(this@ReduceVisitor)
+    suppress("NOTHING_TO_INLINE") inline fun Expression.reduce(): Expression? = accept(this@ReduceVisitor)
 
     override fun default(e: Expression) = e
 

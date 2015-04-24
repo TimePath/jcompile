@@ -7,6 +7,8 @@ import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.debug
+import com.timepath.getTextWS
 import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 
@@ -16,7 +18,21 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val logger = Logger.new()
     }
 
-    fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
+    suppress("NOTHING_TO_INLINE") inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
+
+    inline fun Expression.wrap(body: (Expression) -> List<IR>) = try {
+        body(this)
+    } catch(e: Exception) {
+        when (e) {
+            is UnsupportedOperationException -> {
+                val ctx = this.ctx
+                if (ctx != null) {
+                    logger.severe { "${ctx.debug()}: error: ${e.getMessage()!!}\n${ctx.getTextWS()}\n" }
+                }
+            }
+        }
+        listOf<IR>()
+    }
 
     override fun visit(e: BinaryExpression) = Types.handle<Q1VM.State, List<IR>>(Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
     override fun visit(e: BinaryExpression.Add) = visit(e : BinaryExpression)
@@ -53,7 +69,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: BlockExpression): List<IR> {
         state.allocator.push(this)
         val list = e.children.flatMap {
-            it.generate(state)
+            it.wrap { it.generate(state) }
         }
         state.allocator.pop()
         return list
@@ -67,11 +83,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: ConditionalExpression): List<IR> {
         with(e) {
             val ret = linkedListOf<IR>()
-            val genPred = test.generate(state)
+            val genPred = test.wrap { it.generate(state) }
             ret.addAll(genPred)
-            val genTrue = pass.generate(state)
+            val genTrue = pass.wrap { it.generate(state) }
             val trueCount = genTrue.count { it.real }
-            val genFalse = fail?.generate(state)
+            val genFalse = fail?.wrap { it.generate(state) }
             if (genFalse == null) {
                 // No else, jump to the instruction after the body
                 ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0)))
@@ -148,7 +164,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             this
         }
         val genParams = params.flatMap { it.generate(state) }
-        val children = children.flatMap { it.generate(state) }
+        val children = children.flatMap { it.wrap { it.generate(state) } }
         run {
             // Calculate label jumps
             val labelIndices = linkedMapOf<String, Int>()

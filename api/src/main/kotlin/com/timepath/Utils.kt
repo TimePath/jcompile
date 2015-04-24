@@ -1,5 +1,7 @@
 package com.timepath
 
+import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.misc.Interval
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
@@ -12,6 +14,22 @@ class DaemonThreadFactory : ThreadFactory {
         setDaemon(true)
         this
     }
+}
+
+public fun ParserRuleContext.getTextWS(): String {
+    return Interval(start.getStartIndex(), stop.getStopIndex()).let {
+        start.getInputStream().getText(it)
+    }
+}
+
+public fun ParserRuleContext.debug(): String {
+    val token = start
+    val source = token.getTokenSource()
+
+    val line = token.getLine()
+    val col = token.getCharPositionInLine()
+    val file = source.getSourceName()
+    return "$file:$line:$col"
 }
 
 public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {

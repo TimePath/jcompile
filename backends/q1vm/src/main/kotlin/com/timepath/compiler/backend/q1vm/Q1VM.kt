@@ -17,10 +17,10 @@ import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import java.util.LinkedHashMap
 
-fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
-fun Expression.generate(state: Q1VM.State) = accept(state.generatorVisitor)
-fun Expression.reduce() = accept(ReduceVisitor)
-fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
+suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
+suppress("NOTHING_TO_INLINE") inline fun Expression.generate(state: Q1VM.State) = accept(state.generatorVisitor)
+suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(ReduceVisitor)
+suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
 

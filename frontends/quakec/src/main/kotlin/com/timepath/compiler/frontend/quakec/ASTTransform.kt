@@ -41,16 +41,6 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         }
     }
 
-    private fun debug(ctx: ParserRuleContext) {
-        val token = ctx.start
-        val source = token.getTokenSource()
-
-        val line = token.getLine()
-        val col = token.getCharPositionInLine()
-        val file = source.getSourceName()
-        logger.fine { "{$token} $line,$col $file" }
-    }
-
     fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }
     fun QCParser.DeclarationSpecifiers2Context?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }
     fun type(list: List<DeclarationSpecifierContext>, old: Boolean = false) = list.lastOrNull { it.typeSpecifier() != null }?.let { type(it, old) }
