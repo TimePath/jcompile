@@ -1,5 +1,6 @@
 package com.timepath.compiler.backend.q1vm
 
+import com.timepath.Logger
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
@@ -14,7 +15,9 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.getTextWS
 import com.timepath.q1vm.Instruction
+import org.antlr.v4.runtime.ParserRuleContext
 import java.util.LinkedHashMap
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
@@ -42,7 +45,18 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         fun contains(name: String): Boolean
     }
 
+    val logger = Logger.new()
+
+    class Err(val ctx: ParserRuleContext, val reason: String) {
+        private val token = ctx.start
+        val file = token.getTokenSource().getSourceName()
+        val line = token.getLine()
+        val col = token.getCharPositionInLine()
+        val code = ctx.getTextWS()
+    }
+
     inner class State(val opts: CompilerOptions) : CompileState() {
+        val errors = linkedListOf<Err>()
         val evaluateVisitor = EvaluateVisitor(this)
         val generatorVisitor = GeneratorVisitor(this)
         val typeVisitor = TypeVisitor(this)

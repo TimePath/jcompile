@@ -38,9 +38,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             Operation("sizeof", this) to OperationHandler(int_t) { gen: Q1VM.State, self, _ ->
                 sizeExpr.generate(gen)
             },
-            Operation("[]", this, int_t) to index,
-            // TODO: remove
-            Operation("[]", this, float_t) to index
+            Operation("[]", this, int_t) to index
     )
 
     // FIXME

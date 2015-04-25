@@ -25,9 +25,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     } catch(e: Exception) {
         when (e) {
             is UnsupportedOperationException -> {
-                val ctx = this.ctx
-                if (ctx != null) {
-                    logger.severe { "${ctx.debug()}: error: ${e.getMessage()!!}\n${ctx.getTextWS()}\n" }
+                ctx?.let { ctx ->
+                    val reason = e.getMessage()!!
+                    logger.severe { "${ctx.debug()}: error: ${reason}\n${ctx.getTextWS()}\n" }
+                    state.errors.add(Q1VM.Err(ctx, reason))
                 }
             }
         }

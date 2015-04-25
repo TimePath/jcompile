@@ -28,11 +28,32 @@ object Main {
             defs.forEach { project ->
                 time(logger, "Project time") {
                     val compiler = Compiler(QCC(), Q1VM()).let {
-                        it.includeFrom(File("$xonotic/data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
+                        it.includeFrom(File(xonotic, "data/xonotic-data.pk3dir/qcsrc/${project.root}/progs.src"))
                         it.define(project.define)
                         it
                     }
                     val compiled = compiler.compile()
+                    fun StringBuilder.node(s: String, body: StringBuilder.() -> Unit) {
+                        append("\n<$s>")
+                        body()
+                        append("</$s>")
+                    }
+                    StringBuilder {
+                        fun Any.plus() = append(this.toString()
+                                .replace("&", "&amp;")
+                                .replace("<", "&lt;"))
+                        node("errors") {
+                            compiler.state.errors.forEach {
+                                node("error") {
+                                    node("file") { +(File(xonotic).relativePath(File(it.file))) }
+                                    node("line") { append(it.line) }
+                                    node("col") { append(it.col) }
+                                    node("reason") { +(it.reason) }
+                                    node("extract") { +(it.code) }
+                                }
+                            }
+                        }
+                    }.let { File("out", "${project.root}.xml").writeText(it.substring(1)) }
                     thread {
                         ProgramDataWriter(IOWrapper.File(File("out", project.out).let {
                             it.getParentFile().mkdirs()
