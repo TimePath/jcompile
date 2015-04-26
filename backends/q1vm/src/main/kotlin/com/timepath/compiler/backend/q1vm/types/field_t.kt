@@ -1,22 +1,16 @@
 package com.timepath.compiler.backend.q1vm.types
 
-import com.timepath.Logger
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
 import com.timepath.compiler.backend.q1vm.DefaultHandler
-import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.pointer_t
 import com.timepath.q1vm.Instruction
 
 data class field_t(val type: Type) : pointer_t() {
-
-    companion object {
-        val logger = Logger.new()
-    }
 
     override val simpleName = "field_t"
     override fun toString() = ".$type"
@@ -28,17 +22,6 @@ data class field_t(val type: Type) : pointer_t() {
             Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC)
     )
 
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState) = when {
-        state.symbols.globalScope -> {
-            state as Q1VM.State
-            val owner = entity_t // TODO: other types
-            if (name in owner.fields) {
-                logger.warning { "redeclaring field $name" }
-            }
-            owner.fields[name] = this.type
-            // TODO: namespace
-            DeclarationExpression(name, this, state.fields[owner, name])
-        }
-        else -> DeclarationExpression(name, this, value ?: ConstantExpression(0))
-    }.let { listOf(it) }
+    override fun declare(name: String, value: ConstantExpression?, state: CompileState) =
+            listOf(DeclarationExpression(name, this, value ?: ConstantExpression(0)))
 }

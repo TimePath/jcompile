@@ -1,5 +1,6 @@
 package com.timepath.compiler.frontend.quakec
 
+import com.timepath.Logger
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
@@ -17,6 +18,10 @@ import com.timepath.unquote
 import java.util.ArrayList
 
 private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
+
+    companion object {
+        val logger = Logger.new()
+    }
 
     fun emptyList<T>(): List<T> = ArrayList()
     fun listOf<T>(): MutableList<T> = ArrayList()
@@ -234,8 +239,18 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val vararg = ptl.functionVararg()
                     val signature = ptl.functionType(type) ?: type
                     when (ptl) {
-                        null ->
-                            type.declare(id, state = state)
+                        null -> when {
+                            type is field_t && state.symbols.globalScope -> {
+                                val owner = entity_t // TODO: other types
+                                if (id in owner.fields) {
+                                    logger.warning { "redeclaring field $id" }
+                                }
+                                owner.fields[id] = type.type
+                                // TODO: namespace
+                                DeclarationExpression(id, type, state.fields[owner, id]).let { listOf(it) }
+                            }
+                            else -> type.declare(id, state = state)
+                        }
                         else -> when {
                             signature is function_t -> // function prototype
                                 FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
