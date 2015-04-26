@@ -1,22 +1,14 @@
 #include "defs.qh"
 
-#if 0
-#  define entityclass(name) typedef entity name
-#  define new(class) spawn()
-#else
-#  define entityclass(name) entityclass name {}
-#  define new(class) ((class) spawn())
-#endif
+#define entityclass(name) entityclass name {}
+#define class(name) [[class(name)]]
+#define new(class) ((class) spawn())
 
 entityclass(A);
-
-[[class(A)]]
-.int justA;
+class(A) .int justA;
 
 entityclass(B);
-
-[[class(B)]]
-.int justB;
+class(B) .int justB;
 
 void main() {
     entity e = spawn();
