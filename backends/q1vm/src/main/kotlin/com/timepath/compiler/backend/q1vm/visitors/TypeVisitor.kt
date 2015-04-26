@@ -2,7 +2,10 @@ package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.backend.q1vm.types.array_t
+import com.timepath.compiler.backend.q1vm.types.class_t
+import com.timepath.compiler.backend.q1vm.types.field_t
+import com.timepath.compiler.backend.q1vm.types.void_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.Types
@@ -94,13 +97,10 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     override fun visit(e: ReferenceExpression) = e.refers.type
 
-    // FIXME: hack
     override fun visit(e: DynamicReferenceExpression): Type {
-        state.allocator[e.id]?.let { return it.type }
-        // probably a vector component
-        //  return float_t
-        return field_t(float_t)
-        //  throw NullPointerException("Reference ${e.id} not found")
+        val entry = state.allocator[e.id]
+        if (entry == null) throw NullPointerException("Reference ${e.id} not found")
+        return entry.type
     }
 
     override fun visit(e: DeclarationExpression) = e.type
