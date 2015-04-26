@@ -66,7 +66,7 @@ class CompilerSpecs {
                     var roots: Sequence<List<Expression>>
                     it("should parse") {
                         logger.info { "Parsing $test" }
-                        roots = compiler.ast()
+                        roots = compiler.ast().toList().sequence()
                         val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
                         compare("AST", test.name + ".xml", actual)
                     }
