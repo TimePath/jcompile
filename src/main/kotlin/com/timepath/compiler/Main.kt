@@ -64,28 +64,5 @@ object Main {
                 }
             }
         }
-        time(logger, "GMQCC tests") {
-            val gmqcc = Compiler(QCC().let {
-                it.cpp.addFeatures(Feature.DIGRAPHS, Feature.TRIGRAPHS)
-                it
-            }, Q1VM()).let {
-                it.define("GMQCC")
-                it.define("__STD_GMQCC__")
-                it
-            }
-            val include = { filter: (file: File) -> Boolean ->
-                val files = File("$xonotic/gmqcc/tests").listFiles(filter)
-                if (files != null) {
-                    files.sort()
-                    files.forEach {
-                        gmqcc.include(it)
-                    }
-                }
-            }
-            include { it.name.endsWith(".qh") }
-            // include { it.name.endsWith(".qc") }
-            gmqcc.include(File("$xonotic/gmqcc/tests/fieldparams.qc"))
-            gmqcc.compile()
-        }
     }
 }
