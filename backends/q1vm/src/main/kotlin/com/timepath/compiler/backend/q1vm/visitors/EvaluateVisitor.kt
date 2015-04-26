@@ -51,7 +51,7 @@ class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
 
     override fun visit(e: ConstantExpression) = e.value
 
-    override fun visit(e: MemberReferenceExpression) = state.fields[e.id].evaluate() // TODO: other types
+    override fun visit(e: MemberReferenceExpression) = state.fields[e.owner, e.id].evaluate()
 
     override fun visit(e: ReferenceExpression) = e.refers.evaluate()
 

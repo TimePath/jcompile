@@ -1,6 +1,5 @@
 package com.timepath.compiler.frontend.quakec
 
-import com.timepath.Logger
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
@@ -50,7 +49,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return when {
         // varargs
             indirection == 3 -> void_t
-            else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]
+            else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]!!
         }.let { direct ->
             when {
                 old -> null
@@ -110,10 +109,6 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
 
     fun DeclaratorContext.deepest() = sequence(this) { it.declarator() }.last()
 
-    companion object {
-        val logger = Logger.new()
-    }
-
     override fun defaultResult() = emptyList<Expression>()
 
     override fun aggregateResult(aggregate: List<Expression>, nextResult: List<Expression>): List<Expression> {
@@ -167,6 +162,14 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
+        ctx.classSpecifier()?.let {
+            val s = it.name.getText()
+            if (state.types[s] == null) {
+                val clazz = entity_t.extend(s)
+                state.types[s] = clazz
+            }
+            return emptyList()
+        }
         val declarations = ctx.initDeclaratorList()?.initDeclarator()
         if (declarations == null) {
             return ctx.enumSpecifier().enumeratorList().enumerator().mapTo(listOf<Expression>()) {
@@ -500,7 +503,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
 
     override fun visitCastExpression(ctx: QCParser.CastExpressionContext) = when {
         ctx.terminal -> {
-            val type = state.types[ctx.typeName().getText()]
+            val type = state.types[ctx.typeName().getText()]!!
             val expr = ctx.castExpression().accept(this).single()
             UnaryExpression.Cast(
                     type = type,
@@ -542,7 +545,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     }
 
     override fun visitPostfixVararg(ctx: QCParser.PostfixVarargContext): List<Expression> {
-        val type = state.types[ctx.typeName().getText()]
+        val type = state.types[ctx.typeName().getText()]!!
         val va_args = state.symbols.resolve("VA_ARGS")!!
         val va_arg = MethodCallExpression(va_args, ctx.expression().accept(this).single().let { listOf(it) }, ctx = ctx)
         return UnaryExpression.Cast(type, va_arg, ctx = ctx).let { listOf(it) }

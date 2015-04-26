@@ -200,6 +200,7 @@ staticAssertDeclaration
 declaration
     :   declarationSpecifiers initDeclaratorList ';'
     |   enumSpecifier
+    |   classSpecifier
     |   staticAssertDeclaration
     ;
 
@@ -298,6 +299,10 @@ enumerator
 
 enumerationConstant
     :   Identifier
+    ;
+
+classSpecifier
+    :   'entityclass' name=Identifier '{' '}' ';'
     ;
 
 typedefName

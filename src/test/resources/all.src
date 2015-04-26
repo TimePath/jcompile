@@ -1,5 +1,6 @@
 arrays.qc
 calls.qc
+classes.qc
 doubleeval.qc
 functionpointers.qc
 goto.qc

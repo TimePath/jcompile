@@ -10,11 +10,9 @@ public abstract class CompileState {
 
     val types = object : TypeRegistry {
 
-        private val types = linkedMapOf<String, Type>()
+        private val types: MutableMap<String, Type> = linkedMapOf()
 
-        override fun get(name: String): Type {
-            return types[name]
-        }
+        override fun get(name: String) = types[name]
 
         override fun set(name: String, t: Type) {
             types[name] = t

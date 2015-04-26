@@ -7,7 +7,7 @@ import com.timepath.compiler.ast.Expression
 
 public abstract class Type : Named {
 
-    override fun toString() = javaClass.getSimpleName().toLowerCase()
+    override fun toString() = simpleName
 
     abstract fun declare(name: String, value: ConstantExpression? = null, state: CompileState): List<Expression>
 

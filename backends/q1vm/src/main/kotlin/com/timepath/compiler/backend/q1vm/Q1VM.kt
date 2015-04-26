@@ -1,6 +1,5 @@
 package com.timepath.compiler.backend.q1vm
 
-import com.timepath.Logger
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
@@ -15,6 +14,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.getTextWS
 import com.timepath.q1vm.Instruction
 import org.antlr.v4.runtime.ParserRuleContext
@@ -41,11 +41,8 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
     }
 
     trait FieldCounter {
-        fun get(name: String): ConstantExpression
-        fun contains(name: String): Boolean
+        fun get(type: struct_t, name: String): ConstantExpression
     }
-
-    val logger = Logger.new()
 
     class Err(val ctx: ParserRuleContext, val reason: String) {
         private val token = ctx.start
@@ -65,8 +62,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
         val fields: FieldCounter = object : FieldCounter {
             val map: MutableMap<String, Int> = LinkedHashMap()
-            override fun get(name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
-            override fun contains(name: String) = name in map
+            override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
         }
 
         init {

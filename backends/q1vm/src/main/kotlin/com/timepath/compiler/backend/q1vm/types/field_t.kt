@@ -31,12 +31,13 @@ data class field_t(val type: Type) : pointer_t() {
     override fun declare(name: String, value: ConstantExpression?, state: CompileState) = when {
         state.symbols.globalScope -> {
             state as Q1VM.State
-            if (name in state.fields) {
+            val owner = entity_t // TODO: other types
+            if (name in owner.fields) {
                 logger.warning { "redeclaring field $name" }
             }
-            entity_t.fields[name] = this.type
-            // TODO: namespace entity
-            DeclarationExpression(name, this, state.fields[name])
+            owner.fields[name] = this.type
+            // TODO: namespace
+            DeclarationExpression(name, this, state.fields[owner, name])
         }
         else -> DeclarationExpression(name, this, value ?: ConstantExpression(0))
     }.let { listOf(it) }

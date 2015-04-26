@@ -61,7 +61,7 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
     override fun visit(e: IndexExpression): Type {
         val typeL = e.left.type()
         return when (typeL) {
-            is entity_t ->
+            is class_t ->
                 (e.right.type() as field_t).type
             is array_t ->
                 typeL.type

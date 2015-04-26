@@ -3,7 +3,7 @@ package com.timepath.compiler.backend.q1vm.visitors
 import com.timepath.Logger
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
-import com.timepath.compiler.backend.q1vm.types.entity_t
+import com.timepath.compiler.backend.q1vm.types.class_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
@@ -207,7 +207,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         with(e) {
             return with(linkedListOf<IR>()) {
                 val typeL = left.type(state)
-                if (typeL is entity_t) {
+                if (typeL is class_t) {
                     val genL = left.generate()
                     addAll(genL)
                     val genR = right.generate()
@@ -280,7 +280,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 val genL = left.generate()
                 addAll(genL)
                 // check(e.field.owner is entity_t, "Field belongs to different type")
-                val genR = state.fields[e.field.id].generate()
+                val genR = state.fields[e.field.owner, e.field.id].generate()
                 addAll(genR)
                 val type = type(state)
                 val out = state.allocator.allocateReference(type = type)
@@ -290,7 +290,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
     }
 
-    override fun visit(e: MemberReferenceExpression) = state.fields[e.id].generate() // FIXME: other types
+    override fun visit(e: MemberReferenceExpression) = state.fields[e.owner, e.id].generate()
 
     override fun visit(e: MemoryReference): List<IR> {
         return listOf(ReferenceIR(e.ref))
@@ -348,7 +348,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: DynamicReferenceExpression): List<IR> {
         val id = e.id
         if (id !in state.allocator) {
-            logger.severe { "unknown reference $id" }
+            logger.severe { "unknown late bound reference ${id}" }
         }
         // FIXME: null references
         val global = state.allocator[id]
