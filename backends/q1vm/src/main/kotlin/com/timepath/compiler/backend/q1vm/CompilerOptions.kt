@@ -32,4 +32,16 @@ data class CompilerOptions(
          * Support `if not (expr)`
          */
         , val ifNot: Boolean = false
+        /**
+         * Allows the following without special syntax:
+         *
+         * .float field;
+         * ent.field
+         *
+         * This violates entity classes.
+         *
+         * Prefer:
+         * ent.(field)
+         */
+        , val legacyPointerToMember: Boolean = false
 )

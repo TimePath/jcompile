@@ -238,16 +238,28 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val params = ptl.functionArgs()
                     val vararg = ptl.functionVararg()
                     val signature = ptl.functionType(type) ?: type
+                    val attribs = ctx.declarationSpecifiers().declarationSpecifier().sequence()
+                            .flatMap { it.attributeList()?.let { it.attribute().sequence() } ?: sequenceOf() }
+                            .filterNotNull()
+                            .toList()
                     when (ptl) {
                         null -> when {
                             type is field_t && state.symbols.globalScope -> {
-                                val owner = entity_t // TODO: other types
-                                if (id in owner.fields) {
-                                    logger.warning { "redeclaring field $id" }
+                                val extends = attribs.sequence().map {
+                                    val classExtender = "class\\((.*)\\)".toRegex()
+                                    val matcher = classExtender.matcher(it.getText())
+                                    if (!matcher.matches()) return@map null
+                                    state.types[matcher.group(1)] as? class_t
+                                }.filterNotNull().toList()
+                                (sequenceOf(entity_t) + extends).forEach {
+                                    if (id in it.fields) {
+                                        logger.warning { "redeclaring field $id" }
+                                    }
+                                    it.fields[id] = type.type
+                                    state.fields[it, id]
                                 }
-                                owner.fields[id] = type.type
                                 // TODO: namespace
-                                DeclarationExpression(id, type, state.fields[owner, id]).let { listOf(it) }
+                                DeclarationExpression(id, type, state.fields[entity_t, id]).let { listOf(it) }
                             }
                             else -> type.declare(id, state = state)
                         }
@@ -607,15 +619,15 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 val sym = state.symbols.resolve(text)
                 val field = ltype.fields[text]
                 when {
-                // Favor fields
-                    field != null -> MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
-                // Fall back to locals and params. TODO: deprecate without special syntax
-                    sym != null -> when {
-                    // This is for PostfixIndex
-                        sym.type is array_t -> MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
-                        sym.type is field_t -> IndexExpression(left = left, right = sym, ctx = ctx)
-                        else -> throw UnsupportedOperationException("Applying $sym to struct type $ltype")
-                    }
+                    field != null -> // Favor fields
+                        MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                    sym != null -> // Fall back to locals and params
+                        when {
+                            sym.type is array_t -> // This is for PostfixIndex
+                                MemberExpression(left = left, field = MemberReferenceExpression(ltype, text), ctx = ctx)
+                            state.opts.legacyPointerToMember && sym.type is field_t -> IndexExpression(left = left, right = sym, ctx = ctx)
+                            else -> throw UnsupportedOperationException("Applying $sym to struct type $ltype")
+                        }
                     else -> throw NullPointerException("Can't resolve $ltype.$text")
                 }
             }
