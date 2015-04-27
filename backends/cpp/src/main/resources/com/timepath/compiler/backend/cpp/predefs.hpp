@@ -1,28 +1,11 @@
-#pragma once
 typedef const char *string;
 
 inline string _(string str) {
     return str;
 }
 
-enum component {
-    x, y, z
-};
-
 struct vector {
     float x, y, z;
-
-    float &operator[](component c) {
-        switch (c) {
-            case component::x:
-                return x;
-            case component::y:
-                return y;
-            case component::z:
-                return z;
-        }
-        return x;
-    }
 
     vector operator+(const vector &other) {
         return (vector) {x + other.x, y + other.y, z + other.z};
@@ -132,70 +115,8 @@ vector operator*(float f, const vector &other) {
 
 struct entity {
 
-    template<typename T>
-    T &operator[](T *field) {
-        return *new T();
-    }
-
     operator bool() {
         return true;
     }
 
 };
-
-/*
-class number {
-    union {
-        float f;
-        int i;
-        bool b;
-    } n;
-    bool ok_;
-
-    typedef void (number::*bool_type)() const;
-
-    void this_type_does_not_support_comparisons() const {
-    }
-
-public:
-    explicit number(bool b = true) : ok_(b) {
-        n.b = b;
-    }
-
-    operator bool_type() const {
-        return ok_ ? &number::this_type_does_not_support_comparisons : 0;
-    }
-
-    number() {
-
-    }
-
-    number(float f) {
-        n.f = f;
-    }
-
-    operator float() {
-        return n.f;
-    }
-
-    number *operator=(number r) {
-        n = r.n;
-        return this;
-    }
-};
-
-template<typename T>
-bool operator!=(const number &lhs, const T &rhs) {
-    lhs.this_type_does_not_support_comparisons();
-    return false;
-}
-
-template<typename T>
-bool operator==(const number &lhs, const T &rhs) {
-    lhs.this_type_does_not_support_comparisons();
-    return false;
-}
-
-#define float number
-#define int number
-*/
