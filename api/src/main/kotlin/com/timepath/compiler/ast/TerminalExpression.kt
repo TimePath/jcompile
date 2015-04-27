@@ -21,7 +21,7 @@ public open class DynamicReferenceExpression(val id: String, override val ctx: P
 }
 
 public open class DeclarationExpression(val id: String,
-                                        val type: Type,
+                                        open val type: Type,
                                         val value: ConstantExpression? = null,
                                         override val ctx: PRC? = null) : Expression() {
     override val simpleName = "DeclarationExpression"

@@ -19,14 +19,44 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun default(e: Expression) = throw NullPointerException("${e.javaClass}")
 
     override fun visit(e: Nop) = ";"
-    override fun visit(e: UnaryExpression) = "(${e.op}${e.operand.print()})"
-    override fun visit(e: UnaryExpression.Cast) = "((${typename(e.type)}) ${e.operand.print()})"
-    override fun visit(e: BinaryExpression) = "(${e.left.print()} ${e.op} ${e.right.print()})"
-    override fun visit(e: MemberExpression) = "(${e.left.print()}.${e.field.id})"
-    override fun visit(e: MemberReferenceExpression) = "(${typename(e.owner)}::${e.id})"
+    override fun visit(e: UnaryExpression) = "${e.op}${e.operand.print()}"
+    override fun visit(e: UnaryExpression.Cast) = "(${typename(e.type)}) ${e.operand.print()}"
+    val binaryPrecedence = mapOf(
+            "::" to 1
+            , "()" to 2
+            , "[]" to 2
+            , "." to 2
+            , "->" to 2
+            , "*" to 3, "/" to 3, "%" to 3
+            , "+" to 6, "-" to 6
+            , "<<" to 7, ">>" to 7
+            , "<" to 8, "<=" to 8, ">" to 8, ">=" to 8
+            , "==" to 9, "!=" to 9
+            , "&" to 10
+            , "^" to 11
+            , "|" to 12
+            , "&&" to 13
+            , "||" to 14
+            , "=" to 15
+            , "+=" to 15, "-=" to 15
+            , "*=" to 15, "/=" to 15, "%=" to 15
+            , "<<=" to 15, ">>=" to 15
+            , "&=" to 15, "^=" to 15, "|=" to 15
+            , "," to 17
+    )
+
+    fun Expression.printPrec(parent: String) = when {
+        this is BinaryExpression && binaryPrecedence[op]!! > binaryPrecedence[parent]!! -> "(${print()})"
+        else -> print()
+    }
+
+    override fun visit(e: BinaryExpression) = "${e.left.printPrec(e.op)} ${e.op} ${e.right.printPrec(e.op)}"
+
+    override fun visit(e: MemberExpression) = "${e.left.print()}.${e.field.id}"
+    override fun visit(e: MemberReferenceExpression) = "${typename(e.owner)}::${e.id}"
     override fun visit(e: IndexExpression) = when {
-        e.right.type() is field_t -> "(${e.left.print()}.*${e.right.print()})"
-        else -> "(${e.left.print()}[${e.right.print()}])"
+        e.right.type() is field_t -> "${e.left.print()}.*${e.right.print()}"
+        else -> "${e.left.print()}[${e.right.print()}]"
     }
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(state.typeVisitor)
@@ -63,10 +93,13 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
                 else "")
     }
 
-    fun declare(e: DeclarationExpression) = when (e.type) {
-        is array_t -> _declare(e.type, e.id, e.type.sizeExpr)
-        is function_t -> _declare(e.type, e.id, null)
-        else -> _declare(e.type, e.id, e.value)
+    fun declare(e: DeclarationExpression): String {
+        val t = e.type
+        return when (t) {
+            is array_t -> _declare(t, e.id, t.sizeExpr)
+            is function_t -> _declare(t, e.id, null)
+            else -> _declare(t, e.id, e.value)
+        }
     }
 
     override fun visit(e: BlockExpression) = block(e.children).toString()
@@ -83,10 +116,19 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         }.toString()
     }
 
-    override fun visit(e: ConditionalExpression) = when {
-        e.expression -> "${e.test.print()} ? ${e.pass.print()} : ${e.fail!!.print()}"
-        else -> "if (${e.test.print()}) ${compound(e.pass, true)}" +
-                (if (e.fail != null) " else " + compound(e.fail, false) else "")
+    override fun visit(e: ConditionalExpression): String {
+        val pred = e.test.print()
+        return when {
+            e.expression -> {
+                val pass = e.pass.print()
+                check(e.fail != null, "f is null")
+                val fail = e.fail!!.print()
+                "$pred ? $pass : $fail"
+            }
+            else -> "if ($pred) ${compound(e.pass, true)}" + run {
+                if (e.fail != null) " else ${compound(e.fail, false)}" else ""
+            }
+        }
     }
 
     override fun visit(e: ConstantExpression) = e.value.any.let {
@@ -108,17 +150,12 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun visit(e: ParameterExpression) = declare(e)
 
     override fun visit(e: FunctionExpression) = Printer {
-        +_declare((e.type as function_t).type, e.id + "(" +
-                (if (e.params != null) e.params.map { it.print() }.join(", ")
-                else e.type.argTypes.map { _declare(it, null, null) }.join(", ")) +
-                (if ((e.params != null || e.type.argTypes.isNotEmpty())
-                        && (e.vararg != null || e.type.vararg != null)) ", "
-                else "") +
-                (if (e.vararg != null) e.vararg.print()
-                else if (e.type.vararg != null) _declare(e.type.vararg, null, null)
-                else "") +
-                ")"
-                , null)
+        val pars = e.params?.map { it.print() }
+                ?: e.type.argTypes.map { _declare(it, null, null) }
+        val vara = e.vararg?.let { it.print().let { listOf(it) } }
+                ?: e.type.vararg?.let { _declare(it, null, null).let { listOf(it) } }
+                ?: emptyList()
+        +_declare(e.type.type, "${e.id}(${(pars + vara).join(", ")})", null)
         if (e.children.isNotEmpty()) {
             +block(e.children)
         }
@@ -128,16 +165,16 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: LabelExpression) = "${e.id}:"
 
-    override fun visit(e: LoopExpression) = when {
-        !e.checkBefore -> "do ${block(e.children)} while (${e.predicate.print()})"
-        e.initializer != null && e.update != null ->
-            "for (" +
-                    e.initializer.map { it.print() }.join(", ") + "; " +
-                    e.predicate.print() + "; " +
-                    e.update.map { it.print() }.join(", ") +
-                    ") " +
-                    block(e.children)
-        else -> "while (${e.predicate.print()}) ${block(e.children)}"
+    override fun visit(e: LoopExpression): String {
+        val init = e.initializer?.let { it.map { it.print() }.join(", ") }
+        val pred = e.predicate.print()
+        val body = block(e.children)
+        val update = e.update?.let { it.map { it.print() }.join(", ") }
+        return when {
+            !e.checkBefore -> "do $body while ($pred)"
+            e.initializer != null && e.update != null -> "for ($init; $pred; $update) $body"
+            else -> "while ($pred) $body"
+        }
     }
 
     override fun visit(e: MethodCallExpression) = "${e.function.print()}(${e.args.map { it.print() }.join(", ")})"

@@ -682,13 +682,14 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
                 state.symbols.resolve(vector)?.let {
-                    if (it.type is vector_t) {
+                    val type = it.type
+                    if (type is vector_t) {
                         return MemberExpression(
                                 left = ReferenceExpression(it),
                                 field = MemberReferenceExpression(vector_t, component),
                                 ctx = ctx).let { listOf(it) }
                     }
-                    if (it.type is field_t && it.type.type is vector_t) {
+                    if (type is field_t && type.type is vector_t) {
                         // TODO: will this work?
                         return MemberReferenceExpression(vector_t, text).let { listOf(it) }
                     }
