@@ -1,4 +1,4 @@
-typedef const char *string;
+using std::string;
 
 inline string _(string str) {
     return str;
@@ -7,8 +7,16 @@ inline string _(string str) {
 struct vector {
     float x, y, z;
 
+    vector() : x(0), y(0), z(0) { }
+
+    vector(float x, float y, float z) : x(x), y(y), z(z) { }
+
+    vector operator+() {
+        return vector(x, y, z);
+    }
+
     vector operator+(const vector &other) {
-        return (vector) {x + other.x, y + other.y, z + other.z};
+        return vector(x + other.x, y + other.y, z + other.z);
     }
 
     vector &operator+=(const vector &other) {
@@ -19,8 +27,12 @@ struct vector {
         return *this;
     }
 
+    vector operator-() {
+        return vector(-x, -y, -z);
+    }
+
     vector operator-(const vector &other) {
-        return (vector) {x - other.x, y - other.y, z - other.z};
+        return vector(x - other.x, y - other.y, z - other.z);
     }
 
     vector &operator-=(const vector &other) {
@@ -32,7 +44,7 @@ struct vector {
     }
 
     vector operator*(const float other) {
-        return (vector) {x * other, y * other, z * other};
+        return vector(x * other, y * other, z * other);
     }
 
     vector &operator*=(const float other) {
@@ -48,7 +60,7 @@ struct vector {
     }
 
     vector operator/(const float other) {
-        return (vector) {x / other, y / other, z / other};
+        return vector(x / other, y / other, z / other);
     }
 
     vector &operator/=(const float other) {
@@ -72,11 +84,11 @@ struct vector {
     }
 
     vector operator&(const vector &other) {
-        return (vector) {
+        return vector(
                         (float) (((int) x) & ((int) other.x)),
                         (float) (((int) y) & ((int) other.y)),
                         (float) (((int) z) & ((int) other.z))
-                        };
+                        );
     }
 
     vector &operator&=(const vector &other) {
@@ -88,11 +100,11 @@ struct vector {
     }
 
     vector operator|(const vector &other) {
-        return (vector) {
+        return vector(
                         (float) (((int) x) | ((int) other.x)),
                         (float) (((int) y) | ((int) other.y)),
                         (float) (((int) z) | ((int) other.z))
-                        };
+                        );
     }
 
     vector &operator|=(const vector &other) {
@@ -104,16 +116,16 @@ struct vector {
     }
 
     vector operator~() {
-        return (vector) {(float)~(int) x, (float)~(int) y, (float)~(int) z};
+        return vector((float)~(int) x, (float)~(int) y, (float)~(int) z);
     }
 
 };
 
 vector operator*(float f, const vector &other) {
-    return (vector) {f * other.x, f * other.y, f * other.z};
+    return vector(f * other.x, f * other.y, f * other.z);
 }
 
-struct entity {
+struct entity_base {
 
     operator bool() {
         return true;

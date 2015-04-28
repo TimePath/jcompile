@@ -67,10 +67,15 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: BinaryExpression) = "${e.left.printPrec(e.op)} ${e.op} ${e.right.printPrec(e.op)}".p
 
-    override fun visit(e: MemberExpression) = "${e.left.print()}.${e.field.id}".p
+    fun deref(t: Type) = when (t) {
+        is class_t -> "->"
+        else -> "."
+    }
+
+    override fun visit(e: MemberExpression) = "${e.left.print()}${deref(e.left.type())}${e.field.id}".p
     override fun visit(e: MemberReferenceExpression) = "${typename(e.owner)}::${e.id}".p
     override fun visit(e: IndexExpression) = when {
-        e.right.type() is field_t -> "${e.left.print()}.*${e.right.print()}".p
+        e.right.type() is field_t -> "${e.left.print()}${deref(e.left.type())}*${e.right.print()}".p
         else -> "${e.left.print()}[${e.right.print()}]".p
     }
 
@@ -90,7 +95,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     fun typename(t: Type): String = typename.getOrElse(t) { t.simpleName }
 
     fun _declare_field(t: field_t, id: String?)
-            = _declare(t.type, "entity::*${id ?: ""}", null)
+            = _declare(t.type, "entity_s::*${id ?: ""}", null)
 
     fun _declare(t: Type, id: String?, v: Expression?): Printer = when (t) {
         is array_t -> _declare(t.type, id, null).toString() +
@@ -100,7 +105,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         is function_t -> "${_declare(t.type, "(*${id ?: ""})", null)}" +
                 "(${t.argTypes.map { _declare(it, null, null).toString() }.join(", ")}" +
                 (if (t.argTypes.isNotEmpty() && t.vararg != null) ", " else "") +
-                (t.vararg ?: "") +
+                (t.vararg?.let { "..." } ?: "") +
                 ")"
         else -> typename(t) +
                 (if (id != null) " ${id}" else "") +
@@ -150,14 +155,14 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: ConstantExpression) = e.value.any.let {
         when (it) {
-            is Pointer -> "${it.int}".p
-            is Float -> "${it}f".p
-            is Int -> "${it}".p
-            is Vector -> "(vector) { ${it.x}f, ${it.y}f, ${it.z}f }".p
-            is Char -> "'${it}'".p
-            is String -> "\"${it}\"".p
+            is Pointer -> "${it.int}"
+            is Float -> "${it}f"
+            is Int -> "${it}"
+            is Vector -> "vector ( ${it.x}f, ${it.y}f, ${it.z}f )"
+            is Char -> "'${it}'"
+            is String -> "\"${it}\""
             else -> throw NoWhenBranchMatchedException()
-        }
+        }.p
     }
 
     override fun visit(e: ContinueStatement) = "continue".p
@@ -169,8 +174,8 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun visit(e: FunctionExpression) = Printer {
         val pars = e.params?.map { it.print().toString() }
                 ?: e.type.argTypes.map { _declare(it, null, null).toString() }
-        val vara = e.vararg?.let { it.print().toString().let { listOf(it) } }
-                ?: e.type.vararg?.let { _declare(it, null, null).toString().let { listOf(it) } }
+        val vara = e.vararg?.let { it.print().toString(); "..." }?.let { listOf(it) }
+                ?: e.type.vararg?.let { _declare(it, null, null).toString(); "..." }?.let { listOf(it) }
                 ?: emptyList()
         +_declare(e.type.type, "${e.id}(${(pars + vara).join(", ")})", null)
         if (e.children.isNotEmpty()) {
