@@ -25,11 +25,17 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     }
 
     fun block(l: List<Expression>) = Printer {
-        +"{"
-        +indent {
-            l.forEach { +"${it.print()}${term(it)}" }
+        val single = l.singleOrNull()
+        when (single) {
+            is BlockExpression -> +single.print()
+            else -> {
+                +"{"
+                +indent {
+                    l.forEach { +"${it.print()}${term(it)}" }
+                }
+                +"}"
+            }
         }
-        +"}"
     }
 
     override fun default(e: Expression) = throw UnsupportedOperationException("${e.javaClass}")
