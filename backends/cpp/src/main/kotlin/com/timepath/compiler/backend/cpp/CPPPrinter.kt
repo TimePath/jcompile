@@ -47,32 +47,30 @@ object CPPPrinter {
                 +"using $ns::vector;"
                 +""
 
-                +"namespace $ns"
-                +"{"
+                +"namespace $ns {"
                 +indent {
                     +"typedef struct entity_s *entity;"
-                    +"struct entity_s : xon::entity_base"
-                    entity_t.fields.flatMap {
+
+                    +"struct entity_s : xon::entity_base ${entity_t.fields.flatMap {
                         val (n, t) = it
                         t.declare(n, state = state)
-                    }.let {
-                        +BlockExpression(it).accept(visitor).terminate(";")
+                    }.let { BlockExpression(it).accept(visitor).terminate(";") }}"
+
+                    code.sequence().filter {
+                        when {
+                        // Pointer to member
+                            it is DeclarationExpression
+                                    && it.type is field_t
+                                    && it.value != null
+                            -> false
+                            else -> true
+                        }
+                    }.forEach {
+                        +it.accept(visitor)
                     }
                 }
                 +"}"
                 +""
-
-                +"namespace $ns"
-                +BlockExpression(code.filter {
-                    when {
-                    // Pointer to member
-                        it is DeclarationExpression
-                                && it.type is field_t
-                                && it.value != null
-                        -> false
-                        else -> true
-                    }
-                }).accept(visitor)
             }.toString())
         }
     }

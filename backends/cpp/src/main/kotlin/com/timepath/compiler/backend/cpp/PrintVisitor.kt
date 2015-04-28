@@ -16,9 +16,12 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
             l.forEach {
                 val line = it.print()
                 when {
-                    it is ConditionalExpression && !it.expression
+                    it is BlockExpression
+                        , it is ConditionalExpression && !it.expression
                         , it is FunctionExpression && it.children.isNotEmpty()
                         , it is LabelExpression
+                        , it is LoopExpression
+                        , it is SwitchExpression
                         , it is SwitchExpression.Case
                     -> Unit
                     else -> line.terminate(";")
@@ -120,12 +123,10 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         is function_t -> declareFunc(id).let {
             it.toString()
         }
-        else -> typename() +
-                (id?.let { " $it" } ?: "") +
-                when {
-                    v != null -> " = " + v.print()
-                    else -> ""
-                }
+        else -> typename() + (id?.let { " $it" } ?: "") + when {
+            v != null -> " = " + v.print()
+            else -> ""
+        }
     }.p
 
     fun declare(e: DeclarationExpression) = e.type.let {
@@ -155,14 +156,10 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
                 "$pred ? $pass : $fail".p
             }
             else -> Printer {
-                run {
-                    +"if ($pred)"
-                    +compound(e.pass)
-                }
-                if (e.fail != null) {
-                    +"else"
-                    +compound(e.fail)
-                }
+                +("if ($pred) ${compound(e.pass)}" + when {
+                    e.fail != null -> " else ${compound(e.fail)}"
+                    else -> ""
+                })
             }
         }
     }
@@ -191,10 +188,10 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         val vara = e.vararg?.let { it.print(); "..." }?.let { listOf(it) }
                 ?: e.type.vararg?.let { it.declareVar(null, null); "..." }?.let { listOf(it) }
                 ?: emptyList()
-        +e.type.type.declareVar("${e.id}(${(pars + vara).joinToString(", ")})", null)
-        if (e.children.isNotEmpty()) {
-            +block(e.children)
-        }
+        +(e.type.type.declareVar("${e.id}(${(pars + vara).joinToString(", ")})", null).toString() + when {
+            e.children.isNotEmpty() -> " ${block(e.children)}"
+            else -> ""
+        })
     }
 
     override fun visit(e: GotoExpression) = "goto ${e.id}".p
@@ -223,8 +220,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     }.p
 
     override fun visit(e: SwitchExpression) = Printer {
-        +"switch (${e.test.print()})"
-        +block(e.children)
+        +"switch (${e.test.print()}) ${block(e.children)}"
     }
 
     override fun visit(e: SwitchExpression.Case) = when (e.expr) {
