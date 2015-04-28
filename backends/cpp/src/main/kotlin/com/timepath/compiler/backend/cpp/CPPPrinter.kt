@@ -65,6 +65,7 @@ object CPPPrinter {
                 +"namespace $ns"
                 +BlockExpression(code.filter {
                     when {
+                    // Pointer to member
                         it is DeclarationExpression
                                 && it.type is field_t
                                 && it.value != null

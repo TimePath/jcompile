@@ -16,10 +16,11 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
             l.forEach {
                 val line = it.print()
                 when {
-                    it is ConditionalExpression && !it.expression -> Unit
-                    it is FunctionExpression && it.children.isNotEmpty() -> Unit
-                    it is LabelExpression -> Unit
-                    it is SwitchExpression.Case -> Unit
+                    it is ConditionalExpression && !it.expression
+                        , it is FunctionExpression && it.children.isNotEmpty()
+                        , it is LabelExpression
+                        , it is SwitchExpression.Case
+                    -> Unit
                     else -> line.terminate(";")
                 }
                 +line
@@ -28,14 +29,13 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         +"}"
     }
 
-    override fun default(e: Expression) = throw NullPointerException("${e.javaClass}")
+    override fun default(e: Expression) = throw UnsupportedOperationException("${e.javaClass}")
 
-    val String.p: Printer
-        get() = Printer(this)
+    val String.p: Printer get() = Printer(this)
 
     override fun visit(e: Nop) = ";".p
     override fun visit(e: UnaryExpression) = "${e.op}${e.operand.print()}".p
-    override fun visit(e: UnaryExpression.Cast) = "(${typename(e.type)}) ${e.operand.print()}".p
+    override fun visit(e: UnaryExpression.Cast) = "(${e.type.typename()}) ${e.operand.print()}".p
     val binaryPrecedence = mapOf(
             "::" to 1
             , "()" to 2
@@ -73,16 +73,16 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     }
 
     override fun visit(e: MemberExpression) = "${e.left.print()}${deref(e.left.type())}${e.field.id}".p
-    override fun visit(e: MemberReferenceExpression) = "${typename(e.owner)}::${e.id}".p
+    override fun visit(e: MemberReferenceExpression) = "${e.owner.typename()}::${e.id}".p
     override fun visit(e: IndexExpression) = when {
-        e.right.type() is field_t -> "${e.left.print()}${deref(e.left.type())}*${e.right.print()}".p
-        else -> "${e.left.print()}[${e.right.print()}]".p
-    }
+        e.right.type() is field_t -> "${e.left.print()}${deref(e.left.type())}*${e.right.print()}"
+        else -> "${e.left.print()}[${e.right.print()}]"
+    }.p
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(state.typeVisitor)
     suppress("NOTHING_TO_INLINE") inline fun Expression.print() = accept(this@PrintVisitor)
 
-    val typename: Map<Type, String> = mapOf(
+    val typename = mapOf(
             void_t to "void"
             , bool_t to "bool"
             , int_t to "int"
@@ -92,33 +92,47 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
             , string_t to "string"
     )
 
-    fun typename(t: Type): String = typename.getOrElse(t) { t.simpleName }
+    fun Type.typename(): String = typename.getOrElse(this) { simpleName }
 
-    fun _declare_field(t: field_t, id: String?)
-            = _declare(t.type, "entity_s::*${id ?: ""}", null)
+    fun array_t.declareArray(id: String?) = (id ?: "").let {
+        type.declareVar(it, null)
+    }
 
-    fun _declare(t: Type, id: String?, v: Expression?): Printer = when (t) {
-        is array_t -> _declare(t.type, id, null).toString() +
-                "[${v!!.print()}]"
-        is field_t -> _declare_field(t, id).toString() +
-                (if (v != null) " = (${_declare_field(t, null)}) ${v.print()}" else "")
-        is function_t -> "${_declare(t.type, "(*${id ?: ""})", null)}" +
-                "(${t.argTypes.map { _declare(it, null, null).toString() }.join(", ")}" +
-                (if (t.argTypes.isNotEmpty() && t.vararg != null) ", " else "") +
-                (t.vararg?.let { "..." } ?: "") +
-                ")"
-        else -> typename(t) +
-                (if (id != null) " ${id}" else "") +
-                (if (v != null) " = ${v.print()}"
-                else "")
+    fun field_t.declareField(id: String?) = (id ?: "").let {
+        type.declareVar("entity_s::*$it", null)
+    }
+
+    fun function_t.declareFunc(id: String?) = (id ?: "").let { if (true) "(*$it)" else it }.let {
+        type.declareVar(it, null).let {
+            val sig = this.argTypes.map { it.declareVar(null, null).toString() } +
+                    (this.vararg?.let { listOf("...") } ?: emptyList())
+            "$it(${sig.join(", ")})"
+        }
+    }
+
+    fun Type.declareVar(id: String?, v: Expression?): Printer = when (this) {
+        is array_t -> declareArray(id).let {
+            it.toString() + "[${v?.print() ?: ""}]"
+        }
+        is field_t -> declareField(id).let {
+            it.toString() + (v?.let { " = (${declareField(null)}) ${it.print()}" } ?: "")
+        }
+        is function_t -> declareFunc(id).let {
+            it.toString()
+        }
+        else -> typename() +
+                (id?.let { " $it" } ?: "") +
+                when {
+                    v != null -> " = " + v.print()
+                    else -> ""
+                }
     }.p
 
-    fun declare(e: DeclarationExpression): Printer {
-        val t = e.type
-        return when (t) {
-            is array_t -> _declare(t, e.id, t.sizeExpr)
-            is function_t -> _declare(t, e.id, null)
-            else -> _declare(t, e.id, e.value)
+    fun declare(e: DeclarationExpression) = e.type.let {
+        when (it) {
+            is array_t -> it.declareVar(e.id, it.sizeExpr)
+            is function_t -> it.declareVar(e.id, null)
+            else -> it.declareVar(e.id, e.value)
         }
     }
 
@@ -172,12 +186,12 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun visit(e: ParameterExpression) = declare(e)
 
     override fun visit(e: FunctionExpression) = Printer {
-        val pars = e.params?.map { it.print().toString() }
-                ?: e.type.argTypes.map { _declare(it, null, null).toString() }
-        val vara = e.vararg?.let { it.print().toString(); "..." }?.let { listOf(it) }
-                ?: e.type.vararg?.let { _declare(it, null, null).toString(); "..." }?.let { listOf(it) }
+        val pars = e.params?.map { it.print() }
+                ?: e.type.argTypes.map { it.declareVar(null, null) }
+        val vara = e.vararg?.let { it.print(); "..." }?.let { listOf(it) }
+                ?: e.type.vararg?.let { it.declareVar(null, null); "..." }?.let { listOf(it) }
                 ?: emptyList()
-        +_declare(e.type.type, "${e.id}(${(pars + vara).join(", ")})", null)
+        +e.type.type.declareVar("${e.id}(${(pars + vara).joinToString(", ")})", null)
         if (e.children.isNotEmpty()) {
             +block(e.children)
         }
@@ -188,18 +202,18 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun visit(e: LabelExpression) = "${e.id}:".p
 
     override fun visit(e: LoopExpression): Printer {
-        val init = e.initializer?.let { it.map { it.print().toString() }.join(", ") }
+        val init = e.initializer?.let { it.map { it.print() }.joinToString(", ") }
         val pred = e.predicate.print()
         val body = block(e.children)
-        val update = e.update?.let { it.map { it.print().toString() }.join(", ") }
+        val update = e.update?.let { it.map { it.print() }.joinToString(", ") }
         return when {
             !e.checkBefore -> "do $body while ($pred)"
-            e.initializer != null && e.update != null -> "for ($init; $pred; $update) $body"
+            init != null && update != null -> "for ($init; $pred; $update) $body"
             else -> "while ($pred) $body"
         }.p
     }
 
-    override fun visit(e: MethodCallExpression) = "${e.function.print()}(${e.args.map { it.print().toString() }.join(", ")})".p
+    override fun visit(e: MethodCallExpression) = "${e.function.print()}(${e.args.map { it.print() }.joinToString(", ")})".p
 
     override fun visit(e: ReferenceExpression) = "${e.refers.id}".p
 
