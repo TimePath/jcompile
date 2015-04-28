@@ -10,24 +10,24 @@ import com.timepath.compiler.types.defaults.function_t
 
 class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisitor<Printer> {
 
+    companion object {
+        fun term(e: Expression) = when {
+            e is BlockExpression
+                , e is ConditionalExpression && !e.expression
+                , e is FunctionExpression && e.children.isNotEmpty()
+                , e is LabelExpression
+                , e is LoopExpression
+                , e is SwitchExpression
+                , e is SwitchExpression.Case
+            -> ""
+            else -> ";"
+        }
+    }
+
     fun block(l: List<Expression>) = Printer {
         +"{"
         +indent {
-            l.forEach {
-                val line = it.print()
-                when {
-                    it is BlockExpression
-                        , it is ConditionalExpression && !it.expression
-                        , it is FunctionExpression && it.children.isNotEmpty()
-                        , it is LabelExpression
-                        , it is LoopExpression
-                        , it is SwitchExpression
-                        , it is SwitchExpression.Case
-                    -> Unit
-                    else -> line.terminate(";")
-                }
-                +line
-            }
+            l.forEach { +"${it.print()}${term(it)}" }
         }
         +"}"
     }

@@ -65,9 +65,7 @@ object CPPPrinter {
                             -> false
                             else -> true
                         }
-                    }.forEach {
-                        +it.accept(visitor)
-                    }
+                    }.forEach { +"${it.accept(visitor)}${PrintVisitor.term(it)}" }
                 }
                 +"}"
                 +""
