@@ -4,6 +4,16 @@ inline string _(string str) {
     return str;
 }
 
+// Brings members of a vector into the current namespace to be used with pointer to member
+#define VECTOR(name)                        \
+union {                                     \
+    vector name;                            \
+    struct {                                \
+        [[deprecated("Use member access")]] \
+        float name##_x, name##_y, name##_z; \
+    };                                      \
+}
+
 struct vector {
     float x, y, z;
 
