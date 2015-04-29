@@ -258,8 +258,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                                     it.fields[id] = type.type
                                     state.fields[it, id]
                                 }
-                                // TODO: namespace
-                                DeclarationExpression(id, type, state.fields[entity_t, id]).let { listOf(it) }
+                                emptyList<Expression>()
                             }
                             else -> type.declare(id, state = state)
                         }
@@ -677,29 +676,46 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Expression> {
         val text = ctx.getText()
         match(ctx.Identifier()) {
+            // TODO: other types?
+            val e = entity_t
+            run {
+                val symbol = state.symbols.resolve(text)
+                val member = e.fields[text]
+                when {
+                    symbol != null ->
+                        return ReferenceExpression(
+                                symbol,
+                                ctx = ctx).let { listOf(it) }
+                    state.opts.legacyFieldNamespace
+                            && member != null ->
+                        return MemberReferenceExpression(
+                                e, text,
+                                ctx = ctx).let { listOf(it) }
+                }
+                Unit
+            }
             val matcher = matchVecComponent.matcher(text)
             if (state.opts.legacyVectors && matcher.matches()) {
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
-                state.symbols.resolve(vector)?.let {
-                    val type = it.type
-                    if (type is vector_t) {
+                val symbol = state.symbols.resolve(vector)
+                val member = e.fields[vector]
+                when {
+                    symbol != null
+                            && symbol.type is vector_t ->
                         return MemberExpression(
-                                left = ReferenceExpression(it),
-                                field = MemberReferenceExpression(vector_t, component),
+                                left = ReferenceExpression(symbol, ctx = ctx),
+                                field = MemberReferenceExpression(vector_t, component, ctx = ctx),
                                 ctx = ctx).let { listOf(it) }
-                    }
-                    if (type is field_t && type.type is vector_t) {
-                        // TODO: will this work?
-                        return MemberReferenceExpression(vector_t, text).let { listOf(it) }
-                    }
+                    state.opts.legacyFieldNamespace
+                            && member != null
+                            && member is vector_t ->
+                        // Pointer to member of member is illegal, must use a union of the member and its members
+                        return MemberReferenceExpression(e, text, ctx = ctx).let { listOf(it) }
                 }
             }
-            val symbol = state.symbols.resolve(text)
-            if (symbol == null) {
-                throw NullPointerException("Unable to resolve symbol $text")
-            }
-            return ReferenceExpression(symbol, ctx = ctx).let { listOf(it) }
+
+            throw NullPointerException("Unable to resolve symbol $text")
         }
         match(ctx.Constant()) {
             val s = it.getText()

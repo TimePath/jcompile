@@ -44,4 +44,16 @@ data class CompilerOptions(
          * ent.(field)
          */
         , val legacyPointerToMember: Boolean = false
+        /**
+         * Try 'missing' symbols as entity fields
+         *
+         * globally:
+         * entityclass entity {
+         *      .float f;
+         * }
+         *
+         * locally:
+         * .float fld = f; // comes from entity::
+         */
+        , val legacyFieldNamespace: Boolean = true
 )
