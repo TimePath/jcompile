@@ -16,7 +16,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
                 , e is ConditionalExpression && !e.expression
                 , e is FunctionExpression && e.children.isNotEmpty()
                 , e is LabelExpression
-                , e is LoopExpression
+                , e is LoopExpression && e.checkBefore
                 , e is SwitchExpression
                 , e is SwitchExpression.Case
             -> ""
