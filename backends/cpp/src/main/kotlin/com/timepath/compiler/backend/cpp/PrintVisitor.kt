@@ -147,9 +147,9 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: BreakStatement) = "break".p
 
-    fun compound(e: Expression) = when (e) {
-        is BlockExpression -> e.print()
-        is ConditionalExpression -> e.print()
+    fun compound(e: Expression, force: Boolean = false) = when {
+        e is BlockExpression -> e.print()
+        !force && e is ConditionalExpression -> e.print()
         else -> block(listOf(e))
     }
 
@@ -162,7 +162,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
                 "$pred ? $pass : $fail".p
             }
             else -> Printer {
-                +("if ($pred) ${compound(e.pass)}" + when {
+                +("if ($pred) ${compound(e.pass, force = true)}" + when {
                     e.fail != null -> " else ${compound(e.fail)}"
                     else -> ""
                 })
