@@ -32,7 +32,7 @@ object CPPPrinter {
 
     val indent = "    "
 
-    fun write(visitor: PrintVisitor, file: File, include: List<File>, code: List<Expression>, state: Q1VM.State) {
+    fun write(visitor: PrintVisitor, file: File, include: List<File>, code: List<Expression>) {
         val parent = file.getParentFile()
         parent.mkdirs()
         FileOutputStream(file).writer().buffered().use {
@@ -49,13 +49,6 @@ object CPPPrinter {
 
                 +"namespace $ns {"
                 +indent {
-                    +"typedef struct entity_s *entity;"
-
-                    +"struct entity_s : xon::entity_base ${entity_t.fields.flatMap {
-                        val (n, t) = it
-                        t.declare(n, state = state)
-                    }.let { BlockExpression(it).accept(visitor).terminate(";") }}"
-
                     code.sequence().filter {
                         when {
                         // Pointer to member
@@ -80,6 +73,7 @@ object CPPPrinter {
             it.define(project.define)
             it
         }
+        val v = PrintVisitor(compiler.state, indent)
 
         val ast = compiler.ast().toList()
         val projOut = File(out, project.out)
@@ -93,6 +87,12 @@ object CPPPrinter {
                     PREDEFS.openStream().reader().buffered().lines().forEach {
                         +it
                     }
+                    +""
+                    +"typedef struct entity_s *entity;"
+                    +"struct entity_s : xon::entity_base ${entity_t.fields.flatMap {
+                        val (n, t) = it
+                        t.declare(n, state = compiler.state)
+                    }.let { BlockExpression(it).accept(v).terminate(";") }}"
                 }
                 +"}"
             }.toString())
@@ -119,14 +119,13 @@ object CPPPrinter {
                 +"add_definitions(-std=c++11)"
             }.toString())
         }
-        val v = PrintVisitor(compiler.state, indent)
         val include = listOf(predef)
         val accumulate = linkedListOf<Expression>()
         for ((f, code) in map) {
-            write(v, File(projOut, f), include, code, compiler.state)
+            write(v, File(projOut, f), include, code)
             accumulate.addAll(code)
         }
-        write(v, File(projOut, "all.cpp"), include, accumulate, compiler.state)
+        write(v, File(projOut, "all.cpp"), include, accumulate)
     }
 
     platformStatic fun main(args: Array<String>) {
