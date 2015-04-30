@@ -11,6 +11,13 @@ def scripts = [
 ]
 mainClassName = scripts['compile']
 scripts.each { scriptName, className ->
+    tasks.create(name: 'run-' + scriptName, type: JavaExec, dependsOn: 'classes') {
+        main = className
+        classpath = sourceSets.main.runtimeClasspath
+        System.getProperty("exec.args")?.with {
+            args it.split()
+        }
+    }
     def t = tasks.create(name: scriptName + 'StartScript', type: CreateStartScripts) {
         mainClassName = className
         applicationName = scriptName

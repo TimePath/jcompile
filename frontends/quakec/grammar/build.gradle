@@ -2,6 +2,9 @@ dependencies {
     compile "org.antlr:antlr4-runtime:${versions.antlr}"
 }
 
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
 configurations {
     generatedCompile.extendsFrom compile
 }
