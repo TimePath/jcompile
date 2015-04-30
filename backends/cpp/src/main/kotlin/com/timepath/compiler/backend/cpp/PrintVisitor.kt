@@ -82,7 +82,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     }
 
     override fun visit(e: MemberExpression) = "${e.left.print()}${deref(e.left.type())}${e.field.id}".p
-    override fun visit(e: MemberReferenceExpression) = "${e.owner.typename()}::${e.id}".p
+    override fun visit(e: MemberReferenceExpression) = "&${e.owner.typenameDirect()}::${e.id}".p
     override fun visit(e: IndexExpression) = when {
         e.right.type() is field_t -> "${e.left.print()}${deref(e.left.type())}*${e.right.print()}"
         else -> "${e.left.print()}[${e.right.print()}]"
@@ -102,13 +102,14 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     )
 
     fun Type.typename(): String = typename.getOrElse(this) { simpleName }
+    fun Type.typenameDirect(): String = typename().replace("entity", "entity_s")
 
     fun array_t.declareArray(id: String?) = (id ?: "").let {
         type.declareVar(it, null)
     }
 
     fun field_t.declareField(id: String?) = (id ?: "").let {
-        type.declareVar("entity_s::*$it", null)
+        type.declareVar("${entity_t.typenameDirect()}::*$it", null)
     }
 
     fun function_t.declareFunc(id: String?) = (id ?: "").let { if (true) "(*$it)" else it }.let {
