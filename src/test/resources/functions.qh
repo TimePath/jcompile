@@ -1,23 +1,21 @@
-#include "defs.qh"
-
-// global
+// global: (float) -> float
 float test1(float f);
 float test2(float f) {}
 float(float f) test3;
 float(float f) test4 = {};
 
-// global
+// global: (float) -> Entity.float
 .float test5(float f);
 .float test6(float f) {}
-// entity
+// entity: Entity.(float) -> float
 .float(float f) test7;
-// global
+// global: (float) -> Entity.float
 .float(float f) test8 = {};
 
-// global
-void() test9(float f);
-void() test10(float f) {}
+// global: (float) -> () -> float
+float() test9(float f);
+float() test10(float f) {}
 
-// global
-.void() test11(float f);
-.void() test12(float f) {}
+// global: (float) -> Entity.() -> float
+.float() test11(float f);
+.float() test12(float f) {}

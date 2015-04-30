@@ -55,9 +55,9 @@ RunWith(javaClass<AllTests>())
 class CompilerSpecs {
     companion object {
         platformStatic fun suite() = given("a compiler") {
-            val tests = File(resources, "all.src").readLines().sequence()
-                    .map { File(resources, it) }
-                    .filter { it.exists() }
+            val tests = resources.listFiles().sequence().filter {
+                !it.isDirectory() && it.name.matches(".+\\.q[ch]$")
+            }
             tests.forEach { test ->
                 on(test.name) {
                     val compiler = Compiler(QCC(), Q1VM())
@@ -86,9 +86,11 @@ class CompilerSpecs {
                             compare("allocation", test.name + ".txt", actual)
                         }
                     }
-                    it("should execute") {
-                        logger.info { "Executing $test" }
-                        Program(asm.generateProgs()).exec()
+                    if (test.name.endsWith(".qc")) {
+                        it("should execute") {
+                            logger.info { "Executing $test" }
+                            Program(asm.generateProgs()).exec()
+                        }
                     }
                 }
             }
