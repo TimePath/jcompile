@@ -42,6 +42,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
     trait FieldCounter {
         fun get(type: struct_t, name: String): ConstantExpression
+        fun size(): Int
     }
 
     class Err(val ctx: ParserRuleContext, val reason: String) {
@@ -63,6 +64,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val fields: FieldCounter = object : FieldCounter {
             val map: MutableMap<String, Int> = LinkedHashMap()
             override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
+            override fun size() = map.size()
         }
 
         init {
