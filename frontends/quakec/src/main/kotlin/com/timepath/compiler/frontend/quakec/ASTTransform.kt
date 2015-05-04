@@ -38,11 +38,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
 
     inline fun SymbolTable.scope<R>(name: String, block: () -> R): R {
         push(name)
-        try {
-            return block()
-        } finally {
-            pop()
-        }
+        val b = block()
+        pop()
+        return b
     }
 
     fun QCParser.DeclarationSpecifiersContext?.type(old: Boolean = false) = this?.let { type(it.declarationSpecifier(), old) }
