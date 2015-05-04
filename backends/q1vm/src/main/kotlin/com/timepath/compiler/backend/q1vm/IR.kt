@@ -15,14 +15,13 @@ open class IR(val instr: Instruction? = null,
         return "$s /* $name */"
     }
 
-    val real = this !is FakeIR
+    val real = this !is Fake
 
+    private abstract class Fake(val repr: String) : IR(name = repr) {
+        override fun toString(): String = "/* $repr */"
+    }
+
+    class Return(override val ret: Int) : Fake("return = $$ret")
+    class Function(s: String, val function: ProgramData.Function) : Fake("function $s")
+    class Label(val id: String) : Fake("label $id")
 }
-
-private abstract class FakeIR(val repr: String) : IR(name = repr) {
-    override fun toString(): String = "/* $repr */"
-}
-
-class ReturnIR(override val ret: Int) : FakeIR("return = $$ret")
-class FunctionIR(s: String, val function: ProgramData.Function) : FakeIR("function $s")
-class LabelIR(val id: String) : FakeIR("label $id")

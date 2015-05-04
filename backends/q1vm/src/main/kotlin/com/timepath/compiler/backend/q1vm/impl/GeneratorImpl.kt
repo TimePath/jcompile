@@ -40,7 +40,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val statements = ArrayList<ProgramData.Statement>(ir.size())
             val functions = ArrayList<ProgramData.Function>()
             ir.forEach {
-                if (it is FunctionIR) {
+                if (it is IR.Function) {
                     if (it.function.firstStatement < 0) {
                         functions.add(it.function)
                     } else {

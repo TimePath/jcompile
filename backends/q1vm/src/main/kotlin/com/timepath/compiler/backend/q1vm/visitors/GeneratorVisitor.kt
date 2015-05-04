@@ -14,8 +14,6 @@ import com.timepath.q1vm.ProgramData
 
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
-    val `???`: List<IR> get() = throw UnsupportedOperationException()
-
     companion object {
         val logger = Logger.new()
     }
@@ -54,48 +52,46 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: ConditionalExpression): List<IR> {
-        with(e) {
-            val ret = linkedListOf<IR>()
-            val genPred = test.wrap { it.generate(state) }
-            ret.addAll(genPred)
-            val genTrue = pass.wrap { it.generate(state) }
-            val trueCount = genTrue.count { it.real }
-            val genFalse = fail?.wrap { it.generate(state) }
-            if (genFalse == null) {
-                // No else, jump to the instruction after the body
-                ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0), name = e.test.toString()))
-                ret.addAll(genTrue)
-            } else {
-                val falseCount = genFalse.count { it.real }
-                val temp = state.allocator.allocateReference(type = type(state))
-                // The if body has a goto, include it in the count
-                val jumpTrue = IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0), name = e.test.toString())
-                ret.add(jumpTrue)
-                // if
-                ret.addAll(genTrue)
-                if (genTrue.isNotEmpty())
-                    ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref), name = "store"))
-                else
-                    jumpTrue.args[1]--
-                // end if, jump to the instruction after the else
-                val jumpFalse = IR(Instruction.GOTO, array(falseCount + 2, 0, 0), name = "end if")
-                ret.add(jumpFalse)
-                // else
-                ret.addAll(genFalse)
-                if (genFalse.isNotEmpty())
-                    ret.add(IR(Instruction.STORE_FLOAT, array(genFalse.last().ret, temp.ref), name = "store"))
-                else
-                    jumpFalse.args[1]--
-                // return
-                ret.add(ReturnIR(temp.ref))
-            }
-            return ret
+        val ret = linkedListOf<IR>()
+        val genPred = e.test.wrap { it.generate(state) }
+        ret.addAll(genPred)
+        val genTrue = e.pass.wrap { it.generate(state) }
+        val trueCount = genTrue.count { it.real }
+        val genFalse = e.fail?.wrap { it.generate(state) }
+        if (genFalse == null) {
+            // No else, jump to the instruction after the body
+            ret.add(IR(Instruction.IFNOT, array(genPred.last().ret, trueCount + 1, 0), name = e.test.toString()))
+            ret.addAll(genTrue)
+        } else {
+            val falseCount = genFalse.count { it.real }
+            val temp = state.allocator.allocateReference(type = e.type(state))
+            // The if body has a goto, include it in the count
+            val jumpTrue = IR(Instruction.IFNOT, array(genPred.last().ret, (trueCount + 2) + 1, 0), name = e.test.toString())
+            ret.add(jumpTrue)
+            // if
+            ret.addAll(genTrue)
+            if (genTrue.isNotEmpty())
+                ret.add(IR(Instruction.STORE_FLOAT, array(genTrue.last().ret, temp.ref), name = "store"))
+            else
+                jumpTrue.args[1]--
+            // end if, jump to the instruction after the else
+            val jumpFalse = IR(Instruction.GOTO, array(falseCount + 2, 0, 0), name = "end if")
+            ret.add(jumpFalse)
+            // else
+            ret.addAll(genFalse)
+            if (genFalse.isNotEmpty())
+                ret.add(IR(Instruction.STORE_FLOAT, array(genFalse.last().ret, temp.ref), name = "store"))
+            else
+                jumpFalse.args[1]--
+            // return
+            ret.add(IR.Return(temp.ref))
         }
+        return ret
     }
 
     override fun visit(e: ConstantExpression): List<IR> {
         val constant = state.allocator.allocateConstant(e.value, type = e.type(state))
-        return listOf(ReturnIR(constant.ref))
+        return listOf(IR.Return(constant.ref))
     }
 
     override fun visit(e: ContinueStatement): List<IR> {
@@ -108,43 +104,43 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             logger.warning { "redeclaring ${e.id}" }
         }
         val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
-        return listOf(ReturnIR(global.ref))
+        return listOf(IR.Return(global.ref))
     }
 
-    override fun visit(e: FunctionExpression): List<IR> = with(e) {
-        if (id in state.allocator) {
-            logger.warning { "redefining $id" }
+    override fun visit(e: FunctionExpression): List<IR> {
+        if (e.id in state.allocator) {
+            logger.warning { "redefining ${e.id}" }
         }
 
-        val global = state.allocator.allocateFunction(id, type = type(state) as function_t)
+        val global = state.allocator.allocateFunction(e.id, type = e.type(state) as function_t)
         val f = ProgramData.Function(
-                firstStatement = if (builtin == null)
+                firstStatement = if (e.builtin == null)
                     0 // to be filled in later
                 else
-                    -builtin,
+                    -e.builtin,
                 firstLocal = 0,
                 numLocals = 0,
                 profiling = 0,
-                nameOffset = state.allocator.allocateString(id).ref,
+                nameOffset = state.allocator.allocateString(e.id).ref,
                 fileNameOffset = 0,
                 numParams = 0,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
-        state.allocator.push(id)
+        state.allocator.push(e.id)
         val params = with(linkedListOf<Expression>()) {
-            params?.let { addAll(it) }
-            vararg?.let { add(it) }
+            e.params?.let { addAll(it) }
+            e.vararg?.let { add(it) }
             this
         }
         val genParams = params.flatMap { it.generate(state) }
-        val children = children.flatMap { it.wrap { it.generate(state) } }
+        val children = e.children.flatMap { it.wrap { it.generate(state) } }
         run {
             // Calculate label jumps
             val labelIndices = linkedMapOf<String, Int>()
             val jumpIndices = linkedMapOf<String, Int>()
             children.fold(0, { i, it ->
                 when {
-                    it is LabelIR -> {
+                    it is IR.Label -> {
                         labelIndices[it.id] = i
                     }
                     it.instr == Instruction.GOTO && it.args[0] == 0 -> {
@@ -159,12 +155,12 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             }
         }
         val list = (listOf(
-                FunctionIR("$id -> ${global.ref}", f.copy(numLocals = state.allocator.references.size())))
+                IR.Function("${e.id} -> ${global.ref}", f.copy(numLocals = state.allocator.references.size())))
                 + genParams
                 + children
                 + IR(instr = Instruction.DONE, ret = global.ref, name = "endfunction"))
         state.allocator.pop()
-        list
+        return list
     }
 
     override fun visit(e: GotoExpression): List<IR> {
@@ -175,121 +171,113 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: IndexExpression): List<IR> {
-        with(e) {
-            return with(linkedListOf<IR>()) {
-                val typeL = left.type(state)
-                if (typeL is class_t) {
-                    val genL = left.generate()
-                    addAll(genL)
-                    val genR = right.generate()
-                    addAll(genR)
-                    val type = type(state)
-                    val out = state.allocator.allocateReference(type = type)
-                    add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
-                    this
-                } else {
-                    visit(e : BinaryExpression)
-                }
+        return with(linkedListOf<IR>()) {
+            val typeL = e.left.type(state)
+            if (typeL is class_t) {
+                val genL = e.left.generate()
+                addAll(genL)
+                val genR = e.right.generate()
+                addAll(genR)
+                val type = e.type(state)
+                val out = state.allocator.allocateReference(type = type)
+                add(IR(e.instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
+                this
+            } else {
+                visit(e : BinaryExpression)
             }
         }
     }
 
     override fun visit(e: LabelExpression): List<IR> {
-        return listOf(LabelIR(e.id))
+        return listOf(IR.Label(e.id))
     }
 
     override fun visit(e: LoopExpression): List<IR> {
-        with(e) {
-            val genInit = initializer?.flatMap { it.generate(state) }
+        val genInit = e.initializer?.flatMap { it.generate(state) }
 
-            val genPred = predicate.generate(state)
-            val predCount = genPred.count { it.real }
+        val genPred = e.predicate.generate(state)
+        val predCount = genPred.count { it.real }
 
-            val genBody = children.flatMap { it.generate(state) }
-            val bodyCount = genBody.count { it.real }
+        val genBody = e.children.flatMap { it.generate(state) }
+        val bodyCount = genBody.count { it.real }
 
-            val genUpdate = update?.flatMap { it.generate(state) }
-            val updateCount = genUpdate?.count { it.real } ?: 0
+        val genUpdate = e.update?.flatMap { it.generate(state) }
+        val updateCount = genUpdate?.count { it.real } ?: 0
 
-            val totalCount = bodyCount + updateCount + predCount
+        val totalCount = bodyCount + updateCount + predCount
 
-            val ret = linkedListOf<IR>()
-            if (genInit != null) {
-                ret.addAll(genInit)
-            }
-            ret.addAll(genPred)
-            if (checkBefore) {
-                ret.add(IR(Instruction.IFNOT, array(genPred.last().ret,
-                        totalCount + /* the last if */ 1 + /* the next instruction */ 1, 0), name = "loop precondition"))
-            }
-            ret.addAll(genBody)
-            if (genUpdate != null) {
-                ret.addAll(genUpdate)
-            }
-            ret.addAll(genPred)
-            ret.add(IR(Instruction.IF, array(genPred.last().ret, -totalCount, 0), name = predicate.toString()))
-
-            // break/continue; jump to end
-            genBody.filter { it.real }.forEachIndexed { i, IR ->
-                if (IR.instr == Instruction.GOTO && IR.args[0] == 0) {
-                    val after = (bodyCount - 1) - i
-                    IR.args[0] = after + 1 + when (IR.args[1]) {
-                    // break
-                        1 -> updateCount + predCount + /* if */ 1
-                        else -> 0
-                    }
-                    IR.args[1] = 0
-                }
-            }
-            return ret
+        val ret = linkedListOf<IR>()
+        if (genInit != null) {
+            ret.addAll(genInit)
         }
+        ret.addAll(genPred)
+        if (e.checkBefore) {
+            ret.add(IR(Instruction.IFNOT, array(genPred.last().ret,
+                    totalCount + /* the last if */ 1 + /* the next instruction */ 1, 0), name = "loop precondition"))
+        }
+        ret.addAll(genBody)
+        if (genUpdate != null) {
+            ret.addAll(genUpdate)
+        }
+        ret.addAll(genPred)
+        ret.add(IR(Instruction.IF, array(genPred.last().ret, -totalCount, 0), name = e.predicate.toString()))
+
+        // break/continue; jump to end
+        genBody.filter { it.real }.forEachIndexed { i, IR ->
+            if (IR.instr == Instruction.GOTO && IR.args[0] == 0) {
+                val after = (bodyCount - 1) - i
+                IR.args[0] = after + 1 + when (IR.args[1]) {
+                // break
+                    1 -> updateCount + predCount + /* if */ 1
+                    else -> 0
+                }
+                IR.args[1] = 0
+            }
+        }
+        return ret
     }
 
     override fun visit(e: MemberExpression): List<IR> {
-        with(e) {
-            return with(linkedListOf<IR>()) {
-                val genL = left.generate()
-                addAll(genL)
-                // check(e.field.owner is entity_t, "Field belongs to different type")
-                val genR = state.fields[e.field.owner, e.field.id].generate()
-                addAll(genR)
-                val type = type(state)
-                val out = state.allocator.allocateReference(type = type)
-                add(IR(instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, this.toString()))
-                this
-            }
+        return with(linkedListOf<IR>()) {
+            val genL = e.left.generate()
+            addAll(genL)
+            // check(e.field.owner is entity_t, "Field belongs to different type")
+            val genR = state.fields[e.field.owner, e.field.id].generate()
+            addAll(genR)
+            val type = e.type(state)
+            val out = state.allocator.allocateReference(type = type)
+            add(IR(e.instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
+            this
         }
     }
 
     override fun visit(e: MemberReferenceExpression) = state.fields[e.owner, e.id].generate()
 
     override fun visit(e: MemoryReference): List<IR> {
-        return listOf(ReturnIR(e.ref))
+        return listOf(IR.Return(e.ref))
     }
 
     override fun visit(e: MethodCallExpression): List<IR> {
-        with(e) {
-            // TODO: increase this
-            if (args.size() > 8) {
-                logger.warning { "${function} takes ${args.size()} parameters" }
-            }
-            val args = args.take(8).map { it.generate(state) }
-            fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
-            var i = 0
-            val prepare: List<IR> = args.map {
-                val param = Instruction.OFS_PARAM(i++)
-                IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
-            }
-            val global = state.allocator.allocateReference(type = type(state))
-            with(linkedListOf<IR>()) {
-                val genF = function.generate(state)
-                addAll(genF)
-                addAll(args.flatMap { it })
-                addAll(prepare)
-                add(IR(instr(i), array(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString()))
-                add(IR(Instruction.STORE_FLOAT, array(Instruction.OFS_PARAM(-1), global.ref), global.ref, "Save response"))
-                return this
-            }
+        // TODO: increase this
+        if (e.args.size() > 8) {
+            logger.warning { "${e.function} takes ${e.args.size()} parameters" }
+        }
+        val args = e.args.take(8).map { it.generate(state) }
+        fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
+        var i = 0
+        val prepare: List<IR> = args.map {
+            val param = Instruction.OFS_PARAM(i++)
+            IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
+        }
+        val global = state.allocator.allocateReference(type = e.type(state))
+        with(linkedListOf<IR>()) {
+            val genF = e.function.generate(state)
+            addAll(genF)
+            addAll(args.flatMap { it })
+            addAll(prepare)
+            add(IR(instr(i), array(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString()))
+            add(IR(Instruction.STORE_FLOAT, array(Instruction.OFS_PARAM(-1), global.ref), global.ref, "Save response"))
+            return this
         }
     }
 
@@ -313,7 +301,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         // FIXME: null references
         val global = state.allocator[id]
-        return listOf(ReturnIR(global?.ref ?: 0))
+        return listOf(IR.Return(global?.ref ?: 0))
     }
 
     override fun visit(e: DynamicReferenceExpression): List<IR> {
@@ -323,7 +311,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         // FIXME: null references
         val global = state.allocator[id]
-        return listOf(ReturnIR(global?.ref ?: 0))
+        return listOf(IR.Return(global?.ref ?: 0))
     }
 
     override fun visit(e: ReturnStatement): List<IR> {
@@ -339,20 +327,17 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: StructDeclarationExpression): List<IR> {
-        with(e) {
-            val fields: List<IR> = struct.fields.flatMap {
-                it.value.declare("${id}_${it.key}", state = state).flatMap {
-                    it.generate(state)
-                }
+        val fields: List<IR> = e.struct.fields.flatMap {
+            it.value.declare("${e.id}_${it.key}", state = state).flatMap {
+                it.generate(state)
             }
-            val allocator = state.allocator
-            allocator.scope.peek().lookup[id] = allocator.references[fields.first().ret]!!.dup(name = id, type = struct)
-            return fields
         }
+        val allocator = state.allocator
+        allocator.scope.peek().lookup[e.id] = allocator.references[fields.first().ret]!!.dup(name = e.id, type = e.struct)
+        return fields
     }
 
     override fun visit(e: SwitchExpression) = e.reduce().generate()
-    override fun visit(e: SwitchExpression.Case) = `???`
 
     override fun visit(e: UnaryExpression) = Types.handle<Q1VM.State, List<IR>>(Operation(e.op, e.operand.type(state)))(state, e.operand, null)
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()
