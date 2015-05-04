@@ -74,12 +74,7 @@ class CompilerSpecs {
                     it("should compile") {
                         logger.info { "Compiling $test" }
                         asm = compiler.compile(roots)
-                        asm.ir.map { ir ->
-                            if (ir.real)
-                                "$ir"
-                            else
-                                "/* $ir */"
-                        }.filterNotNull().joinToString("\n").let { actual ->
+                        asm.ir.joinToString("\n").let { actual ->
                             compare("ASM", test.name + ".asm", actual)
                         }
                         compiler.state.allocator.toString().let { actual ->

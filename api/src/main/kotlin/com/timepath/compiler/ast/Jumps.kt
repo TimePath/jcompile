@@ -7,7 +7,7 @@ public class GotoExpression(val id: String, override val ctx: PRC? = null) : Exp
     override val simpleName = "GotoExpression"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
-    override fun toString(): String = "goto $id"
+    override fun toString() = "goto ${id}"
 
 }
 
@@ -22,6 +22,7 @@ public class ReturnStatement(val returnValue: Expression?, override val ctx: PRC
     override val simpleName = "ReturnStatement"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
+    override fun toString() = "return ${returnValue}"
 }
 
 // TODO: on labels
@@ -29,7 +30,7 @@ public class ContinueStatement(override val ctx: PRC? = null) : Expression() {
     override val simpleName = "ContinueStatement"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
-    override fun toString(): String = "continue"
+    override fun toString() = "continue"
 
 }
 
@@ -38,6 +39,6 @@ public class BreakStatement(override val ctx: PRC? = null) : Expression() {
     override val simpleName = "BreakStatement"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 
-    override fun toString(): String = "break"
+    override fun toString() = "break"
 
 }

@@ -81,7 +81,7 @@ class DefaultAssignHandler(type: Type,
 
         val lvalue = lhs.last()
         val rvalue = rhs.last()
-        add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret))
+        add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         this
     }
 })

@@ -4,15 +4,15 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.ast.SwitchExpression.Case
 import java.util.concurrent.atomic.AtomicInteger
 
-object ReduceVisitor : ASTVisitor<Expression?> {
+object ReduceVisitor : ASTVisitor<Expression> {
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.reduce(): Expression? = accept(this@ReduceVisitor)
+    suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(this@ReduceVisitor)
 
     override fun default(e: Expression) = e
 
     val uid = AtomicInteger()
 
-    override fun visit(e: SwitchExpression): Expression? {
+    override fun visit(e: SwitchExpression): Expression {
         with(e) {
             val jumps = linkedListOf<Expression>()
             val default = linkedListOf<Expression>()
