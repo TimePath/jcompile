@@ -12,7 +12,7 @@ import java.io.File
 import java.net.URL
 import java.util.LinkedList
 
-public class Compiler<F : Frontend, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
+public class Compiler<F : Frontend<S>, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
 
     val state = backend.state
 

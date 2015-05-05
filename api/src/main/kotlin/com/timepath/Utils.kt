@@ -3,6 +3,7 @@ package com.timepath
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Interval
 import java.lang.invoke.MethodHandles
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.logging.Level
@@ -42,6 +43,8 @@ public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
 }
 
 public inline fun <T : Any, R> T.with(f: T.() -> R): T = let { f(); it }
+
+public inline fun ExecutorService.use<T>(body: ExecutorService.() -> T): T = body().with { shutdown() }
 
 public class Logger(public val logger: java.util.logging.Logger) {
     companion object {
