@@ -25,10 +25,10 @@ suppress("NOTHING_TO_INLINE") inline fun Expression.generate(state: Q1VM.State) 
 suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(ReduceVisitor)
 suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 
-public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Generator.ASM> {
+public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Sequence<List<Expression>>, Generator.ASM> {
 
     override val state = State(opts)
-    override fun generate(roots: Sequence<List<Expression>>) = state.gen.generate(roots.flatMap { it.sequence() })
+    override fun compile(roots: Sequence<List<Expression>>) = state.gen.generate(roots.flatMap { it.sequence() })
 
     init {
         state.symbols.push("<builtin>")

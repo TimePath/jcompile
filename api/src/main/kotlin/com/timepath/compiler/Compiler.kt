@@ -3,7 +3,6 @@ package com.timepath.compiler
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
-import com.timepath.compiler.ast.Expression
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
@@ -12,23 +11,15 @@ import java.io.File
 import java.net.URL
 import java.util.LinkedList
 
-public class Compiler<F : Frontend<S>, S : CompileState, O : Any, B : Backend<S, O>>(val parser: F, val backend: B) {
+public class Compiler<F, B, State, AST, Out>(val frontend: F, val backend: B) :
+        Frontend<State, AST> by frontend,
+        Backend<State, AST, Out> by backend
+where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileState, Out : Any {
 
-    val state = backend.state
+    fun parse() = frontend.parse(includes, state)
+    fun compile() = backend.compile(parse())
 
     val includes = LinkedList<Include>()
-
-    init {
-        define("QCC_SUPPORT_INT")
-        define("QCC_SUPPORT_BOOL")
-        define("QCC_SUPPORT_ENTITYCLASS")
-
-        includes.add(Include.new(javaClass.getResource("/predefs.qc")))
-    }
-
-    fun define(name: String, value: String = "1") {
-        parser.define(name, value)
-    }
 
     data class Include(
             val name: String,
@@ -67,7 +58,4 @@ public class Compiler<F : Frontend<S>, S : CompileState, O : Any, B : Backend<S,
         }.filterNotNullTo(includes)
     }
 
-    fun ast() = parser.parse(includes, state)
-
-    public fun compile(roots: Sequence<List<Expression>> = ast()): O = backend.generate(roots)
 }

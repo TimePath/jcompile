@@ -75,7 +75,7 @@ object CPPPrinter {
         }
         val v = PrintVisitor(compiler.state, indent)
 
-        val ast = compiler.ast().toList()
+        val ast = compiler.parse().toList()
         val projOut = File(out, project.out)
         projOut.mkdirs()
         val predef = File(projOut, "progs.h")

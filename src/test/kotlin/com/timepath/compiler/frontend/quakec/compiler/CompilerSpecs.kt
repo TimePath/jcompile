@@ -7,7 +7,7 @@ import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.Generator.ASM
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.test.PrintVisitor
+import com.timepath.compiler.frontend.quakec.compiler.PrintVisitor
 import com.timepath.q1vm.Program
 import junit.framework.TestCase
 import junit.framework.TestSuite
@@ -63,17 +63,17 @@ class CompilerSpecs {
                     val compiler = Compiler(QCC(), Q1VM())
                     compiler.include(test)
 
-                    var roots: Sequence<List<Expression>>
+                    var roots: List<List<Expression>>
                     it("should parse") {
                         logger.info { "Parsing $test" }
-                        roots = compiler.ast().toList().sequence()
+                        roots = compiler.parse().toList()
                         val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
                         compare("AST", test.name + ".xml", actual)
                     }
                     var asm: ASM
                     it("should compile") {
                         logger.info { "Compiling $test" }
-                        asm = compiler.compile(roots)
+                        asm = compiler.compile(roots.sequence())
                         asm.ir.joinToString("\n").let { actual ->
                             compare("ASM", test.name + ".asm", actual)
                         }
