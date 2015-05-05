@@ -4,9 +4,7 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConditionalExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.backend.q1vm.DefaultAssignHandler
-import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.generate
+import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
@@ -16,26 +14,26 @@ object void_t : Type() {
     override val simpleName = "void_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("&&", this, this) to OperationHandler(bool_t) { gen: Q1VM.State, left, right ->
+            Operation("&&", this, this) to OperationHandler.Binary(bool_t) { left, right ->
                 // TODO: Instruction.AND when no side effects
                 ConditionalExpression(left, true,
                         fail = ConstantExpression(0),
-                        pass = ConditionalExpression(right!!, true,
+                        pass = ConditionalExpression(right, true,
                                 fail = ConstantExpression(0),
                                 pass = ConstantExpression(1))
-                ).generate(gen)
+                ).generate()
             },
             // TODO: perl behaviour
-            Operation("||", this, this) to OperationHandler(bool_t) { gen: Q1VM.State, left, right ->
+            Operation("||", this, this) to OperationHandler.Binary(bool_t) { left, right ->
                 // TODO: Instruction.OR when no side effects
                 ConditionalExpression(left, true,
                         pass = ConstantExpression(1),
-                        fail = ConditionalExpression(right!!, true,
+                        fail = ConditionalExpression(right, true,
                                 pass = ConstantExpression(1),
                                 fail = ConstantExpression(0))
-                ).generate(gen)
+                ).generate()
             },
-            Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT)
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT)
     )
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {

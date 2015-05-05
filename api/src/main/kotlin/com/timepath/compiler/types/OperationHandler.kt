@@ -3,11 +3,30 @@ package com.timepath.compiler.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.Expression
 
-public open class OperationHandler<State : CompileState, T>(
-        val type: Type,
-        protected val handle: (state: State, left: Expression, right: Expression?) -> T
-) {
-    fun invoke(state: State, left: Expression, right: Expression? = null): T {
-        return handle(state, left, right)
+public trait OperationHandler<State : CompileState, T> {
+    val type: Type
+
+    companion object {
+        fun Binary<State : CompileState, T>(type: Type, func: State.(lhs: Expression, rhs: Expression) -> T)
+                = object : OperationHandler<State, T> {
+            override val type = type
+
+            override fun invoke(state: State, left: Expression, right: Expression?): T {
+                requireNotNull(right)
+                return state.func(left, right!!)
+            }
+        }
+
+        fun Unary<State : CompileState, T>(type: Type, func: State.(it: Expression) -> T)
+                = object : OperationHandler<State, T> {
+            override val type = type
+
+            override fun invoke(state: State, left: Expression, right: Expression?): T {
+                assert(right == null)
+                return state.func(left)
+            }
+        }
     }
+
+    fun invoke(state: State, left: Expression, right: Expression? = null): T
 }

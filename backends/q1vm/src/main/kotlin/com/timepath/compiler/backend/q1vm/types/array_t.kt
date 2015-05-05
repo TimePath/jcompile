@@ -2,9 +2,9 @@ package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.evaluate
-import com.timepath.compiler.backend.q1vm.generate
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
@@ -16,29 +16,27 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
     override val simpleName = "array_t"
     override fun toString() = "$type[$sizeExpr]"
 
-    val index = OperationHandler(type) { gen: Q1VM.State, left, right ->
-        when (left) {
-        // arr[i] -> arr(i)(false)
-            is ReferenceExpression -> {
-                val s = generateAccessorName(left.refers.id)
-                val resolve = state.symbols.resolve(s)
-                if (resolve == null) {
-                    throw RuntimeException("Can't resolve $s")
-                }
-                val accessor = ReferenceExpression(resolve)
-                val indexer = MethodCallExpression(accessor, listOf(right!!))
-                MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate(gen)
-            }
-            else -> throw UnsupportedOperationException()
-        }
-    }
-
     override fun handle(op: Operation) = ops[op]
-    val ops = mapOf(
-            Operation("sizeof", this) to OperationHandler(int_t) { gen: Q1VM.State, self, _ ->
-                sizeExpr.generate(gen)
+    val ops = mapOf<Operation, OperationHandler<Q1VM.State, List<IR>>>(
+            Operation("sizeof", this) to OperationHandler.Unary(int_t) {
+                sizeExpr.generate()
             },
-            Operation("[]", this, int_t) to index
+            Operation("[]", this, int_t) to OperationHandler.Binary(type) { lhs, rhs ->
+                when (lhs) {
+                // arr[i] -> arr(i)(false)
+                    is ReferenceExpression -> {
+                        val s = generateAccessorName(lhs.refers.id)
+                        val resolve = state.symbols.resolve(s)
+                        if (resolve == null) {
+                            throw RuntimeException("Can't resolve $s")
+                        }
+                        val accessor = ReferenceExpression(resolve)
+                        val indexer = MethodCallExpression(accessor, listOf(rhs))
+                        MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate()
+                    }
+                    else -> throw UnsupportedOperationException()
+                }
+            }
     )
 
     // FIXME

@@ -58,7 +58,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
-            val merge = fun (it: Allocator.AllocationMap.Entry) {
+            val merge = fun(it: Allocator.AllocationMap.Entry) {
                 val k = it.ref
                 val v = it.value?.any
                 when (v) {

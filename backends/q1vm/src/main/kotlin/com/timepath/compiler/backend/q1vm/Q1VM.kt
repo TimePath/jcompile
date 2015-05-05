@@ -54,6 +54,10 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
     }
 
     inner class State(val opts: CompilerOptions) : CompileState() {
+
+        suppress("NOTHING_TO_INLINE") inline
+        fun Expression.generate() = accept(generatorVisitor)
+
         val errors = linkedListOf<Err>()
         val evaluateVisitor = EvaluateVisitor(this)
         val generatorVisitor = GeneratorVisitor(this)
@@ -78,10 +82,10 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
             Types.handlers.add {
                 if (it.op != ",") null else
-                    OperationHandler(it.right!!) { gen: State, left, right ->
+                    OperationHandler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
                         with(linkedListOf<IR>()) {
-                            addAll(left.generate(gen))
-                            addAll(right!!.generate(gen))
+                            addAll(left.generate())
+                            addAll(right.generate())
                             this
                         }
                     }
@@ -90,12 +94,12 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             Types.handlers.add { void_t.handle(it.copy(left = void_t, right = void_t)) }
             function_t.handlers.add {
                 val ops = mapOf(
-                        Operation("=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FUNC),
-                        Operation("==", this, this) to DefaultHandler(bool_t, Instruction.EQ_FUNC),
-                        Operation("!=", this, this) to DefaultHandler(bool_t, Instruction.NE_FUNC),
-                        Operation("!", this) to DefaultUnaryHandler(bool_t, Instruction.NOT_FUNC),
-                        Operation("&", this) to OperationHandler(float_t) { gen, self, _ ->
-                            BinaryExpression.Divide(MemoryReference(self.generate(gen).last().ret, float_t), ConstantExpression(Pointer(1))).generate(gen)
+                        Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FUNC),
+                        Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FUNC),
+                        Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FUNC),
+                        Operation("!", this) to DefaultHandlers.Unary(bool_t, Instruction.NOT_FUNC),
+                        Operation("&", this) to OperationHandler.Unary(float_t) {
+                            BinaryExpression.Divide(MemoryReference(it.generate().last().ret, float_t), ConstantExpression(Pointer(1))).generate()
                         }
                 )
                 ops[it]
