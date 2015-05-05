@@ -6,7 +6,7 @@ import com.timepath.q1vm.ProgramData
 
 trait Generator {
     companion object {
-        fun new(state: Q1VM.State) = GeneratorImpl(state)
+        fun invoke(state: Q1VM.State) = GeneratorImpl(state)
     }
 
     val gotoLabels: MutableMap<IR, String>

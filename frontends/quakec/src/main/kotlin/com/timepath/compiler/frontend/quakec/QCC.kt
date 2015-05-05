@@ -30,7 +30,7 @@ public class QCC : Frontend<Q1VM.State, Sequence<List<Expression>>> {
 
     override fun parse(includes: List<Compiler.Include>, state: Q1VM.State): Sequence<List<Expression>> {
         includes.let {
-            val predefs = Compiler.Include.new(javaClass.getResource("/predefs.qc"))
+            val predefs = Compiler.Include(javaClass.getResource("/predefs.qc"))
             listOf(predefs) + it
         }.let {
             Executors.newSingleThreadExecutor().use {

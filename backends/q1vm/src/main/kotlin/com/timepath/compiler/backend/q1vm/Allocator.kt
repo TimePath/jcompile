@@ -9,7 +9,7 @@ import java.util.Stack
 trait Allocator {
 
     companion object {
-        fun new(opts: CompilerOptions) = AllocatorImpl(opts)
+        fun invoke(opts: CompilerOptions) = AllocatorImpl(opts)
     }
 
     trait AllocationMap {

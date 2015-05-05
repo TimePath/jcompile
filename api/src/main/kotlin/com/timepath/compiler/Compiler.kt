@@ -27,11 +27,11 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
             val source: Source
     ) {
         companion object {
-            fun new(input: String, name: String) = Include(name, name, StringLexerSource(input))
+            fun invoke(input: String, name: String) = Include(name, name, StringLexerSource(input))
 
-            fun new(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
+            fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
 
-            fun new(url: URL): Include {
+            fun invoke(url: URL): Include {
                 val name = url.getPath().substringAfterLast('/')
                 val path = url.getPath()
                 return Include(name, path, object : LexerSource(url.openStream().buffered().reader(), true) {
@@ -43,18 +43,18 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
     }
 
     public fun include(input: String, name: String) {
-        includes.add(Include.new(input, name))
+        includes.add(Include(input, name))
     }
 
     public fun include(file: File) {
-        includes.add(Include.new(file))
+        includes.add(Include(file))
     }
 
     fun includeFrom(progs: File) {
         progs.readLines().drop(1).map {
             val name = it.replaceFirst("//.*", "").trim()
             val file = File(progs.getParent(), name)
-            if (name.isNotEmpty() && file.exists()) Include.new(file) else null
+            if (name.isNotEmpty() && file.exists()) Include(file) else null
         }.filterNotNullTo(includes)
     }
 

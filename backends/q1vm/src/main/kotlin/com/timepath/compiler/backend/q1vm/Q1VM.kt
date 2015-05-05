@@ -58,8 +58,8 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val evaluateVisitor = EvaluateVisitor(this)
         val generatorVisitor = GeneratorVisitor(this)
         val typeVisitor = TypeVisitor(this)
-        val allocator: Allocator = Allocator.new(opts)
-        val gen: Generator = Generator.new(this)
+        val allocator: Allocator = Allocator(opts)
+        val gen: Generator = Generator(this)
 
         val fields: FieldCounter = object : FieldCounter {
             val map: MutableMap<String, Int> = LinkedHashMap()
