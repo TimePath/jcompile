@@ -41,6 +41,8 @@ public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
     return ret
 }
 
+public inline fun <T : Any, R> T.with(f: T.() -> R): T = let { f(); it }
+
 public class Logger(public val logger: java.util.logging.Logger) {
     companion object {
         init {
