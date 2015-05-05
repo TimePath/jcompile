@@ -16,7 +16,7 @@ import kotlin.platform.platformStatic
 
 object CPPPrinter {
 
-    val logger = Logger.new()
+    val logger = Logger()
 
     data class Project(val root: String, val define: String, val out: String)
 

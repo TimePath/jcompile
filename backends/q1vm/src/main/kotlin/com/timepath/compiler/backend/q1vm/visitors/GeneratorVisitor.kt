@@ -15,7 +15,7 @@ import com.timepath.q1vm.ProgramData
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     companion object {
-        val logger = Logger.new()
+        val logger = Logger()
     }
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)

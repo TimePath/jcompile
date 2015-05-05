@@ -47,9 +47,8 @@ public class Logger(public val logger: java.util.logging.Logger) {
             LogManager.getLogManager().readConfiguration(javaClass.getResourceAsStream("/logging.properties"));
         }
 
-        suppress("NOTHING_TO_INLINE")
-        inline fun new(name: String = MethodHandles.lookup().lookupClass().getName())
-                = Logger(java.util.logging.Logger.getLogger(name))
+        suppress("NOTHING_TO_INLINE") inline
+        fun invoke() = Logger(java.util.logging.Logger.getLogger(MethodHandles.lookup().lookupClass().getName()))
     }
 
     public inline fun log(level: Level, msg: () -> String): Unit = if (logger.isLoggable(level)) logger.log(level, msg())

@@ -7,7 +7,7 @@ import java.util.Deque
 public class Program(val data: ProgramData) {
 
     companion object {
-        val logger = Logger.new()
+        val logger = Logger()
     }
 
     private val world = data.entities.spawn()

@@ -20,7 +20,7 @@ import java.util.ArrayList
 private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
     companion object {
-        val logger = Logger.new()
+        val logger = Logger()
     }
 
     fun emptyList<T>(): List<T> = ArrayList()

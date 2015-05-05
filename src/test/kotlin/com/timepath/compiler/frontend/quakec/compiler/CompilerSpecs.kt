@@ -32,7 +32,7 @@ fun compare(what: String, name: String, actual: String) {
     }
 }
 
-val logger = Logger.new()
+val logger = Logger()
 
 /**
  *  RunWith(javaClass<AllTests>())

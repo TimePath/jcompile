@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
 fun ASTVisitor<T>.visitReflective<T>(e: Expression): T {
     val method = javaClass.getMethod("visit", e.javaClass)
     try {
-        val result = method.invoke(this, e)
+        val result = method(this, e)
         [suppress("UNCHECKED_CAST")]
         return result as T
     } catch (t: Throwable) {

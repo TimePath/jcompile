@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 public class QCC : Frontend {
 
     companion object {
-        val logger = Logger.new()
+        val logger = Logger()
     }
 
     val cpp: Preprocessor = CustomPreprocessor()

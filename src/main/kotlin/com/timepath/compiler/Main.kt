@@ -12,7 +12,7 @@ import kotlin.platform.platformStatic
 
 object Main {
 
-    val logger = Logger.new()
+    val logger = Logger()
 
     platformStatic fun main(args: Array<String>) {
         val xonotic = "${System.getProperties()["user.home"]}/projects/xonotic/xonotic"
