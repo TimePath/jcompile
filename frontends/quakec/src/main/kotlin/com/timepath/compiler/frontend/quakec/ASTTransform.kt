@@ -366,16 +366,16 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             val right = ctx.assignmentExpression().accept(this).single()
             when (ctx.op.getType()) {
                 QCParser.Assign -> BinaryExpression.Assign(left, right, ctx = ctx)
-                QCParser.StarAssign -> BinaryExpression.MultiplyAssign(left, right, ctx = ctx)
-                QCParser.DivAssign -> BinaryExpression.DivideAssign(left, right, ctx = ctx)
-                QCParser.ModAssign -> BinaryExpression.ModuloAssign(left, right, ctx = ctx)
-                QCParser.PlusAssign -> BinaryExpression.AddAssign(left, right, ctx = ctx)
-                QCParser.MinusAssign -> BinaryExpression.SubtractAssign(left, right, ctx = ctx)
-                QCParser.LeftShiftAssign -> BinaryExpression.LshAssign(left, right, ctx = ctx)
-                QCParser.RightShiftAssign -> BinaryExpression.RshAssign(left, right, ctx = ctx)
-                QCParser.AndAssign -> BinaryExpression.AndAssign(left, right, ctx = ctx)
-                QCParser.XorAssign -> BinaryExpression.ExclusiveOrAssign(left, right, ctx = ctx)
-                QCParser.OrAssign -> BinaryExpression.OrAssign(left, right, ctx = ctx)
+                QCParser.StarAssign -> BinaryExpression.Multiply.Assign(left, right, ctx = ctx)
+                QCParser.DivAssign -> BinaryExpression.Divide.Assign(left, right, ctx = ctx)
+                QCParser.ModAssign -> BinaryExpression.Modulo.Assign(left, right, ctx = ctx)
+                QCParser.PlusAssign -> BinaryExpression.Add.Assign(left, right, ctx = ctx)
+                QCParser.MinusAssign -> BinaryExpression.Subtract.Assign(left, right, ctx = ctx)
+                QCParser.LeftShiftAssign -> BinaryExpression.Lsh.Assign(left, right, ctx = ctx)
+                QCParser.RightShiftAssign -> BinaryExpression.Rsh.Assign(left, right, ctx = ctx)
+                QCParser.AndAssign -> BinaryExpression.BitAnd.Assign(left, right, ctx = ctx)
+                QCParser.XorAssign -> BinaryExpression.BitXor.Assign(left, right, ctx = ctx)
+                QCParser.OrAssign -> BinaryExpression.BitOr.Assign(left, right, ctx = ctx)
                 else -> throw NoWhenBranchMatchedException()
             }.let { listOf(it) }
         }
@@ -427,7 +427,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     val QCParser.ExclusiveOrExpressionContext.terminal: Boolean get() = exclusiveOrExpression() != null
 
     override fun visitExclusiveOrExpression(ctx: QCParser.ExclusiveOrExpressionContext) = when {
-        ctx.terminal -> BinaryExpression.ExclusiveOr(
+        ctx.terminal -> BinaryExpression.BitXor(
                 left = ctx.exclusiveOrExpression().accept(this).single(),
                 right = ctx.andExpression().accept(this).single(),
                 ctx = ctx).let { listOf(it) }

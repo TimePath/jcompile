@@ -119,7 +119,7 @@ open class number_t : Type() {
                     BinaryExpression.Or(left, right)
                 },
                 Operation("^=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.ExclusiveOr(left, right)
+                    BinaryExpression.BitXor(left, right)
                 },
                 Operation("<<=", this, this) to DefaultAssignHandler(this, Instruction.STORE_FLOAT) { left, right ->
                     BinaryExpression.Lsh(left, right)
