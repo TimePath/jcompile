@@ -4,36 +4,35 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
+import com.timepath.with
 
 object DefaultHandlers {
 
-    fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type, { left, right ->
-        with(linkedListOf<IR>()) {
+    fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { left, right ->
+        linkedListOf<IR>().with {
             val genLeft = left.generate()
             addAll(genLeft)
             val genRight = right.generate()
             addAll(genRight)
             val out = allocator.allocateReference(type = type)
             add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$left $instr $right"))
-            this
         }
-    })
+    }
 
-    fun Unary(type: Type, instr: Instruction) = OperationHandler.Unary<Q1VM.State, List<IR>>(type, {
-        with(linkedListOf<IR>()) {
+    fun Unary(type: Type, instr: Instruction) = OperationHandler.Unary<Q1VM.State, List<IR>>(type) {
+        linkedListOf<IR>().with {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type)
             add(IR(instr, array(genLeft.last().ret, out.ref), out.ref, name = "$it"))
-            this
         }
-    })
+    }
 
     fun Assign(type: Type,
                instr: Instruction,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
             = OperationHandler.Binary<Q1VM.State, List<IR>>(type, { lhs, rhs ->
-        with(linkedListOf<IR>()) {
+        linkedListOf<IR>().with {
             val realInstr: Instruction
             val leftL: Expression
             val leftR: Expression

@@ -7,7 +7,9 @@ public trait OperationHandler<State : CompileState, T> {
     val type: Type
 
     companion object {
-        fun Binary<State : CompileState, T>(type: Type, func: State.(lhs: Expression, rhs: Expression) -> T)
+        inline fun Binary<State : CompileState, T>(type: Type,
+                                                   inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
+                                                   func: State.(lhs: Expression, rhs: Expression) -> T)
                 = object : OperationHandler<State, T> {
             override val type = type
 
@@ -17,7 +19,9 @@ public trait OperationHandler<State : CompileState, T> {
             }
         }
 
-        fun Unary<State : CompileState, T>(type: Type, func: State.(it: Expression) -> T)
+        inline fun Unary<State : CompileState, T>(type: Type,
+                                                  inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
+                                                  func: State.(it: Expression) -> T)
                 = object : OperationHandler<State, T> {
             override val type = type
 
