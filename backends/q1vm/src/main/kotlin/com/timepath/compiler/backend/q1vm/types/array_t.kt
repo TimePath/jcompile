@@ -21,21 +21,15 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             Operation("sizeof", this) to OperationHandler.Unary(int_t) {
                 sizeExpr.generate()
             },
-            Operation("[]", this, int_t) to OperationHandler.Binary(type) { lhs, rhs ->
-                when (lhs) {
+            Operation("[]", this, int_t) to OperationHandler.Binary(type) { l, r ->
+                if (l !is ReferenceExpression) throw UnsupportedOperationException()
                 // arr[i] -> arr(i)(false)
-                    is ReferenceExpression -> {
-                        val s = generateAccessorName(lhs.refers.id)
-                        val resolve = state.symbols.resolve(s)
-                        if (resolve == null) {
-                            throw RuntimeException("Can't resolve $s")
-                        }
-                        val accessor = ReferenceExpression(resolve)
-                        val indexer = MethodCallExpression(accessor, listOf(rhs))
-                        MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate()
-                    }
-                    else -> throw UnsupportedOperationException()
-                }
+                val s = generateAccessorName(l.refers.id)
+                val resolve = state.symbols.resolve(s)
+                if (resolve == null) throw RuntimeException("Can't resolve $s")
+                val accessor = ReferenceExpression(resolve)
+                val indexer = MethodCallExpression(accessor, listOf(r))
+                MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate()
             }
     )
 

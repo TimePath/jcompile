@@ -14,21 +14,21 @@ object void_t : Type() {
     override val simpleName = "void_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("&&", this, this) to OperationHandler.Binary(bool_t) { left, right ->
+            Operation("&&", this, this) to OperationHandler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.AND when no side effects
-                ConditionalExpression(left, true,
+                ConditionalExpression(l, true,
                         fail = ConstantExpression(0),
-                        pass = ConditionalExpression(right, true,
+                        pass = ConditionalExpression(r, true,
                                 fail = ConstantExpression(0),
                                 pass = ConstantExpression(1))
                 ).generate()
             },
             // TODO: perl behaviour
-            Operation("||", this, this) to OperationHandler.Binary(bool_t) { left, right ->
+            Operation("||", this, this) to OperationHandler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.OR when no side effects
-                ConditionalExpression(left, true,
+                ConditionalExpression(l, true,
                         pass = ConstantExpression(1),
-                        fail = ConditionalExpression(right, true,
+                        fail = ConditionalExpression(r, true,
                                 pass = ConstantExpression(1),
                                 fail = ConstantExpression(0))
                 ).generate()

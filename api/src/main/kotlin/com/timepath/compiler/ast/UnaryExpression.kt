@@ -3,6 +3,11 @@ package com.timepath.compiler.ast
 import com.timepath.compiler.types.Type
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
+public fun Expression.inv(): UnaryExpression.BitNot = UnaryExpression.BitNot(this)
+public fun Expression.not(): UnaryExpression.Not = UnaryExpression.Not(this)
+public fun Expression.minus(): UnaryExpression.Minus = UnaryExpression.Minus(this)
+public fun Expression.plus(): UnaryExpression.Plus = UnaryExpression.Plus(this)
+
 public abstract class UnaryExpression protected(val op: String, val operand: Expression, override val ctx: PRC? = null) : Expression() {
 
     init {

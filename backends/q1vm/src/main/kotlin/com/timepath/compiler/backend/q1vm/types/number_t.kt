@@ -20,57 +20,44 @@ open class number_t : Type() {
                 Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT),
                 Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
-                Operation("&", this) to OperationHandler.Unary(this) {
-                    BinaryExpression.Divide(it, ConstantExpression(Pointer(1))).generate()
-                },
-                Operation("*", this) to OperationHandler.Unary(this) {
-                    BinaryExpression.Multiply(it, ConstantExpression(Pointer(1))).generate()
-                },
-                Operation("+", this) to OperationHandler.Unary(this) {
-                    it.generate()
-                },
-                Operation("-", this) to OperationHandler.Unary(this) {
-                    BinaryExpression.Subtract(ConstantExpression(0), it).generate()
-                },
-
+                Operation("&", this) to OperationHandler.Unary(this) { (it / ConstantExpression(Pointer(1))).generate() },
+                Operation("*", this) to OperationHandler.Unary(this) { (it * ConstantExpression(Pointer(1))).generate() },
+                Operation("+", this) to OperationHandler.Unary(this) { it.generate() },
+                Operation("-", this) to OperationHandler.Unary(this) { (ConstantExpression(0) - it).generate() },
                 Operation("*", this, this) to DefaultHandlers.Binary(this, Instruction.MUL_FLOAT),
                 Operation("*", this, vector_t) to DefaultHandlers.Binary(vector_t, Instruction.MUL_FLOAT_VEC),
                 Operation("/", this, this) to DefaultHandlers.Binary(this, Instruction.DIV_FLOAT),
-                Operation("%", this, this) to OperationHandler.Binary(this) { left, right ->
-                    MethodCallExpression(DynamicReferenceExpression("__builtin_mod"), listOf(left, right)).generate()
+                Operation("%", this, this) to OperationHandler.Binary(this) { l, r ->
+                    MethodCallExpression(DynamicReferenceExpression("__builtin_mod"), listOf(l, r)).generate()
                 },
 
                 // pre
                 Operation("++", this) to OperationHandler.Unary(this) {
                     val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    BinaryExpression.Assign(it, BinaryExpression.Add(it, one)).generate()
+                    BinaryExpression.Assign(it, it + one).generate()
                 },
                 // post
                 Operation("++", this, this) to OperationHandler.Unary(this) {
                     val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     with(linkedListOf<IR>()) {
-                        val add = BinaryExpression.Add(it, one)
-                        val assign = BinaryExpression.Assign(it, add)
+                        val assign = BinaryExpression.Assign(it, it + one)
                         // FIXME
-                        val sub = BinaryExpression.Subtract(assign, one)
-                        addAll(sub.generate())
+                        addAll((assign - one).generate())
                         this
                     }
                 },
                 // pre
                 Operation("--", this) to OperationHandler.Unary(this) {
                     val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    BinaryExpression.Assign(it, BinaryExpression.Subtract(it, one)).generate()
+                    BinaryExpression.Assign(it, it - one).generate()
                 },
                 // post
                 Operation("--", this, this) to OperationHandler.Unary(this) {
                     val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
                     with(linkedListOf<IR>()) {
-                        val sub = BinaryExpression.Subtract(it, one)
-                        val assign = BinaryExpression.Assign(it, sub)
+                        val assign = BinaryExpression.Assign(it, it - one)
                         // FIXME
-                        val add = BinaryExpression.Add(assign, one)
-                        addAll(add.generate())
+                        addAll((assign + one).generate())
                         this
                     }
                 },
@@ -85,9 +72,7 @@ open class number_t : Type() {
                 Operation("!", this) to OperationHandler.Unary(bool_t) {
                     BinaryExpression.Eq(ConstantExpression(0f), it).generate()
                 },
-                Operation("~", this) to OperationHandler.Unary(this) {
-                    BinaryExpression.Subtract(ConstantExpression(-1), it).generate()
-                },
+                Operation("~", this) to OperationHandler.Unary(this) { (ConstantExpression(-1) - it).generate() },
                 Operation("&", this, this) to DefaultHandlers.Binary(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandlers.Binary(this, Instruction.BITOR),
                 Operation("^", this, this) to OperationHandler.Binary(this) { left, right ->
@@ -99,36 +84,16 @@ open class number_t : Type() {
                 Operation(">>", this, this) to DefaultHandlers.Binary(int_t, Instruction.BITOR),
                 // TODO
                 Operation("**", this, this) to DefaultHandlers.Binary(float_t, Instruction.BITOR),
-                Operation("+=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Add(left, right)
-                },
-                Operation("-=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Subtract(left, right)
-                },
-                Operation("*=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Multiply(left, right)
-                },
-                Operation("/=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Divide(left, right)
-                },
-                Operation("%=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Modulo(left, right)
-                },
-                Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.And(left, right)
-                },
-                Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Or(left, right)
-                },
-                Operation("^=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.BitXor(left, right)
-                },
-                Operation("<<=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Lsh(left, right)
-                },
-                Operation(">>=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { left, right ->
-                    BinaryExpression.Rsh(left, right)
-                }
+                Operation("+=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l + r },
+                Operation("-=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l - r },
+                Operation("*=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l * r },
+                Operation("/=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l / r },
+                Operation("%=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l % r },
+                Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l and r },
+                Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l or r },
+                Operation("^=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l xor r },
+                Operation("<<=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l shl r },
+                Operation(">>=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l shr r }
         )
     }
 

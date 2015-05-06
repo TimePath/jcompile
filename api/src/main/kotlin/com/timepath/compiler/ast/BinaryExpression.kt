@@ -1,6 +1,18 @@
 package com.timepath.compiler.ast
 
+import kotlin.platform.platformStatic
 import org.antlr.v4.runtime.ParserRuleContext as PRC
+
+public fun Expression.or(other: Expression): BinaryExpression.BitOr = BinaryExpression.BitOr(this, other)
+public fun Expression.xor(other: Expression): BinaryExpression.BitXor = BinaryExpression.BitXor(this, other)
+public fun Expression.and(other: Expression): BinaryExpression.BitAnd = BinaryExpression.BitAnd(this, other)
+public fun Expression.shl(other: Expression): BinaryExpression.Lsh = BinaryExpression.Lsh(this, other)
+public fun Expression.shr(other: Expression): BinaryExpression.Rsh = BinaryExpression.Rsh(this, other)
+public fun Expression.plus(other: Expression): BinaryExpression.Add = BinaryExpression.Add(this, other)
+public fun Expression.minus(other: Expression): BinaryExpression.Subtract = BinaryExpression.Subtract(this, other)
+public fun Expression.times(other: Expression): BinaryExpression.Multiply = BinaryExpression.Multiply(this, other)
+public fun Expression.div(other: Expression): BinaryExpression.Divide = BinaryExpression.Divide(this, other)
+public fun Expression.mod(other: Expression): BinaryExpression.Modulo = BinaryExpression.Modulo(this, other)
 
 public abstract class BinaryExpression(val op: String, val left: Expression, val right: Expression, override val ctx: PRC? = null) : Expression() {
 
