@@ -21,7 +21,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import java.util.LinkedHashMap
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
-suppress("NOTHING_TO_INLINE") inline fun Expression.generate(state: Q1VM.State) = accept(state.generatorVisitor)
 suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(ReduceVisitor)
 suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 

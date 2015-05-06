@@ -19,7 +19,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         roots.forEach {
             it.transform { it.reduce() }
         }
-        return ASMImpl(BlockExpression(roots).generate(state))
+        return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor))
     }
 
     inner class ASMImpl(override val ir: List<IR>) : Generator.ASM {
