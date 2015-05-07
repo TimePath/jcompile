@@ -1,16 +1,22 @@
 package com.timepath.compiler.backend.q1vm.impl
 
+import com.timepath.Logger
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.StringManager
+import com.timepath.with
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.ArrayList
 
 class GeneratorImpl(val state: Q1VM.State) : Generator {
+
+    companion object {
+        val logger = Logger()
+    }
 
     override val gotoLabels = linkedMapOf<IR, String>()
 
@@ -70,13 +76,13 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             state.allocator.references.all.forEach(merge)
             state.allocator.constants.all.forEach(merge)
 
-            val globalData = {
+            val globalData = run {
                 val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size()))
                 assert(size >= globalData.position())
                 globalData.limit(size)
                 globalData.position(0)
                 globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
-            }()
+            }
 
             val stringManager = StringManager(state.allocator.strings.all.map { it.name })
 
@@ -101,7 +107,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                             globalDefs = ProgramData.Header.Section(globalDefsOffset, globalDefs.size()),
                             fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size()),
                             functions = ProgramData.Header.Section(functionsOffset, functions.size()),
-                            globalData = ProgramData.Header.Section(stringsOffset, globalData.capacity()),
+                            globalData = ProgramData.Header.Section(stringsOffset, globalData.capacity() / 4),
                             stringData = ProgramData.Header.Section(globalDataOffset, stringManager.constant.length())
                     ),
                     statements = statements,
@@ -110,7 +116,21 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     functions = functions,
                     globalData = globalData,
                     strings = stringManager
-            )
+            ).with {
+                logger.severe {
+                    StringBuilder {
+                        appendln("Program's system-checksum = ${header.crc}")
+                        appendln("Entity field space: ${header.entityFields}")
+                        appendln("Globals: ${header.globalData.count}")
+                        appendln("Counts:")
+                        appendln("      code: ${header.statements.count}")
+                        appendln("      defs: ${header.globalDefs.count}")
+                        appendln("    fields: ${header.fieldDefs.count}")
+                        appendln(" functions: ${header.functions.count}")
+                        appendln("   strings: ${header.stringData.count}")
+                    }.toString()
+                }
+            }
         }
     }
 }
