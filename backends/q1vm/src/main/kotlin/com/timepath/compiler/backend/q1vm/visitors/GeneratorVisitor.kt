@@ -3,6 +3,7 @@ package com.timepath.compiler.backend.q1vm.visitors
 import com.timepath.Logger
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
+import com.timepath.compiler.backend.q1vm.types.class_t
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
@@ -212,6 +213,20 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 }
                 IR.args[1] = 0
             }
+        }
+    }
+
+    override fun visit(e: IndexExpression): List<IR> {
+        val typeL = e.left.type(state)
+        if (typeL !is class_t) return visit(e : BinaryExpression)
+        return linkedListOf<IR>().with {
+            val genL = e.left.generate()
+            addAll(genL)
+            val genR = e.right.generate()
+            addAll(genR)
+            val type = e.type(state)
+            val out = state.allocator.allocateReference(type = type)
+            add(IR(e.instr as? Instruction ?: Instruction.LOAD_FLOAT, array(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
         }
     }
 
