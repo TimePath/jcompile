@@ -9,6 +9,7 @@ import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.frontend.quakec.compiler.PrintVisitor
 import com.timepath.q1vm.Program
+import com.timepath.q1vm.util.ProgramDataWriter
 import junit.framework.TestCase
 import junit.framework.TestSuite
 import org.junit.runner.RunWith
@@ -68,23 +69,27 @@ class CompilerSpecs {
                         logger.info { "Parsing $test" }
                         roots = compiler.parse().toList()
                         val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
-                        compare("AST", test.name + ".xml", actual)
+                        compare("AST", "${test.name}.xml", actual)
                     }
-                    var asm: ASM
+                    var prog: Program
                     it("should compile") {
                         logger.info { "Compiling $test" }
-                        asm = compiler.compile(roots.sequence())
+                        val asm = compiler.compile(roots.sequence())
                         asm.ir.joinToString("\n").let { actual ->
-                            compare("ASM", test.name + ".asm", actual)
+                            compare("ASM", "${test.name}.asm", actual)
                         }
                         compiler.state.allocator.toString().let { actual ->
-                            compare("allocation", test.name + ".txt", actual)
+                            compare("allocation", "${test.name}.txt", actual)
                         }
+                        val progData = asm.generateProgs()
+                        prog = Program(progData)
+                        val tmp = File(resources, "tmp/${test.name}.dat")
+                        ProgramDataWriter(tmp).write(progData)
                     }
                     if (test.name.endsWith(".qc")) {
                         it("should execute") {
                             logger.info { "Executing $test" }
-                            Program(asm.generateProgs()).exec()
+                            prog.exec()
                         }
                     }
                 }
