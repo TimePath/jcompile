@@ -8,10 +8,9 @@ import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.string_t
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
-import java.util.HashMap
-import java.util.LinkedHashMap
-import java.util.LinkedList
-import java.util.Stack
+import com.timepath.quote
+import com.timepath.with
+import java.util.*
 
 class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
@@ -27,12 +26,13 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 override val value: Value?,
                 override val type: Type) : Allocator.AllocationMap.Entry {
 
-            val tags = name.split("|").toCollection(linkedSetOf<String>())
+            val separator = '|'
+            val tags = name.split(separator).toMutableSet()
 
             fun tag(tag: String) {
                 if (tag !in tags) {
                     tags.add(tag)
-                    name += "|$tag"
+                    name += separator + tag
                 }
             }
 
@@ -111,7 +111,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = HashMap()) : Allocator.Scope
 
-    override val scope = Stack<Allocator.Scope>()
+    override val scope: Deque<Allocator.Scope> = LinkedList()
 
     override fun push(id: Any) {
         scope.push(Scope(id))
@@ -130,40 +130,25 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         allocateReference("_", function_t(string_t, listOf(string_t))) // TODO: not really a function
     }
 
-    private inline fun all(operation: (Allocator.Scope) -> Unit) = scope.reverse().forEach(operation)
-
-    override fun contains(name: String): Boolean {
-        all {
-            if (name in it.lookup) {
-                return true
-            }
-        }
-        return false
-    }
-
+    override fun contains(name: String) = scope.firstOrNull { name in it.lookup } != null
     override fun get(name: String): Allocator.AllocationMap.Entry? {
-        all {
-            val i = it.lookup[name]
-            if (i != null) {
-                return i
+        scope.forEach {
+            it.lookup[name]?.let {
+                return it
             }
         }
         return null
     }
 
-    private var funCounter = 0
-
     /**
      * Return the index to a constant referring to this function
      */
-    override fun allocateFunction(id: String?, type: function_t): Allocator.AllocationMap.Entry {
-        val name = id ?: "fun${funCounter++}"
-        val i = functions.size()
-        // index the function will have
-        val function = functions.allocate(name, i, null, type)
-        val const = allocateConstant(Value(Pointer(function.ref)), type, "fun($name)")
-        scope.peek().lookup[name] = const
-        return const
+    override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
+        val function = functions.allocate(id, functions.size(), null, type)
+        // Allocate a constant so the function can be called
+        return allocateConstant(Value(Pointer(function.ref)), type, id).with {
+            scope.peek().lookup[id] = this
+        }
     }
 
     private var refCounter = 0
@@ -172,7 +157,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
      * Reserve space for this variable and add its name to the current scope
      */
     override fun allocateReference(id: String?, type: Type, value: Value?): Allocator.AllocationMap.Entry {
-        val name = id ?: "ref${refCounter++}"
+        val name = id ?: "var${refCounter++}"
         val i = opts.userStorageStart + (references.size() + constants.size())
         val entry = references.allocate(name, i, value, type)
         scope.peek().lookup[name] = entry
@@ -182,49 +167,40 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     /**
      * Reserve space for this constant
      */
-    override fun allocateConstant(value: Value, type: Type, id: String?): Allocator.AllocationMap.Entry {
+    override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
-            return allocateConstant(Value(Pointer(str.ref)), string_t, "str(${str.name})")
-        }
-        val name: String = when {
-            id != null -> id
-            else -> when (value.any) {
-                is Int -> "${value.any}i"
-                is Float -> "${value.any}f"
-                else -> "$value"
-            }
+            return allocateConstant(Value(Pointer(str.ref)), string_t, str.name.quote())
         }
         if (opts.mergeConstants) {
-            constants[value]?.let { it ->
-                constants[name] = it
-                it.tag(name)
+            constants[value]?.let {
+                constants[id] = it
+                it.tag(id)
                 return it
             }
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
-        return constants.allocate(name, i, value, type)
+        return constants.allocate(id, i, value, type)
     }
 
     private var stringCounter = 0
 
     override fun allocateString(s: String): Allocator.AllocationMap.Entry {
-        val name = s
         // merge strings
-        val existing = strings[name]
+        val existing = strings[s]
         if (existing != null) {
             return existing
         }
         val i = stringCounter
-        stringCounter += name.length() + 1
-        return strings.allocate(name, i, null, string_t)
+        stringCounter += s.length() + 1
+        return strings.allocate(s, i, null, string_t)
     }
 
     override fun toString(): String {
-        val constants = constants.all.map { it.toString() }.join("\n")
-        val functions = functions.all.map { it.toString() }.join("\n")
-        val strings = strings.all.map { it.toString() }.join("\n")
-        val references = references.all.map { it.toString() }.join("\n")
+        val constants = constants.all.joinToString("\n")
+        val functions = functions.all.joinToString("\n")
+        val strings = strings.all.joinToString("\n")
+        val references = references.all.joinToString("\n")
         return "constants:\n" + constants +
                 "\n\n" +
                 "functions:\n" + functions +

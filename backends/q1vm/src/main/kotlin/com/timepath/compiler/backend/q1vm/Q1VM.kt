@@ -15,9 +15,7 @@ import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.getTextWS
 import com.timepath.q1vm.Instruction
-import org.antlr.v4.runtime.ParserRuleContext
 import java.util.LinkedHashMap
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
@@ -27,44 +25,34 @@ suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = ac
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Sequence<List<Expression>>, Generator.ASM> {
 
     override val state = State(opts)
-    override fun compile(roots: Sequence<List<Expression>>) = state.gen.generate(roots.flatMap { it.sequence() })
+    override fun compile(roots: Sequence<List<Expression>>) = Generator(state).generate(roots.flatMap { it.sequence() }.toList())
 
     init {
         state.symbols.push("<builtin>")
-        state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
         state.symbols.declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
         state.symbols.declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
+        state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
         // TODO: not really a function
         state.symbols.declare(DeclarationExpression("_", function_t(string_t, listOf(string_t))))
         state.symbols.push("<global>")
     }
 
-    trait FieldCounter {
-        fun get(type: struct_t, name: String): ConstantExpression
-        fun size(): Int
-    }
-
-    class Err(val ctx: ParserRuleContext, val reason: String) {
-        private val token = ctx.start
-        val file = token.getTokenSource().getSourceName()
-        val line = token.getLine()
-        val col = token.getCharPositionInLine()
-        val code = ctx.getTextWS()
-    }
-
-    inner class State(val opts: CompilerOptions) : CompileState() {
+    class State(val opts: CompilerOptions) : CompileState() {
 
         suppress("NOTHING_TO_INLINE") inline
         fun Expression.generate() = accept(generatorVisitor)
 
-        val errors = linkedListOf<Err>()
         val evaluateVisitor = EvaluateVisitor(this)
         val generatorVisitor = GeneratorVisitor(this)
         val typeVisitor = TypeVisitor(this)
-        val allocator: Allocator = Allocator(opts)
-        val gen: Generator = Generator(this)
+        val allocator = Allocator(opts)
 
-        val fields: FieldCounter = object : FieldCounter {
+        trait FieldCounter {
+            fun get(type: struct_t, name: String): ConstantExpression
+            fun size(): Int
+        }
+
+        val fields = object : FieldCounter {
             val map: MutableMap<String, Int> = LinkedHashMap()
             override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
             override fun size() = map.size()
@@ -92,16 +80,22 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             Types.handlers.add { it.left.handle(it) }
             Types.handlers.add { void_t.handle(it.copy(left = void_t, right = void_t)) }
             function_t.handlers.add {
-                val ops = mapOf(
-                        Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FUNC),
-                        Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FUNC),
-                        Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FUNC),
-                        Operation("!", this) to DefaultHandlers.Unary(bool_t, Instruction.NOT_FUNC),
-                        Operation("&", this) to OperationHandler.Unary(float_t) {
-                            BinaryExpression.Divide(MemoryReference(it.generate().last().ret, float_t), ConstantExpression(Pointer(1))).generate()
+                when (it) {
+                    Operation("=", this, this) ->
+                        DefaultHandlers.Assign(this, Instruction.STORE_FUNC)
+                    Operation("==", this, this) ->
+                        DefaultHandlers.Binary(bool_t, Instruction.EQ_FUNC)
+                    Operation("!=", this, this) ->
+                        DefaultHandlers.Binary(bool_t, Instruction.NE_FUNC)
+                    Operation("!", this) ->
+                        DefaultHandlers.Unary(bool_t, Instruction.NOT_FUNC)
+                    Operation("&", this) ->
+                        OperationHandler.Unary<Q1VM.State, List<IR>>(int_t) {
+                            val gen = it.generate()
+                            (MemoryReference(gen.last().ret, int_t) / ConstantExpression(Pointer(1))).generate()
                         }
-                )
-                ops[it]
+                    else -> null
+                }
             }
 
             types["void"] = void_t

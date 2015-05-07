@@ -3,15 +3,9 @@ package com.timepath.compiler
 import com.timepath.compiler.types.Type
 import com.timepath.quote
 
-public class Value(val any: Any) {
+public data class Value(val any: Any) {
 
     fun toBoolean(): Boolean = false
-
-    override fun toString() = "${any.javaClass.getSimpleName()}(${any.toString().quote()})"
-
-    override fun equals(other: Any?) = (other is Value) && (any == other.any)
-
-    override fun hashCode() = any.hashCode()
 
     fun plus(other: Value): Value {
         val lhs = any

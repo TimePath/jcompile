@@ -9,12 +9,10 @@ trait Generator {
         fun invoke(state: Q1VM.State) = GeneratorImpl(state)
     }
 
-    val gotoLabels: MutableMap<IR, String>
-
     trait ASM {
         val ir: List<IR>
         fun generateProgs(): ProgramData
     }
 
-    fun generate(roots: Sequence<Expression>): ASM
+    fun generate(roots: List<Expression>): ASM
 }

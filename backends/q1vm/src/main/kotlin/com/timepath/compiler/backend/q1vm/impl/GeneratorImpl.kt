@@ -18,12 +18,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         val logger = Logger()
     }
 
-    override val gotoLabels = linkedMapOf<IR, String>()
-
-    override fun generate(roots: Sequence<Expression>): Generator.ASM {
-        val roots = roots.toList()
-        roots.forEach {
-            it.transform { it.reduce() }
+    override fun generate(roots: List<Expression>): Generator.ASM {
+        for (root in roots) {
+            root.transform { it.reduce() }
         }
         return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor))
     }

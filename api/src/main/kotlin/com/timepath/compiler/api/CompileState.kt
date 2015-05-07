@@ -1,5 +1,6 @@
 package com.timepath.compiler.api
 
+import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.types.Type
 import java.util.Deque
@@ -7,6 +8,8 @@ import java.util.LinkedHashMap
 import java.util.LinkedList
 
 public abstract class CompileState {
+
+    val errors: MutableList<Compiler.Err> = LinkedList()
 
     val types = object : TypeRegistry {
 

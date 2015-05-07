@@ -4,6 +4,7 @@ import com.timepath.compiler.Value
 import com.timepath.compiler.backend.q1vm.impl.AllocatorImpl
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
+import java.util.Deque
 import java.util.Stack
 
 trait Allocator {
@@ -46,15 +47,19 @@ trait Allocator {
         val lookup: MutableMap<String, AllocationMap.Entry>
     }
 
-    val scope: Stack<Scope>
+    val scope: Deque<Scope>
 
     fun push(id: Any)
     fun pop()
 
     fun allocateString(s: String): AllocationMap.Entry
-    fun allocateFunction(id: String? = null, type: function_t): AllocationMap.Entry
+    fun allocateFunction(id: String, type: function_t): AllocationMap.Entry
     fun allocateReference(id: String? = null, type: Type, value: Value? = null): AllocationMap.Entry
-    fun allocateConstant(value: Value, type: Type, id: String? = null): AllocationMap.Entry
+    fun allocateConstant(value: Value, type: Type, id: String = when (value.any) {
+        is Int -> "${value.any}i"
+        is Float -> "${value.any}f"
+        else -> "$value"
+    }): AllocationMap.Entry
 
     fun contains(name: String): Boolean
     fun get(name: String): AllocationMap.Entry?

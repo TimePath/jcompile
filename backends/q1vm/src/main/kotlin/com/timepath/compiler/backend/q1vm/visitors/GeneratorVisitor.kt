@@ -1,6 +1,7 @@
 package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.Logger
+import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.class_t
@@ -33,12 +34,14 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 ctx?.let { ctx ->
                     val reason = e.getMessage()!!
                     logger.severe { "${ctx.debug()}: error: ${reason}\n${ctx.getTextWS()}\n" }
-                    state.errors.add(Q1VM.Err(ctx, reason))
+                    state.errors.add(Compiler.Err(ctx, reason))
                 }
             }
         }
         listOf<IR>()
     }
+
+    val gotoLabels = linkedMapOf<IR, String>()
 
     override fun visit(e: BinaryExpression) = Types.handle<Q1VM.State, List<IR>>(
             Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
@@ -127,7 +130,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 numParams = 0,
                 sizeof = byteArray(0, 0, 0, 0, 0, 0, 0, 0)
         )
-        state.allocator.push(e.id)
+        state.allocator.push(e)
         val params = linkedListOf<Expression>().with {
             e.params?.let { addAll(it) }
             e.vararg?.let { add(it) }
@@ -143,7 +146,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                     it is IR.Label ->
                         labelIndices[it.id] = realCount
                     it.instr is Instruction.GOTO && it.args[0] == 0 ->
-                        jumpIndices[state.gen.gotoLabels[it]] = realCount
+                        jumpIndices[gotoLabels[it]] = realCount
                 }
                 when {
                     it.real -> realCount + 1
@@ -167,7 +170,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     /** Filled in by new labels */
     override fun visit(e: GotoExpression) =
             IR(Instruction.GOTO, array(0, 0, 0), name = e.toString()).with {
-                state.gen.gotoLabels[this] = e.id
+                gotoLabels[this] = e.id
             }.list()
 
     override fun visit(e: LabelExpression) = IR.Label(e.id).list()

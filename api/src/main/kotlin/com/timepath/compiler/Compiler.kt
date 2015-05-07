@@ -3,10 +3,12 @@ package com.timepath.compiler
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
+import com.timepath.getTextWS
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
 import org.anarres.cpp.StringLexerSource
+import org.antlr.v4.runtime.ParserRuleContext
 import java.io.File
 import java.net.URL
 import java.util.LinkedList
@@ -18,6 +20,14 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
 
     fun parse() = frontend.parse(includes, state)
     fun compile() = backend.compile(parse())
+
+    class Err(val ctx: ParserRuleContext, val reason: String) {
+        private val token = ctx.start
+        val file = token.getTokenSource().getSourceName()
+        val line = token.getLine()
+        val col = token.getCharPositionInLine()
+        val code = ctx.getTextWS()
+    }
 
     val includes = LinkedList<Include>()
 
