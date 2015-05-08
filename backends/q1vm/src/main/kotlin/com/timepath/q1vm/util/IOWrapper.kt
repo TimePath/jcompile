@@ -8,7 +8,7 @@ trait IOWrapper {
 
     private fun _read(n: Int): Long {
         var ret = 0
-        (0..n - 1).forEach {
+        n.indices.forEach {
             val b = read()
             ret = ret or ((b and 0xFF) shl (8 * it))
         }
@@ -54,7 +54,7 @@ trait IOWrapper {
     fun writeInt(v: Int) = _write(4, v)
 
     fun writeString(s: String) {
-        write(s.toByteArray())
+        write(s.toByteArray(Charsets.US_ASCII)) // FIXME/TODO: count the size of UTF8 characters
         writeByte(0)
     }
 
@@ -76,25 +76,25 @@ trait IOWrapper {
             set(value) = raf.seek(value.toLong())
     }
 
-    class Buffer(val raf: ByteBuffer) : IOWrapper {
-        override fun read(): Int = raf.get().toInt()
+    class Buffer(val buf: ByteBuffer) : IOWrapper {
+        override fun read(): Int = buf.get().toInt()
 
         override fun read(b: ByteArray) {
-            raf.get(b)
+            buf.get(b)
         }
 
         override fun doWrite(b: Byte) {
-            raf.put(b)
+            buf.put(b)
         }
 
         override fun write(b: ByteArray) {
-            raf.put(b)
+            buf.put(b)
         }
 
         override var offset: Int
-            get() = raf.position()
+            get() = buf.position()
             set(offset) {
-                raf.position(offset)
+                buf.position(offset)
             }
     }
 }
