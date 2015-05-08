@@ -8,7 +8,6 @@ import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.string_t
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
-import com.timepath.quote
 import com.timepath.with
 import java.util.*
 
@@ -168,7 +167,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
-            return allocateConstant(Value(Pointer(str.ref)), string_t, str.name.quote())
+            return allocateConstant(Value(Pointer(str.ref)), string_t, str.name)
         }
         if (opts.mergeConstants) {
             constants[value]?.let {

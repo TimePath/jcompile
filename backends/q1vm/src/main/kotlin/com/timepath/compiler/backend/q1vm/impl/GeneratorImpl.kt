@@ -68,7 +68,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 val f = fun(it: Allocator.AllocationMap.Entry) {
                     val k = it.ref
                     val v = it.value?.any
-                    add(ProgramData.Definition(0, k.toShort(), 0))
+                    val e = state.allocator.allocateString(it.name)
+                    add(ProgramData.Definition(0, k.toShort(), e.ref))
                     when (v) {
                         is Pointer -> intData.put(k, v.int)
                         is Int -> floatData.put(k, v.toFloat())
@@ -110,8 +111,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                             globalDefs = ProgramData.Header.Section(globalDefsOffset, globalDefs.size()),
                             fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size()),
                             functions = ProgramData.Header.Section(functionsOffset, functions.size()),
-                            globalData = ProgramData.Header.Section(stringsOffset, globalData.capacity() / 4),
-                            stringData = ProgramData.Header.Section(globalDataOffset, stringManager.constant.length())
+                            globalData = ProgramData.Header.Section(globalDataOffset, globalData.capacity() / 4),
+                            stringData = ProgramData.Header.Section(stringsOffset, stringManager.constant.length())
                     ),
                     statements = statements,
                     globalDefs = globalDefs,

@@ -1,5 +1,6 @@
 package com.timepath.q1vm
 
+import com.timepath.with
 import java.util.ArrayList
 import java.util.Scanner
 
@@ -36,10 +37,9 @@ class StringManager(list: Collection<String>,
     fun get(index: Int): String? {
         if (index >= 0) {
             if (index < constantSize)
-                return Scanner(constant.substring(index)).let {
-                    it.useDelimiter("\u0000")
-                    it.next()
-                }
+                return Scanner(constant.substring(index)).with {
+                    useDelimiter("\u0000")
+                }.next()
             val zoneIndex = index - constantSize
             if (zoneIndex < zone.size())
                 return zone[zoneIndex]!!

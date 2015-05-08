@@ -58,10 +58,9 @@ object Main {
                         }.let { File("out", "${project.root}.xml").writeText(it.substring(1)) }
                     }
                     thread {
-                        ProgramDataWriter(IOWrapper.File(File("out", project.out).let {
-                            it.getParentFile().mkdirs()
-                            it.createNewFile()
-                            it
+                        ProgramDataWriter(IOWrapper.File(File("out", project.out).with {
+                            getParentFile().mkdirs()
+                            createNewFile()
                         }, write = true)).write(compiled.generateProgs())
                     }
                 }
