@@ -34,11 +34,14 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         val intData = globalData.asIntBuffer()
         val floatData = globalData.asFloatBuffer()
 
+        /**
+         * FIXME: metadata
+         */
         override fun generateProgs(): ProgramData {
-            val globalDefs = ArrayList<ProgramData.Definition>()
-            val fieldDefs = ArrayList<ProgramData.Definition>()
-            state.fields.size().indices.forEach {
-                fieldDefs.add(ProgramData.Definition(0, it.toShort(), 0)) // FIXME: metadata
+            val fieldDefs = ArrayList<ProgramData.Definition>().with {
+                state.fields.size().indices.forEach {
+                    add(ProgramData.Definition(0, it.toShort(), 0))
+                }
             }
             val statements = ArrayList<ProgramData.Statement>(ir.size())
             val functions = ArrayList<ProgramData.Function>()
@@ -61,17 +64,20 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
-            val merge = fun(it: Allocator.AllocationMap.Entry) {
-                val k = it.ref
-                val v = it.value?.any
-                when (v) {
-                    is Pointer -> intData.put(k, v.int)
-                    is Int -> floatData.put(k, v.toFloat())
-                    is Float -> floatData.put(k, v)
+            val globalDefs = ArrayList<ProgramData.Definition>().with {
+                val f = fun(it: Allocator.AllocationMap.Entry) {
+                    val k = it.ref
+                    val v = it.value?.any
+                    add(ProgramData.Definition(0, k.toShort(), 0))
+                    when (v) {
+                        is Pointer -> intData.put(k, v.int)
+                        is Int -> floatData.put(k, v.toFloat())
+                        is Float -> floatData.put(k, v)
+                    }
                 }
+                state.allocator.references.all.forEach(f)
+                state.allocator.constants.all.forEach(f)
             }
-            state.allocator.references.all.forEach(merge)
-            state.allocator.constants.all.forEach(merge)
 
             val globalData = run {
                 val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size()))
@@ -87,7 +93,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val crc = -1 // TODO: CRC16
             val entityFields = fieldDefs.size()
 
-            val statementsOffset = 60
+            val statementsOffset = 60 // Size of header
             val globalDefsOffset = statementsOffset + statements.size() * 8
             val fieldDefsOffset = globalDefsOffset + globalDefs.size() * 8
             val functionsOffset = fieldDefsOffset + fieldDefs.size() * 8
