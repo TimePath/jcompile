@@ -3,8 +3,6 @@ package com.timepath.q1vm
 import com.timepath.q1vm.ProgramData.Header
 import com.timepath.q1vm.ProgramData.Header.Section
 import java.nio.ByteBuffer
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
 import kotlin.properties.Delegates
 
 data class ProgramData(val header: Header,
@@ -143,10 +141,6 @@ data class ProgramData(val header: Header,
                 val count: Int)
     }
 
-    val globalIntData: IntBuffer by Delegates.lazy {
-        globalData.asIntBuffer()
-    }
-    val globalFloatData: FloatBuffer by Delegates.lazy {
-        globalData.asFloatBuffer()
-    }
+    val globalIntData = globalData.asIntBuffer()
+    val globalFloatData = globalData.asFloatBuffer()
 }

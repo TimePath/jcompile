@@ -82,7 +82,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
             val globalData = run {
                 val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size()))
-                assert(size >= globalData.position())
+                assert(globalData.position() < size)
                 globalData.limit(size)
                 globalData.position(0)
                 globalData.slice().order(ByteOrder.LITTLE_ENDIAN)
@@ -100,7 +100,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val functionsOffset = fieldDefsOffset + fieldDefs.size() * 8
             val globalDataOffset = functionsOffset + functions.size() * 36
             // Last for simplicity; strings are not fixed size
-            val stringsOffset = globalDataOffset + globalData.capacity() * 4
+            val stringsOffset = globalDataOffset + globalData.capacity()
 
             return ProgramData(
                     header = ProgramData.Header(
