@@ -317,7 +317,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         it.value.declare("${e.id}_${it.key}", state = state).flatMap { it.generate() }
     }.with {
         state.allocator.let {
-            it.scope.peek().lookup[e.id] = it.references[first().ret]!!.dup(name = e.id, type = e.struct)
+            it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = e.struct)
         }
     }
 

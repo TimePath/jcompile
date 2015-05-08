@@ -19,7 +19,6 @@ trait Allocator {
             val ref: Int
             val value: Value?
             val type: Type
-            fun dup(name: String = name, ref: Int = ref, value: Value? = value, type: Type = type): Entry
         }
 
         val all: List<Entry>

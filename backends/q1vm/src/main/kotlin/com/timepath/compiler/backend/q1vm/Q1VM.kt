@@ -37,6 +37,11 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         state.symbols.push("<global>")
     }
 
+    trait FieldCounter {
+        fun get(type: struct_t, name: String): ConstantExpression
+        fun size(): Int
+    }
+
     class State(val opts: CompilerOptions) : CompileState() {
 
         suppress("NOTHING_TO_INLINE") inline
@@ -46,11 +51,6 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val generatorVisitor = GeneratorVisitor(this)
         val typeVisitor = TypeVisitor(this)
         val allocator = Allocator(opts)
-
-        trait FieldCounter {
-            fun get(type: struct_t, name: String): ConstantExpression
-            fun size(): Int
-        }
 
         val fields = object : FieldCounter {
             val map: MutableMap<String, Int> = LinkedHashMap()

@@ -35,8 +35,6 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                     name += separator + tag
                 }
             }
-
-            override fun dup(name: String, ref: Int, value: Value?, type: Type) = copy(name, ref, value, type)
         }
 
         private val free = LinkedList<EntryImpl>()
