@@ -9,7 +9,7 @@ import com.timepath.compiler.backend.q1vm.types.string_t
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.with
-import java.util.*
+import java.util.Deque
 
 class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
@@ -36,12 +36,12 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
 
-        private val free = LinkedList<EntryImpl>()
-        private val pool = LinkedList<EntryImpl>()
+        private val free = linkedListOf<EntryImpl>()
+        private val pool: MutableList<EntryImpl> = linkedListOf()
         override val all: List<EntryImpl> = pool
-        private val refs = LinkedHashMap<Int, EntryImpl>()
-        private val values = LinkedHashMap<Value, EntryImpl>()
-        private val names = LinkedHashMap<String, Allocator.AllocationMap.Entry>()
+        private val refs: MutableMap<Int, EntryImpl> = linkedMapOf()
+        private val values: MutableMap<Value?, EntryImpl> = linkedMapOf()
+        private val names: MutableMap<String, Allocator.AllocationMap.Entry> = linkedMapOf()
 
         /**
          * Considered inside a function at this depth
@@ -60,7 +60,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
             val e = EntryImpl(id, ref, value, type)
             pool.add(e)
-            if (!scope.empty() && value == null) {
+            if (scope.isNotEmpty() && value == null) {
                 scope.peek().add(e)
             }
             refs[e.ref] = e
@@ -83,10 +83,10 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
         override fun size() = pool.size()
 
-        private val scope = Stack<LinkedList<EntryImpl>>()
+        private val scope: Deque<MutableList<EntryImpl>> = linkedListOf()
 
         fun push() {
-            scope.push(LinkedList<EntryImpl>())
+            scope.push(linkedListOf<EntryImpl>())
         }
 
         /**
@@ -106,9 +106,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val constants = AllocationMapImpl()
     override val strings = AllocationMapImpl()
 
-    data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = HashMap()) : Allocator.Scope
+    data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = linkedMapOf()) : Allocator.Scope
 
-    override val scope: Deque<Allocator.Scope> = LinkedList()
+    override val scope: Deque<Allocator.Scope> = linkedListOf()
 
     override fun push(id: Any) {
         scope.push(Scope(id))

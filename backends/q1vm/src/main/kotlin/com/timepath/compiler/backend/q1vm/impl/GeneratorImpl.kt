@@ -10,7 +10,6 @@ import com.timepath.q1vm.StringManager
 import com.timepath.with
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.ArrayList
 
 class GeneratorImpl(val state: Q1VM.State) : Generator {
 
@@ -38,14 +37,14 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          * FIXME: metadata
          */
         override fun generateProgs(): ProgramData {
-            val fieldDefs = ArrayList<ProgramData.Definition>().with {
+            val fieldDefs = arrayListOf<ProgramData.Definition>().with {
                 for ((s, idx) in state.fields.map) {
                     val e = state.allocator.allocateString(s)
                     add(ProgramData.Definition(0, idx.toShort(), e.ref))
                 }
             }
-            val statements = ArrayList<ProgramData.Statement>(ir.size())
-            val functions = ArrayList<ProgramData.Function>()
+            val statements = arrayListOf<ProgramData.Statement>()
+            val functions = arrayListOf<ProgramData.Function>()
             ir.forEach {
                 if (it is IR.Function) {
                     if (it.function.firstStatement < 0) {
@@ -65,7 +64,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
-            val globalDefs = ArrayList<ProgramData.Definition>().with {
+            val globalDefs = arrayListOf<ProgramData.Definition>().with {
                 val f = fun(it: Allocator.AllocationMap.Entry) {
                     val k = it.ref
                     val v = it.value?.any

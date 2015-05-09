@@ -66,7 +66,7 @@ class ProgramDataWriter(val raf: IOWrapper) {
         raf.writeString("")
 
         raf.offset = ret.header.globalData.offset
-        raf.write(ByteArray(ret.globalData.capacity()).with { ret.globalData.get(this)  })
+        raf.write(ByteArray(ret.globalData.capacity()).with { ret.globalData.get(this) })
     }
 
 }

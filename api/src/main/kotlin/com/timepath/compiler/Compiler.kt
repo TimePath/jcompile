@@ -11,7 +11,6 @@ import org.anarres.cpp.StringLexerSource
 import org.antlr.v4.runtime.ParserRuleContext
 import java.io.File
 import java.net.URL
-import java.util.LinkedList
 
 public class Compiler<F, B, State, AST, Out>(val frontend: F, val backend: B) :
         Frontend<State, AST> by frontend,
@@ -29,7 +28,7 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
         val code = ctx.getTextWS()
     }
 
-    val includes = LinkedList<Include>()
+    val includes: MutableList<Include> = linkedListOf()
 
     data class Include(
             val name: String,

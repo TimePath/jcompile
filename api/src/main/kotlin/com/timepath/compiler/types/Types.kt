@@ -5,7 +5,7 @@ import java.lang.reflect.ParameterizedType
 
 public object Types {
 
-    val types: MutableMap<Class<*>, Type> = hashMapOf()
+    val types: MutableMap<Class<*>, Type> = linkedMapOf()
 
     fun from(any: Any) = types[any.javaClass]!!
 

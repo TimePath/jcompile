@@ -16,7 +16,6 @@ import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
-import java.util.LinkedHashMap
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
 suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(ReduceVisitor)
@@ -54,7 +53,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val allocator = Allocator(opts)
 
         val fields = object : FieldCounter {
-            override val map: MutableMap<String, Int> = LinkedHashMap()
+            override val map: MutableMap<String, Int> = linkedMapOf()
             override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
             override fun size() = map.size()
         }

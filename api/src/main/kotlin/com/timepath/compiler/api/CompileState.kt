@@ -4,12 +4,10 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.types.Type
 import java.util.Deque
-import java.util.LinkedHashMap
-import java.util.LinkedList
 
 public abstract class CompileState {
 
-    val errors: MutableList<Compiler.Err> = LinkedList()
+    val errors: MutableList<Compiler.Err> = linkedListOf()
 
     val types = object : TypeRegistry {
 
@@ -24,9 +22,9 @@ public abstract class CompileState {
 
     val symbols = object : SymbolTable {
 
-        inner data class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = LinkedHashMap())
+        inner data class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = linkedMapOf())
 
-        private val stack: Deque<Scope> = LinkedList()
+        private val stack: Deque<Scope> = linkedListOf()
 
         override val globalScope: Boolean get() = stack.size() < 3
 

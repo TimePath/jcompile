@@ -5,7 +5,6 @@ import com.timepath.compiler.backend.q1vm.impl.AllocatorImpl
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import java.util.Deque
-import java.util.Stack
 
 trait Allocator {
 

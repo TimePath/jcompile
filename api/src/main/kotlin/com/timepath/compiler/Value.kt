@@ -1,7 +1,6 @@
 package com.timepath.compiler
 
 import com.timepath.compiler.types.Type
-import com.timepath.quote
 
 public data class Value(val any: Any) {
 

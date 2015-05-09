@@ -15,7 +15,6 @@ import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.unquote
-import java.util.ArrayList
 
 private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
@@ -23,9 +22,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val logger = Logger()
     }
 
-    fun emptyList<T>(): List<T> = ArrayList()
-    fun listOf<T>(): MutableList<T> = ArrayList()
-    fun listOf<T>(vararg values: T): List<T> = ArrayList<T>(values.size()).let { it.addAll(values); it }
+    fun emptyList<T>(): List<T> = arrayListOf()
+    fun listOf<T>(): MutableList<T> = arrayListOf()
+    fun listOf<T>(vararg values: T): List<T> = arrayListOf(*values)
 
     inline fun match<T : Any, R>(it: T?, body: (T) -> R) = when (it) {
         null -> null

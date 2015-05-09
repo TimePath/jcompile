@@ -26,7 +26,6 @@ public data class function_t(val type: Type, val argTypes: List<Type>, val varar
 
         val handlers = linkedListOf<function_t.(Operation) -> OperationHandler<*, *>?>()
 
-        var ops = hashMapOf<Operation, OperationHandler<*, *>>()
     }
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {

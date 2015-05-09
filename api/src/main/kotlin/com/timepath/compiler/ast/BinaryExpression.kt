@@ -1,6 +1,5 @@
 package com.timepath.compiler.ast
 
-import kotlin.platform.platformStatic
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 public fun Expression.or(other: Expression): BinaryExpression.BitOr = BinaryExpression.BitOr(this, other)

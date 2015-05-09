@@ -1,7 +1,5 @@
 package com.timepath.q1vm
 
-import java.util.ArrayList
-
 class Builtin(val name: String,
               val parameterTypes: Array<Class<*>> = array(),
               val varargsType: Class<*>? = null,
@@ -30,7 +28,7 @@ class Builtin(val name: String,
             else -> it
         }
 
-        val args: MutableList<Any?> = ArrayList(parameterCount)
+        val args: MutableList<Any?> = arrayListOf()
         parameterTypes.mapTo(args) { read(it) }
         if (varargsType != null)
             (parameterTypes.size()..parameterCount - 1).mapTo(args) { read(varargsType) }

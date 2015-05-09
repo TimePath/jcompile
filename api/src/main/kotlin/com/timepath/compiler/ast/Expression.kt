@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 public abstract class Expression : Named {
 
+    override fun toString() = simpleName
+
     abstract val ctx: PRC?
 
     abstract fun accept<T>(visitor: ASTVisitor<T>): T

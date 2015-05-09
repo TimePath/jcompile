@@ -1,7 +1,6 @@
 package com.timepath.q1vm
 
 import com.timepath.with
-import java.util.ArrayList
 import java.util.Scanner
 
 class StringManager(list: Collection<String>,
@@ -31,8 +30,8 @@ class StringManager(list: Collection<String>,
         constantSize = stroff
     }
 
-    private val temp: MutableList<String> = ArrayList(512)
-    private val zone: MutableList<String?> = ArrayList(512)
+    private val temp: MutableList<String> = arrayListOf()
+    private val zone: MutableList<String?> = arrayListOf()
 
     fun get(index: Int): String? {
         if (index >= 0) {

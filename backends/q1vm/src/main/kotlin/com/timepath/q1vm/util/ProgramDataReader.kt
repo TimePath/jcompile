@@ -5,19 +5,14 @@ import com.timepath.q1vm.StringManager
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.ArrayList
 
 class ProgramDataReader(val raf: IOWrapper) {
 
     constructor(file: File) : this(IOWrapper.File(file))
 
-    private fun iterData<T>(section: ProgramData.Header.Section, action: () -> T): MutableList<T> {
-        val ret = ArrayList<T>(section.count)
+    private inline fun iterData<T>(section: ProgramData.Header.Section, action: () -> T): List<T> {
         raf.offset = section.offset
-        for (i in 0..section.count - 1) {
-            ret add action()
-        }
-        return ret
+        return section.count.indices.map { action() }
     }
 
     private fun readSection() = ProgramData.Header.Section(
@@ -74,10 +69,10 @@ class ProgramDataReader(val raf: IOWrapper) {
                                     raf.readByte(), raf.readByte(), raf.readByte(), raf.readByte())
                     )
                 },
-                strings = StringManager({
+                strings = StringManager(run {
                     raf.offset = header.stringData.offset
 
-                    val list: MutableList<String> = ArrayList(512)
+                    val list: MutableList<String> = arrayListOf()
                     val sb = StringBuilder()
                     val c: Int
                     while (raf.offset - header.stringData.offset < header.stringData.count) {
@@ -92,14 +87,14 @@ class ProgramDataReader(val raf: IOWrapper) {
                         }
                     }
                     list
-                }(), header.stringData.count),
-                globalData = ByteBuffer.wrap({
+                }, header.stringData.count),
+                globalData = ByteBuffer.wrap(run {
                     raf.offset = header.globalData.offset
 
                     val bytes = ByteArray(4 * header.globalData.count)
                     raf.read(bytes)
                     bytes
-                }()).order(ByteOrder.LITTLE_ENDIAN)
+                }).order(ByteOrder.LITTLE_ENDIAN)
         )
         return ret
     }
