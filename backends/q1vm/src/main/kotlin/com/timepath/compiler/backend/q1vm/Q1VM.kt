@@ -38,6 +38,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
     }
 
     trait FieldCounter {
+        val map: Map<String, Int>
         fun get(type: struct_t, name: String): ConstantExpression
         fun size(): Int
     }
@@ -53,7 +54,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val allocator = Allocator(opts)
 
         val fields = object : FieldCounter {
-            val map: MutableMap<String, Int> = LinkedHashMap()
+            override val map: MutableMap<String, Int> = LinkedHashMap()
             override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
             override fun size() = map.size()
         }

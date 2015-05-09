@@ -39,8 +39,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          */
         override fun generateProgs(): ProgramData {
             val fieldDefs = ArrayList<ProgramData.Definition>().with {
-                state.fields.size().indices.forEach {
-                    add(ProgramData.Definition(0, it.toShort(), 0))
+                for ((s, idx) in state.fields.map) {
+                    val e = state.allocator.allocateString(s)
+                    add(ProgramData.Definition(0, idx.toShort(), e.ref))
                 }
             }
             val statements = ArrayList<ProgramData.Statement>(ir.size())
