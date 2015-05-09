@@ -144,24 +144,33 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val type = parameterTypeList.functionType(declSpecs.type(old)!!)!!
         val params = parameterTypeList.functionArgs()
         val vararg = parameterTypeList.functionVararg()
-        return FunctionExpression(
-                id = declarator.deepest().getText(),
+        val id = declarator.deepest().getText()
+        val doChildren = fun FunctionExpression.() {
+            state.symbols.declare(this)
+            state.symbols.scope("params") {
+                params?.forEach { state.symbols.declare(it) }
+                vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
+                state.symbols.scope("body") {
+                    addAll(visitChildren(ctx.compoundStatement()))
+                }
+            }
+        }
+        // Accumulate functions
+        // TODO: check [[accumulate]] and [[last]]
+        (state.symbols.resolve(id) as? FunctionExpression)?.let {
+            it.doChildren()
+            return listOf()
+        }
+        FunctionExpression(
+                id = id,
                 type = type,
                 params = params,
                 vararg = vararg,
                 ctx = ctx
         ).let {
-            state.symbols.declare(it)
-            state.symbols.scope("params") {
-                params?.forEach { state.symbols.declare(it) }
-                vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
-                state.symbols.scope("body") {
-                    val children = visitChildren(ctx.compoundStatement())
-                    it.addAll(children)
-                }
-            }
-            it
-        }.let { listOf(it) }
+            it.doChildren()
+            return listOf(it)
+        }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
