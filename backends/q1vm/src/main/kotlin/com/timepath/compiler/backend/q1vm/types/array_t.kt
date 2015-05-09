@@ -48,7 +48,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
         }
     }
 
-    private fun generateAccessorName(id: String) = "__${id}_access"
+    fun generateAccessorName(id: String) = "__${id}_access"
 
     /**
      *  #define ARRAY(name, size)                                                       \

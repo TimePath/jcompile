@@ -1,6 +1,8 @@
 package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.ast.*
+import com.timepath.compiler.backend.q1vm.types.array_t
+import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
@@ -8,14 +10,14 @@ import com.timepath.with
 
 object DefaultHandlers {
 
-    fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { left, right ->
+    fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
         linkedListOf<IR>().with {
-            val genLeft = left.generate()
+            val genLeft = l.generate()
             addAll(genLeft)
-            val genRight = right.generate()
+            val genRight = r.generate()
             addAll(genRight)
             val out = allocator.allocateReference(type = type)
-            add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$left $instr $right"))
+            add(IR(instr, array(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
         }
     }
 
@@ -28,61 +30,64 @@ object DefaultHandlers {
         }
     }
 
+    /**
+     * TODO: other storeps
+     */
     fun Assign(type: Type,
                instr: Instruction,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
-            = OperationHandler.Binary<Q1VM.State, List<IR>>(type, { lhs, rhs ->
+            = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
         linkedListOf<IR>().with {
-            val realInstr: Instruction
-            val leftL: Expression
-            val leftR: Expression
-            // TODO: other storeps
-            when {
-                lhs is IndexExpression -> {
-                    // TODO: returning arrays
-                    // val typeL = left.left.type(gen)
-                    // val tmp = left.left.doGenerate(gen)
-                    // addAll(tmp)
-                    // val refE = tmp.last().ret
-                    // val memoryReference = MemoryReference(refE, typeL)
-                    val memoryReference = lhs.left
-                    realInstr = Instruction.STOREP_FLOAT
-                    leftR = IndexExpression(memoryReference, lhs.right)
-                    leftL = IndexExpression(memoryReference, lhs.right).let {
-                        it.instr = Instruction.ADDRESS
-                        it
-                    }
-                }
-                lhs is MemberExpression -> {
-                    val typeL = lhs.left.type(this@Binary)
-                    // get the entity
-                    val tmp = lhs.left.generate()
-                    addAll(tmp)
-                    val refE = tmp.last().ret
+            val x = fun(realInstr: Instruction,
+                        leftR: Expression,
+                        leftL: Expression) {
+                val genL = leftL.generate()
+                addAll(genL)
+                val genR = (op(leftR, r) ?: r).generate()
+                addAll(genR)
 
-                    realInstr = Instruction.STOREP_FLOAT
-                    val memoryReference = MemoryReference(refE, typeL)
-                    leftR = MemberExpression(memoryReference, lhs.field)
-                    leftL = MemberExpression(memoryReference, lhs.field).let {
-                        it.instr = Instruction.ADDRESS
-                        it
-                    }
-                }
-                else -> {
-                    realInstr = instr
-                    leftR = lhs
-                    leftL = lhs
-                }
+                val lvalue = genL.last()
+                val rvalue = genR.last()
+                add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $genR"))
             }
-            val genL = leftL.generate()
-            addAll(genL)
-            val genR = (op(leftR, rhs) ?: rhs).generate()
-            addAll(genR)
-
-            val lvalue = genL.last()
-            val rvalue = genR.last()
-            add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $genR"))
-            this
+            when {
+                l is IndexExpression -> {
+                    val typeL = l.left.type(this@Binary)
+                    when (typeL) {
+                        is entity_t -> {
+                            val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
+                            x(Instruction.STOREP_FLOAT,
+                                    IndexExpression(tmp, l.right),
+                                    IndexExpression(tmp, l.right).with {
+                                        this.instr = Instruction.ADDRESS
+                                    })
+                        }
+                        is array_t -> {
+                            val arr = l.left
+                            val idx = l.right
+                            val set = r
+                            if (arr !is ReferenceExpression) throw UnsupportedOperationException()
+                            val s = typeL.generateAccessorName(arr.refers.id)
+                            val resolve = symbols.resolve(s)
+                            if (resolve == null) throw RuntimeException("Can't resolve $s")
+                            val indexer = ReferenceExpression(resolve)
+                            val accessor = MethodCallExpression(indexer, listOf(idx))
+                            addAll(MethodCallExpression(accessor, listOf(ConstantExpression(1), set)).generate())
+                        }
+                        else -> throw UnsupportedOperationException("Indexing ${typeL}")
+                    }
+                }
+                l is MemberExpression -> {
+                    val typeL = l.left.type(this@Binary) as entity_t
+                    val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
+                    x(Instruction.STOREP_FLOAT,
+                            MemberExpression(tmp, l.field),
+                            MemberExpression(tmp, l.field).with {
+                                this.instr = Instruction.ADDRESS
+                            })
+                }
+                else -> x(instr, l, l)
+            }
         }
-    })
+    }
 }

@@ -261,7 +261,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         args.flatMapTo(this) { it }
         args.mapIndexedTo(this) { i, it ->
             val param = Instruction.OFS_PARAM(i)
-            IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param $i")
+            IR(Instruction.STORE_FLOAT, array(it.last().ret, param), param, "Prepare param ${i + 1}")
         }
         fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
         IR(instr(args.size()), array(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())

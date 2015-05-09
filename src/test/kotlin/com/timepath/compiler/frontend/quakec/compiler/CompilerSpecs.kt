@@ -56,9 +56,9 @@ RunWith(javaClass<AllTests>())
 class CompilerSpecs {
     companion object {
         platformStatic fun suite() = given("a compiler") {
-            val tests = resources.listFiles().sequence().filter {
+            val tests = resources.listFiles().filter {
                 !it.isDirectory() && it.name.matches(".+\\.q[ch]$")
-            }
+            }.toSortedListBy { it.name }
             tests.forEach { test ->
                 on(test.name) {
                     val compiler = Compiler(QCC(), Q1VM())
