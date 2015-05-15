@@ -1,3 +1,4 @@
+#define _(x) x
 [[inline]] int __builtin_floor(float a) { return (int) a | 0; }
 [[inline]] bool __builtin_logxor(int a, int b) { return !a != !b; }
 [[inline]] int __builtin_sign(float a) { return a < 0 ? -1 : 1; }

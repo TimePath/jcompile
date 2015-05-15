@@ -54,7 +54,7 @@ class CompilerSpecs {
     companion object {
         platformStatic fun suite() = given("a compiler") {
             val tests = resources.listFiles().filter {
-                !it.isDirectory() && it.name.matches(".+\\.q[ch]$".toRegex())
+                !it.isDirectory() && it.name.matches("prototype\\.q[ch]$".toRegex())
             }.toSortedListBy { it.name }
             tests.forEach { test ->
                 on(test.name) {
