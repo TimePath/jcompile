@@ -2,6 +2,7 @@ package com.timepath
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Interval
+import java.io.IOException
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -49,7 +50,12 @@ public inline fun ExecutorService.use<T>(body: ExecutorService.() -> T): T = bod
 public class Logger(public val logger: java.util.logging.Logger) {
     companion object {
         init {
-            LogManager.getLogManager().readConfiguration(javaClass.getResourceAsStream("/logging.properties"));
+            javaClass.getResourceAsStream("/logging.properties")?.let {
+                try {
+                    LogManager.getLogManager().readConfiguration(it)
+                } catch(ignore: IOException) {
+                }
+            }
         }
 
         suppress("NOTHING_TO_INLINE") inline
