@@ -1,6 +1,3 @@
-apply plugin: 'maven-publish'
-group = 'com.timepath'
-version = '0.1-SNAPSHOT'
 apply plugin: 'application'
 
 def base = 'com.timepath.compiler'
@@ -31,15 +28,6 @@ scripts.each { scriptName, className ->
     createAllStartScripts.dependsOn(t)
 }
 
-task sourceJar(type: Jar) { from sourceSets.main.allSource }
-
-publishing.publications {
-    mavenJava(MavenPublication) {
-        from components.java
-        artifact sourceJar { classifier "sources" }
-    }
-}
-
 buildscript {
     ext.versions = [
             kotlin: '0.11.91.1',
@@ -62,12 +50,27 @@ buildscript {
 }
 
 allprojects { p ->
+
+    group = 'com.timepath'
+    version = '0.1-SNAPSHOT'
+
+    apply plugin: 'kotlin'
+
+    apply plugin: 'maven-publish'
+
+    task sourceJar(type: Jar) { from sourceSets.main.allSource }
+
+    publishing.publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar { classifier "sources" }
+        }
+    }
+
     repositories {
         mavenLocal()
         mavenCentral()
     }
-
-    apply plugin: 'kotlin'
 
     sourceSets {
         main.java.srcDirs = []
