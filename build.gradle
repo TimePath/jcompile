@@ -1,3 +1,28 @@
+buildscript {
+    ext.versions = [
+            kotlin: '0.11.91.4',
+            junit : '4.12',
+            antlr : '4.5',
+            jcpp  : '1.4.8',
+    ]
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        // antlr4 plugin
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+    }
+}
+
+plugins {
+    id "org.standardout.versioneye" version "1.0.1"
+}
+
 apply plugin: 'application'
 
 def base = 'com.timepath.compiler'
@@ -26,27 +51,6 @@ scripts.each { scriptName, className ->
         fileMode = 0755
     }
     createAllStartScripts.dependsOn(t)
-}
-
-buildscript {
-    ext.versions = [
-            kotlin: '0.11.91.1',
-            junit : '4.12',
-            antlr : '4.5',
-            jcpp  : '1.4.8',
-    ]
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        // antlr4 plugin
-        jcenter()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
-    }
 }
 
 allprojects { p ->
