@@ -173,6 +173,7 @@ argumentExpressionList
 primaryExpression
     :   Identifier
     |   Constant
+    |   '[' expression ',' expression ',' expression ']'
     |   StringLiteral+
     |   '(' expression ')'
     |   genericSelection

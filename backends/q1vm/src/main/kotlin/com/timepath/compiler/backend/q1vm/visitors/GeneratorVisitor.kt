@@ -37,6 +37,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                     state.errors.add(Compiler.Err(ctx, reason))
                 }
             }
+            else -> throw e
         }
         listOf<IR>()
     }
@@ -234,15 +235,20 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: MemberExpression) = linkedListOf<IR>().with {
-        val genL = e.left.generate()
-                .with { addAll(this) }
-        // check(e.field.owner is entity_t, "Field belongs to different type")
-        val genR = state.fields[e.field.owner, e.field.id].generate()
-                .with { addAll(this) }
-        val out = state.allocator.allocateReference(type = e.type(state))
-        val instr = e.instr as? Instruction ?: Instruction.LOAD_FLOAT
-        IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString())
-                .with { add(this) }
+        if (e.field.owner is class_t) {
+            val genL = e.left.generate()
+                    .with { addAll(this) }
+            // check(e.field.owner is entity_t, "Field belongs to different type")
+            val genR = state.fields[e.field.owner, e.field.id].generate()
+                    .with { addAll(this) }
+            val out = state.allocator.allocateReference(type = e.type(state))
+            val instr = e.instr as? Instruction ?: Instruction.LOAD_FLOAT
+            IR(instr, array(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString())
+                    .with { add(this) }
+        } else {
+            val f = state.allocator["${e.left}_${e.field.id}"]!!
+            add(IR.Return(f.ref))
+        }
     }
 
     override fun visit(e: MemberReferenceExpression) = state.fields[e.owner, e.id].generate()

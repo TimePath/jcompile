@@ -16,8 +16,8 @@ data class CompilerOptions(
          * float y; // re-use x
          *
          */
-        // TODO: types per fold
-        , val scopeFolding: Boolean = true
+        // TODO: types per fold, contiguous for vectors
+        , val scopeFolding: Boolean = false
         // TODO: types per fold
         , val mergeConstants: Boolean = true
         /**

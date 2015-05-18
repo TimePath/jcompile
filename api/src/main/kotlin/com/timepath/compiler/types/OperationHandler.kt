@@ -7,7 +7,7 @@ public trait OperationHandler<State : CompileState, T> {
     val type: Type
 
     companion object {
-        inline fun Binary<State : CompileState, T>(type: Type,
+        fun Binary<State : CompileState, T>(type: Type,
                                                    inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
                                                    func: State.(lhs: Expression, rhs: Expression) -> T)
                 = object : OperationHandler<State, T> {
@@ -19,7 +19,7 @@ public trait OperationHandler<State : CompileState, T> {
             }
         }
 
-        inline fun Unary<State : CompileState, T>(type: Type,
+        fun Unary<State : CompileState, T>(type: Type,
                                                   inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
                                                   func: State.(it: Expression) -> T)
                 = object : OperationHandler<State, T> {

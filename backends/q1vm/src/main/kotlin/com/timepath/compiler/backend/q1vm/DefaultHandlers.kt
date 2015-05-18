@@ -5,6 +5,7 @@ import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
+import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
 import com.timepath.with
 
@@ -43,12 +44,13 @@ object DefaultHandlers {
                         leftL: Expression) {
                 val genL = leftL.generate()
                 addAll(genL)
-                val genR = (op(leftR, r) ?: r).generate()
+                val right = op(leftR, r) ?: r
+                val genR = right.generate()
                 addAll(genR)
 
                 val lvalue = genL.last()
                 val rvalue = genR.last()
-                add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $genR"))
+                add(IR(realInstr, array(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
             }
             when {
                 l is IndexExpression -> {
@@ -78,13 +80,21 @@ object DefaultHandlers {
                     }
                 }
                 l is MemberExpression -> {
-                    val typeL = l.left.type(this@Binary) as entity_t
-                    val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                    x(Instruction.STOREP_FLOAT,
-                            MemberExpression(tmp, l.field),
-                            MemberExpression(tmp, l.field).with {
-                                this.instr = Instruction.ADDRESS
-                            })
+                    val typeL = l.left.type(this@Binary)
+                    when (typeL) {
+                        is entity_t -> {
+                            val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
+                            x(Instruction.STOREP_FLOAT,
+                                    MemberExpression(tmp, l.field),
+                                    MemberExpression(tmp, l.field).with {
+                                        this.instr = Instruction.ADDRESS
+                                    })
+                        }
+                        is struct_t -> {
+                            x(instr, l, l)
+                        }
+                        else -> throw UnsupportedOperationException("MemberExpression for type ${typeL}")
+                    }
                 }
                 else -> x(instr, l, l)
             }

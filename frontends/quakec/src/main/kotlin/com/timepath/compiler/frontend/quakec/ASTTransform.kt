@@ -15,6 +15,7 @@ import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.unquote
+import com.timepath.with
 
 private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
@@ -762,7 +763,21 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     ctx = ctx).let { listOf(it) }
         }
         match(ctx.expression()) {
-            return it.accept(this)
+            it.singleOrNull()?.let {
+                return it.accept(this)
+            }
+            return listOf(BlockExpression(linkedListOf<Expression>().with {
+                val decl = StructDeclarationExpression("tmp", vector_t)
+                val vec = ReferenceExpression(decl)
+                add(decl)
+                val x = MemberExpression(vec, MemberReferenceExpression(vector_t, "x"))
+                val y = MemberExpression(vec, MemberReferenceExpression(vector_t, "y"))
+                val z = MemberExpression(vec, MemberReferenceExpression(vector_t, "z"))
+                add(BinaryExpression.Assign(x, it[0].accept(this@ASTTransform).single()))
+                add(BinaryExpression.Assign(y, it[1].accept(this@ASTTransform).single()))
+                add(BinaryExpression.Assign(z, it[2].accept(this@ASTTransform).single()))
+                add(vec)
+            }, ctx = ctx))
         }
         throw UnsupportedOperationException(ctx.getText())
     }
