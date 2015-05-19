@@ -1,5 +1,17 @@
 grammar Kotlin;
 
+// FIXME:
+// val x = "//comment"
+// val x = "'apos"
+// val x = "#include"
+// val x = "~"
+// val x = "&"
+// val x = "|"
+// val x = "^"
+// val x = "`grave"
+// val x = 3.indices
+// val x = 3..7
+
 file
   : preamble toplevelObject* EOF
   ;
@@ -104,7 +116,7 @@ block
     ;
 function
   : modifiers 'fun' typeParameters?
-      (type '.')?
+      (type memberAccessOperation)?
       simpleName
       typeParameters? valueParameters (':' type)?
       typeConstraints
@@ -138,10 +150,10 @@ parameter
   : simpleName ':' type
   ;
 object
-  : 'object' simpleName (':' delegationSpecifiers)? classBody?
+  : modifiers 'object' simpleName (':' delegationSpecifiers)? classBody?
   ;
 secondaryConstructor
-  : modifiers 'constructor' valueParameters (':' constructorDelegationCall)? block
+  : modifiers 'constructor' valueParameters (':' constructorDelegationCall)? block?
   ;
 constructorDelegationCall
   : ('this' | 'super') valueArguments
@@ -156,13 +168,16 @@ enumEntry
     : initializer (',' initializer)*
     ;
 type
-  : annotations (typeDescriptor ('.' functionType)? | functionType)
+  : annotations type_
+  ;
+type_
+  : (typeDescriptor (memberAccessOperation functionType)? | functionType)
   ;
 typeDescriptor
-  : '(' typeDescriptor ')'
+  : '(' type_ ')'
   | userType
-  | typeDescriptor '?' //#nullableType
   | 'dynamic'
+  | typeDescriptor '?' //#nullableType
   ;
 
 userType
@@ -356,6 +371,7 @@ jump
   ;
 functionLiteral
   : '{' (functionLiteralArgs '->')? statement* '}'
+  | 'fun' (type memberAccessOperation)? valueParameters (':' type)? block
   ;
   functionLiteralArgs
     : functionLiteralArg (',' functionLiteralArg)*
@@ -586,7 +602,7 @@ EscapeSequence
 
 simpleName
   : SimpleName
-  | 'get' | 'set' | 'out'
+  | 'get' | 'set' | 'out' | 'file' | 'init' | 'attribute'
   ;
 SimpleName
   : JavaIdentifier
