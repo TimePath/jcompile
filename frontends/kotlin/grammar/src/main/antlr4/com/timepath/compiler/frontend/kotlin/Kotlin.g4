@@ -2,13 +2,6 @@ grammar Kotlin;
 
 // FIXME:
 // val x = "//comment"
-// val x = "'apos"
-// val x = "#include"
-// val x = "~"
-// val x = "&"
-// val x = "|"
-// val x = "^"
-// val x = "`grave"
 
 file
   : preamble toplevelObject* EOF
@@ -28,7 +21,7 @@ fileAnnotation
   : '[' 'file' ':' annotationEntry+ ']'
   ;
 packageHeader
-  : ('package' packageName)
+  : 'package' packageName
   ;
   packageName
     : simpleName ('.' simpleName)*
@@ -338,7 +331,7 @@ atomicExpression
         : '$' (simpleName | 'this')
         | EscapeSequence
         | longTemplate
-        | ~'"'
+        | ~'"' | '`' | '\'' | '#' | '~' | '&' | '|' | '^'
         ;
         longTemplate
           : '${' expression '}'
