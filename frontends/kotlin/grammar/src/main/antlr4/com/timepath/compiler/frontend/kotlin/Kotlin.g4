@@ -9,8 +9,6 @@ grammar Kotlin;
 // val x = "|"
 // val x = "^"
 // val x = "`grave"
-// val x = 3.indices
-// val x = 3..7
 
 file
   : preamble toplevelObject* EOF
@@ -537,7 +535,7 @@ FloatingPointLiteral
     ;
   fragment
   DecimalFloatingPointLiteral
-    : Digits '.' Digits? ExponentPart? FloatTypeSuffix?
+    : Digits ('.' Digits)? ExponentPart? FloatTypeSuffix?
     | '.' Digits ExponentPart? FloatTypeSuffix?
     | Digits ExponentPart FloatTypeSuffix?
     | Digits FloatTypeSuffix
