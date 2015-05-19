@@ -329,13 +329,10 @@ atomicExpression
       ;
       stringTemplateElement
         : '$' (simpleName | 'this')
+        | '${' expression '}' //#longTemplate
         | EscapeSequence
-        | longTemplate
         | ~'"' | '`' | '\'' | '#' | '~' | '&' | '|' | '^'
         ;
-        longTemplate
-          : '${' expression '}'
-          ;
 declaration
   : function
   | property
