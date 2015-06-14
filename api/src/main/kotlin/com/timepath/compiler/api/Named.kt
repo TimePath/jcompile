@@ -1,5 +1,5 @@
 package com.timepath.compiler.api
 
-public trait Named {
+public interface Named {
     val simpleName: String
 }

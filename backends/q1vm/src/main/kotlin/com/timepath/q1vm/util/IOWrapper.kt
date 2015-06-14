@@ -3,12 +3,12 @@ package com.timepath.q1vm.util
 import java.io
 import java.nio.ByteBuffer
 
-trait IOWrapper {
+interface IOWrapper {
     var offset: Int
 
     private fun _read(n: Int): Long {
         var ret = 0
-        n.indices.forEach {
+        (0..n - 1).forEach {
             val b = read()
             ret = ret or ((b and 0xFF) shl (8 * it))
         }
@@ -41,7 +41,7 @@ trait IOWrapper {
 
     fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
 
-    private fun _write(n: Int, v: Int) = n.indices.forEach { doWrite((v ushr (it * 8)).toByte()) }
+    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { doWrite((v ushr (it * 8)).toByte()) }
 
     fun doWrite(b: Byte)
 

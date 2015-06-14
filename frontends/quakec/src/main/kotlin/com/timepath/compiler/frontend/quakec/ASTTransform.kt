@@ -58,7 +58,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 old -> null
                 else -> match(typeSpec.directTypeSpecifier().parameterTypeList()) { it.functionType(direct) }
             } ?: direct
-        }.let { indirection.indices.fold(it) { it, _ -> field_t(it) } }
+        }.let { (0..indirection - 1).fold(it) { it, _ -> field_t(it) } }
     }
 
     fun ParameterTypeListContext?.functionType(type: Type) = this?.let {
@@ -245,15 +245,15 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val params = ptl.functionArgs()
                     val vararg = ptl.functionVararg()
                     val signature = ptl.functionType(type) ?: type
-                    val attribs = ctx.declarationSpecifiers().declarationSpecifier().sequence()
-                            .flatMap { it.attributeList()?.let { it.attribute().sequence() } ?: sequenceOf() }
+                    val attribs = ctx.declarationSpecifiers().declarationSpecifier().asSequence()
+                            .flatMap { it.attributeList()?.let { it.attribute().asSequence() } ?: sequenceOf() }
                             .filterNotNull()
                             .toList()
                     when (ptl) {
                         null -> when {
                             type is field_t && state.symbols.globalScope -> {
-                                val extends = attribs.sequence().map {
-                                    val classExtender = "class\\((.*)\\)".toRegex()
+                                val extends = attribs.asSequence().map {
+                                    val classExtender = "class\\((.*)\\)".toPattern()
                                     val matcher = classExtender.matcher(it.getText())
                                     if (!matcher.matches()) return@map null
                                     state.types[matcher.group(1)] as? class_t
@@ -584,7 +584,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return UnaryExpression.Cast(type, va_arg, ctx = ctx).let { listOf(it) }
     }
 
-    val matchVecComponent = "^(.+)_(x|y|z)$".toRegex()
+    val matchVecComponent = "^(.+)_(x|y|z)$".toPattern()
 
     /**
      * static:
@@ -676,9 +676,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         }.let { listOf(it) }
     }
 
-    val matchChar = "'(.)'".toRegex()
-    val matchVec = "'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'".toRegex()
-    val matchHex = "0x([\\d0-F]+)".toRegex()
+    val matchChar = "'(.)'".toPattern()
+    val matchVec = "'\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*([+-]?[\\d.]+)\\s*'".toPattern()
+    val matchHex = "0x([\\d0-F]+)".toPattern()
 
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Expression> {
         val text = ctx.getText()
@@ -729,7 +729,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             matchChar.let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
-                    return ConstantExpression(matcher.group(1).charAt(0), ctx = ctx).let { listOf(it) }
+                    return ConstantExpression(matcher.group(1)[0], ctx = ctx).let { listOf(it) }
                 }
             }
             matchVec.let {

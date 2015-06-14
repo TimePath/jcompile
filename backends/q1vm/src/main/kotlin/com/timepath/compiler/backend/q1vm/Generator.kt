@@ -4,12 +4,12 @@ import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.impl.GeneratorImpl
 import com.timepath.q1vm.ProgramData
 
-trait Generator {
+interface Generator {
     companion object {
         fun invoke(state: Q1VM.State) = GeneratorImpl(state)
     }
 
-    trait ASM {
+    interface ASM {
         val ir: List<IR>
         fun generateProgs(): ProgramData
     }

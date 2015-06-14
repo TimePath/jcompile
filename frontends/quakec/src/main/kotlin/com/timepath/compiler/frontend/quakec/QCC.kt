@@ -55,7 +55,7 @@ public class QCC : Frontend<Q1VM.State, Sequence<List<Expression>>> {
                 }
             }
         }.let {
-            it.sequence().map {
+            it.asSequence().map {
                 val (include, future) = it
                 logger.info { include.path }
                 val ret = future.get().accept(ASTTransform(state))

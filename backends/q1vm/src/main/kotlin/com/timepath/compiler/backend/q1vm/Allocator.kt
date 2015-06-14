@@ -6,14 +6,14 @@ import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import java.util.Deque
 
-trait Allocator {
+interface Allocator {
 
     companion object {
         fun invoke(opts: CompilerOptions) = AllocatorImpl(opts)
     }
 
-    trait AllocationMap {
-        trait Entry {
+    interface AllocationMap {
+        interface Entry {
             val name: String
             val ref: Int
             val value: Value?
@@ -40,7 +40,7 @@ trait Allocator {
     val constants: AllocationMap
     val strings: AllocationMap
 
-    trait Scope {
+    interface Scope {
         val id: Any
         val lookup: MutableMap<String, AllocationMap.Entry>
     }

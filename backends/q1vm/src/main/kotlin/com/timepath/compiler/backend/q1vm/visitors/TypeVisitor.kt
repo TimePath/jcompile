@@ -38,7 +38,7 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
                 (e.right.type() as field_t).type
             is array_t ->
                 typeL.type
-            else -> visit(e:BinaryExpression)
+            else -> visit(e as BinaryExpression)
         }
     }
 
@@ -74,8 +74,8 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
     }
 
     override fun visit(e: DeclarationExpression) = e.type
-    override fun visit(e: ParameterExpression) = visit(e: DeclarationExpression)
-    override fun visit(e: StructDeclarationExpression) = visit(e: DeclarationExpression)
+    override fun visit(e: ParameterExpression) = visit(e as DeclarationExpression)
+    override fun visit(e: StructDeclarationExpression) = visit(e as DeclarationExpression)
 
     override fun visit(e: MemoryReference) = e.type
 

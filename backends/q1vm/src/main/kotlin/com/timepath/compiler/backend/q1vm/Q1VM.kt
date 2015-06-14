@@ -24,7 +24,7 @@ suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = ac
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Sequence<List<Expression>>, Generator.ASM> {
 
     override val state = State(opts)
-    override fun compile(roots: Sequence<List<Expression>>) = Generator(state).generate(roots.flatMap { it.sequence() }.toList())
+    override fun compile(roots: Sequence<List<Expression>>) = Generator(state).generate(roots.flatMap { it.asSequence() }.toList())
 
     init {
         state.symbols.push("<builtin>")
@@ -36,7 +36,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         state.symbols.push("<global>")
     }
 
-    trait FieldCounter {
+    interface FieldCounter {
         val map: Map<String, Int>
         fun get(type: struct_t, name: String): ConstantExpression
         fun size(): Int

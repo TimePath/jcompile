@@ -49,7 +49,7 @@ object CPPPrinter {
 
                 +"namespace $ns {"
                 +indent {
-                    code.sequence().filter {
+                    code.asSequence().filter {
                         when {
                         // Pointer to member
                             it is DeclarationExpression
@@ -98,7 +98,7 @@ object CPPPrinter {
             }.toString())
         }
         val zipped = compiler.includes.map {
-            sourceRoot.getParentFile().relativePath(File(it.path))
+            File(it.path).relativeTo(sourceRoot.getParentFile())
                     .replace(".qc", ".cpp")
                     .replace(".qh", ".hpp")
         }.zip(ast)

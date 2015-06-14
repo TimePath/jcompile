@@ -25,7 +25,7 @@ class CustomLexer(input: ANTLRInputStream) : QCLexer(input) {
         val token = super.emit()
         if (token.getType() == QCLexer.LineDirective) {
             val s = token.getText()
-            val split = s.split(" ")
+            val split = s.splitBy(" ")
             val line = split[1]
             setLine(line.toInt() - 1)
             file = split[2].trim().unquote()

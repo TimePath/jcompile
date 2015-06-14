@@ -21,7 +21,7 @@ object ReduceVisitor : ASTVisitor<Expression> {
                     is SwitchExpression -> it.reduce()
                     is Case -> {
                         val expr = it.expr
-                        fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replaceAll("[^a-zA-Z_0-9]", "_")}"
+                        fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replace("[^a-zA-Z_0-9]".toRegex(), "_")}"
                         val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
                         val goto = GotoExpression(label)
                         if (expr == null) {

@@ -1,11 +1,11 @@
 package com.timepath.q1vm
 
 class Builtin(val name: String,
-              val parameterTypes: Array<Class<*>> = array(),
+              val parameterTypes: Array<Class<*>> = arrayOf(),
               val varargsType: Class<*>? = null,
               val callback: Builtin.Handler) {
 
-    trait Handler {
+    interface Handler {
         fun call(args: List<*>): Any
     }
 

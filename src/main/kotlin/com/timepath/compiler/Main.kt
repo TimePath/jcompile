@@ -20,7 +20,7 @@ object Main {
         val root = File(args[0])
         require(root.exists(), "qcsrc not found")
         time(logger, "Total time") {
-            [data] class Project(val root: String, val define: String, val out: String)
+            @data class Project(val root: String, val define: String, val out: String)
 
             val defs = listOf(
                     Project("menu", "MENUQC", "menuprogs.dat")
@@ -47,7 +47,7 @@ object Main {
                             node("errors") {
                                 compiler.state.errors.forEach {
                                     node("error") {
-                                        node("file") { +(root.relativePath(File(it.file))) }
+                                        node("file") { +(File(it.file).relativeTo(root)) }
                                         node("line") { append(it.line) }
                                         node("col") { append(it.col) }
                                         node("reason") { +(it.reason) }

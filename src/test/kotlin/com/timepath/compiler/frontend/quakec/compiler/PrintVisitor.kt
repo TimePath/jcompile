@@ -71,6 +71,6 @@ public object PrintVisitor : ASTVisitor<Map<String, Any?>> {
             "type" to e.type
     )
 
-    override fun visit(e: ParameterExpression): Map<String, Any?> = visit(e : DeclarationExpression)
-    override fun visit(e: StructDeclarationExpression): Map<String, Any?> = visit(e : DeclarationExpression)
+    override fun visit(e: ParameterExpression): Map<String, Any?> = visit(e as DeclarationExpression)
+    override fun visit(e: StructDeclarationExpression): Map<String, Any?> = visit(e as DeclarationExpression)
 }

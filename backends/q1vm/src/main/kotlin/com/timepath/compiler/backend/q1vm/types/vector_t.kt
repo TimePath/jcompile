@@ -43,7 +43,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                     addAll(genL)
                     val genR = r.generate()
                     addAll(genR)
-                    for (i in 3.indices) {
+                    for (i in 0..3 - 1) {
                         val component = MemoryReference(ref.ref + i, type = float_t)
                         BinaryExpression.Assign(
                                 component,
@@ -62,7 +62,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                     addAll(gen)
                     val genR = r.generate()
                     addAll(genR)
-                    for (i in 3.indices) {
+                    for (i in 0..3 - 1) {
                         val component = MemoryReference(ref.ref + i, type = float_t)
                         BinaryExpression.Assign(component,
                                 MemoryReference(gen.last().ret + i, type = float_t) and
@@ -77,7 +77,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val gen = it.generate()
                     addAll(gen)
-                    for (i in 3.indices) {
+                    for (i in 0..3 - 1) {
                         val component = MemoryReference(ref.ref + i, type = float_t)
                         BinaryExpression.Assign(component, MemoryReference(gen.last().ret + i, type = float_t).inv())
                                 .let { addAll(it.generate()) }
@@ -90,7 +90,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val gen = it.generate()
                     addAll(gen)
-                    for (i in 3.indices) {
+                    for (i in 0..3 - 1) {
                         val component = MemoryReference(ref.ref + i, type = float_t)
                         BinaryExpression.Assign(component, -MemoryReference(gen.last().ret + i, type = float_t))
                                 .let { addAll(it.generate()) }

@@ -8,7 +8,7 @@ public fun Expression.not(): UnaryExpression.Not = UnaryExpression.Not(this)
 public fun Expression.minus(): UnaryExpression.Minus = UnaryExpression.Minus(this)
 public fun Expression.plus(): UnaryExpression.Plus = UnaryExpression.Plus(this)
 
-public abstract class UnaryExpression protected(val op: String, val operand: Expression, override val ctx: PRC? = null) : Expression() {
+public abstract class UnaryExpression protected constructor(val op: String, val operand: Expression, override val ctx: PRC? = null) : Expression() {
 
     init {
         add(operand)
@@ -23,7 +23,7 @@ public abstract class UnaryExpression protected(val op: String, val operand: Exp
         override fun toString(): String = "(($type) $operand)"
     }
 
-    public abstract class Post protected(op: String, operand: Expression, ctx: PRC? = null) : UnaryExpression(op, operand, ctx) {
+    public abstract class Post protected constructor(op: String, operand: Expression, ctx: PRC? = null) : UnaryExpression(op, operand, ctx) {
 
         override fun toString(): String = "($operand $op)"
     }

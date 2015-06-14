@@ -1,8 +1,8 @@
 package com.timepath.compiler.backend.cpp
 
-public class Printer private(private val indent: String) {
+public class Printer private constructor(private val indent: String) {
     private val lines: MutableList<String> = linkedListOf()
-    override fun toString() = lines.sequence().map { indent + it }.join("\n")
+    override fun toString() = lines.asSequence().map { indent + it }.join("\n")
     fun T.plus<T>() = this@Printer.lines.addAll(this@plus.toString().split('\n')).let { Unit }
     inline fun String.invoke(body: Printer.() -> Unit) = Printer(this, body)
 

@@ -44,7 +44,7 @@ private class EntityManager(val data: ProgramData) {
         val x = entities[self]!!.float[field + 0]
         val y = entities[self]!!.float[field + 1]
         val z = entities[self]!!.float[field + 2]
-        return array(x, y, z)
+        return arrayOf(x, y, z)
     }
 
     fun readInt(self: Int, field: Int): Int {

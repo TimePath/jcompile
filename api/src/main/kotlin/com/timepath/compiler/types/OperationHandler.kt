@@ -3,13 +3,13 @@ package com.timepath.compiler.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.Expression
 
-public trait OperationHandler<State : CompileState, T> {
+public interface OperationHandler<State : CompileState, T> {
     val type: Type
 
     companion object {
         fun Binary<State : CompileState, T>(type: Type,
-                                                   inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
-                                                   func: State.(lhs: Expression, rhs: Expression) -> T)
+                                            inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
+                                            func: State.(lhs: Expression, rhs: Expression) -> T)
                 = object : OperationHandler<State, T> {
             override val type = type
 
@@ -20,8 +20,8 @@ public trait OperationHandler<State : CompileState, T> {
         }
 
         fun Unary<State : CompileState, T>(type: Type,
-                                                  inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
-                                                  func: State.(it: Expression) -> T)
+                                           inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
+                                           func: State.(it: Expression) -> T)
                 = object : OperationHandler<State, T> {
             override val type = type
 

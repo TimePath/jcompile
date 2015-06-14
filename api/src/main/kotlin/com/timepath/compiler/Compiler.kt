@@ -61,7 +61,7 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
 
     fun includeFrom(progs: File) {
         progs.readLines().drop(1).map {
-            val name = it.replaceFirst("//.*", "").trim()
+            val name = it.replaceFirst("//.*".toRegex(), "").trim()
             val file = File(progs.getParent(), name)
             if (name.isNotEmpty() && file.exists()) Include(file) else null
         }.filterNotNullTo(includes)

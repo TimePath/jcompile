@@ -4,7 +4,6 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
-import com.timepath.compiler.backend.q1vm.Generator.ASM
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.frontend.quakec.compiler.PrintVisitor
@@ -52,12 +51,12 @@ inline fun TestSuite.on(what: String, assertions: ((String, () -> Unit) -> Unit)
     addTest(it)
 }
 
-RunWith(javaClass<AllTests>())
+RunWith(AllTests::class)
 class CompilerSpecs {
     companion object {
         platformStatic fun suite() = given("a compiler") {
             val tests = resources.listFiles().filter {
-                !it.isDirectory() && it.name.matches(".+\\.q[ch]$")
+                !it.isDirectory() && it.name.matches(".+\\.q[ch]$".toRegex())
             }.toSortedListBy { it.name }
             tests.forEach { test ->
                 on(test.name) {
@@ -74,7 +73,7 @@ class CompilerSpecs {
                     var prog: Program
                     it("should compile") {
                         logger.info { "Compiling $test" }
-                        val asm = compiler.compile(roots.sequence())
+                        val asm = compiler.compile(roots.asSequence())
                         asm.ir.joinToString("\n").let { actual ->
                             compare("ASM", "${test.name}.asm", actual)
                         }

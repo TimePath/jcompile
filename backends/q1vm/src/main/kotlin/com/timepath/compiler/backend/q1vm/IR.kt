@@ -4,7 +4,7 @@ import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 
 open class IR(val instr: Instruction? = null,
-              val args: Array<Int> = array(),
+              val args: Array<Int> = arrayOf(),
               /** Continuation passing */
               open val ret: Int = 0,
               val name: String) {

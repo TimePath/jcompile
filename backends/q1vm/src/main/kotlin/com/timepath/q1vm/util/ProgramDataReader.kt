@@ -12,7 +12,7 @@ class ProgramDataReader(val raf: IOWrapper) {
 
     private inline fun iterData<T>(section: ProgramData.Header.Section, action: () -> T): List<T> {
         raf.offset = section.offset
-        return section.count.indices.map { action() }
+        return (0..section.count - 1).map { action() }
     }
 
     private fun readSection() = ProgramData.Header.Section(
@@ -65,7 +65,7 @@ class ProgramDataReader(val raf: IOWrapper) {
                             raf.readInt(),
                             raf.readInt(),
                             raf.readInt(),
-                            byteArray(raf.readByte(), raf.readByte(), raf.readByte(), raf.readByte(),
+                            byteArrayOf(raf.readByte(), raf.readByte(), raf.readByte(), raf.readByte(),
                                     raf.readByte(), raf.readByte(), raf.readByte(), raf.readByte())
                     )
                 },
@@ -75,10 +75,11 @@ class ProgramDataReader(val raf: IOWrapper) {
                     val list: MutableList<String> = arrayListOf()
                     val sb = StringBuilder()
                     val c: Int
+                    loop@
                     while (raf.offset - header.stringData.offset < header.stringData.count) {
                         c = raf.readByte().toInt()
                         when {
-                            c < 0 -> break
+                            c < 0 -> break@loop
                             c == 0 -> {
                                 list add sb.toString()
                                 sb.setLength(0)

@@ -16,11 +16,13 @@ private class CustomPreprocessor : Preprocessor() {
         addFeature(Feature.LINEMARKERS)
     }
 
+    private val badRegex = "Bad token \\[#@\\d+,\\d+\\]:\"#\"".toRegex()
+
     override fun token(): Token {
         try {
             return super.token()
         } catch (e: Exception) {
-            if (e.getMessage()?.matches("Bad token \\[#@\\d+,\\d+\\]:\"#\"") ?: false) {
+            if (e.getMessage()?.matches(badRegex) ?: false) {
                 return Token(Token.HASH, -1, -1, "#", null)
             }
             throw e
