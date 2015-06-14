@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.ParserRuleContext as PRC
  */
 public class FunctionExpression(id: String? = null,
                                 override val type: function_t,
-                                val params: List<Expression>? = null,
+                                val params: List<ParameterExpression>? = null,
                                 val vararg: Expression? = null,
                                 add: List<Expression>? = null,
                                 val builtin: Int? = null,

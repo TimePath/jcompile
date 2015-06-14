@@ -14,9 +14,7 @@ fun main(args: Array<String>) {
             }
 }
 
-/**
- * Prefer Expression.accept(this)
- */
+@deprecated("", replaceWith = ReplaceWith("e.accept(this)"))
 fun ASTVisitor<T>.visitReflective<T>(e: Expression): T {
     val method = javaClass.getMethod("visit", e.javaClass)
     try {

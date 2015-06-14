@@ -1,5 +1,6 @@
 package com.timepath.compiler.backend.cpp
 
+import com.timepath.Printer
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.data.Pointer
