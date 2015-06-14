@@ -128,7 +128,6 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
             is Vector -> "vector(${it.x}, ${it.y}, ${it.z})"
             is Char -> "'${it}'"
             is String -> "\"${it}\""
-            is MemberReferenceExpression -> "'${it.id}'"
             else -> throw NoWhenBranchMatchedException()
         }.let { Printer(it) }
     }
@@ -196,6 +195,7 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
     }
 
     override fun visit(e: MemberExpression) = Printer("${e.left.print()}.${e.field.id}")
+    override fun visit(e: MemberReferenceExpression) = Printer("'${e.id}'")
 
     override fun visit(e: MethodCallExpression) = Printer("${e.function.print()}(${
     e.args.asSequence().map {
