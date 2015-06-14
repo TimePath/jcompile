@@ -136,17 +136,15 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
 
     override fun visit(e: DeclarationExpression) = declare(e)
     override fun visit(e: FunctionExpression): Printer {
-        fun func(id: String): String {
-            val pars = e.params?.map { it.id }
-            val vara = e.vararg?.let { listOf("...") }
-            return "function ${e.id}(${
-            ((pars ?: emptyList()) + (vara ?: emptyList())).map { escape(it) }.joinToString(", ")
-            })"
+        fun func(): String {
+            val pars = e.params?.map { it.id } ?: emptyList()
+            val vara = e.vararg?.let { listOf("...") } ?: emptyList()
+            return "function ${e.id}(${(pars + vara).map { escape(it) }.joinToString(", ")})"
         }
         return Printer {
             depth++
             if (e.children.isNotEmpty()) {
-                +func(e.id)
+                +func()
                 +indent {
                     e.children.forEach {
                         +it.print()
@@ -154,7 +152,7 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
                 }
                 +"end"
             } else {
-                +"${func(e.id)} end"
+                +"${func()} end"
             }
             depth--
         }
