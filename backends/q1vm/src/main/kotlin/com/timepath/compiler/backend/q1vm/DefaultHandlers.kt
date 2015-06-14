@@ -52,8 +52,8 @@ object DefaultHandlers {
                 val rvalue = genR.last()
                 add(IR(realInstr, arrayOf(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
             }
-            when {
-                l is IndexExpression -> {
+            when (l) {
+                is IndexExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
                         is entity_t -> {
@@ -70,8 +70,7 @@ object DefaultHandlers {
                             val set = r
                             if (arr !is ReferenceExpression) throw UnsupportedOperationException()
                             val s = typeL.generateAccessorName(arr.refers.id)
-                            val resolve = symbols.resolve(s)
-                            if (resolve == null) throw RuntimeException("Can't resolve $s")
+                            val resolve = symbols.resolve(s) ?: throw RuntimeException("Can't resolve $s")
                             val indexer = ReferenceExpression(resolve)
                             val accessor = MethodCallExpression(indexer, listOf(idx))
                             addAll(MethodCallExpression(accessor, listOf(ConstantExpression(1), set)).generate())
@@ -79,7 +78,7 @@ object DefaultHandlers {
                         else -> throw UnsupportedOperationException("Indexing ${typeL}")
                     }
                 }
-                l is MemberExpression -> {
+                is MemberExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
                         is entity_t -> {

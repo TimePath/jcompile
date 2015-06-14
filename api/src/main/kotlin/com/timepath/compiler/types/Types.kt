@@ -20,11 +20,9 @@ public object Types {
     suppress("UNCHECKED_CAST")
     inline fun handle<reified S : CompileState, reified T>(operation: Operation): OperationHandler<S, T> {
         for (handler in handlers) {
-            val it = handler(operation)
-            if (it == null) continue
+            val it = handler(operation) ?: continue
             if (debug) {
-                val types = it.javaClass.typeArguments()
-                if (types == null) throw NullPointerException("OperationHandler has no RTTI")
+                val types = it.javaClass.typeArguments() ?: throw NullPointerException("OperationHandler has no RTTI")
                 if (types[0] !is S) continue
                 if (types[1] !is T) continue
             }

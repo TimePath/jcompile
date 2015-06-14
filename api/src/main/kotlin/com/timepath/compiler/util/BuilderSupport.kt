@@ -1,4 +1,4 @@
-package com.timepath.compiler.api
+package com.timepath.compiler.util
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.types.Types

@@ -1,4 +1,4 @@
-package com.timepath.compiler.frontend.quakec.compiler
+package com.timepath.compiler.frontend.quakec
 
 import com.timepath.compiler.ast.*
 

@@ -1,12 +1,10 @@
-package com.timepath.quakec.compiler
+package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.compiler.frontend.quakec.compiler.PrintVisitor
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.util.ProgramDataWriter
 import junit.framework.TestCase

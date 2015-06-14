@@ -49,9 +49,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     fun type(decl: DeclarationSpecifierContext, old: Boolean = false): Type? {
         val typeSpec = decl.typeSpecifier()
         val indirection = match(typeSpec.pointer()) { it.getText().length() } ?: 0
-        return when {
+        return when (indirection) {
         // varargs
-            indirection == 3 -> void_t
+            3 -> void_t
             else -> state.types[typeSpec.directTypeSpecifier().children[0].getText()]!!
         }.let { direct ->
             when {
@@ -97,15 +97,13 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return match(this?.parameterList()?.parameterDeclaration()) {
             // 'type ... id'
             val vararg = it.last()
-            val specifiers = vararg.declarationSpecifiers2()?.declarationSpecifier()
-            if (specifiers == null) return null
+            val specifiers = vararg.declarationSpecifiers2()?.declarationSpecifier() ?: return null
             check(specifiers.size() <= 2)
             val type = when {
                 specifiers.size() == 2 -> type(specifiers.first(), false)!!
                 else -> void_t
             }
-            val id = specifiers.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().getText() }
-            if (id == null) return null
+            val id = specifiers.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().getText() } ?: return null
             DeclarationExpression(id, type, ctx = specifiers.first())
         }
     }
@@ -269,11 +267,11 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                             }
                             else -> type.declare(id, state = state)
                         }
-                        else -> when {
-                            signature is function_t -> // function prototype
-                                FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
-                            else -> // function pointer
-                                signature.declare(id, state = state)
+                        else -> when (signature) {
+                        // function prototype
+                            is function_t -> FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
+                        // function pointer
+                            else -> signature.declare(id, state = state)
                         }
                     }
                 }
