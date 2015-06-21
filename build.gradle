@@ -84,6 +84,8 @@ allprojects { p ->
     test.exclude '**/*$*'
 
     dependencies {
+        compile 'com.timepath:commons:1.0-SNAPSHOT'
+
         if (p != project(':api'))
             compile project(':api')
 

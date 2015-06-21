@@ -10,7 +10,7 @@ import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.backend.q1vm.types.field_t
 import com.timepath.compiler.frontend.quakec.QCC
-import com.timepath.time
+import com.timepath.compiler.time
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.platform.platformStatic

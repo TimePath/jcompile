@@ -1,6 +1,6 @@
 package com.timepath.compiler.frontend.quakec
 
-import com.timepath.unquote
+import com.timepath.compiler.unquote
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.misc.Pair
 

@@ -5,11 +5,11 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.class_t
+import com.timepath.compiler.debug
+import com.timepath.compiler.getTextWS
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
-import com.timepath.debug
-import com.timepath.getTextWS
 import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 import com.timepath.with

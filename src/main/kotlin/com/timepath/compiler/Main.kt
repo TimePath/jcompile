@@ -5,7 +5,6 @@ import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.q1vm.util.IOWrapper
 import com.timepath.q1vm.util.ProgramDataWriter
-import com.timepath.time
 import com.timepath.with
 import java.io.File
 import kotlin.concurrent.thread

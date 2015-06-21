@@ -14,7 +14,7 @@ import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.unquote
+import com.timepath.compiler.unquote
 import com.timepath.with
 
 private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
