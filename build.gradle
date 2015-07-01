@@ -74,6 +74,7 @@ allprojects { p ->
     repositories {
         mavenLocal()
         mavenCentral()
+        maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
     }
 
     sourceSets {
