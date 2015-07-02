@@ -18,7 +18,7 @@ public object PrintVisitor : ASTVisitor<Map<String, Any?>> {
             sb.append("/>\n")
         } else {
             sb.append(">\n")
-            val nextIndent = indent + "\t"
+            val nextIndent = indent + "    "
             for (c in e.children) {
                 render(c, sb, nextIndent)
             }
