@@ -4,7 +4,9 @@ import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
-public open class ReferenceExpression(val refers: DeclarationExpression, override val ctx: PRC? = null) : Expression() {
+public fun DeclarationExpression.ref(): ReferenceExpression = ReferenceExpression(this, null)
+
+public open class ReferenceExpression(val refers: DeclarationExpression, override val ctx: PRC?) : Expression() {
     override val simpleName = "ReferenceExpression"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 

@@ -10,6 +10,7 @@ import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.pointer_t
+import com.timepath.with
 
 data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 
@@ -17,19 +18,18 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
     override fun toString() = "$type[$sizeExpr]"
 
     override fun handle(op: Operation) = ops[op]
-    val ops = mapOf<Operation, OperationHandler<Q1VM.State, List<IR>>>(
-            Operation("sizeof", this) to OperationHandler.Unary(int_t) {
+    val ops = mapOf(
+            Operation("sizeof", this) to OperationHandler.Unary<Q1VM.State, List<IR>>(int_t) {
                 sizeExpr.generate()
             },
-            Operation("[]", this, int_t) to OperationHandler.Binary(type) { l, r ->
+            Operation("[]", this, int_t) to OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
                 if (l !is ReferenceExpression) throw UnsupportedOperationException()
                 // arr[i] -> arr(i)(false)
                 val s = generateAccessorName(l.refers.id)
-                val resolve = state.symbols.resolve(s)
-                if (resolve == null) throw RuntimeException("Can't resolve $s")
-                val accessor = ReferenceExpression(resolve)
+                val resolve = state.symbols.resolve(s) ?: throw RuntimeException("Can't resolve $s")
+                val accessor = resolve.ref()
                 val indexer = MethodCallExpression(accessor, listOf(r))
-                MethodCallExpression(indexer, listOf(ConstantExpression(false))).generate()
+                MethodCallExpression(indexer, listOf(false.expr())).generate()
             }
     )
 
@@ -37,14 +37,13 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<Expression> {
         val sizeVal = sizeExpr.evaluate(state as Q1VM.State)
         val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
-        return with(linkedListOf<Expression>()) {
+        return linkedListOf<Expression>() with {
             add(DeclarationExpression(name, this@array_t))
-            add(DeclarationExpression("${name}_size", int_t, ConstantExpression(size)))
+            add(DeclarationExpression("${name}_size", int_t, size.expr()))
             add(generateAccessor(name))
-            (0..size - 1).forEachIndexed { i, _ ->
-                addAll(generateComponent(name, i))
+            repeat(size) {
+                addAll(generateComponent(name, it))
             }
-            this
         }
     }
 
@@ -67,19 +66,12 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
                 accessor,
                 function_t(function_t(type, listOf(bool_t, type), null), listOf(int_t), null),
                 listOf(index)
-
         )
-        func.addAll(listOf(ReturnStatement(
-                UnaryExpression.Dereference(BinaryExpression.Add(
-                        UnaryExpression.Address(
-                                ReferenceExpression(func)
-                        ),
-                        BinaryExpression.Add(
-                                ConstantExpression(1),
-                                ReferenceExpression(index)
-                        )
-                ))
-        )))
+        val e = (func.ref().address()
+                + 1.expr()
+                + index.ref()
+                ).deref()
+        func.add(ReturnStatement(e))
         return func
     }
 
@@ -92,10 +84,9 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
      */
     private fun generateComponent(id: String, i: Int): List<Expression> {
         val accessor = "${generateAccessorName(id)}_${i}"
-        return with(linkedListOf<Expression>()) {
+        return linkedListOf<Expression>() with {
             val field = DeclarationExpression("${accessor}_field", type)
             add(field)
-            val fieldReference = ReferenceExpression(field)
             val mode = ParameterExpression("mode", bool_t, 0)
             val value = ParameterExpression("value", type, 1)
             add(FunctionExpression(
@@ -106,12 +97,11 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
                             value
                     ),
                     add = listOf(ReturnStatement(ConditionalExpression(
-                            ReferenceExpression(mode), true,
-                            BinaryExpression.Assign(fieldReference, ReferenceExpression(value)),
-                            fieldReference
+                            mode.ref(), true,
+                            field.ref().set(value.ref()),
+                            field.ref()
                     )))
             ))
-            this
         }
     }
 

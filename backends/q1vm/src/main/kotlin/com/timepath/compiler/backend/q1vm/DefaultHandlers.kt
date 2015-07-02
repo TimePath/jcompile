@@ -12,7 +12,7 @@ import com.timepath.with
 object DefaultHandlers {
 
     fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        linkedListOf<IR>().with {
+        linkedListOf<IR>() with {
             val genLeft = l.generate()
             addAll(genLeft)
             val genRight = r.generate()
@@ -23,7 +23,7 @@ object DefaultHandlers {
     }
 
     fun Unary(type: Type, instr: Instruction) = OperationHandler.Unary<Q1VM.State, List<IR>>(type) {
-        linkedListOf<IR>().with {
+        linkedListOf<IR>() with {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type)
@@ -38,7 +38,7 @@ object DefaultHandlers {
                instr: Instruction,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
             = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        linkedListOf<IR>().with {
+        linkedListOf<IR>() with {
             val x = fun(realInstr: Instruction,
                         leftR: Expression,
                         leftL: Expression) {
@@ -60,7 +60,7 @@ object DefaultHandlers {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP_FLOAT,
                                     IndexExpression(tmp, l.right),
-                                    IndexExpression(tmp, l.right).with {
+                                    IndexExpression(tmp, l.right) with {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }
@@ -71,9 +71,9 @@ object DefaultHandlers {
                             if (arr !is ReferenceExpression) throw UnsupportedOperationException()
                             val s = typeL.generateAccessorName(arr.refers.id)
                             val resolve = symbols.resolve(s) ?: throw RuntimeException("Can't resolve $s")
-                            val indexer = ReferenceExpression(resolve)
+                            val indexer = resolve.ref()
                             val accessor = MethodCallExpression(indexer, listOf(idx))
-                            addAll(MethodCallExpression(accessor, listOf(ConstantExpression(1), set)).generate())
+                            addAll(MethodCallExpression(accessor, listOf(1.expr(), set)).generate())
                         }
                         else -> throw UnsupportedOperationException("Indexing ${typeL}")
                     }
@@ -85,7 +85,7 @@ object DefaultHandlers {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP_FLOAT,
                                     MemberExpression(tmp, l.field),
-                                    MemberExpression(tmp, l.field).with {
+                                    MemberExpression(tmp, l.field) with {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }

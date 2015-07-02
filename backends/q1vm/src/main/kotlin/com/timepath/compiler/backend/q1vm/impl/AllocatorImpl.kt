@@ -143,7 +143,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
         val function = functions.allocate(id, functions.size(), null, type)
         // Allocate a constant so the function can be called
-        return allocateConstant(Value(Pointer(function.ref)), type, id).with {
+        return allocateConstant(Value(Pointer(function.ref)), type, id) with {
             scope.peek().lookup[id] = this
         }
     }

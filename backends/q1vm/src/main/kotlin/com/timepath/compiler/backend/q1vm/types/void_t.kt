@@ -4,6 +4,7 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConditionalExpression
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.ast.expr
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
@@ -17,20 +18,20 @@ object void_t : Type() {
             Operation("&&", this, this) to OperationHandler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.AND when no side effects
                 ConditionalExpression(l, true,
-                        fail = ConstantExpression(0),
+                        fail = 0.expr(),
                         pass = ConditionalExpression(r, true,
-                                fail = ConstantExpression(0),
-                                pass = ConstantExpression(1))
+                                fail = 0.expr(),
+                                pass = 1.expr())
                 ).generate()
             },
             // TODO: perl behaviour
             Operation("||", this, this) to OperationHandler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.OR when no side effects
                 ConditionalExpression(l, true,
-                        pass = ConstantExpression(1),
+                        pass = 1.expr(),
                         fail = ConditionalExpression(r, true,
-                                pass = ConstantExpression(1),
-                                fail = ConstantExpression(0))
+                                pass = 1.expr(),
+                                fail = 0.expr())
                 ).generate()
             },
             Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT)

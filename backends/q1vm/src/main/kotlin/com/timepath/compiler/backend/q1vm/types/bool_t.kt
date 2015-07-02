@@ -1,10 +1,7 @@
 package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.ast.BinaryExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.DeclarationExpression
-import com.timepath.compiler.ast.minus
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
@@ -18,9 +15,9 @@ object bool_t : number_t() {
             Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FLOAT),
             Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FLOAT),
             Operation("!", this) to OperationHandler.Unary(bool_t) {
-                BinaryExpression.Eq(ConstantExpression(0), it).generate()
+                (0.expr() eq it).generate()
             },
-            Operation("-", this) to OperationHandler.Unary(this) { (ConstantExpression(0) - it).generate() },
+            Operation("-", this) to OperationHandler.Unary(this) { (0.expr() - it).generate() },
             Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
             Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
             Operation("*", this, float_t) to DefaultHandlers.Binary(float_t, Instruction.MUL_FLOAT),

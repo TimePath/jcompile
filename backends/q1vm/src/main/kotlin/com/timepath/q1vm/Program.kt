@@ -56,8 +56,8 @@ public class Program(val data: ProgramData) {
                         stack.push(Frame(func = nextFunc, comeFrom = stmtIdx))
                         // Copy parameters
                         var i = nextFunc.firstLocal
-                        for (param in 0..nextFunc.numParams - 1) {
-                            for (ofs in 0..nextFunc.sizeof[param].toInt() - 1) {
+                        repeat(nextFunc.numParams) { param ->
+                            repeat(nextFunc.sizeof[param].toInt()) { ofs ->
                                 data.globalIntData[i++] = data.globalIntData[Instruction.OFS_PARAM(param) + ofs]
                             }
                         }

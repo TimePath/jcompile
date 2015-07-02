@@ -206,7 +206,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                             type.declare(id, state = state).flatMap {
                                 listOf(it,
                                         BinaryExpression.Assign(
-                                                left = ReferenceExpression(it as DeclarationExpression),
+                                                left = (it as DeclarationExpression).ref(),
                                                 right = initializer,
                                                 ctx = ctx))
                             }
@@ -229,7 +229,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                                 val signature = parameterTypeList.functionType(retType!!)!!
                                 FunctionExpression(id, signature, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
                             } else {
-                                type.declare(id, ConstantExpression(value), state = state)
+                                type.declare(id, value.expr(), state = state)
                             }
                         }
                     }
@@ -282,24 +282,21 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         }
     }
 
-    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext) = with(listOf<Expression>()) {
+    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext) = listOf<Expression>() with {
         val id = ctx.Identifier().getText()
         add(LabelExpression(id, ctx = ctx))
         match(ctx.blockItem()) { addAll(it.accept(this@ASTTransform)) }
-        this
     }
 
-    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext) = with(listOf<Expression>()) {
+    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext) = listOf<Expression>() with {
         val case = ctx.constantExpression().accept(this@ASTTransform).single()
         SwitchExpression.Case(case, ctx = ctx).let { add(it) }
         addAll(ctx.blockItem().accept(this@ASTTransform))
-        this
     }
 
-    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext) = with(listOf<Expression>()) {
+    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext) = listOf<Expression>() with {
         add(SwitchExpression.Case(null, ctx = ctx))
         addAll(ctx.blockItem().accept(this@ASTTransform))
-        this
     }
 
     override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext) = ReturnStatement(
@@ -335,7 +332,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return ConditionalExpression(
                 test = ctx.expression().accept(this).single().let {
                     if (ctx.getToken(QCParser.IfNot, 0) == null) it
-                    else if (state.opts.ifNot) UnaryExpression.Not(it)
+                    else if (state.opts.ifNot) !it
                     else throw UnsupportedOperationException("`if not (expr)` is disabled")
                 },
                 expression = false,
@@ -658,7 +655,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return when (left) {
             is MemberExpression -> {
                 // (ent.arr)[i] -> ent.(arr[i])
-                val field = ReferenceExpression(state.symbols.resolve(left.field.id)!!)
+                val field = state.symbols.resolve(left.field.id)!!.ref()
                 IndexExpression(left = left.left, right = IndexExpression(field, right), ctx = ctx)
             }
             else -> IndexExpression(left = left, right = right, ctx = ctx)
@@ -764,16 +761,16 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             it.singleOrNull()?.let {
                 return it.accept(this)
             }
-            return listOf(BlockExpression(linkedListOf<Expression>().with {
+            return listOf(BlockExpression(linkedListOf<Expression>() with {
                 val decl = StructDeclarationExpression("tmp", vector_t)
-                val vec = ReferenceExpression(decl)
+                val vec = decl.ref()
                 add(decl)
                 val x = MemberExpression(vec, MemberReferenceExpression(vector_t, "x"))
                 val y = MemberExpression(vec, MemberReferenceExpression(vector_t, "y"))
                 val z = MemberExpression(vec, MemberReferenceExpression(vector_t, "z"))
-                add(BinaryExpression.Assign(x, it[0].accept(this@ASTTransform).single()))
-                add(BinaryExpression.Assign(y, it[1].accept(this@ASTTransform).single()))
-                add(BinaryExpression.Assign(z, it[2].accept(this@ASTTransform).single()))
+                add(x set it[0].accept(this@ASTTransform).single())
+                add(y set it[1].accept(this@ASTTransform).single())
+                add(z set it[2].accept(this@ASTTransform).single())
                 add(vec)
             }, ctx = ctx))
         }

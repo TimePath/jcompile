@@ -10,6 +10,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
+import com.timepath.with
 import kotlin.properties.Delegates
 
 open class number_t : Type() {
@@ -20,10 +21,10 @@ open class number_t : Type() {
                 Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT),
                 Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
-                Operation("&", this) to OperationHandler.Unary(this) { (it / ConstantExpression(Pointer(1))).generate() },
-                Operation("*", this) to OperationHandler.Unary(this) { (it * ConstantExpression(Pointer(1))).generate() },
+                Operation("&", this) to OperationHandler.Unary(this) { (it / Pointer(1).expr()).generate() },
+                Operation("*", this) to OperationHandler.Unary(this) { (it * Pointer(1).expr()).generate() },
                 Operation("+", this) to OperationHandler.Unary(this) { it.generate() },
-                Operation("-", this) to OperationHandler.Unary(this) { (ConstantExpression(0) - it).generate() },
+                Operation("-", this) to OperationHandler.Unary(this) { (0.expr() - it).generate() },
                 Operation("*", this, this) to DefaultHandlers.Binary(this, Instruction.MUL_FLOAT),
                 Operation("*", this, vector_t) to DefaultHandlers.Binary(vector_t, Instruction.MUL_FLOAT_VEC),
                 Operation("/", this, this) to DefaultHandlers.Binary(this, Instruction.DIV_FLOAT),
@@ -33,32 +34,30 @@ open class number_t : Type() {
 
                 // pre
                 Operation("++", this) to OperationHandler.Unary(this) {
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    BinaryExpression.Assign(it, it + one).generate()
+                    val one = 1.expr().to(int_t)
+                    (it.set(it + one)).generate()
                 },
                 // post
                 Operation("++", this, this) to OperationHandler.Unary(this) {
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    with(linkedListOf<IR>()) {
-                        val assign = BinaryExpression.Assign(it, it + one)
+                    val one = 1.expr().to(int_t)
+                    linkedListOf<IR>() with {
+                        val assign = it.set(it + one)
                         // FIXME
                         addAll((assign - one).generate())
-                        this
                     }
                 },
                 // pre
                 Operation("--", this) to OperationHandler.Unary(this) {
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    BinaryExpression.Assign(it, it - one).generate()
+                    val one = 1.expr().to(int_t)
+                    (it.set(it - one)).generate()
                 },
                 // post
                 Operation("--", this, this) to OperationHandler.Unary(this) {
-                    val one = UnaryExpression.Cast(int_t, ConstantExpression(1))
-                    with(linkedListOf<IR>()) {
-                        val assign = BinaryExpression.Assign(it, it - one)
+                    val one = 1.expr().to(int_t)
+                    linkedListOf<IR>() with {
+                        val assign = it.set(it - one)
                         // FIXME
                         addAll((assign + one).generate())
-                        this
                     }
                 },
 
@@ -70,9 +69,9 @@ open class number_t : Type() {
                 Operation("<=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.LE),
 
                 Operation("!", this) to OperationHandler.Unary(bool_t) {
-                    BinaryExpression.Eq(ConstantExpression(0f), it).generate()
+                    (0f.expr() eq it).generate()
                 },
-                Operation("~", this) to OperationHandler.Unary(this) { (ConstantExpression(-1) - it).generate() },
+                Operation("~", this) to OperationHandler.Unary(this) { ((-1).expr() - it).generate() },
                 Operation("&", this, this) to DefaultHandlers.Binary(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandlers.Binary(this, Instruction.BITOR),
                 Operation("^", this, this) to OperationHandler.Binary(this) { left, right ->

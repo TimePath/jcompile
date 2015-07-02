@@ -15,11 +15,11 @@ fun BlockExpression.block(configure: (BlockExpression.() -> Unit)? = null): Bloc
 }
 
 fun BlockExpression.const(value: Any): ConstantExpression {
-    return ConstantExpression(value)
+    return value.expr()
 }
 
 fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
-    return initChild(DeclarationExpression(name, Types.from(any), ConstantExpression(any)))
+    return initChild(DeclarationExpression(name, Types.from(any), any.expr()))
 }
 
 fun BlockExpression.ref(id: String): DynamicReferenceExpression {

@@ -16,6 +16,7 @@ import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
+import com.timepath.with
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
 suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(ReduceVisitor)
@@ -28,8 +29,8 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
     init {
         state.symbols.push("<builtin>")
-        state.symbols.declare(DeclarationExpression("false", bool_t, ConstantExpression(0)))
-        state.symbols.declare(DeclarationExpression("true", bool_t, ConstantExpression(1)))
+        state.symbols.declare(DeclarationExpression("false", bool_t, 0.expr()))
+        state.symbols.declare(DeclarationExpression("true", bool_t, 1.expr()))
         state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
         // TODO: not really a function
         state.symbols.declare(DeclarationExpression("_", function_t(string_t, listOf(string_t))))
@@ -54,7 +55,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
         val fields = object : FieldCounter {
             override val map: MutableMap<String, Int> = linkedMapOf()
-            override fun get(type: struct_t, name: String) = ConstantExpression(Pointer(map.getOrPut(name) { map.size() }))
+            override fun get(type: struct_t, name: String) = Pointer(map.getOrPut(name) { map.size() }).expr()
             override fun size() = map.size()
         }
 
@@ -70,10 +71,9 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             Types.handlers.add {
                 if (it.op != ",") null else
                     OperationHandler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
-                        with(linkedListOf<IR>()) {
+                        linkedListOf<IR>() with {
                             addAll(left.generate())
                             addAll(right.generate())
-                            this
                         }
                     }
             }
@@ -92,7 +92,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
                     Operation("&", this) ->
                         OperationHandler.Unary<Q1VM.State, List<IR>>(int_t) {
                             val gen = it.generate()
-                            (MemoryReference(gen.last().ret, int_t) / ConstantExpression(Pointer(1))).generate()
+                            (MemoryReference(gen.last().ret, int_t) / Pointer(1).expr()).generate()
                         }
                     else -> null
                 }

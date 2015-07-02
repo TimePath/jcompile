@@ -28,7 +28,7 @@ object Main {
             )
             for (project in defs) {
                 time(logger, "Project time") {
-                    val compiler = Compiler(QCC(), Q1VM()).with {
+                    val compiler = Compiler(QCC(), Q1VM()) with {
                         includeFrom(File(root, "${project.root}/progs.src"))
                         define(project.define)
                     }
@@ -57,7 +57,7 @@ object Main {
                         }.let { File("out", "${project.root}.xml").writeText(it.substring(1)) }
                     }
                     thread {
-                        ProgramDataWriter(IOWrapper.File(File("out", project.out).with {
+                        ProgramDataWriter(IOWrapper.File(File("out", project.out) with {
                             getParentFile().mkdirs()
                             createNewFile()
                         }, write = true)).write(compiled.generateProgs())

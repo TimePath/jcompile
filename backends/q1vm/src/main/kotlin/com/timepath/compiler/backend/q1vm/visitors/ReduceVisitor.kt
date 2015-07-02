@@ -13,31 +13,29 @@ object ReduceVisitor : ASTVisitor<Expression> {
     val uid = AtomicInteger()
 
     override fun visit(e: SwitchExpression): Expression {
-        with(e) {
-            val jumps = linkedListOf<Expression>()
-            val default = linkedListOf<Expression>()
-            val cases = LoopExpression(checkBefore = false, predicate = ConstantExpression(0), body = BlockExpression(transform {
-                when (it) {
-                    is SwitchExpression -> it.reduce()
-                    is Case -> {
-                        val expr = it.expr
-                        fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replace("[^a-zA-Z_0-9]".toRegex(), "_")}"
-                        val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
-                        val goto = GotoExpression(label)
-                        if (expr == null) {
-                            default.add(goto)
-                        } else {
-                            val test = BinaryExpression.Eq(test, expr)
-                            val jump = ConditionalExpression(test, false, goto)
-                            jumps.add(jump)
-                        }
-                        LabelExpression(label) // replace with a label so goto will be filled in later
+        val jumps = linkedListOf<Expression>()
+        val default = linkedListOf<Expression>()
+        val cases = LoopExpression(checkBefore = false, predicate = 0.expr(), body = BlockExpression(e.transform {
+            when (it) {
+                is SwitchExpression -> it.reduce()
+                is Case -> {
+                    val expr = it.expr
+                    fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replace("[^a-zA-Z_0-9]".toRegex(), "_")}"
+                    val label = (if (expr == null) "default" else "case $expr").sanitizeLabel()
+                    val goto = GotoExpression(label)
+                    if (expr == null) {
+                        default.add(goto)
+                    } else {
+                        val test = e.test eq expr
+                        val jump = ConditionalExpression(test, false, goto)
+                        jumps.add(jump)
                     }
-                    else -> it
+                    LabelExpression(label) // replace with a label so goto will be filled in later
                 }
-            }))
-            return BlockExpression(jumps + default + listOf(cases))
-        }
+                else -> it
+            }
+        }))
+        return BlockExpression(jumps + default + listOf(cases))
     }
 
     override fun visit(e: UnaryExpression.Cast) = e.operand.reduce()

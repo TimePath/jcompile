@@ -37,7 +37,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          * FIXME: metadata
          */
         override fun generateProgs(): ProgramData {
-            val fieldDefs = arrayListOf<ProgramData.Definition>().with {
+            val fieldDefs = arrayListOf<ProgramData.Definition>() with {
                 for ((s, idx) in state.fields.map) {
                     val e = state.allocator.allocateString(s)
                     add(ProgramData.Definition(0, idx.toShort(), e.ref))
@@ -64,7 +64,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     statements.add(ProgramData.Statement(it.instr!!, a, b, c))
                 }
             }
-            val globalDefs = arrayListOf<ProgramData.Definition>().with {
+            val globalDefs = arrayListOf<ProgramData.Definition>() with {
                 val f = fun(it: Allocator.AllocationMap.Entry) {
                     val k = it.ref
                     val v = it.value?.any
@@ -120,7 +120,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     functions = functions,
                     globalData = globalData,
                     strings = stringManager
-            ).with {
+            ) with {
                 logger.severe {
                     StringBuilder {
                         appendln("Program's system-checksum = ${header.crc}")

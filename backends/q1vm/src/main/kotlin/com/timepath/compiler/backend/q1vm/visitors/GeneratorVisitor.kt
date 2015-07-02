@@ -132,7 +132,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 sizeof = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
         )
         state.allocator.push(e)
-        val params = linkedListOf<Expression>().with {
+        val params = linkedListOf<Expression>() with {
             e.params?.let { addAll(it) }
             e.vararg?.let { add(it) }
         }
@@ -176,7 +176,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: LabelExpression) = IR.Label(e.id).list()
 
-    override fun visit(e: LoopExpression) = linkedListOf<IR>().with {
+    override fun visit(e: LoopExpression) = linkedListOf<IR>() with {
         val genInit = e.initializer?.flatMap { it.generate() }
 
         val genPred = e.predicate.generate()
@@ -223,7 +223,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: IndexExpression): List<IR> {
         val typeL = e.left.type(state)
         if (typeL !is class_t) return visit(e as BinaryExpression)
-        return linkedListOf<IR>().with {
+        return linkedListOf<IR>() with {
             val genL = e.left.generate()
             addAll(genL)
             val genR = e.right.generate()
@@ -234,7 +234,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
     }
 
-    override fun visit(e: MemberExpression) = linkedListOf<IR>().with {
+    override fun visit(e: MemberExpression) = linkedListOf<IR>() with {
         if (e.field.owner is class_t) {
             val genL = e.left.generate()
                     .with { addAll(this) }
@@ -255,7 +255,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: MemoryReference) = IR.Return(e.ref).list()
 
-    override fun visit(e: MethodCallExpression) = linkedListOf<IR>().with {
+    override fun visit(e: MethodCallExpression) = linkedListOf<IR>() with {
         // TODO: increase this
         if (e.args.size() > 8) {
             logger.warning { "${e.function} takes ${e.args.size()} parameters" }
@@ -278,13 +278,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: Nop) = emptyList<IR>()
 
-    override fun visit(e: ParameterExpression) = linkedListOf<IR>().with {
+    override fun visit(e: ParameterExpression) = linkedListOf<IR>() with {
         visit(e as DeclarationExpression)
                 .with { addAll(this) }
-        BinaryExpression.Assign(
-                ReferenceExpression(e),
-                MemoryReference(Instruction.OFS_PARAM(e.index), e.type)
-        ).with { addAll(generate()) }
+        e.ref().set(MemoryReference(Instruction.OFS_PARAM(e.index), e.type))
+                .with { addAll(generate()) }
     }
 
     override fun visit(e: ReferenceExpression): List<IR> {
@@ -321,7 +319,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: StructDeclarationExpression) = e.struct.fields.flatMap {
         it.value.declare("${e.id}_${it.key}", state = state).flatMap { it.generate() }
-    }.with {
+    } with {
         state.allocator.let {
             it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = e.struct)
         }

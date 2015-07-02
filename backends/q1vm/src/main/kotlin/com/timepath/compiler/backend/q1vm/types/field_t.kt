@@ -3,6 +3,7 @@ package com.timepath.compiler.backend.q1vm.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
+import com.timepath.compiler.ast.expr
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
@@ -22,5 +23,5 @@ data class field_t(val type: Type) : pointer_t() {
     )
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState) =
-            listOf(DeclarationExpression(name, this, value ?: ConstantExpression(0)))
+            listOf(DeclarationExpression(name, this, value ?: 0.expr()))
 }

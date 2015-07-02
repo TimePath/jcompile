@@ -8,7 +8,7 @@ interface IOWrapper {
 
     private fun _read(n: Int): Long {
         var ret = 0
-        (0..n - 1).forEach {
+        repeat(n) {
             val b = read()
             ret = ret or ((b and 0xFF) shl (8 * it))
         }
@@ -41,7 +41,7 @@ interface IOWrapper {
 
     fun readDouble(): Double = java.lang.Double.longBitsToDouble(readLong())
 
-    private fun _write(n: Int, v: Int) = (0..n - 1).forEach { doWrite((v ushr (it * 8)).toByte()) }
+    private fun _write(n: Int, v: Int) = repeat(n) { doWrite((v ushr (it * 8)).toByte()) }
 
     fun doWrite(b: Byte)
 

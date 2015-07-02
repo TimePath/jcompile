@@ -7,6 +7,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.OperationHandler
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
+import com.timepath.with
 
 // TODO: identify as value
 object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
@@ -22,8 +23,8 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             Operation("*", this, int_t) to DefaultHandlers.Binary(this, Instruction.MUL_VEC_FLOAT),
             Operation("*=", this, float_t) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l * r },
             Operation("*=", this, int_t) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l * r },
-            Operation("/", this, float_t) to OperationHandler.Binary(this) { l, r -> (l * (ConstantExpression(1) / r)).generate() },
-            Operation("/", this, int_t) to OperationHandler.Binary(this) { left, right -> (left * (ConstantExpression(1) / right)).generate() },
+            Operation("/", this, float_t) to OperationHandler.Binary(this) { l, r -> (l * (1.expr() / r)).generate() },
+            Operation("/", this, int_t) to OperationHandler.Binary(this) { l, r -> (l * (1.expr() / r)).generate() },
             Operation("/=", this, float_t) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l / r },
             Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_VEC),
             Operation("+=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l + r },
@@ -37,65 +38,60 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             },
             Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l or r },
             Operation("|", this, this) to OperationHandler.Binary(this) { l, r ->
-                with(linkedListOf<IR>()) {
+                linkedListOf<IR>() with {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val genL = l.generate()
                     addAll(genL)
                     val genR = r.generate()
                     addAll(genR)
-                    for (i in 0..3 - 1) {
+                    repeat(3) { i ->
                         val component = MemoryReference(ref.ref + i, type = float_t)
-                        BinaryExpression.Assign(
-                                component,
+                        (component.set(
                                 MemoryReference(genL.last().ret + i, type = float_t)
-                                        or MemoryReference(genR.last().ret + i, type = float_t)
-                        ).let { addAll(it.generate()) }
+                                        or MemoryReference(genR.last().ret + i, type = float_t)))
+                                .let { addAll(it.generate()) }
                     }
-                    this
                 }
             },
             Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_VEC) { l, r -> l and r },
             Operation("&", this, this) to OperationHandler.Binary(this) { l, r ->
-                with(linkedListOf<IR>()) {
+                linkedListOf<IR>() with {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val gen = l.generate()
                     addAll(gen)
                     val genR = r.generate()
                     addAll(genR)
-                    for (i in 0..3 - 1) {
+                    repeat(3) { i ->
                         val component = MemoryReference(ref.ref + i, type = float_t)
-                        BinaryExpression.Assign(component,
-                                MemoryReference(gen.last().ret + i, type = float_t) and
-                                        MemoryReference(genR.last().ret + i, type = float_t))
+                        component.set(
+                                MemoryReference(gen.last().ret + i, type = float_t)
+                                        and MemoryReference(genR.last().ret + i, type = float_t))
                                 .let { addAll(it.generate()) }
                     }
-                    this
                 }
             },
             Operation("~", this) to OperationHandler.Unary(this) {
-                with(linkedListOf<IR>()) {
+                linkedListOf<IR>() with {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val gen = it.generate()
                     addAll(gen)
-                    for (i in 0..3 - 1) {
+                    repeat(3) { i ->
                         val component = MemoryReference(ref.ref + i, type = float_t)
-                        BinaryExpression.Assign(component, MemoryReference(gen.last().ret + i, type = float_t).inv())
+                        component.set(MemoryReference(gen.last().ret + i, type = float_t).inv())
                                 .let { addAll(it.generate()) }
                     }
-                    this
                 }
             },
             Operation("-", this) to OperationHandler.Unary(this) {
-                with(linkedListOf<IR>()) {
+                linkedListOf<IR>() with {
                     val ref = allocator.allocateReference(type = this@vector_t)
                     val gen = it.generate()
                     addAll(gen)
-                    for (i in 0..3 - 1) {
+                    repeat(3) { i ->
                         val component = MemoryReference(ref.ref + i, type = float_t)
-                        BinaryExpression.Assign(component, -MemoryReference(gen.last().ret + i, type = float_t))
+                        component.set(-MemoryReference(gen.last().ret + i, type = float_t))
                                 .let { addAll(it.generate()) }
                     }
-                    this
                 }
             }
     )
