@@ -436,9 +436,20 @@ enum class Instruction {
          * PARAM0 = 4, n = 0
          * PARAM1 = 7, n = 1
          * ...
-         * PARMA7 = 25
+         * PARAM7 = 25
          */
         fun OFS_PARAM(n: Int) = 4 + n * 3
+
+        fun OFS_STR(ret: Int) = when (ret) {
+            in 1..3 -> "RETURN(${ret - 1})"
+            in 4..27 -> "PARAM(${(ret - 4) / 3}${((ret - 4) % 3).let {
+                when {
+                    it != 0 -> ", $it"
+                    else -> ""
+                }
+            }})"
+            else -> ret
+        }
 
         private val instructions by Delegates.lazy { Instruction.values() }
         fun from(i: Int) = instructions[i]

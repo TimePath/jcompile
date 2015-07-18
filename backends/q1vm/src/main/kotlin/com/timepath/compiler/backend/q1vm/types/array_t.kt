@@ -26,7 +26,7 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
                 if (l !is ReferenceExpression) throw UnsupportedOperationException()
                 // arr[i] -> arr(i)(false)
                 val s = generateAccessorName(l.refers.id)
-                val resolve = state.symbols.resolve(s) ?: throw RuntimeException("Can't resolve $s")
+                val resolve = state.symbols[s] ?: throw RuntimeException("Can't resolve $s")
                 val accessor = resolve.ref()
                 val indexer = MethodCallExpression(accessor, listOf(r))
                 MethodCallExpression(indexer, listOf(false.expr())).generate()

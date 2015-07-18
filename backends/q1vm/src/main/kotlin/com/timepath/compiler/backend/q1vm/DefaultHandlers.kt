@@ -38,20 +38,20 @@ object DefaultHandlers {
                instr: Instruction,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
             = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        linkedListOf<IR>() with {
-            val x = fun(realInstr: Instruction,
-                        leftR: Expression,
-                        leftL: Expression) {
-                val genL = leftL.generate()
-                addAll(genL)
-                val right = op(leftR, r) ?: r
-                val genR = right.generate()
-                addAll(genR)
+        fun MutableList<IR>.x(realInstr: Instruction,
+                              leftR: Expression,
+                              leftL: Expression) {
+            val genL = leftL.generate()
+            addAll(genL)
+            val right = op(leftR, r) ?: r
+            val genR = right.generate()
+            addAll(genR)
 
-                val lvalue = genL.last()
-                val rvalue = genR.last()
-                add(IR(realInstr, arrayOf(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
-            }
+            val lvalue = genL.last()
+            val rvalue = genR.last()
+            add(IR(realInstr, arrayOf(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
+        }
+        linkedListOf<IR>() with {
             when (l) {
                 is IndexExpression -> {
                     val typeL = l.left.type(this@Binary)
@@ -70,7 +70,7 @@ object DefaultHandlers {
                             val set = r
                             if (arr !is ReferenceExpression) throw UnsupportedOperationException()
                             val s = typeL.generateAccessorName(arr.refers.id)
-                            val resolve = symbols.resolve(s) ?: throw RuntimeException("Can't resolve $s")
+                            val resolve = symbols.get(s) ?: throw RuntimeException("Can't resolve $s")
                             val indexer = resolve.ref()
                             val accessor = MethodCallExpression(indexer, listOf(idx))
                             addAll(MethodCallExpression(accessor, listOf(1.expr(), set)).generate())

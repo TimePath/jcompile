@@ -42,7 +42,7 @@ public abstract class CompileState {
             return e
         }
 
-        override fun resolve(id: String) = stack.firstOrNull { id in it.vars }?.vars?.get(id)
+        override fun get(id: String) = stack.firstOrNull { id in it.vars }?.let { it.vars[id] }
     }
 
 }

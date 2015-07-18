@@ -14,13 +14,26 @@ open class IR(val instr: Instruction? = null,
         return "$s /* $name */"
     }
 
-    val real = this !is Fake
+    val real = this !is Str
 
-    private abstract class Fake(val repr: String) : IR(name = repr) {
-        override fun toString(): String = "/* $repr */"
+    private abstract class Str(val repr: String) : IR(name = repr) {
+        override fun toString() = repr
     }
 
-    class Return(override val ret: Int) : Fake("return = $$ret")
-    class Function(s: String, val function: ProgramData.Function) : Fake("function $s")
-    class Label(val id: String) : Fake("label $id")
+    class Return(override val ret: Int)
+    : Str("/* return = $${Instruction.OFS_STR(ret)} */")
+
+    class Declare(val e: Allocator.AllocationMap.Entry)
+    : Str("using ${e.name} = $${Instruction.OFS_STR(e.ref)}") {
+        override val ret = e.ref
+    }
+
+    class Function(val e: Allocator.AllocationMap.Entry, val function: ProgramData.Function)
+    : Str("${e.name}: ; $${e.ref}")
+
+    class EndFunction(ret: Int)
+    : IR(instr = Instruction.DONE, ret = ret, name = "endfunction")
+
+    class Label(val id: String)
+    : Str("label $id")
 }

@@ -149,15 +149,18 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
-                    addAll(visitChildren(ctx.compoundStatement()))
+                    val children = visitChildren(ctx.compoundStatement())
+                    addAll(children)
                 }
             }
         }
         // Accumulate functions
         // TODO: check [[accumulate]] and [[last]]
-        (state.symbols.resolve(id) as? FunctionExpression)?.let {
-            it.doChildren()
-            return listOf()
+        state.symbols[id]?.let {
+            if (it is FunctionExpression) {
+                it.doChildren()
+                return listOf()
+            }
         }
         FunctionExpression(
                 id = id,
@@ -574,7 +577,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
 
     override fun visitPostfixVararg(ctx: QCParser.PostfixVarargContext): List<Expression> {
         val type = state.types[ctx.typeName().getText()]!!
-        val va_args = state.symbols.resolve("VA_ARGS")!!
+        val va_args = state.symbols["VA_ARGS"]!!
         val va_arg = MethodCallExpression(va_args, ctx.expression().accept(this).single().let { listOf(it) }, ctx = ctx)
         return UnaryExpression.Cast(type, va_arg, ctx = ctx).let { listOf(it) }
     }
@@ -599,7 +602,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 // FIXME: hides similarly named fields which should probably shadow the vector
                 val vector = vecMatcher.group(1)
                 val component = vecMatcher.group(2)
-                if (state.symbols.resolve(vector) != null) {
+                if (state.symbols[vector] != null) {
                     // This isn't just a `float vec_x`
                     MemberExpression(
                             left = MemberExpression(
@@ -617,7 +620,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 }
             }
             else -> {
-                val sym = state.symbols.resolve(text)
+                val sym = state.symbols[text]
                 val field = ltype.fields[text]
                 when {
                     field != null -> // Favor fields
@@ -655,7 +658,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         return when (left) {
             is MemberExpression -> {
                 // (ent.arr)[i] -> ent.(arr[i])
-                val field = state.symbols.resolve(left.field.id)!!.ref()
+                val field = state.symbols[left.field.id]!!.ref()
                 IndexExpression(left = left.left, right = IndexExpression(field, right), ctx = ctx)
             }
             else -> IndexExpression(left = left, right = right, ctx = ctx)
@@ -681,7 +684,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             // TODO: other types?
             val e = entity_t
             run {
-                val symbol = state.symbols.resolve(text)
+                val symbol = state.symbols[text]
                 val member = e.fields[text]
                 when {
                     symbol != null ->
@@ -700,7 +703,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             if (state.opts.legacyVectors && matcher.matches()) {
                 val vector = matcher.group(1)
                 val component = matcher.group(2)
-                val symbol = state.symbols.resolve(vector)
+                val symbol = state.symbols[vector]
                 val member = e.fields[vector]
                 when {
                     symbol != null

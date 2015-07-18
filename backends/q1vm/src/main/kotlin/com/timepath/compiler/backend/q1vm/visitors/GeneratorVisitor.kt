@@ -109,7 +109,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             logger.warning { "redeclaring ${e.id}" }
         }
         val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
-        return IR.Return(global.ref).list()
+        return IR.Declare(global).list()
     }
 
     override fun visit(e: FunctionExpression): List<IR> {
@@ -160,10 +160,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             }
         }
         val list = (listOf(
-                IR.Function("${e.id} -> ${global.ref}", f.copy(numLocals = state.allocator.references.size())))
+                IR.Function(global, f.copy(numLocals = state.allocator.references.size())))
                 + genParams
                 + children
-                + IR(instr = Instruction.DONE, ret = global.ref, name = "endfunction"))
+                + IR.EndFunction(global.ref))
         state.allocator.pop()
         return list
     }
@@ -287,12 +287,12 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: ReferenceExpression): List<IR> {
         val id = e.refers.id
-        if (id !in state.allocator) {
-            logger.severe { "unknown reference ${id}" }
-        }
-        // FIXME: null references
         val global = state.allocator[id]
-        return listOf(IR.Return(global?.ref ?: 0))
+        if (global == null) {
+            logger.severe { "unknown reference ${id}" }
+            throw NullPointerException("unknown reference ${id}")
+        }
+        return IR.Return(global.ref).list()
     }
 
     override fun visit(e: DynamicReferenceExpression): List<IR> {

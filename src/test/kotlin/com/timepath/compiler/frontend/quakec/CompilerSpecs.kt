@@ -4,6 +4,7 @@ import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.backend.q1vm.ASMPrinter
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.q1vm.Program
 import com.timepath.q1vm.util.ProgramDataWriter
@@ -54,7 +55,7 @@ class CompilerSpecs {
     companion object {
         platformStatic fun suite() = given("a compiler") {
             val tests = resources.listFiles().filter {
-                !it.isDirectory() && it.name.matches("prototype\\.q[ch]$".toRegex())
+                !it.isDirectory() && it.name.matches(".+\\.q[ch]$".toRegex())
             }.toSortedListBy { it.name }
             tests.forEach { test ->
                 on(test.name) {
@@ -72,7 +73,7 @@ class CompilerSpecs {
                     it("should compile") {
                         logger.info { "Compiling $test" }
                         val asm = compiler.compile(roots.asSequence())
-                        asm.ir.joinToString("\n").let { actual ->
+                        ASMPrinter(asm.ir).toString().let { actual ->
                             compare("ASM", "${test.name}.asm", actual)
                         }
                         compiler.state.allocator.toString().let { actual ->
