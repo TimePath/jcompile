@@ -9,7 +9,6 @@ import com.timepath.compiler.debug
 import com.timepath.compiler.getTextWS
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
-import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 import com.timepath.with
@@ -105,19 +104,16 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     override fun visit(e: ContinueStatement) = IR(Instruction.GOTO, arrayOf(0, 0, 0), name = e.toString()).list()
 
     override fun visit(e: DeclarationExpression): List<IR> {
-        if (e.id in state.allocator.scope.peek().lookup) {
-            logger.warning { "redeclaring ${e.id}" }
-        }
-        val global = state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
+        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
         return IR.Declare(global).list()
     }
 
     override fun visit(e: FunctionExpression): List<IR> {
-        if (e.id in state.allocator) {
-            logger.warning { "redefining ${e.id}" }
+        val global = state.allocator[e.id]
+        if (global == null) {
+            logger.warning { "undefined ${e.id}" }
+            throw NullPointerException("undefined ${e.id}")
         }
-
-        val global = state.allocator.allocateFunction(e.id, type = e.type(state) as function_t)
         val f = ProgramData.Function(
                 firstStatement = if (e.builtin == null)
                     0 // to be filled in later
@@ -160,7 +156,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             }
         }
         val list = (listOf(
-                IR.Function(global, f.copy(numLocals = state.allocator.references.size())))
+                IR.Function(global, f.copy(numLocals = 0 ?: state.allocator.references.size()))) // FIXME
                 + genParams
                 + children
                 + IR.EndFunction(global.ref))

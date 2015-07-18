@@ -1,10 +1,10 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.Logger
-import com.timepath.compiler.ast.BlockExpression
-import com.timepath.compiler.ast.Expression
+import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
+import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.StringManager
 import com.timepath.with
@@ -21,7 +21,26 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         for (root in roots) {
             root.transform { it.reduce() }
         }
-        return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor))
+        state.allocator.push("<forward declarations>")
+        val allocate = object : ASTVisitor<Unit> {
+            override fun visit(e: FunctionExpression) {
+                if (e.id in state.allocator) {
+                    logger.warning { "redeclaring ${e.id}" }
+                }
+                state.allocator.allocateFunction(e.id, type = e.type(state) as function_t)
+            }
+
+            override fun visit(e: DeclarationExpression) {
+                if (e.id in state.allocator) {
+                    logger.warning { "redeclaring ${e.id}" }
+                }
+                state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
+            }
+        }
+        roots.forEach { it.accept(allocate) }
+        return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor)) with {
+            state.allocator.pop()
+        }
     }
 
     inner class ASMImpl(override val ir: List<IR>) : Generator.ASM {

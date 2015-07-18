@@ -162,16 +162,13 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 return listOf()
             }
         }
-        FunctionExpression(
+        return FunctionExpression(
                 id = id,
                 type = type,
                 params = params,
                 vararg = vararg,
                 ctx = ctx
-        ).let {
-            it.doChildren()
-            return listOf(it)
-        }
+        ).with { doChildren() }.let { listOf(it) }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
