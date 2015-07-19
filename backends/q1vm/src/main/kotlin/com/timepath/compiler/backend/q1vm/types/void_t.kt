@@ -7,7 +7,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.ast.expr
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
 
@@ -15,7 +15,7 @@ object void_t : Type() {
     override val simpleName = "void_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("&&", this, this) to OperationHandler.Binary(bool_t) { l, r ->
+            Operation("&&", this, this) to Operation.Handler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.AND when no side effects
                 ConditionalExpression(l, true,
                         fail = 0.expr(),
@@ -25,7 +25,7 @@ object void_t : Type() {
                 ).generate()
             },
             // TODO: perl behaviour
-            Operation("||", this, this) to OperationHandler.Binary(bool_t) { l, r ->
+            Operation("||", this, this) to Operation.Handler.Binary(bool_t) { l, r ->
                 // TODO: Instruction.OR when no side effects
                 ConditionalExpression(l, true,
                         pass = 1.expr(),

@@ -7,7 +7,7 @@ import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.q1vm.Instruction
 import com.timepath.with
@@ -21,24 +21,24 @@ open class number_t : Type() {
                 Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT),
                 Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
-                Operation("&", this) to OperationHandler.Unary(this) { (it / Pointer(1).expr()).generate() },
-                Operation("*", this) to OperationHandler.Unary(this) { (it * Pointer(1).expr()).generate() },
-                Operation("+", this) to OperationHandler.Unary(this) { it.generate() },
-                Operation("-", this) to OperationHandler.Unary(this) { (0.expr() - it).generate() },
+                Operation("&", this) to Operation.Handler.Unary(this) { (it / Pointer(1).expr()).generate() },
+                Operation("*", this) to Operation.Handler.Unary(this) { (it * Pointer(1).expr()).generate() },
+                Operation("+", this) to Operation.Handler.Unary(this) { it.generate() },
+                Operation("-", this) to Operation.Handler.Unary(this) { (0.expr() - it).generate() },
                 Operation("*", this, this) to DefaultHandlers.Binary(this, Instruction.MUL_FLOAT),
                 Operation("*", this, vector_t) to DefaultHandlers.Binary(vector_t, Instruction.MUL_FLOAT_VEC),
                 Operation("/", this, this) to DefaultHandlers.Binary(this, Instruction.DIV_FLOAT),
-                Operation("%", this, this) to OperationHandler.Binary(this) { l, r ->
+                Operation("%", this, this) to Operation.Handler.Binary(this) { l, r ->
                     MethodCallExpression(DynamicReferenceExpression("__builtin_mod"), listOf(l, r)).generate()
                 },
 
                 // pre
-                Operation("++", this) to OperationHandler.Unary(this) {
+                Operation("++", this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
                     (it.set(it + one)).generate()
                 },
                 // post
-                Operation("++", this, this) to OperationHandler.Unary(this) {
+                Operation("++", this, this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
                     linkedListOf<IR>() with {
                         val assign = it.set(it + one)
@@ -47,12 +47,12 @@ open class number_t : Type() {
                     }
                 },
                 // pre
-                Operation("--", this) to OperationHandler.Unary(this) {
+                Operation("--", this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
                     (it.set(it - one)).generate()
                 },
                 // post
-                Operation("--", this, this) to OperationHandler.Unary(this) {
+                Operation("--", this, this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
                     linkedListOf<IR>() with {
                         val assign = it.set(it - one)
@@ -68,13 +68,13 @@ open class number_t : Type() {
                 Operation(">=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.GE),
                 Operation("<=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.LE),
 
-                Operation("!", this) to OperationHandler.Unary(bool_t) {
+                Operation("!", this) to Operation.Handler.Unary(bool_t) {
                     (0f.expr() eq it).generate()
                 },
-                Operation("~", this) to OperationHandler.Unary(this) { ((-1).expr() - it).generate() },
+                Operation("~", this) to Operation.Handler.Unary(this) { ((-1).expr() - it).generate() },
                 Operation("&", this, this) to DefaultHandlers.Binary(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandlers.Binary(this, Instruction.BITOR),
-                Operation("^", this, this) to OperationHandler.Binary(this) { left, right ->
+                Operation("^", this, this) to Operation.Handler.Binary(this) { left, right ->
                     MethodCallExpression(DynamicReferenceExpression("__builtin_xor"), listOf(left, right)).generate()
                 },
                 // TODO
@@ -103,7 +103,7 @@ open class number_t : Type() {
 
 object int_t : number_t() {
     override val simpleName = "int_t"
-    override fun handle(op: Operation): OperationHandler<Q1VM.State, List<IR>>? {
+    override fun handle(op: Operation): Operation.Handler<Q1VM.State, List<IR>>? {
         super.handle(op)?.let { return it }
         if (op.right == float_t) {
             return float_t.handle(op.copy(left = float_t))
@@ -117,7 +117,7 @@ object int_t : number_t() {
 
 object float_t : number_t() {
     override val simpleName = "float_t"
-    override fun handle(op: Operation): OperationHandler<Q1VM.State, List<IR>>? {
+    override fun handle(op: Operation): Operation.Handler<Q1VM.State, List<IR>>? {
         super.handle(op)?.let { return it }
         if (op.right == int_t || op.right == bool_t) {
             return super.handle(op.copy(right = float_t))

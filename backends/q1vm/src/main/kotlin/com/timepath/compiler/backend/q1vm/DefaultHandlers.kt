@@ -3,7 +3,7 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.entity_t
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.Instruction
@@ -11,7 +11,7 @@ import com.timepath.with
 
 object DefaultHandlers {
 
-    fun Binary(type: Type, instr: Instruction) = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
+    fun Binary(type: Type, instr: Instruction) = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
         linkedListOf<IR>() with {
             val genLeft = l.generate()
             addAll(genLeft)
@@ -22,7 +22,7 @@ object DefaultHandlers {
         }
     }
 
-    fun Unary(type: Type, instr: Instruction) = OperationHandler.Unary<Q1VM.State, List<IR>>(type) {
+    fun Unary(type: Type, instr: Instruction) = Handler.Unary<Q1VM.State, List<IR>>(type) {
         linkedListOf<IR>() with {
             val genLeft = it.generate()
             addAll(genLeft)
@@ -37,7 +37,7 @@ object DefaultHandlers {
     fun Assign(type: Type,
                instr: Instruction,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
-            = OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
+            = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
         fun MutableList<IR>.x(realInstr: Instruction,
                               leftR: Expression,
                               leftL: Expression) {

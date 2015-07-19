@@ -6,7 +6,7 @@ import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.q1vm.Instruction
 
 object bool_t : number_t() {
@@ -14,10 +14,10 @@ object bool_t : number_t() {
     val ops = mapOf(
             Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FLOAT),
             Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FLOAT),
-            Operation("!", this) to OperationHandler.Unary(bool_t) {
+            Operation("!", this) to Operation.Handler.Unary(bool_t) {
                 (0.expr() eq it).generate()
             },
-            Operation("-", this) to OperationHandler.Unary(this) { (0.expr() - it).generate() },
+            Operation("-", this) to Operation.Handler.Unary(this) { (0.expr() - it).generate() },
             Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
             Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
             Operation("*", this, float_t) to DefaultHandlers.Binary(float_t, Instruction.MUL_FLOAT),
@@ -30,7 +30,7 @@ object bool_t : number_t() {
             Operation(">", this, this) to DefaultHandlers.Binary(bool_t, Instruction.GT)
     )
 
-    override fun handle(op: Operation): OperationHandler<Q1VM.State, List<IR>>? {
+    override fun handle(op: Operation): Operation.Handler<Q1VM.State, List<IR>>? {
         ops[op]?.let {
             return it
         }

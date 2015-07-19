@@ -11,6 +11,6 @@ public abstract class Type : Named {
 
     abstract fun declare(name: String, value: ConstantExpression? = null, state: CompileState): List<Expression>
 
-    abstract fun handle(op: Operation): OperationHandler<*, *>?
+    abstract fun handle(op: Operation): Operation.Handler<*, *>?
 
 }

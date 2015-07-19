@@ -6,7 +6,7 @@ import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.evaluate
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.pointer_t
@@ -19,10 +19,10 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
 
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("sizeof", this) to OperationHandler.Unary<Q1VM.State, List<IR>>(int_t) {
+            Operation("sizeof", this) to Operation.Handler.Unary<Q1VM.State, List<IR>>(int_t) {
                 sizeExpr.generate()
             },
-            Operation("[]", this, int_t) to OperationHandler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
+            Operation("[]", this, int_t) to Operation.Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
                 if (l !is ReferenceExpression) throw UnsupportedOperationException()
                 // arr[i] -> arr(i)(false)
                 val s = generateAccessorName(l.refers.id)

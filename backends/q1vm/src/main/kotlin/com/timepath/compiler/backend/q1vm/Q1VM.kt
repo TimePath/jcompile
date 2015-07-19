@@ -11,7 +11,7 @@ import com.timepath.compiler.backend.q1vm.visitors.GeneratorVisitor
 import com.timepath.compiler.backend.q1vm.visitors.ReduceVisitor
 import com.timepath.compiler.backend.q1vm.visitors.TypeVisitor
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.OperationHandler
+import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
@@ -70,7 +70,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
             Types.handlers.add {
                 if (it.op != ",") null else
-                    OperationHandler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
+                    Operation.Handler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
                         linkedListOf<IR>() with {
                             addAll(left.generate())
                             addAll(right.generate())
@@ -90,7 +90,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
                     Operation("!", this) ->
                         DefaultHandlers.Unary(bool_t, Instruction.NOT_FUNC)
                     Operation("&", this) ->
-                        OperationHandler.Unary<Q1VM.State, List<IR>>(int_t) {
+                        Operation.Handler.Unary<Q1VM.State, List<IR>>(int_t) {
                             val gen = it.generate()
                             (MemoryReference(gen.last().ret, int_t) / Pointer(1).expr()).generate()
                         }
