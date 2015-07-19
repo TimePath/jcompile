@@ -34,7 +34,7 @@ object void_t : Type() {
                                 fail = 0.expr())
                 ).generate()
             },
-            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT)
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>()))
     )
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {

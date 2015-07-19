@@ -18,7 +18,7 @@ open class number_t : Type() {
     override fun handle(op: Operation) = ops[op]
     private val ops by Delegates.lazy {
         mapOf(
-                Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT),
+                Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())),
                 Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
                 Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
                 Operation("&", this) to Operation.Handler.Unary(this) { (it / Pointer(1).expr()).generate() },
@@ -61,8 +61,8 @@ open class number_t : Type() {
                     }
                 },
 
-                Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FLOAT),
-                Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FLOAT),
+                Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ(javaClass<float_t>())),
+                Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE(javaClass<float_t>())),
                 Operation(">", this, this) to DefaultHandlers.Binary(bool_t, Instruction.GT),
                 Operation("<", this, this) to DefaultHandlers.Binary(bool_t, Instruction.LT),
                 Operation(">=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.GE),
@@ -83,16 +83,16 @@ open class number_t : Type() {
                 Operation(">>", this, this) to DefaultHandlers.Binary(int_t, Instruction.BITOR),
                 // TODO
                 Operation("**", this, this) to DefaultHandlers.Binary(float_t, Instruction.BITOR),
-                Operation("+=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l + r },
-                Operation("-=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l - r },
-                Operation("*=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l * r },
-                Operation("/=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l / r },
-                Operation("%=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l % r },
-                Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l and r },
-                Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l or r },
-                Operation("^=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l xor r },
-                Operation("<<=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l shl r },
-                Operation(">>=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FLOAT) { l, r -> l shr r }
+                Operation("+=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l + r },
+                Operation("-=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l - r },
+                Operation("*=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l * r },
+                Operation("/=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l / r },
+                Operation("%=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l % r },
+                Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l and r },
+                Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l or r },
+                Operation("^=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l xor r },
+                Operation("<<=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l shl r },
+                Operation(">>=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<float_t>())) { l, r -> l shr r }
         )
     }
 

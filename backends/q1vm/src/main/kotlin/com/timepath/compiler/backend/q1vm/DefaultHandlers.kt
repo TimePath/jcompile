@@ -7,6 +7,7 @@ import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.compiler.backend.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.with
 
 object DefaultHandlers {
@@ -58,7 +59,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP_FLOAT,
+                            x(Instruction.STOREP(javaClass<float_t>()),
                                     IndexExpression(tmp, l.right),
                                     IndexExpression(tmp, l.right) with {
                                         this.instr = Instruction.ADDRESS
@@ -83,7 +84,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP_FLOAT,
+                            x(Instruction.STOREP(javaClass<float_t>()),
                                     MemberExpression(tmp, l.field),
                                     MemberExpression(tmp, l.field) with {
                                         this.instr = Instruction.ADDRESS

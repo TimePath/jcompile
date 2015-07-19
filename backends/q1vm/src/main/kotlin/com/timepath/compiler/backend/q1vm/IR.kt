@@ -32,7 +32,7 @@ open class IR(val instr: Instruction? = null,
     : Str("${e.name}: ; $${e.ref}")
 
     class EndFunction(ret: Int)
-    : IR(instr = Instruction.DONE, ret = ret, name = "endfunction")
+    : IR(ret = ret, name = "endfunction")
 
     class Label(val id: String)
     : Str("label $id")

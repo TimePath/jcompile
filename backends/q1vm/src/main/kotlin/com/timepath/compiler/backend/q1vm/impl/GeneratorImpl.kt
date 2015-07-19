@@ -4,8 +4,8 @@ import com.timepath.Logger
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.data.Pointer
+import com.timepath.compiler.backend.q1vm.types.*
 import com.timepath.compiler.types.defaults.function_t
-import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.QInstruction
 import com.timepath.q1vm.StringManager
@@ -66,7 +66,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
-            ir.forEach {
+            for (it in ir) {
                 if (it is IR.Function) {
                     if (it.function.firstStatement < 0) {
                         functions.add(it.function)
@@ -77,82 +77,98 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         )
                     }
                 }
-                if (it.real) {
-                    val args = it.args
-                    val a = if (args.size() > 0) args[0] else 0
-                    val b = if (args.size() > 1) args[1] else 0
-                    val c = if (args.size() > 2) args[2] else 0
-                    val instr = when (it.instr) {
-                        Instruction.DONE -> QInstruction.DONE
-                        Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
-                        Instruction.MUL_VEC -> QInstruction.MUL_VEC
-                        Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
-                        Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
-                        Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
-                        Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
-                        Instruction.ADD_VEC -> QInstruction.ADD_VEC
-                        Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
-                        Instruction.SUB_VEC -> QInstruction.SUB_VEC
-                        Instruction.EQ_FLOAT -> QInstruction.EQ_FLOAT
-                        Instruction.EQ_VEC -> QInstruction.EQ_VEC
-                        Instruction.EQ_STR -> QInstruction.EQ_STR
-                        Instruction.EQ_ENT -> QInstruction.EQ_ENT
-                        Instruction.EQ_FUNC -> QInstruction.EQ_FUNC
-                        Instruction.NE_FLOAT -> QInstruction.NE_FLOAT
-                        Instruction.NE_VEC -> QInstruction.NE_VEC
-                        Instruction.NE_STR -> QInstruction.NE_STR
-                        Instruction.NE_ENT -> QInstruction.NE_ENT
-                        Instruction.NE_FUNC -> QInstruction.NE_FUNC
-                        Instruction.LE -> QInstruction.LE
-                        Instruction.GE -> QInstruction.GE
-                        Instruction.LT -> QInstruction.LT
-                        Instruction.GT -> QInstruction.GT
-                        Instruction.LOAD_FLOAT -> QInstruction.LOAD_FLOAT
-                        Instruction.LOAD_VEC -> QInstruction.LOAD_VEC
-                        Instruction.LOAD_STR -> QInstruction.LOAD_STR
-                        Instruction.LOAD_ENT -> QInstruction.LOAD_ENT
-                        Instruction.LOAD_FIELD -> QInstruction.LOAD_FIELD
-                        Instruction.LOAD_FUNC -> QInstruction.LOAD_FUNC
-                        Instruction.ADDRESS -> QInstruction.ADDRESS
-                        Instruction.STORE_FLOAT -> QInstruction.STORE_FLOAT
-                        Instruction.STORE_VEC -> QInstruction.STORE_VEC
-                        Instruction.STORE_STR -> QInstruction.STORE_STR
-                        Instruction.STORE_ENT -> QInstruction.STORE_ENT
-                        Instruction.STORE_FIELD -> QInstruction.STORE_FIELD
-                        Instruction.STORE_FUNC -> QInstruction.STORE_FUNC
-                        Instruction.STOREP_FLOAT -> QInstruction.STOREP_FLOAT
-                        Instruction.STOREP_VEC -> QInstruction.STOREP_VEC
-                        Instruction.STOREP_STR -> QInstruction.STOREP_STR
-                        Instruction.STOREP_ENT -> QInstruction.STOREP_ENT
-                        Instruction.STOREP_FIELD -> QInstruction.STOREP_FIELD
-                        Instruction.STOREP_FUNC -> QInstruction.STOREP_FUNC
-                        Instruction.RETURN -> QInstruction.RETURN
-                        Instruction.NOT_FLOAT -> QInstruction.NOT_FLOAT
-                        Instruction.NOT_VEC -> QInstruction.NOT_VEC
-                        Instruction.NOT_STR -> QInstruction.NOT_STR
-                        Instruction.NOT_ENT -> QInstruction.NOT_ENT
-                        Instruction.NOT_FUNC -> QInstruction.NOT_FUNC
-                        Instruction.IF -> QInstruction.IF
-                        Instruction.IFNOT -> QInstruction.IFNOT
-                        Instruction.CALL0 -> QInstruction.CALL0
-                        Instruction.CALL1 -> QInstruction.CALL1
-                        Instruction.CALL2 -> QInstruction.CALL2
-                        Instruction.CALL3 -> QInstruction.CALL3
-                        Instruction.CALL4 -> QInstruction.CALL4
-                        Instruction.CALL5 -> QInstruction.CALL5
-                        Instruction.CALL6 -> QInstruction.CALL6
-                        Instruction.CALL7 -> QInstruction.CALL7
-                        Instruction.CALL8 -> QInstruction.CALL8
-                        Instruction.STATE -> QInstruction.STATE
-                        Instruction.GOTO -> QInstruction.GOTO
-                        Instruction.AND -> QInstruction.AND
-                        Instruction.OR -> QInstruction.OR
-                        Instruction.BITAND -> QInstruction.BITAND
-                        Instruction.BITOR -> QInstruction.BITOR
+                if (!it.real) {
+                    continue
+                }
+                val instr = it.instr
+                val qinstr = when {
+                    it is IR.EndFunction -> QInstruction.DONE
+                    instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
+                    instr is Instruction.MUL_VEC -> QInstruction.MUL_VEC
+                    instr is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
+                    instr is Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
+                    instr is Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
+                    instr is Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
+                    instr is Instruction.ADD_VEC -> QInstruction.ADD_VEC
+                    instr is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
+                    instr is Instruction.SUB_VEC -> QInstruction.SUB_VEC
+                    instr is Instruction.EQ -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.EQ_FLOAT
+                        javaClass<vector_t>() -> QInstruction.EQ_VEC
+                        javaClass<string_t>() -> QInstruction.EQ_STR
+                        javaClass<entity_t>() -> QInstruction.EQ_ENT
+                        javaClass<field_t>() -> QInstruction.EQ_FUNC
+                        javaClass<function_t>() -> QInstruction.EQ_FUNC
                         else -> throw NoWhenBranchMatchedException()
                     }
-                    statements.add(ProgramData.Statement(instr, a, b, c))
+                    instr is Instruction.NE -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.NE_FLOAT
+                        javaClass<vector_t>() -> QInstruction.NE_VEC
+                        javaClass<string_t>() -> QInstruction.NE_STR
+                        javaClass<entity_t>() -> QInstruction.NE_ENT
+                        javaClass<field_t>() -> QInstruction.NE_FUNC
+                        javaClass<function_t>() -> QInstruction.NE_FUNC
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                    instr is Instruction.LE -> QInstruction.LE
+                    instr is Instruction.GE -> QInstruction.GE
+                    instr is Instruction.LT -> QInstruction.LT
+                    instr is Instruction.GT -> QInstruction.GT
+                    instr is Instruction.LOAD -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.LOAD_FLOAT
+                        javaClass<vector_t>() -> QInstruction.LOAD_VEC
+                        javaClass<string_t>() -> QInstruction.LOAD_STR
+                        javaClass<entity_t>() -> QInstruction.LOAD_ENT
+                        javaClass<field_t>() -> QInstruction.LOAD_FIELD
+                        javaClass<function_t>() -> QInstruction.LOAD_FUNC
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                    instr is Instruction.ADDRESS -> QInstruction.ADDRESS
+                    instr is Instruction.STORE -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.STORE_FLOAT
+                        javaClass<vector_t>() -> QInstruction.STORE_VEC
+                        javaClass<string_t>() -> QInstruction.STORE_STR
+                        javaClass<entity_t>() -> QInstruction.STORE_ENT
+                        javaClass<field_t>() -> QInstruction.STORE_FIELD
+                        javaClass<function_t>() -> QInstruction.STORE_FUNC
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                    instr is Instruction.STOREP -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.STOREP_FLOAT
+                        javaClass<vector_t>() -> QInstruction.STOREP_VEC
+                        javaClass<string_t>() -> QInstruction.STOREP_STR
+                        javaClass<entity_t>() -> QInstruction.STOREP_ENT
+                        javaClass<field_t>() -> QInstruction.STOREP_FIELD
+                        javaClass<function_t>() -> QInstruction.STOREP_FUNC
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                    instr is Instruction.RETURN -> QInstruction.RETURN
+                    instr is Instruction.NOT -> when (instr.type) {
+                        javaClass<float_t>() -> QInstruction.NOT_FLOAT
+                        javaClass<vector_t>() -> QInstruction.NOT_VEC
+                        javaClass<string_t>() -> QInstruction.NOT_STR
+                        javaClass<entity_t>() -> QInstruction.NOT_ENT
+                        javaClass<field_t>() -> QInstruction.NOT_FUNC
+                        javaClass<function_t>() -> QInstruction.NOT_FUNC
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                    instr is Instruction.IF -> QInstruction.IF
+                    instr is Instruction.IFNOT -> QInstruction.IFNOT
+                    instr is Instruction.CALL ->
+                        QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(8, instr.argc))
+                    instr is Instruction.STATE -> QInstruction.STATE
+                    instr is Instruction.GOTO -> QInstruction.GOTO
+                    instr is Instruction.AND -> QInstruction.AND
+                    instr is Instruction.OR -> QInstruction.OR
+                    instr is Instruction.BITAND -> QInstruction.BITAND
+                    instr is Instruction.BITOR -> QInstruction.BITOR
+                    else -> throw NoWhenBranchMatchedException()
                 }
+                val args = it.args
+                val a = if (args.size() > 0) args[0] else 0
+                val b = if (args.size() > 1) args[1] else 0
+                val c = if (args.size() > 2) args[2] else 0
+                statements.add(ProgramData.Statement(qinstr, a, b, c))
             }
             val globalDefs = arrayListOf<ProgramData.Definition>() with {
                 val f = fun(it: Allocator.AllocationMap.Entry) {

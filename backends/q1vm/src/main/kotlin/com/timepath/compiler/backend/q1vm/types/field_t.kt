@@ -9,6 +9,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.pointer_t
 import com.timepath.compiler.backend.q1vm.Instruction
+import com.timepath.compiler.types.defaults.function_t
 
 data class field_t(val type: Type) : pointer_t() {
 
@@ -17,9 +18,9 @@ data class field_t(val type: Type) : pointer_t() {
 
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE_FIELD),
-            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ_FUNC),
-            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE_FUNC)
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE(javaClass<field_t>())),
+            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ(javaClass<function_t>())),
+            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE(javaClass<function_t>()))
     )
 
     override fun declare(name: String, value: ConstantExpression?, state: CompileState) =

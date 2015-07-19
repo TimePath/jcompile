@@ -82,13 +82,13 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             function_t.handlers.add {
                 when (it) {
                     Operation("=", this, this) ->
-                        DefaultHandlers.Assign(this, Instruction.STORE_FUNC)
+                        DefaultHandlers.Assign(this, Instruction.STORE(javaClass<function_t>()))
                     Operation("==", this, this) ->
-                        DefaultHandlers.Binary(bool_t, Instruction.EQ_FUNC)
+                        DefaultHandlers.Binary(bool_t, Instruction.EQ(javaClass<function_t>()))
                     Operation("!=", this, this) ->
-                        DefaultHandlers.Binary(bool_t, Instruction.NE_FUNC)
+                        DefaultHandlers.Binary(bool_t, Instruction.NE(javaClass<function_t>()))
                     Operation("!", this) ->
-                        DefaultHandlers.Unary(bool_t, Instruction.NOT_FUNC)
+                        DefaultHandlers.Unary(bool_t, Instruction.NOT(javaClass<function_t>()))
                     Operation("&", this) ->
                         Operation.Handler.Unary<Q1VM.State, List<IR>>(int_t) {
                             val gen = it.generate()

@@ -1,96 +1,84 @@
 package com.timepath.compiler.backend.q1vm
 
-import com.timepath.q1vm.ProgramData
-import com.timepath.q1vm.StringManager
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
-import kotlin.properties.Delegates
+import com.timepath.compiler.types.Type
 
-enum class Instruction {
+interface Instruction {
 
-    DONE,
+    fun name() = javaClass.getSimpleName()
 
-    MUL_FLOAT,
-    MUL_VEC,
-    MUL_FLOAT_VEC,
-    MUL_VEC_FLOAT,
-    DIV_FLOAT,
+    object MUL_FLOAT : Instruction
 
-    ADD_FLOAT,
-    ADD_VEC,
-    SUB_FLOAT,
-    SUB_VEC,
+    object MUL_VEC : Instruction
 
-    EQ_FLOAT,
-    EQ_VEC,
-    EQ_STR,
-    EQ_ENT,
-    EQ_FUNC,
+    object MUL_FLOAT_VEC : Instruction
 
-    NE_FLOAT,
-    NE_VEC,
-    NE_STR,
-    NE_ENT,
-    NE_FUNC,
+    object MUL_VEC_FLOAT : Instruction
 
-    LE,
-    GE,
-    LT,
-    GT,
+    object DIV_FLOAT : Instruction
 
-    LOAD_FLOAT,
-    LOAD_VEC,
-    LOAD_STR,
-    LOAD_ENT,
-    LOAD_FIELD,
-    LOAD_FUNC,
+    object ADD_FLOAT : Instruction
 
-    ADDRESS,
+    object ADD_VEC : Instruction
 
-    STORE_FLOAT,
-    STORE_VEC,
-    STORE_STR,
-    STORE_ENT,
-    STORE_FIELD,
-    STORE_FUNC,
+    object SUB_FLOAT : Instruction
 
-    STOREP_FLOAT,
-    STOREP_VEC,
-    STOREP_STR,
-    STOREP_ENT,
-    STOREP_FIELD,
-    STOREP_FUNC,
+    object SUB_VEC : Instruction
 
-    RETURN,
+    class EQ(val type: Class<out Type>) : Instruction {
+        override fun name() = "EQ<${type.getSimpleName()}>"
+    }
 
-    NOT_FLOAT,
-    NOT_VEC,
-    NOT_STR,
-    NOT_ENT,
-    NOT_FUNC,
+    class NE(val type: Class<out Type>) : Instruction {
+        override fun name() = "EQ<${type.getSimpleName()}>"
+    }
 
-    IF,
-    IFNOT,
+    object LE : Instruction
 
-    CALL0,
-    CALL1,
-    CALL2,
-    CALL3,
-    CALL4,
-    CALL5,
-    CALL6,
-    CALL7,
-    CALL8,
+    object GE : Instruction
 
-    STATE,
+    object LT : Instruction
 
-    GOTO,
+    object GT : Instruction
 
-    AND,
-    OR,
+    class LOAD(val type: Class<out Type>) : Instruction {
+        override fun name() = "LOAD<${type.getSimpleName()}>"
+    }
 
-    BITAND,
-    BITOR;
+    object ADDRESS : Instruction
+
+    class STORE(val type: Class<out Type>) : Instruction {
+        override fun name() = "STORE<${type.getSimpleName()}>"
+    }
+
+    class STOREP(val type: Class<out Type>) : Instruction {
+        override fun name() = "STOREP<${type.getSimpleName()}>"
+    }
+
+    object RETURN : Instruction
+
+    class NOT(val type: Class<out Type>) : Instruction {
+        override fun name() = "NOT<${type.getSimpleName()}>"
+    }
+
+    object IF : Instruction
+
+    object IFNOT : Instruction
+
+    class CALL(val argc: Int) : Instruction {
+        override fun name() = "CALL<$argc>"
+    }
+
+    object STATE : Instruction
+
+    object GOTO : Instruction
+
+    object AND : Instruction
+
+    object OR : Instruction
+
+    object BITAND : Instruction
+
+    object BITOR : Instruction
 
     companion object {
 
@@ -113,10 +101,6 @@ enum class Instruction {
             }})"
             else -> ret
         }
-
-        private val instructions by Delegates.lazy(::values)
-        fun from(i: Int) = instructions[i]
-
     }
 
 }

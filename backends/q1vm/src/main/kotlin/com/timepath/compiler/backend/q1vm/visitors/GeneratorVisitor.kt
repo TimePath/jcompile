@@ -10,6 +10,7 @@ import com.timepath.compiler.getTextWS
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.backend.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.q1vm.ProgramData
 import com.timepath.with
 
@@ -78,7 +79,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE_FLOAT, arrayOf(genTrue.last().ret, temp.ref), name = "store"))
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), arrayOf(genTrue.last().ret, temp.ref), name = "store"))
             else
                 jumpTrue.args[1]--
             // end if, jump to the instruction after the else
@@ -87,7 +88,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // else
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE_FLOAT, arrayOf(genFalse.last().ret, temp.ref), name = "store"))
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), arrayOf(genFalse.last().ret, temp.ref), name = "store"))
             else
                 jumpFalse.args[1]--
             // return
@@ -226,7 +227,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             addAll(genR)
             val type = e.type(state)
             val out = state.allocator.allocateReference(type = type)
-            add(IR(e.instr as? Instruction ?: Instruction.LOAD_FLOAT, arrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
+            val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
+            add(IR(instr, arrayOf(genL.last().ret, genR.last().ret,out.ref),out.ref, e.toString()))
         }
     }
 
@@ -238,9 +240,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val genR = state.fields[e.field.owner, e.field.id].generate()
                     .with { addAll(this) }
             val out = state.allocator.allocateReference(type = e.type(state))
-            val instr = e.instr as? Instruction ?: Instruction.LOAD_FLOAT
-            IR(instr, arrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString())
-                    .with { add(this) }
+            val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
+            IR(instr, arrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
             val f = state.allocator["${e.left}_${e.field.id}"]!!
             add(IR.Return(f.ref))
@@ -263,12 +264,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         args.flatMapTo(this) { it }
         args.mapIndexedTo(this) { i, it ->
             val param = Instruction.OFS_PARAM(i)
-            IR(Instruction.STORE_FLOAT, arrayOf(it.last().ret, param), param, "Prepare param ${i + 1}")
+            IR(Instruction.STORE(javaClass<float_t>()), arrayOf(it.last().ret, param), param, "Prepare param ${i + 1}")
         }
-        fun instr(i: Int) = Instruction.from(Instruction.CALL0.ordinal() + i)
-        IR(instr(args.size()), arrayOf(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())
+        IR(Instruction.CALL(args.size()), arrayOf(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())
                 .with { add(this) }
-        IR(Instruction.STORE_FLOAT, arrayOf(Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
+        IR(Instruction.STORE(javaClass<float_t>()), arrayOf(Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
                 .with { add(this) }
     }
 

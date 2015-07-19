@@ -71,13 +71,14 @@ class ASMPrinter(val ir: List<IR>) {
                 }
             }.padEnd(12)
         }
+        val s = (stmt.instr?.name() ?: "").padEnd(18)
         +when (stmt.instr) {
             Instruction.GOTO ->
-                "${(stmt.instr.name()).padEnd(12)} | ${stmt.args[0]}"
+                "$s | ${stmt.args[0]}"
             Instruction.IF, Instruction.IFNOT ->
-                "${(stmt.instr.name()).padEnd(12)} | ${f(stmt.args[0])} ${stmt.args[1]}"
+                "$s | ${f(stmt.args[0])} ${stmt.args[1]}"
             else -> {
-                "${(stmt.instr?.name() ?: "").padEnd(12)} | ${stmt.args.map(f).join(" ")}".trimEnd()
+                "$s | ${stmt.args.map(f).join(" ")}".trimEnd()
             }
         }
     }
