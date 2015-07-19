@@ -1,6 +1,6 @@
 package com.timepath.compiler.backend.q1vm
 
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 
 open class IR(val instr: Instruction? = null,

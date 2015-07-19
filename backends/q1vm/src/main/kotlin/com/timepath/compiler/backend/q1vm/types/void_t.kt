@@ -9,7 +9,7 @@ import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 
 object void_t : Type() {
     override val simpleName = "void_t"

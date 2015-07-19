@@ -6,7 +6,7 @@ import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 
 abstract class class_t : struct_t() {
     fun ops(self: struct_t) = mapOf(

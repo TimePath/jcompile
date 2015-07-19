@@ -8,7 +8,7 @@ import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.pointer_t
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 
 data class field_t(val type: Type) : pointer_t() {
 

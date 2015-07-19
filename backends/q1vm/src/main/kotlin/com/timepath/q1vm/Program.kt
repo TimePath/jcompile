@@ -36,7 +36,7 @@ public class Program(val data: ProgramData) {
             val skip = stmt(data)
             stmtIdx += skip
             if (skip == 0) {
-                // Instruction.DONE, Instruction.RETURN
+                // QInstruction.DONE, QInstruction.RETURN
                 stack.pop().let {
                     it.restore()
                     stmtIdx = it.comeFrom
@@ -44,13 +44,13 @@ public class Program(val data: ProgramData) {
                 continue
             }
             when (stmt.op) {
-                Instruction.CALL0, Instruction.CALL1, Instruction.CALL2, Instruction.CALL3, Instruction.CALL4,
-                Instruction.CALL5, Instruction.CALL6, Instruction.CALL7, Instruction.CALL8 -> {
+                QInstruction.CALL0, QInstruction.CALL1, QInstruction.CALL2, QInstruction.CALL3, QInstruction.CALL4,
+                QInstruction.CALL5, QInstruction.CALL6, QInstruction.CALL7, QInstruction.CALL8 -> {
                     val nextFunc = data.functions[data.globalIntData[stmt.a]]
                     val nextStmt = nextFunc.firstStatement
                     if (nextStmt < 0) {
                         val id = -nextStmt
-                        val paramCount = stmt.op.ordinal() - Instruction.CALL0.ordinal()
+                        val paramCount = stmt.op.ordinal() - QInstruction.CALL0.ordinal()
                         invokeBuiltin(id, paramCount)
                     } else {
                         stack.push(Frame(func = nextFunc, comeFrom = stmtIdx))
@@ -58,7 +58,7 @@ public class Program(val data: ProgramData) {
                         var i = nextFunc.firstLocal
                         repeat(nextFunc.numParams) { param ->
                             repeat(nextFunc.sizeof[param].toInt()) { ofs ->
-                                data.globalIntData[i++] = data.globalIntData[Instruction.OFS_PARAM(param) + ofs]
+                                data.globalIntData[i++] = data.globalIntData[QInstruction.OFS_PARAM(param) + ofs]
                             }
                         }
                         stmtIdx = nextStmt
@@ -73,9 +73,9 @@ public class Program(val data: ProgramData) {
         builtin.call(this, paramCount).let {
             when (it) {
                 is Unit -> Unit
-                is Float -> data.globalFloatData.put(Instruction.OFS_PARAM(-1), it)
-                is Int -> data.globalIntData.put(Instruction.OFS_PARAM(-1), it)
-                is String -> data.globalIntData.put(Instruction.OFS_PARAM(-1), data.strings.tempString(it))
+                is Float -> data.globalFloatData.put(QInstruction.OFS_PARAM(-1), it)
+                is Int -> data.globalIntData.put(QInstruction.OFS_PARAM(-1), it)
+                is String -> data.globalIntData.put(QInstruction.OFS_PARAM(-1), data.strings.tempString(it))
                 else -> throw UnsupportedOperationException("Builtin returning ${it.javaClass}")
             }
         }

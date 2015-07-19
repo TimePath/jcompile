@@ -9,7 +9,7 @@ import com.timepath.compiler.debug
 import com.timepath.compiler.getTextWS
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 import com.timepath.with
 
@@ -142,7 +142,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 when {
                     it is IR.Label ->
                         labelIndices[it.id] = realCount
-                    it.instr is Instruction.GOTO && it.args[0] == 0 ->
+                    it.instr == Instruction.GOTO && it.args[0] == 0 ->
                         jumpIndices[gotoLabels[it]] = realCount
                 }
                 when {

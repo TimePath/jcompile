@@ -6,7 +6,7 @@ import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.with
 
 // TODO: identify as value

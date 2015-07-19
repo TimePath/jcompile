@@ -13,7 +13,7 @@ data class ProgramData(val header: Header,
                        val strings: StringManager,
                        val globalData: ByteBuffer) {
 
-    class Statement(val op: Instruction,
+    class Statement(val op: QInstruction,
                     val a: Int,
                     val b: Int,
                     val c: Int) {
@@ -21,7 +21,7 @@ data class ProgramData(val header: Header,
         constructor(op: Short,
                     a: Short,
                     b: Short,
-                    c: Short) : this(Instruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
+                    c: Short) : this(QInstruction.from(op.toInt()), a.toInt(), b.toInt(), c.toInt())
 
         var data: ProgramData? = null
 

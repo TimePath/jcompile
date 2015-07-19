@@ -8,7 +8,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import kotlin.properties.Delegates
 
-enum class Instruction {
+enum class QInstruction {
 
     /**
      * Same as RETURN, used for disassembly
@@ -440,18 +440,7 @@ enum class Instruction {
          */
         fun OFS_PARAM(n: Int) = 4 + n * 3
 
-        fun OFS_STR(ret: Int) = when (ret) {
-            in 1..3 -> "RETURN(${ret - 1})"
-            in 4..27 -> "PARAM(${(ret - 4) / 3}${((ret - 4) % 3).let {
-                when {
-                    it != 0 -> ", $it"
-                    else -> ""
-                }
-            }})"
-            else -> ret
-        }
-
-        private val instructions by Delegates.lazy { Instruction.values() }
+        private val instructions by Delegates.lazy(::values)
         fun from(i: Int) = instructions[i]
 
     }

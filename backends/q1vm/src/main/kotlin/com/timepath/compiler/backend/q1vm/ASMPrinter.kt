@@ -1,7 +1,7 @@
 package com.timepath.compiler.backend.q1vm
 
 import com.timepath.Printer
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import java.util.LinkedList
 
 class ASMPrinter(val ir: List<IR>) {

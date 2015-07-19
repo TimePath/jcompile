@@ -13,7 +13,7 @@ class Builtin(val name: String,
     fun Program.getString(i: Int) = data.strings[data.globalIntData[i]]
 
     fun call(ctx: Program, parameterCount: Int): Any {
-        var offset = Instruction.OFS_PARAM(0)
+        var offset = QInstruction.OFS_PARAM(0)
         fun read(it: Any): Any? = when (it) {
             javaClass<Float>() -> {
                 val i = offset

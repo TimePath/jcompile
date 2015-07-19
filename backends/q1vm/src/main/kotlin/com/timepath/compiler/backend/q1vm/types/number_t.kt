@@ -9,7 +9,7 @@ import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.with
 import kotlin.properties.Delegates
 

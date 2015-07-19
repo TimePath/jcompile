@@ -15,7 +15,7 @@ import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.q1vm.Instruction
+import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.with
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
