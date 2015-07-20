@@ -1,7 +1,6 @@
 package com.timepath.compiler.backend.q1vm
 
 import com.timepath.Printer
-import com.timepath.compiler.backend.q1vm.Instruction
 import java.util.LinkedList
 
 class ASMPrinter(val ir: List<IR>) {
@@ -71,15 +70,10 @@ class ASMPrinter(val ir: List<IR>) {
                 }
             }.padEnd(12)
         }
-        val s = (stmt.instr?.name() ?: "").padEnd(18)
+        val s = (stmt.instr?.name(f) ?: "")
         +when (stmt.instr) {
-            Instruction.GOTO ->
-                "$s | ${stmt.args[0]}"
-            Instruction.IF, Instruction.IFNOT ->
-                "$s | ${f(stmt.args[0])} ${stmt.args[1]}"
-            else -> {
-                "$s | ${stmt.args.map(f).join(" ")}".trimEnd()
-            }
+            is Instruction.GOTO, is Instruction.LABEL -> s
+            else -> "${s.padEnd(18)} | ${stmt.args.map(f).join(" ")}"
         }
     }
 }

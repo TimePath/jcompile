@@ -54,6 +54,147 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         val intData = globalData.asIntBuffer()
         val floatData = globalData.asFloatBuffer()
 
+        inner class JumpManager(val idx: () -> Int) {
+            /** Map of label to indices */
+            private val labels: MutableMap<String, Int> = hashMapOf()
+            /** Goto indices needing fixup */
+            private val deferred: MutableList<Pair<String, Int>> = linkedListOf()
+
+            fun label(id: String) {
+                labels[id] = idx()
+            }
+
+            fun goto(label: String) {
+                deferred.add(label to idx())
+            }
+
+            fun fixup(list: MutableList<ProgramData.Statement>) {
+                for ((label, idx) in deferred) {
+                    val it = labels[label]!!
+                    val rel = it - idx
+                    check(rel != 0)
+                    val replace = list[idx]
+                    when (replace.op) {
+                        QInstruction.GOTO ->
+                            list[idx] = replace.copy(a = rel)
+                        QInstruction.IF, QInstruction.IFNOT ->
+                            list[idx] = replace.copy(b = rel)
+                        else -> throw NoWhenBranchMatchedException()
+                    }
+                }
+            }
+        }
+
+        fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
+            val instr = it.instr
+            val args = it.args
+            val qinstr = when {
+                it is IR.EndFunction -> QInstruction.DONE
+                instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
+                instr is Instruction.MUL_VEC -> QInstruction.MUL_VEC
+                instr is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
+                instr is Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
+                instr is Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
+                instr is Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
+                instr is Instruction.ADD_VEC -> QInstruction.ADD_VEC
+                instr is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
+                instr is Instruction.SUB_VEC -> QInstruction.SUB_VEC
+                instr is Instruction.EQ -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.EQ_FLOAT
+                    javaClass<vector_t>() -> QInstruction.EQ_VEC
+                    javaClass<string_t>() -> QInstruction.EQ_STR
+                    javaClass<entity_t>() -> QInstruction.EQ_ENT
+                    javaClass<field_t>() -> QInstruction.EQ_FUNC
+                    javaClass<function_t>() -> QInstruction.EQ_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.NE -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.NE_FLOAT
+                    javaClass<vector_t>() -> QInstruction.NE_VEC
+                    javaClass<string_t>() -> QInstruction.NE_STR
+                    javaClass<entity_t>() -> QInstruction.NE_ENT
+                    javaClass<field_t>() -> QInstruction.NE_FUNC
+                    javaClass<function_t>() -> QInstruction.NE_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.LE -> QInstruction.LE
+                instr is Instruction.GE -> QInstruction.GE
+                instr is Instruction.LT -> QInstruction.LT
+                instr is Instruction.GT -> QInstruction.GT
+                instr is Instruction.LOAD -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.LOAD_FLOAT
+                    javaClass<vector_t>() -> QInstruction.LOAD_VEC
+                    javaClass<string_t>() -> QInstruction.LOAD_STR
+                    javaClass<entity_t>() -> QInstruction.LOAD_ENT
+                    javaClass<field_t>() -> QInstruction.LOAD_FIELD
+                    javaClass<function_t>() -> QInstruction.LOAD_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.ADDRESS -> QInstruction.ADDRESS
+                instr is Instruction.STORE -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.STORE_FLOAT
+                    javaClass<vector_t>() -> QInstruction.STORE_VEC
+                    javaClass<string_t>() -> QInstruction.STORE_STR
+                    javaClass<entity_t>() -> QInstruction.STORE_ENT
+                    javaClass<field_t>() -> QInstruction.STORE_FIELD
+                    javaClass<function_t>() -> QInstruction.STORE_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.STOREP -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.STOREP_FLOAT
+                    javaClass<vector_t>() -> QInstruction.STOREP_VEC
+                    javaClass<string_t>() -> QInstruction.STOREP_STR
+                    javaClass<entity_t>() -> QInstruction.STOREP_ENT
+                    javaClass<field_t>() -> QInstruction.STOREP_FIELD
+                    javaClass<function_t>() -> QInstruction.STOREP_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.RETURN -> QInstruction.RETURN
+                instr is Instruction.NOT -> when (instr.type) {
+                    javaClass<float_t>() -> QInstruction.NOT_FLOAT
+                    javaClass<vector_t>() -> QInstruction.NOT_VEC
+                    javaClass<string_t>() -> QInstruction.NOT_STR
+                    javaClass<entity_t>() -> QInstruction.NOT_ENT
+                    javaClass<field_t>() -> QInstruction.NOT_FUNC
+                    javaClass<function_t>() -> QInstruction.NOT_FUNC
+                    else -> throw NoWhenBranchMatchedException()
+                }
+                instr is Instruction.CALL -> {
+                    instr.args.mapIndexedTo(statements) { idx, it ->
+                        val param = Instruction.OFS_PARAM(idx)
+                        ProgramData.Statement(QInstruction.STORE_FLOAT, it, param, 0)
+                    }
+                    QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(0, Math.min(instr.args.size(), 8)))
+                }
+                instr is Instruction.STATE -> QInstruction.STATE
+                instr is Instruction.LABEL -> {
+                    jm.label(instr.id)
+                    return
+                }
+                instr is Instruction.GOTO -> {
+                    if (instr is Instruction.GOTO.If) {
+                        args[0] = instr.condition
+                        jm.goto(instr.id)
+                        when (instr.expect) {
+                            true -> QInstruction.IF
+                            else -> QInstruction.IFNOT
+                        }
+                    } else {
+                        if (instr is Instruction.GOTO.Label) {
+                            jm.goto(instr.id)
+                        }
+                        QInstruction.GOTO
+                    }
+                }
+                instr is Instruction.AND -> QInstruction.AND
+                instr is Instruction.OR -> QInstruction.OR
+                instr is Instruction.BITAND -> QInstruction.BITAND
+                instr is Instruction.BITOR -> QInstruction.BITOR
+                else -> throw NoWhenBranchMatchedException()
+            }
+            statements.add(ProgramData.Statement(qinstr, args[0], args[1], args[2]))
+        }
+
         /**
          * FIXME: metadata
          */
@@ -66,109 +207,31 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
-            for (it in ir) {
+            val iter = ir.iterator()
+            for (it in iter) {
                 if (it is IR.Function) {
+                    val firstStatement = statements.size()
                     if (it.function.firstStatement < 0) {
                         functions.add(it.function)
                     } else {
-                        functions.add(it.function.copy(
-                                firstStatement = statements.size(),
-                                firstLocal = state.opts.userStorageStart)
-                        )
+                        it.function.copy(
+                                firstStatement = firstStatement,
+                                firstLocal = state.opts.userStorageStart
+                        ) with { functions.add(this) }
                     }
+                    val jm = JumpManager { statements.size() }
+                    for (stmt in iter) {
+                        if (stmt is IR.Return) continue
+                        if (stmt is IR.EndFunction) break
+                        if (stmt is IR.Declare) continue
+                        generateFunction(stmt, jm, statements)
+                    }
+                    jm.fixup(statements)
+                    statements.add(ProgramData.Statement(QInstruction.DONE, 0, 0, 0))
+                } else {
+                    if (it is IR.Declare) continue
+                    throw UnsupportedOperationException("" + it)
                 }
-                if (!it.real) {
-                    continue
-                }
-                val instr = it.instr
-                val qinstr = when {
-                    it is IR.EndFunction -> QInstruction.DONE
-                    instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
-                    instr is Instruction.MUL_VEC -> QInstruction.MUL_VEC
-                    instr is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
-                    instr is Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
-                    instr is Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
-                    instr is Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
-                    instr is Instruction.ADD_VEC -> QInstruction.ADD_VEC
-                    instr is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
-                    instr is Instruction.SUB_VEC -> QInstruction.SUB_VEC
-                    instr is Instruction.EQ -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.EQ_FLOAT
-                        javaClass<vector_t>() -> QInstruction.EQ_VEC
-                        javaClass<string_t>() -> QInstruction.EQ_STR
-                        javaClass<entity_t>() -> QInstruction.EQ_ENT
-                        javaClass<field_t>() -> QInstruction.EQ_FUNC
-                        javaClass<function_t>() -> QInstruction.EQ_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.NE -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.NE_FLOAT
-                        javaClass<vector_t>() -> QInstruction.NE_VEC
-                        javaClass<string_t>() -> QInstruction.NE_STR
-                        javaClass<entity_t>() -> QInstruction.NE_ENT
-                        javaClass<field_t>() -> QInstruction.NE_FUNC
-                        javaClass<function_t>() -> QInstruction.NE_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.LE -> QInstruction.LE
-                    instr is Instruction.GE -> QInstruction.GE
-                    instr is Instruction.LT -> QInstruction.LT
-                    instr is Instruction.GT -> QInstruction.GT
-                    instr is Instruction.LOAD -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.LOAD_FLOAT
-                        javaClass<vector_t>() -> QInstruction.LOAD_VEC
-                        javaClass<string_t>() -> QInstruction.LOAD_STR
-                        javaClass<entity_t>() -> QInstruction.LOAD_ENT
-                        javaClass<field_t>() -> QInstruction.LOAD_FIELD
-                        javaClass<function_t>() -> QInstruction.LOAD_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.ADDRESS -> QInstruction.ADDRESS
-                    instr is Instruction.STORE -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.STORE_FLOAT
-                        javaClass<vector_t>() -> QInstruction.STORE_VEC
-                        javaClass<string_t>() -> QInstruction.STORE_STR
-                        javaClass<entity_t>() -> QInstruction.STORE_ENT
-                        javaClass<field_t>() -> QInstruction.STORE_FIELD
-                        javaClass<function_t>() -> QInstruction.STORE_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.STOREP -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.STOREP_FLOAT
-                        javaClass<vector_t>() -> QInstruction.STOREP_VEC
-                        javaClass<string_t>() -> QInstruction.STOREP_STR
-                        javaClass<entity_t>() -> QInstruction.STOREP_ENT
-                        javaClass<field_t>() -> QInstruction.STOREP_FIELD
-                        javaClass<function_t>() -> QInstruction.STOREP_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.RETURN -> QInstruction.RETURN
-                    instr is Instruction.NOT -> when (instr.type) {
-                        javaClass<float_t>() -> QInstruction.NOT_FLOAT
-                        javaClass<vector_t>() -> QInstruction.NOT_VEC
-                        javaClass<string_t>() -> QInstruction.NOT_STR
-                        javaClass<entity_t>() -> QInstruction.NOT_ENT
-                        javaClass<field_t>() -> QInstruction.NOT_FUNC
-                        javaClass<function_t>() -> QInstruction.NOT_FUNC
-                        else -> throw NoWhenBranchMatchedException()
-                    }
-                    instr is Instruction.IF -> QInstruction.IF
-                    instr is Instruction.IFNOT -> QInstruction.IFNOT
-                    instr is Instruction.CALL ->
-                        QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(8, instr.argc))
-                    instr is Instruction.STATE -> QInstruction.STATE
-                    instr is Instruction.GOTO -> QInstruction.GOTO
-                    instr is Instruction.AND -> QInstruction.AND
-                    instr is Instruction.OR -> QInstruction.OR
-                    instr is Instruction.BITAND -> QInstruction.BITAND
-                    instr is Instruction.BITOR -> QInstruction.BITOR
-                    else -> throw NoWhenBranchMatchedException()
-                }
-                val args = it.args
-                val a = if (args.size() > 0) args[0] else 0
-                val b = if (args.size() > 1) args[1] else 0
-                val c = if (args.size() > 2) args[2] else 0
-                statements.add(ProgramData.Statement(qinstr, a, b, c))
             }
             val globalDefs = arrayListOf<ProgramData.Definition>() with {
                 val f = fun(it: Allocator.AllocationMap.Entry) {

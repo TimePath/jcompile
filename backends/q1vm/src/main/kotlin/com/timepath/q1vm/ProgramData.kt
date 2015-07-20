@@ -13,7 +13,7 @@ data class ProgramData(val header: Header,
                        val strings: StringManager,
                        val globalData: ByteBuffer) {
 
-    class Statement(val op: QInstruction,
+    data class Statement(val op: QInstruction,
                     val a: Int,
                     val b: Int,
                     val c: Int) {

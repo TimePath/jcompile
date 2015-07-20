@@ -4,7 +4,7 @@ import com.timepath.compiler.types.Type
 
 interface Instruction {
 
-    fun name() = javaClass.getSimpleName()
+    fun name(f: (Int) -> String) = javaClass.getSimpleName()
 
     object MUL_FLOAT : Instruction
 
@@ -25,11 +25,11 @@ interface Instruction {
     object SUB_VEC : Instruction
 
     class EQ(val type: Class<out Type>) : Instruction {
-        override fun name() = "EQ<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "EQ<${type.getSimpleName()}>"
     }
 
     class NE(val type: Class<out Type>) : Instruction {
-        override fun name() = "EQ<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "EQ<${type.getSimpleName()}>"
     }
 
     object LE : Instruction
@@ -41,36 +41,52 @@ interface Instruction {
     object GT : Instruction
 
     class LOAD(val type: Class<out Type>) : Instruction {
-        override fun name() = "LOAD<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "LOAD<${type.getSimpleName()}>"
     }
 
     object ADDRESS : Instruction
 
     class STORE(val type: Class<out Type>) : Instruction {
-        override fun name() = "STORE<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "STORE<${type.getSimpleName()}>"
     }
 
     class STOREP(val type: Class<out Type>) : Instruction {
-        override fun name() = "STOREP<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "STOREP<${type.getSimpleName()}>"
     }
 
     object RETURN : Instruction
 
     class NOT(val type: Class<out Type>) : Instruction {
-        override fun name() = "NOT<${type.getSimpleName()}>"
+        override fun name(f: (Int) -> String) = "NOT<${type.getSimpleName()}>"
     }
 
-    object IF : Instruction
-
-    object IFNOT : Instruction
-
-    class CALL(val argc: Int) : Instruction {
-        override fun name() = "CALL<$argc>"
+    class CALL(val args: List<Int>) : Instruction {
+        override fun name(f: (Int) -> String) = "CALL<${args.size()}>(${args.joinToString(", ")})"
     }
 
     object STATE : Instruction
 
-    object GOTO : Instruction
+    class LABEL(val id: String) : Instruction {
+        override fun name(f: (Int) -> String) = "label ${id}:"
+    }
+
+    interface GOTO : Instruction {
+        /** Unconditional */
+        class Label(val id: String) : GOTO {
+            override fun name(f: (Int) -> String) = "goto ${id}"
+        }
+
+        /** Conditional */
+        class If(val id: String, val condition: Int, val expect: Boolean = true) : GOTO {
+            override fun name(f: (Int) -> String) = "if${if (expect) "" else "not"} ${f(condition)}, goto ${id}"
+        }
+
+        /** Temporary marker, replaced with unconditional goto */
+        object Break : Instruction
+
+        /** Temporary marker, replaced with unconditional goto */
+        object Continue : Instruction
+    }
 
     object AND : Instruction
 

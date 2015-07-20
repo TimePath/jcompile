@@ -5,14 +5,14 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.class_t
+import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.debug
 import com.timepath.compiler.getTextWS
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
-import com.timepath.compiler.backend.q1vm.Instruction
-import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.q1vm.ProgramData
 import com.timepath.with
+import java.util.concurrent.atomic.AtomicInteger
 
 class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
@@ -42,10 +42,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         listOf<IR>()
     }
 
-    val gotoLabels = linkedMapOf<IR, String>()
-
-    override fun visit(e: BinaryExpression) = Types.handle<Q1VM.State, List<IR>>(
-            Operation(e.op, e.left.type(state), e.right.type(state)))(state, e.left, e.right)
+    override fun visit(e: BinaryExpression): List<IR> {
+        val op = Operation(e.op, e.left.type(state), e.right.type(state))
+        return Types.handle<Q1VM.State, List<IR>>(op)(state, e.left, e.right)
+    }
 
     override fun visit(e: BlockExpression): List<IR> {
         state.allocator.push(e)
@@ -57,41 +57,42 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     /** Filled in by visit(LoopExpression) */
-    override fun visit(e: BreakStatement) = IR(Instruction.GOTO, arrayOf(0, 1, 0), name = e.toString()).list()
+    override fun visit(e: BreakStatement) = IR(
+            Instruction.GOTO.Break, name = e.toString()
+    ).list()
+
+    private val conditions = AtomicInteger()
 
     override fun visit(e: ConditionalExpression): List<IR> {
+        val conditionId = "__cond_${conditions.getAndIncrement()}"
+        val falseLabel = "${conditionId}_false"
+        val endLabel = "${conditionId}_end"
+
         val ret = linkedListOf<IR>()
         val genPred = e.test.wrap { it.generate() }
         ret.addAll(genPred)
         val genTrue = e.pass.wrap { it.generate() }
-        val trueCount = genTrue.count { it.real }
         val genFalse = e.fail?.wrap { it.generate() }
         if (genFalse == null) {
-            // No else, jump to the instruction after the body
-            ret.add(IR(Instruction.IFNOT, arrayOf(genPred.last().ret, trueCount + 1, 0), name = e.test.toString()))
+            IR(Instruction.GOTO.If(endLabel, genPred.last().ret, false), name = e.test.toString()).let { ret.add(it) }
+            // if
             ret.addAll(genTrue)
+            ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
         } else {
-            val falseCount = genFalse.count { it.real }
             val temp = state.allocator.allocateReference(type = e.type(state))
-            // The if body has a goto, include it in the count
-            val jumpTrue = IR(Instruction.IFNOT, arrayOf(genPred.last().ret, (trueCount + 2) + 1, 0), name = e.test.toString())
-            ret.add(jumpTrue)
+            IR(Instruction.GOTO.If(falseLabel, genPred.last().ret, false), name = e.test.toString()).let { ret.add(it) }
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), arrayOf(genTrue.last().ret, temp.ref), name = "store"))
-            else
-                jumpTrue.args[1]--
-            // end if, jump to the instruction after the else
-            val jumpFalse = IR(Instruction.GOTO, arrayOf(falseCount + 2, 0, 0), name = "end if")
-            ret.add(jumpFalse)
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(genTrue.last().ret, temp.ref), name = "store"))
+            IR(Instruction.GOTO.Label(endLabel), name = "goto end").let { ret.add(it) }
             // else
+            ret.add(IR(Instruction.LABEL(falseLabel), name = "false"))
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), arrayOf(genFalse.last().ret, temp.ref), name = "store"))
-            else
-                jumpFalse.args[1]--
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(genFalse.last().ret, temp.ref), name = "store"))
             // return
+            ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
             ret.add(IR.Return(temp.ref))
         }
         return ret
@@ -102,7 +103,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     /** Filled in by visit(LoopExpression) */
-    override fun visit(e: ContinueStatement) = IR(Instruction.GOTO, arrayOf(0, 0, 0), name = e.toString()).list()
+    override fun visit(e: ContinueStatement) = IR(
+            Instruction.GOTO.Continue, name = e.toString()
+    ).list()
 
     override fun visit(e: DeclarationExpression): List<IR> {
         val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
@@ -135,27 +138,6 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         val genParams = params.flatMap { it.generate() }
         val children = e.children.flatMap { it.wrap { it.generate() } }
-        run {
-            // Calculate label jumps
-            val labelIndices = linkedMapOf<String, Int>()
-            val jumpIndices = linkedMapOf<String, Int>()
-            children.fold(0) { realCount, it ->
-                when {
-                    it is IR.Label ->
-                        labelIndices[it.id] = realCount
-                    it.instr == Instruction.GOTO && it.args[0] == 0 ->
-                        jumpIndices[gotoLabels[it]] = realCount
-                }
-                when {
-                    it.real -> realCount + 1
-                    else -> realCount
-                }
-            }
-            val real = children.filter { it.real }
-            for ((s, i) in jumpIndices) {
-                real[i].args[0] = labelIndices[s] - i
-            }
-        }
         val list = (listOf(
                 IR.Function(global, f.copy(numLocals = 0 ?: state.allocator.references.size()))) // FIXME
                 + genParams
@@ -166,55 +148,49 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     /** Filled in by new labels */
-    override fun visit(e: GotoExpression) =
-            IR(Instruction.GOTO, arrayOf(0, 0, 0), name = e.toString()).with {
-                gotoLabels[this] = e.id
-            }.list()
+    override fun visit(e: GotoExpression) = IR(Instruction.GOTO.Label(e.id), intArrayOf(), name = e.toString()).list()
 
     override fun visit(e: LabelExpression) = IR.Label(e.id).list()
 
+    private val loops = AtomicInteger()
+
     override fun visit(e: LoopExpression) = linkedListOf<IR>() with {
+        val loopId = "__loop_${loops.getAndIncrement()}"
+        val beginLabel = "${loopId}_begin"
+        val continueLabel = "${loopId}_continue"
+        val breakLabel = "${loopId}_break"
+
         val genInit = e.initializer?.flatMap { it.generate() }
-
         val genPred = e.predicate.generate()
-        val predCount = genPred.count { it.real }
-
-        val genBody = e.children.flatMap { it.generate() }
-        val bodyCount = genBody.count { it.real }
-
-        val genUpdate = e.update?.flatMap { it.generate() }
-        val updateCount = genUpdate?.count { it.real } ?: 0
-
-        val totalCount = bodyCount + updateCount + predCount
-
-        if (genInit != null) {
-            addAll(genInit)
-        }
-        addAll(genPred)
-        if (e.checkBefore) {
-            add(IR(Instruction.IFNOT, arrayOf(genPred.last().ret,
-                    totalCount + /* the last if */ 1 + /* the next instruction */ 1, 0), name = "loop precondition"))
-        }
-        addAll(genBody)
-        if (genUpdate != null) {
-            addAll(genUpdate)
-        }
-        addAll(genPred)
-        add(IR(Instruction.IF, arrayOf(genPred.last().ret, -totalCount, 0), name = e.predicate.toString()))
-
-        // break/continue; jump to end
-        genBody.asSequence().filter { it.real }.forEachIndexed { i, IR ->
-            if (IR.instr == Instruction.GOTO && IR.args[0] == 0) {
-                val after = (bodyCount - 1) - i
-                IR.args[0] = after + 1 + when (IR.args[1]) {
-                    1 -> // break
-                        updateCount + predCount + /* if */ 1
-                    else -> // continue
-                        0
+        val genBody = e.children.asSequence().flatMap {
+            it.generate().asSequence().map {
+                when (it.instr) {
+                    is Instruction.GOTO.Break -> it.copy(Instruction.GOTO.Label(breakLabel), it.args)
+                    is Instruction.GOTO.Continue -> it.copy(Instruction.GOTO.Label(continueLabel), it.args)
+                    else -> it
                 }
-                IR.args[1] = 0
+            }
+        }.toList()
+        val genUpdate = e.update?.flatMap { it.generate() }
+
+        genInit?.let { addAll(it) }
+        genPred.let { addAll(it) }
+        if (e.checkBefore) {
+            Instruction.GOTO.If(breakLabel, genPred.last().ret, false).let {
+                add(IR(it, name = e.predicate.toString()))
             }
         }
+        run {
+            Instruction.LABEL(beginLabel).let { add(IR(it, name = "begin")) }
+            genBody.let { addAll(it) }
+            Instruction.LABEL(continueLabel).let { add(IR(it, name = "continue")) }
+            genUpdate?.let { addAll(it) }
+            genPred.let { addAll(it) }
+            Instruction.GOTO.If(beginLabel, genPred.last().ret).let {
+                add(IR(it, name = e.predicate.toString()))
+            }
+        }
+        Instruction.LABEL(breakLabel).let { add(IR(it, name = "break")) }
     }
 
     override fun visit(e: IndexExpression): List<IR> {
@@ -228,7 +204,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val type = e.type(state)
             val out = state.allocator.allocateReference(type = type)
             val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            add(IR(instr, arrayOf(genL.last().ret, genR.last().ret,out.ref),out.ref, e.toString()))
+            add(IR(instr, intArrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
         }
     }
 
@@ -241,7 +217,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                     .with { addAll(this) }
             val out = state.allocator.allocateReference(type = e.type(state))
             val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            IR(instr, arrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
+            IR(instr, intArrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
             val f = state.allocator["${e.left}_${e.field.id}"]!!
             add(IR.Return(f.ref))
@@ -262,13 +238,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
-        args.mapIndexedTo(this) { i, it ->
-            val param = Instruction.OFS_PARAM(i)
-            IR(Instruction.STORE(javaClass<float_t>()), arrayOf(it.last().ret, param), param, "Prepare param ${i + 1}")
-        }
-        IR(Instruction.CALL(args.size()), arrayOf(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())
+        IR(Instruction.CALL(args.map { it.last().ret }), intArrayOf(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())
                 .with { add(this) }
-        IR(Instruction.STORE(javaClass<float_t>()), arrayOf(Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
+        IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
                 .with { add(this) }
     }
 
@@ -303,7 +275,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: ReturnStatement): List<IR> {
         val ret = linkedListOf<IR>()
-        val args = arrayOf(0, 0, 0)
+        val args = intArrayOf(0, 0, 0)
         e.returnValue?.generate()?.let {
             ret.addAll(it)
             // TODO: return vector

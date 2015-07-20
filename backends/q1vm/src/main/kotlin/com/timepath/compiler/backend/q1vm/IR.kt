@@ -1,20 +1,19 @@
 package com.timepath.compiler.backend.q1vm
 
-import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.q1vm.ProgramData
 
-open class IR(val instr: Instruction? = null,
-              val args: Array<Int> = arrayOf(),
-              /** Continuation passing */
-              open val ret: Int = 0,
-              val name: String) {
+open data class IR(val instr: Instruction? = null,
+                   args: IntArray? = null,
+                   /** Continuation passing */
+                   open val ret: Int = 0,
+                   val name: String) {
+
+    val args: IntArray = args?.copyOf(3) ?: intArrayOf(0, 0, 0)
 
     override fun toString(): String {
         val s = "$instr(${args.map { "$" + it }.join(", ")})"
         return "$s /* $name */"
     }
-
-    val real = this !is Str
 
     private abstract class Str(val repr: String) : IR(name = repr) {
         override fun toString() = repr
@@ -35,5 +34,5 @@ open class IR(val instr: Instruction? = null,
     : IR(ret = ret, name = "endfunction")
 
     class Label(val id: String)
-    : Str("label $id")
+    : IR(Instruction.LABEL(id), name = "label $id")
 }
