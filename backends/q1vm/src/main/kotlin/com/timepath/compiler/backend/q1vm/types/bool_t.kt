@@ -12,8 +12,8 @@ import com.timepath.compiler.backend.q1vm.Instruction
 object bool_t : number_t() {
     override val simpleName = "bool_t"
     val ops = mapOf(
-            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ(javaClass<float_t>())),
-            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE(javaClass<float_t>())),
+            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<float_t>()]),
+            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<float_t>()]),
             Operation("!", this) to Operation.Handler.Unary(bool_t) {
                 (0.expr() eq it).generate()
             },

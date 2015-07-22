@@ -87,7 +87,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
         fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
-            var (a, b, c) = it.args
+            var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Triple(0, 0, 0)
             val qinstr = when {
                 it is IR.EndFunction -> QInstruction.DONE
                 instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
@@ -160,11 +160,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     else -> throw NoWhenBranchMatchedException()
                 }
                 instr is Instruction.CALL -> {
-                    instr.args.mapIndexedTo(statements) { idx, it ->
+                    instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
                         ProgramData.Statement(QInstruction.STORE_FLOAT, it, param, 0)
                     }
-                    QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(0, Math.min(instr.args.size(), 8)))
+                    QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(0, Math.min(instr.params.size(), 8)))
                 }
                 instr is Instruction.STATE -> QInstruction.STATE
                 instr is Instruction.LABEL -> {

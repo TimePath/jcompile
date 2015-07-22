@@ -12,23 +12,23 @@ import com.timepath.with
 
 object DefaultHandlers {
 
-    fun Binary(type: Type, instr: Instruction) = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
+    fun Binary(type: Type, instr: Instruction.Factory) = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
         linkedListOf<IR>() with {
             val genLeft = l.generate()
             addAll(genLeft)
             val genRight = r.generate()
             addAll(genRight)
             val out = allocator.allocateReference(type = type)
-            add(IR(instr, Triple(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
+            add(IR(instr(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
         }
     }
 
-    fun Unary(type: Type, instr: Instruction) = Handler.Unary<Q1VM.State, List<IR>>(type) {
+    fun Unary(type: Type, instr: Instruction.Factory) = Handler.Unary<Q1VM.State, List<IR>>(type) {
         linkedListOf<IR>() with {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type)
-            add(IR(instr, Triple(genLeft.last().ret, out.ref, 0), out.ref, name = "$it"))
+            add(IR(instr(genLeft.last().ret, out.ref, 0), out.ref, name = "$it"))
         }
     }
 
@@ -36,10 +36,10 @@ object DefaultHandlers {
      * TODO: other storeps
      */
     fun Assign(type: Type,
-               instr: Instruction,
+               instr: Instruction.Factory,
                op: (left: Expression, right: Expression) -> BinaryExpression? = { left, right -> null })
             = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        fun MutableList<IR>.x(realInstr: Instruction,
+        fun MutableList<IR>.x(realInstr: Instruction.Factory,
                               leftR: Expression,
                               leftL: Expression) {
             val genL = leftL.generate()
@@ -50,7 +50,7 @@ object DefaultHandlers {
 
             val lvalue = genL.last()
             val rvalue = genR.last()
-            add(IR(realInstr, Triple(rvalue.ret, lvalue.ret, 0), rvalue.ret, "$leftL = $right"))
+            add(IR(realInstr(rvalue.ret, lvalue.ret, 0), rvalue.ret, "$leftL = $right"))
         }
         linkedListOf<IR>() with {
             when (l) {
@@ -59,7 +59,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP(javaClass<float_t>()),
+                            x(Instruction.STOREP[javaClass<float_t>()],
                                     IndexExpression(tmp, l.right),
                                     IndexExpression(tmp, l.right) with {
                                         this.instr = Instruction.ADDRESS
@@ -71,7 +71,7 @@ object DefaultHandlers {
                             val set = r
                             if (arr !is ReferenceExpression) throw UnsupportedOperationException()
                             val s = typeL.generateAccessorName(arr.refers.id)
-                            val resolve = symbols.get(s) ?: throw RuntimeException("Can't resolve $s")
+                            val resolve = symbols[s] ?: throw RuntimeException("Can't resolve $s")
                             val indexer = resolve.ref()
                             val accessor = MethodCallExpression(indexer, listOf(idx))
                             addAll(MethodCallExpression(accessor, listOf(1.expr(), set)).generate())
@@ -84,7 +84,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP(javaClass<float_t>()),
+                            x(Instruction.STOREP[javaClass<float_t>()],
                                     MemberExpression(tmp, l.field),
                                     MemberExpression(tmp, l.field) with {
                                         this.instr = Instruction.ADDRESS

@@ -84,13 +84,13 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), Triple(genTrue.last().ret, temp.ref, 0), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genTrue.last().ret, temp.ref, 0), name = "store"))
             IR(Instruction.GOTO.Label(endLabel), name = "goto end").let { ret.add(it) }
             // else
             ret.add(IR(Instruction.LABEL(falseLabel), name = "false"))
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), Triple(genFalse.last().ret, temp.ref, 0), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genFalse.last().ret, temp.ref, 0), name = "store"))
             // return
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
             ret.add(IR.Return(temp.ref))
@@ -165,8 +165,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genBody = e.children.asSequence().flatMap {
             it.generate().asSequence().map {
                 when (it.instr) {
-                    is Instruction.GOTO.Break -> it.copy(Instruction.GOTO.Label(breakLabel), it.args)
-                    is Instruction.GOTO.Continue -> it.copy(Instruction.GOTO.Label(continueLabel), it.args)
+                    is Instruction.GOTO.Break -> it.copy(Instruction.GOTO.Label(breakLabel))
+                    is Instruction.GOTO.Continue -> it.copy(Instruction.GOTO.Label(continueLabel))
                     else -> it
                 }
             }
@@ -203,8 +203,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             addAll(genR)
             val type = e.type(state)
             val out = state.allocator.allocateReference(type = type)
-            val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            add(IR(instr, Triple(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
+            val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
+            add(IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
         }
     }
 
@@ -216,8 +216,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val genR = state.fields[e.field.owner, e.field.id].generate()
                     .with { addAll(this) }
             val out = state.allocator.allocateReference(type = e.type(state))
-            val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            IR(instr, Triple(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
+            val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
+            IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
             val f = state.allocator["${e.left}_${e.field.id}"]!!
             add(IR.Return(f.ref))
@@ -238,9 +238,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
-        IR(Instruction.CALL(args.map { it.last().ret }), Triple(genF.last().ret, 0, 0), Instruction.OFS_PARAM(-1), "$e")
+        val params = args.map { it.last().ret }
+        IR(Instruction.CALL[params](genF.last().ret, 0, 0), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
-        IR(Instruction.STORE(javaClass<float_t>()), Triple(Instruction.OFS_PARAM(-1), ret.ref, 0), ret.ref, "Save response")
+        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref, 0), ret.ref, "Save response")
                 .with { add(this) }
     }
 
@@ -280,7 +281,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // TODO: non-contiguous vector / non-vector returns
             Triple(it.last().ret, it.last().ret + 1, it.last().ret + 2)
         } ?: Triple(0, 0, 0)
-        ret.add(IR(Instruction.RETURN, args, 0, name = e.toString()))
+        ret.add(IR(Instruction.RETURN(args), 0, name = e.toString()))
         return ret
     }
 

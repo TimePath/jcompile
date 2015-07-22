@@ -4,67 +4,133 @@ import com.timepath.compiler.types.Type
 
 interface Instruction {
 
+    abstract class WithArgs(val args: Triple<Int, Int, Int>) : Instruction
+
+    open class Factory(private val new: (Triple<Int, Int, Int>) -> Instruction) {
+        fun invoke(a: Int, b: Int, c: Int) = new(Triple(a, b, c))
+    }
+
     fun name(f: (Int) -> String) = javaClass.getSimpleName()
 
-    object MUL_FLOAT : Instruction
+    class MUL_FLOAT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ MUL_FLOAT(it) })
+    }
 
-    object MUL_VEC : Instruction
+    class MUL_VEC(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ MUL_VEC(it) })
+    }
 
-    object MUL_FLOAT_VEC : Instruction
+    class MUL_FLOAT_VEC(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ MUL_FLOAT_VEC(it) })
+    }
 
-    object MUL_VEC_FLOAT : Instruction
+    class MUL_VEC_FLOAT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ MUL_VEC_FLOAT(it) })
+    }
 
-    object DIV_FLOAT : Instruction
+    class DIV_FLOAT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ DIV_FLOAT(it) })
+    }
 
-    object ADD_FLOAT : Instruction
+    class ADD_FLOAT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ ADD_FLOAT(it) })
+    }
 
-    object ADD_VEC : Instruction
+    class ADD_VEC(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ ADD_VEC(it) })
+    }
 
-    object SUB_FLOAT : Instruction
+    class SUB_FLOAT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ SUB_FLOAT(it) })
+    }
 
-    object SUB_VEC : Instruction
+    class SUB_VEC(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ SUB_VEC(it) })
+    }
 
-    class EQ(val type: Class<out Type>) : Instruction {
+    class EQ(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { EQ(type, it) }
+        }
+
         override fun name(f: (Int) -> String) = "EQ<${type.getSimpleName()}>"
     }
 
-    class NE(val type: Class<out Type>) : Instruction {
-        override fun name(f: (Int) -> String) = "EQ<${type.getSimpleName()}>"
+    class NE(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { NE(type, it) }
+        }
+
+        override fun name(f: (Int) -> String) = "NE<${type.getSimpleName()}>"
     }
 
-    object LE : Instruction
+    class LE(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ LE(it) })
+    }
 
-    object GE : Instruction
+    class GE(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ GE(it) })
+    }
 
-    object LT : Instruction
+    class LT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ LT(it) })
+    }
 
-    object GT : Instruction
+    class GT(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ GT(it) })
+    }
 
-    class LOAD(val type: Class<out Type>) : Instruction {
+    class LOAD(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { LOAD(type, it) }
+        }
+
         override fun name(f: (Int) -> String) = "LOAD<${type.getSimpleName()}>"
     }
 
-    object ADDRESS : Instruction
+    class ADDRESS(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ ADDRESS(it) })
+    }
 
-    class STORE(val type: Class<out Type>) : Instruction {
+    class STORE(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { STORE(type, it) }
+        }
+
         override fun name(f: (Int) -> String) = "STORE<${type.getSimpleName()}>"
     }
 
-    class STOREP(val type: Class<out Type>) : Instruction {
+    class STOREP(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { STOREP(type, it) }
+        }
+
         override fun name(f: (Int) -> String) = "STOREP<${type.getSimpleName()}>"
     }
 
-    object RETURN : Instruction
+    class RETURN(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ RETURN(it) })
+    }
 
-    class NOT(val type: Class<out Type>) : Instruction {
+    class NOT(val type: Class<out Type>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(type: Class<out Type>) = Factory { NOT(type, it) }
+        }
+
         override fun name(f: (Int) -> String) = "NOT<${type.getSimpleName()}>"
     }
 
-    class CALL(val args: List<Int>) : Instruction {
-        override fun name(f: (Int) -> String) = "CALL<${args.size()}>(${args.joinToString(", ")})"
+    class CALL(val params: List<Int>, args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object {
+            fun get(params: List<Int>) = Factory { CALL(params, it) }
+        }
+
+        override fun name(f: (Int) -> String) = "CALL<${params.size()}>(${params.joinToString(", ")})"
     }
 
-    object STATE : Instruction
+    class STATE(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ STATE(it) })
+    }
 
     class LABEL(val id: String) : Instruction {
         override fun name(f: (Int) -> String) = "label ${id}:"
@@ -88,13 +154,21 @@ interface Instruction {
         object Continue : Instruction
     }
 
-    object AND : Instruction
+    class AND(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ AND(it) })
+    }
 
-    object OR : Instruction
+    class OR(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ OR(it) })
+    }
 
-    object BITAND : Instruction
+    class BITAND(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ BITAND(it) })
+    }
 
-    object BITOR : Instruction
+    class BITOR(args: Triple<Int, Int, Int>) : WithArgs(args) {
+        companion object : Factory({ BITOR(it) })
+    }
 
     companion object {
 

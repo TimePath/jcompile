@@ -3,12 +3,11 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.q1vm.ProgramData
 
 open data class IR(val instr: Instruction? = null,
-                   val args: Triple<Int, Int, Int> = Triple(0, 0, 0),
                    /** Continuation passing */
                    open val ret: Int = 0,
                    val name: String) {
 
-    override fun toString() = "$instr(${args}) /* $name */"
+    override fun toString() = "$instr /* $name */"
 
     private abstract class Str(val repr: String) : IR(name = repr) {
         override fun toString() = repr
