@@ -3,11 +3,16 @@ package com.timepath.compiler.backend.q1vm.visitors
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.*
+import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.evaluate
+import com.timepath.compiler.backend.q1vm.reduce
+import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.backend.q1vm.types.class_t
 import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.debug
 import com.timepath.compiler.getTextWS
+import com.timepath.compiler.ir.IR
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.q1vm.ProgramData
@@ -84,13 +89,13 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genTrue.last().ret, temp.ref, 0), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genTrue.last().ret, temp.ref, Instruction.Ref(0)), name = "store"))
             IR(Instruction.GOTO.Label(endLabel), name = "goto end").let { ret.add(it) }
             // else
             ret.add(IR(Instruction.LABEL(falseLabel), name = "false"))
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genFalse.last().ret, temp.ref, 0), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genFalse.last().ret, temp.ref, Instruction.Ref(0)), name = "store"))
             // return
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
             ret.add(IR.Return(temp.ref))
@@ -126,7 +131,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 firstLocal = 0,
                 numLocals = 0,
                 profiling = 0,
-                nameOffset = state.allocator.allocateString(e.id).ref,
+                nameOffset = state.allocator.allocateString(e.id).ref.i,
                 fileNameOffset = 0,
                 numParams = 0,
                 sizeof = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
@@ -239,9 +244,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
         val params = args.map { it.last().ret }
-        IR(Instruction.CALL[params](genF.last().ret, 0, 0), Instruction.OFS_PARAM(-1), "$e")
+        IR(Instruction.CALL[params](genF.last().ret, Instruction.Ref(0), Instruction.Ref(0)), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
-        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref, 0), ret.ref, "Save response")
+        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref, Instruction.Ref(0)), ret.ref, "Save response")
                 .with { add(this) }
     }
 
@@ -271,7 +276,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         // FIXME: null references
         val global = state.allocator[id]
-        return IR.Return(global?.ref ?: 0).list()
+        return IR.Return(global?.ref ?: Instruction.Ref(0)).list()
     }
 
     override fun visit(e: ReturnStatement): List<IR> {
@@ -279,9 +284,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val args = e.returnValue?.generate()?.let {
             ret.addAll(it)
             // TODO: non-contiguous vector / non-vector returns
-            Triple(it.last().ret, it.last().ret + 1, it.last().ret + 2)
-        } ?: Triple(0, 0, 0)
-        ret.add(IR(Instruction.RETURN(args), 0, name = e.toString()))
+            Instruction.Args(it.last().ret, it.last().ret + 1, it.last().ret + 2)
+        } ?: Instruction.Args(Instruction.Ref(0), Instruction.Ref(0), Instruction.Ref(0))
+        ret.add(IR(Instruction.RETURN(args), Instruction.Ref(0), name = e.toString()))
         return ret
     }
 

@@ -3,11 +3,12 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.entity_t
+import com.timepath.compiler.backend.q1vm.types.float_t
+import com.timepath.compiler.ir.IR
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.compiler.backend.q1vm.Instruction
-import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.with
 
 object DefaultHandlers {
@@ -28,7 +29,7 @@ object DefaultHandlers {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type)
-            add(IR(instr(genLeft.last().ret, out.ref, 0), out.ref, name = "$it"))
+            add(IR(instr(genLeft.last().ret, out.ref, Instruction.Ref(0)), out.ref, name = "$it"))
         }
     }
 
@@ -50,7 +51,7 @@ object DefaultHandlers {
 
             val lvalue = genL.last()
             val rvalue = genR.last()
-            add(IR(realInstr(rvalue.ret, lvalue.ret, 0), rvalue.ret, "$leftL = $right"))
+            add(IR(realInstr(rvalue.ret, lvalue.ret, Instruction.Ref(0)), rvalue.ret, "$leftL = $right"))
         }
         linkedListOf<IR>() with {
             when (l) {

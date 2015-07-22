@@ -1,10 +1,8 @@
-package com.timepath.compiler.backend.q1vm
-
-import com.timepath.q1vm.ProgramData
+package com.timepath.compiler.ir
 
 open data class IR(val instr: Instruction? = null,
                    /** Continuation passing */
-                   open val ret: Int = 0,
+                   open val ret: Instruction.Ref = Instruction.Ref(0),
                    val name: String) {
 
     override fun toString() = "$instr /* $name */"
@@ -13,7 +11,7 @@ open data class IR(val instr: Instruction? = null,
         override fun toString() = repr
     }
 
-    class Return(override val ret: Int)
+    class Return(override val ret: Instruction.Ref)
     : Str("/* return = $${Instruction.OFS_STR(ret)} */")
 
     class Declare(val e: Allocator.AllocationMap.Entry)
@@ -21,10 +19,10 @@ open data class IR(val instr: Instruction? = null,
         override val ret = e.ref
     }
 
-    class Function(val e: Allocator.AllocationMap.Entry, val function: ProgramData.Function)
+    class Function(val e: Allocator.AllocationMap.Entry, val function: Any)
     : Str("${e.name}: ; $${e.ref}")
 
-    class EndFunction(ret: Int)
+    class EndFunction(ret: Instruction.Ref)
     : IR(ret = ret, name = "endfunction")
 
     class Label(val id: String)

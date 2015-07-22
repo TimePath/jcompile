@@ -3,8 +3,10 @@ package com.timepath.compiler.backend.q1vm.impl
 import com.timepath.Logger
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
-import com.timepath.compiler.backend.q1vm.data.Pointer
 import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.ir.Allocator
+import com.timepath.compiler.ir.IR
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.QInstruction
@@ -87,7 +89,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
         fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
-            var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Triple(0, 0, 0)
+            val z = Instruction.Ref(0)
+            var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args(z, z, z)
             val qinstr = when {
                 it is IR.EndFunction -> QInstruction.DONE
                 instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
@@ -162,7 +165,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
-                        ProgramData.Statement(QInstruction.STORE_FLOAT, it, param, 0)
+                        ProgramData.Statement(QInstruction.STORE_FLOAT, it.i, param.i, 0)
                     }
                     QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(0, Math.min(instr.params.size(), 8)))
                 }
@@ -192,7 +195,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.BITOR -> QInstruction.BITOR
                 else -> throw NoWhenBranchMatchedException()
             }
-            statements.add(ProgramData.Statement(qinstr, a, b, c))
+            statements.add(ProgramData.Statement(qinstr, a.i, b.i, c.i))
         }
 
         /**
@@ -202,7 +205,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val fieldDefs = arrayListOf<ProgramData.Definition>() with {
                 for ((s, idx) in state.fields.map) {
                     val e = state.allocator.allocateString(s)
-                    add(ProgramData.Definition(0, idx.toShort(), e.ref))
+                    add(ProgramData.Definition(0, idx.toShort(), e.ref.i))
                 }
             }
             val statements = arrayListOf<ProgramData.Statement>()
@@ -211,6 +214,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             for (it in iter) {
                 if (it is IR.Function) {
                     val firstStatement = statements.size()
+                    it.function as ProgramData.Function
                     if (it.function.firstStatement < 0) {
                         functions.add(it.function)
                     } else {
@@ -238,11 +242,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     val k = it.ref
                     val v = it.value?.any
                     val e = state.allocator.allocateString(it.name)
-                    add(ProgramData.Definition(0, k.toShort(), e.ref))
+                    add(ProgramData.Definition(0, k.i.toShort(), e.ref.i))
                     when (v) {
-                        is Pointer -> intData.put(k, v.int)
-                        is Int -> floatData.put(k, v.toFloat())
-                        is Float -> floatData.put(k, v)
+                        is Pointer -> intData.put(k.i, v.int)
+                        is Int -> floatData.put(k.i, v.toFloat())
+                        is Float -> floatData.put(k.i, v)
                     }
                 }
                 state.allocator.references.all.forEach(f)

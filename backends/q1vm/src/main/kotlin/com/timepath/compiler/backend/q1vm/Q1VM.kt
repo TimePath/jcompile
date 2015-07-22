@@ -3,19 +3,18 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.data.Pointer
-import com.timepath.compiler.backend.q1vm.data.Vector
+import com.timepath.compiler.backend.q1vm.impl.AllocatorImpl
 import com.timepath.compiler.backend.q1vm.types.*
 import com.timepath.compiler.backend.q1vm.visitors.EvaluateVisitor
 import com.timepath.compiler.backend.q1vm.visitors.GeneratorVisitor
 import com.timepath.compiler.backend.q1vm.visitors.ReduceVisitor
 import com.timepath.compiler.backend.q1vm.visitors.TypeVisitor
+import com.timepath.compiler.ir.IR
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.compiler.backend.q1vm.Instruction
 import com.timepath.with
 
 suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
@@ -51,7 +50,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val evaluateVisitor = EvaluateVisitor(this)
         val generatorVisitor = GeneratorVisitor(this)
         val typeVisitor = TypeVisitor(this)
-        val allocator = Allocator(opts)
+        val allocator = AllocatorImpl(opts)
 
         val fields = object : FieldCounter {
             override val map: MutableMap<String, Int> = linkedMapOf()

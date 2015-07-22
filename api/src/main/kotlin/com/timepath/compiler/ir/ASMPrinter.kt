@@ -1,4 +1,4 @@
-package com.timepath.compiler.backend.q1vm
+package com.timepath.compiler.ir
 
 import com.timepath.Printer
 import java.util.LinkedList
@@ -19,7 +19,7 @@ class ASMPrinter(val ir: List<IR>) {
         pop()
     }
 
-    val funcs = LinkedList<LinkedList<Pair<Int, String>>>()
+    val funcs = LinkedList<LinkedList<Pair<Instruction.Ref, String>>>()
 
     fun push() = funcs.push(linkedListOf())
     fun pop() = funcs.pop()
@@ -50,11 +50,11 @@ class ASMPrinter(val ir: List<IR>) {
     }
 
     private fun Printer.statement(stmt: IR) {
-        val f: (Int) -> String = {
+        val f: (Instruction.Ref) -> String = {
             Instruction.OFS_STR(it).let {
                 when (it) {
                     is String -> "@" + it
-                    is Int -> {
+                    is Instruction.Ref -> {
                         var id: String? = null
                         loop@for (scope in funcs) {
                             for (pair in scope) {
@@ -73,7 +73,10 @@ class ASMPrinter(val ir: List<IR>) {
         val s = (stmt.instr?.name(f) ?: "")
         +when (stmt.instr) {
             is Instruction.GOTO, is Instruction.LABEL -> s
-            is Instruction.WithArgs -> "${s.padEnd(18)} | ${stmt.instr.args.toList().map(f).join(" ")}"
+            is Instruction.WithArgs -> {
+                val (a, b, c) = stmt.instr.args
+                "${s.padEnd(18)} | ${listOf(a, b, c).map(f).join(" ")}"
+            }
             else -> "${s.padEnd(18)} | ???"
         }
     }

@@ -6,10 +6,9 @@ import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.ast.expr
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
-import com.timepath.compiler.backend.q1vm.Instruction
 
 object void_t : Type() {
     override val simpleName = "void_t"

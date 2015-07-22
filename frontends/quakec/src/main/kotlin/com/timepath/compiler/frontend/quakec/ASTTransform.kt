@@ -4,7 +4,7 @@ import com.timepath.Logger
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.data.Vector
+import com.timepath.compiler.backend.q1vm.Vector
 import com.timepath.compiler.backend.q1vm.evaluate
 import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.backend.q1vm.types.*

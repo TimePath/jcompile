@@ -1,11 +1,12 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.backend.q1vm.Allocator
 import com.timepath.compiler.backend.q1vm.CompilerOptions
-import com.timepath.compiler.backend.q1vm.data.Pointer
+import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.string_t
+import com.timepath.compiler.ir.Allocator
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.with
@@ -21,7 +22,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         inner data class EntryImpl(
                 /** Privately set */
                 override var name: String,
-                override val ref: Int,
+                override val ref: Instruction.Ref,
                 override val value: Value?,
                 override val type: Type) : Allocator.AllocationMap.Entry {
 
@@ -39,7 +40,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         private val free = linkedListOf<EntryImpl>()
         private val pool: MutableList<EntryImpl> = linkedListOf()
         override val all: List<EntryImpl> = pool
-        private val refs: MutableMap<Int, EntryImpl> = linkedMapOf()
+        private val refs: MutableMap<Instruction.Ref, EntryImpl> = linkedMapOf()
         private val values: MutableMap<Value?, EntryImpl> = linkedMapOf()
         private val names: MutableMap<String, Allocator.AllocationMap.Entry> = linkedMapOf()
 
@@ -49,7 +50,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         val insideFunc: Boolean
             get() = scope.size() >= 3
 
-        fun allocate(id: String, ref: Int, value: Value?, type: Type): EntryImpl {
+        fun allocate(id: String, ref: Instruction.Ref, value: Value?, type: Type): EntryImpl {
             // only consider uninitialized local references for now
             if (opts.scopeFolding && insideFunc && !free.isEmpty() && value == null) {
                 val e = free.pop()
@@ -69,8 +70,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             return e
         }
 
-        override fun contains(ref: Int) = ref in refs
-        override fun get(ref: Int): EntryImpl? = refs[ref]
+        override fun contains(ref: Instruction.Ref) = ref in refs
+        override fun get(ref: Instruction.Ref): EntryImpl? = refs[ref]
 
         override fun contains(value: Value) = value in values
         override fun get(value: Value): EntryImpl? = values[value]
@@ -141,9 +142,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
      * Return the index to a constant referring to this function
      */
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
-        val function = functions.allocate(id, functions.size(), null, type)
+        val function = functions.allocate(id, Instruction.Ref(functions.size()), null, type)
         // Allocate a constant so the function can be called
-        return allocateConstant(Value(Pointer(function.ref)), type, id) with {
+        return allocateConstant(Value(Pointer(function.ref.i)), type, id) with {
             scope.peek().lookup[id] = this
         }
     }
@@ -156,7 +157,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateReference(id: String?, type: Type, value: Value?): Allocator.AllocationMap.Entry {
         val name = id ?: "var${refCounter++}"
         val i = opts.userStorageStart + (references.size() + constants.size())
-        val entry = references.allocate(name, i, value, type)
+        val entry = references.allocate(name, Instruction.Ref(i), value, type)
         scope.peek().lookup[name] = entry
         return entry
     }
@@ -167,7 +168,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
-            return allocateConstant(Value(Pointer(str.ref)), string_t, str.name)
+            return allocateConstant(Value(Pointer(str.ref.i)), string_t, str.name)
         }
         if (opts.mergeConstants) {
             constants[value]?.let {
@@ -177,7 +178,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
-        return constants.allocate(id, i, value, type)
+        return constants.allocate(id, Instruction.Ref(i), value, type)
     }
 
     private var stringCounter = 0
@@ -190,7 +191,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         }
         val i = stringCounter
         stringCounter += s.length() + 1
-        return strings.allocate(s, i, null, string_t)
+        return strings.allocate(s, Instruction.Ref(i), null, string_t)
     }
 
     override fun toString(): String {

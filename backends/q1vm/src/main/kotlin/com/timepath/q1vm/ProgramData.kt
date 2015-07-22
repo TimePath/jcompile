@@ -14,9 +14,9 @@ data class ProgramData(val header: Header,
                        val globalData: ByteBuffer) {
 
     data class Statement(val op: QInstruction,
-                    val a: Int,
-                    val b: Int,
-                    val c: Int) {
+                         val a: Int,
+                         val b: Int,
+                         val c: Int) {
 
         constructor(op: Short,
                     a: Short,

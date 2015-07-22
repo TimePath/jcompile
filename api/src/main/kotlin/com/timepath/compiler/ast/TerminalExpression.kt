@@ -1,5 +1,6 @@
 package com.timepath.compiler.ast
 
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext as PRC
@@ -51,7 +52,7 @@ public class StructDeclarationExpression(id: String,
 
 }
 
-public class MemoryReference(val ref: Int, val type: Type, override val ctx: PRC? = null) : Expression() {
+public class MemoryReference(val ref: Instruction.Ref, val type: Type, override val ctx: PRC? = null) : Expression() {
     override val simpleName = "MemoryReference"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 

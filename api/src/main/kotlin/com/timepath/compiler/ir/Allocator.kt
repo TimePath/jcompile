@@ -1,21 +1,16 @@
-package com.timepath.compiler.backend.q1vm
+package com.timepath.compiler.ir
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.backend.q1vm.impl.AllocatorImpl
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import java.util.Deque
 
 interface Allocator {
 
-    companion object {
-        fun invoke(opts: CompilerOptions) = AllocatorImpl(opts)
-    }
-
     interface AllocationMap {
         interface Entry {
             val name: String
-            val ref: Int
+            val ref: Instruction.Ref
             val value: Value?
             val type: Type
         }
@@ -24,8 +19,8 @@ interface Allocator {
 
         fun size(): Int
 
-        fun contains(ref: Int): Boolean
-        fun get(ref: Int): Entry?
+        fun contains(ref: Instruction.Ref): Boolean
+        fun get(ref: Instruction.Ref): Entry?
 
         fun contains(value: Value): Boolean
         fun get(value: Value): Entry?

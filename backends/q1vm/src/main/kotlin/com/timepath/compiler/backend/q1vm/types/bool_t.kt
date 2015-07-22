@@ -3,11 +3,10 @@ package com.timepath.compiler.backend.q1vm.types
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
-import com.timepath.compiler.backend.q1vm.IR
 import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.ir.IR
+import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.Operation.Handler
-import com.timepath.compiler.backend.q1vm.Instruction
 
 object bool_t : number_t() {
     override val simpleName = "bool_t"
