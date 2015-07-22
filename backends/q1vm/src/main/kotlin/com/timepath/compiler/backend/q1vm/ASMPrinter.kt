@@ -73,7 +73,7 @@ class ASMPrinter(val ir: List<IR>) {
         val s = (stmt.instr?.name(f) ?: "")
         +when (stmt.instr) {
             is Instruction.GOTO, is Instruction.LABEL -> s
-            else -> "${s.padEnd(18)} | ${stmt.args.map(f).join(" ")}"
+            else -> "${s.padEnd(18)} | ${stmt.args.toList().map(f).join(" ")}"
         }
     }
 }

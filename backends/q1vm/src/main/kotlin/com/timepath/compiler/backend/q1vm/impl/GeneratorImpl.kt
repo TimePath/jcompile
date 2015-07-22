@@ -87,7 +87,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
         fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
-            val args = it.args
+            var (a, b, c) = it.args
             val qinstr = when {
                 it is IR.EndFunction -> QInstruction.DONE
                 instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
@@ -173,7 +173,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 }
                 instr is Instruction.GOTO -> {
                     if (instr is Instruction.GOTO.If) {
-                        args[0] = instr.condition
+                        a = instr.condition
                         jm.goto(instr.id)
                         when (instr.expect) {
                             true -> QInstruction.IF
@@ -192,7 +192,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.BITOR -> QInstruction.BITOR
                 else -> throw NoWhenBranchMatchedException()
             }
-            statements.add(ProgramData.Statement(qinstr, args[0], args[1], args[2]))
+            statements.add(ProgramData.Statement(qinstr, a, b, c))
         }
 
         /**

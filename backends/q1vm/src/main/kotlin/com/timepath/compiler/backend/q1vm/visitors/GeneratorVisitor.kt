@@ -84,13 +84,13 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(genTrue.last().ret, temp.ref), name = "store"))
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), Triple(genTrue.last().ret, temp.ref, 0), name = "store"))
             IR(Instruction.GOTO.Label(endLabel), name = "goto end").let { ret.add(it) }
             // else
             ret.add(IR(Instruction.LABEL(falseLabel), name = "false"))
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(genFalse.last().ret, temp.ref), name = "store"))
+                ret.add(IR(Instruction.STORE(javaClass<float_t>()), Triple(genFalse.last().ret, temp.ref, 0), name = "store"))
             // return
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
             ret.add(IR.Return(temp.ref))
@@ -148,7 +148,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     /** Filled in by new labels */
-    override fun visit(e: GotoExpression) = IR(Instruction.GOTO.Label(e.id), intArrayOf(), name = e.toString()).list()
+    override fun visit(e: GotoExpression) = IR(Instruction.GOTO.Label(e.id), name = e.toString()).list()
 
     override fun visit(e: LabelExpression) = IR.Label(e.id).list()
 
@@ -204,7 +204,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val type = e.type(state)
             val out = state.allocator.allocateReference(type = type)
             val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            add(IR(instr, intArrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
+            add(IR(instr, Triple(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
         }
     }
 
@@ -217,7 +217,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                     .with { addAll(this) }
             val out = state.allocator.allocateReference(type = e.type(state))
             val instr = e.instr as? Instruction ?: Instruction.LOAD(javaClass<float_t>())
-            IR(instr, intArrayOf(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
+            IR(instr, Triple(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
             val f = state.allocator["${e.left}_${e.field.id}"]!!
             add(IR.Return(f.ref))
@@ -238,9 +238,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
-        IR(Instruction.CALL(args.map { it.last().ret }), intArrayOf(genF.last().ret), Instruction.OFS_PARAM(-1), e.toString())
+        IR(Instruction.CALL(args.map { it.last().ret }), Triple(genF.last().ret, 0, 0), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
-        IR(Instruction.STORE(javaClass<float_t>()), intArrayOf(Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
+        IR(Instruction.STORE(javaClass<float_t>()), Triple(Instruction.OFS_PARAM(-1), ret.ref, 0), ret.ref, "Save response")
                 .with { add(this) }
     }
 
@@ -275,12 +275,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: ReturnStatement): List<IR> {
         val ret = linkedListOf<IR>()
-        val args = intArrayOf(0, 0, 0)
-        e.returnValue?.generate()?.let {
+        val args = e.returnValue?.generate()?.let {
             ret.addAll(it)
-            // TODO: return vector
-            args[0] = it.last().ret
-        }
+            // TODO: non-contiguous vector / non-vector returns
+            Triple(it.last().ret, it.last().ret + 1, it.last().ret + 2)
+        } ?: Triple(0, 0, 0)
         ret.add(IR(Instruction.RETURN, args, 0, name = e.toString()))
         return ret
     }
