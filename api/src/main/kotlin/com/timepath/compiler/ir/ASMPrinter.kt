@@ -26,13 +26,13 @@ class ASMPrinter(val ir: List<IR>) {
 
     private fun Printer.declare(decl: IR.Declare) {
         val it = decl.e
-        funcs[0].push(it.ref to it.name)
-        +".using ${it.name} = $${Instruction.OFS_STR(it.ref)}"
+        funcs.first().push(it.ref to it.name)
+        +".using ${it.name} = ${Instruction.OFS_STR(it.ref)}"
     }
 
     private fun Printer.function(func: IR.Function, iter: Iterator<IR>) {
         push()
-        +".func ${func.e.name} = $${func.e.ref} {"
+        +".func ${func.e.name} = ${func.e.ref} {"
         +"    " {
             loop@for (it in iter) {
                 when (it) {
@@ -50,10 +50,13 @@ class ASMPrinter(val ir: List<IR>) {
     }
 
     private fun Printer.statement(stmt: IR) {
+        val maxInstrLen = 19
+        val maxVarLen = 12
         val f: (Instruction.Ref) -> String = {
+
             Instruction.OFS_STR(it).let {
                 when (it) {
-                    is String -> "@" + it
+                    is String -> it.toString()
                     is Instruction.Ref -> {
                         var id: String? = null
                         loop@for (scope in funcs) {
@@ -64,20 +67,20 @@ class ASMPrinter(val ir: List<IR>) {
                                 }
                             }
                         }
-                        id ?: "$" + it
+                        id ?: it.toString()
                     }
                     else -> throw NoWhenBranchMatchedException()
                 }
-            }.padEnd(12)
+            }.padEnd(maxVarLen)
         }
         val s = (stmt.instr?.name(f) ?: "")
-        +when (stmt.instr) {
+        +(when (stmt.instr) {
             is Instruction.GOTO, is Instruction.LABEL -> s
             is Instruction.WithArgs -> {
                 val (a, b, c) = stmt.instr.args
-                "${s.padEnd(18)} | ${listOf(a, b, c).map(f).join(" ")}"
+                "${s.padEnd(maxInstrLen)} | ${listOf(a, b, c).map(f).join(" ")}"
             }
-            else -> "${s.padEnd(18)} | ???"
-        }
+            else -> "${s.padEnd(maxInstrLen)} | ???"
+        }).trimEnd()
     }
 }

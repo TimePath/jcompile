@@ -5,13 +5,13 @@ import com.timepath.compiler.types.Type
 interface Instruction {
 
     data class Ref(val i: Int, val scope: Ref.Scope) {
-        enum class Scope {
-            Local, Global
+        enum class Scope(val sym: Char) {
+            Local('%'), Global('@')
         }
         companion object {
             val Null = Ref(0, Scope.Global)
         }
-        override fun toString() = i.toString()
+        override fun toString() = "${scope.sym}${i}"
 
         fun plus(i: Int) = Ref(this.i + i, this.scope)
     }
@@ -196,8 +196,8 @@ interface Instruction {
         fun OFS_PARAM(n: Int) = Ref(4 + n * 3, Ref.Scope.Global)
 
         fun OFS_STR(ref: Ref): Any = when (ref.i) {
-            in 1..3 -> "RETURN(${ref.i - 1})"
-            in 4..27 -> "PARAM(${(ref.i - 4) / 3}${((ref.i - 4) % 3).let {
+            in 1..3 -> "@RETURN(${ref.i - 1})"
+            in 4..27 -> "@PARAM(${(ref.i - 4) / 3}${((ref.i - 4) % 3).let {
                 when {
                     it != 0 -> ", $it"
                     else -> ""
