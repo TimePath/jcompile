@@ -19,7 +19,7 @@ object DefaultHandlers {
             addAll(genLeft)
             val genRight = r.generate()
             addAll(genRight)
-            val out = allocator.allocateReference(type = type)
+            val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
             add(IR(instr(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
         }
     }
@@ -28,8 +28,8 @@ object DefaultHandlers {
         linkedListOf<IR>() with {
             val genLeft = it.generate()
             addAll(genLeft)
-            val out = allocator.allocateReference(type = type)
-            add(IR(instr(genLeft.last().ret, out.ref, Instruction.Ref(0)), out.ref, name = "$it"))
+            val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
+            add(IR(instr(genLeft.last().ret, out.ref), out.ref, name = "$it"))
         }
     }
 
@@ -51,7 +51,7 @@ object DefaultHandlers {
 
             val lvalue = genL.last()
             val rvalue = genR.last()
-            add(IR(realInstr(rvalue.ret, lvalue.ret, Instruction.Ref(0)), rvalue.ret, "$leftL = $right"))
+            add(IR(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         }
         linkedListOf<IR>() with {
             when (l) {

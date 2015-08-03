@@ -38,7 +38,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<vector_t>()]) { l, r -> l or r },
             Operation("|", this, this) to Operation.Handler.Binary(this) { l, r ->
                 linkedListOf<IR>() with {
-                    val ref = allocator.allocateReference(type = this@vector_t)
+                    val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val genL = l.generate()
                     addAll(genL)
                     val genR = r.generate()
@@ -55,7 +55,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<vector_t>()]) { l, r -> l and r },
             Operation("&", this, this) to Operation.Handler.Binary(this) { l, r ->
                 linkedListOf<IR>() with {
-                    val ref = allocator.allocateReference(type = this@vector_t)
+                    val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = l.generate()
                     addAll(gen)
                     val genR = r.generate()
@@ -71,7 +71,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             },
             Operation("~", this) to Operation.Handler.Unary(this) {
                 linkedListOf<IR>() with {
-                    val ref = allocator.allocateReference(type = this@vector_t)
+                    val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = it.generate()
                     addAll(gen)
                     repeat(3) { i ->
@@ -83,7 +83,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             },
             Operation("-", this) to Operation.Handler.Unary(this) {
                 linkedListOf<IR>() with {
-                    val ref = allocator.allocateReference(type = this@vector_t)
+                    val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = it.generate()
                     addAll(gen)
                     repeat(3) { i ->

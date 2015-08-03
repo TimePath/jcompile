@@ -38,7 +38,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 if (e.id in state.allocator) {
                     logger.warning { "redeclaring ${e.id}" }
                 }
-                state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
+                state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
             }
         }
         roots.forEach { it.accept(allocate) }
@@ -89,8 +89,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
         fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
-            val z = Instruction.Ref(0)
-            var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args(z, z, z)
+            var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args()
             val qinstr = when {
                 it is IR.EndFunction -> QInstruction.DONE
                 instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT

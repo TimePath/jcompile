@@ -4,18 +4,24 @@ import com.timepath.compiler.types.Type
 
 interface Instruction {
 
-    data class Ref(val i: Int) {
+    data class Ref(val i: Int, val scope: Ref.Scope) {
+        enum class Scope {
+            Local, Global
+        }
+        companion object {
+            val Null = Ref(0, Scope.Global)
+        }
         override fun toString() = i.toString()
 
-        fun plus(i: Int) = Ref(this.i + i)
+        fun plus(i: Int) = Ref(this.i + i, this.scope)
     }
 
-    data class Args(val a: Ref, val b: Ref, val c: Ref)
+    data class Args(val a: Ref = Ref.Null, val b: Ref = Ref.Null, val c: Ref = Ref.Null)
 
     abstract class WithArgs(val args: Args) : Instruction
 
     open class Factory(private val new: (Args) -> Instruction) {
-        fun invoke(a: Ref, b: Ref, c: Ref) = new(Args(a, b, c))
+        fun invoke(a: Ref = Ref.Null, b: Ref = Ref.Null, c: Ref = Ref.Null) = new(Args(a, b, c))
     }
 
     fun name(f: (Ref) -> String) = javaClass.getSimpleName()
@@ -187,7 +193,7 @@ interface Instruction {
          * ...
          * PARAM7 = 25
          */
-        fun OFS_PARAM(n: Int) = Ref(4 + n * 3)
+        fun OFS_PARAM(n: Int) = Ref(4 + n * 3, Ref.Scope.Global)
 
         fun OFS_STR(ref: Ref): Any = when (ref.i) {
             in 1..3 -> "RETURN(${ref.i - 1})"

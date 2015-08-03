@@ -123,9 +123,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     init {
         push("<builtin>")
-        allocateReference("false", bool_t, Value(0))
-        allocateReference("true", bool_t, Value(1))
-        allocateReference("_", function_t(string_t, listOf(string_t))) // TODO: not really a function
+        allocateConstant(Value(0), bool_t, "false")
+        allocateConstant(Value(1), bool_t, "true")
+        allocateReference("_", function_t(string_t, listOf(string_t)), scope = Instruction.Ref.Scope.Global) // TODO: not really a function
     }
 
     override fun contains(name: String) = scope.firstOrNull { name in it.lookup } != null
@@ -142,7 +142,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
      * Return the index to a constant referring to this function
      */
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
-        val function = functions.allocate(id, Instruction.Ref(functions.size()), null, type)
+        val function = functions.allocate(id, Instruction.Ref(functions.size(), Instruction.Ref.Scope.Global), null, type)
         // Allocate a constant so the function can be called
         return allocateConstant(Value(Pointer(function.ref.i)), type, id) with {
             scope.peek().lookup[id] = this
@@ -154,11 +154,11 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     /**
      * Reserve space for this variable and add its name to the current scope
      */
-    override fun allocateReference(id: String?, type: Type, value: Value?): Allocator.AllocationMap.Entry {
+    override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
         val name = id ?: "var${refCounter++}"
         val i = opts.userStorageStart + (references.size() + constants.size())
-        val entry = references.allocate(name, Instruction.Ref(i), value, type)
-        scope.peek().lookup[name] = entry
+        val entry = references.allocate(name, Instruction.Ref(i, scope), value, type)
+        this.scope.peek().lookup[name] = entry
         return entry
     }
 
@@ -178,7 +178,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
-        return constants.allocate(id, Instruction.Ref(i), value, type)
+        return constants.allocate(id, Instruction.Ref(i, Instruction.Ref.Scope.Global), value, type)
     }
 
     private var stringCounter = 0
@@ -191,7 +191,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         }
         val i = stringCounter
         stringCounter += s.length() + 1
-        return strings.allocate(s, Instruction.Ref(i), null, string_t)
+        return strings.allocate(s, Instruction.Ref(i, Instruction.Ref.Scope.Global), null, string_t)
     }
 
     override fun toString(): String {

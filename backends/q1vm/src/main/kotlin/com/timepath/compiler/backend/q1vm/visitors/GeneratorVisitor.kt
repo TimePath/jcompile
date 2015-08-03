@@ -84,18 +84,18 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             ret.addAll(genTrue)
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
         } else {
-            val temp = state.allocator.allocateReference(type = e.type(state))
+            val temp = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
             IR(Instruction.GOTO.If(falseLabel, genPred.last().ret, false), name = e.test.toString()).let { ret.add(it) }
             // if
             ret.addAll(genTrue)
             if (genTrue.isNotEmpty())
-                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genTrue.last().ret, temp.ref, Instruction.Ref(0)), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genTrue.last().ret, temp.ref), name = "store"))
             IR(Instruction.GOTO.Label(endLabel), name = "goto end").let { ret.add(it) }
             // else
             ret.add(IR(Instruction.LABEL(falseLabel), name = "false"))
             ret.addAll(genFalse)
             if (genFalse.isNotEmpty())
-                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genFalse.last().ret, temp.ref, Instruction.Ref(0)), name = "store"))
+                ret.add(IR(Instruction.STORE[javaClass<float_t>()](genFalse.last().ret, temp.ref), name = "store"))
             // return
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
             ret.add(IR.Return(temp.ref))
@@ -113,7 +113,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     ).list()
 
     override fun visit(e: DeclarationExpression): List<IR> {
-        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state))
+        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), scope = Instruction.Ref.Scope.Global) // TODO: local scope
         return IR.Declare(global).list()
     }
 
@@ -207,7 +207,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val genR = e.right.generate()
             addAll(genR)
             val type = e.type(state)
-            val out = state.allocator.allocateReference(type = type)
+            val out = state.allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             add(IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
         }
@@ -220,7 +220,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // check(e.field.owner is entity_t, "Field belongs to different type")
             val genR = state.fields[e.field.owner, e.field.id].generate()
                     .with { addAll(this) }
-            val out = state.allocator.allocateReference(type = e.type(state))
+            val out = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
@@ -239,14 +239,14 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             logger.warning { "${e.function} takes ${e.args.size()} parameters" }
         }
         val args = e.args.asSequence().take(8).map { it.generate() }.toList()
-        val ret = state.allocator.allocateReference(type = e.type(state))
+        val ret = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
         val params = args.map { it.last().ret }
-        IR(Instruction.CALL[params](genF.last().ret, Instruction.Ref(0), Instruction.Ref(0)), Instruction.OFS_PARAM(-1), "$e")
+        IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
-        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref, Instruction.Ref(0)), ret.ref, "Save response")
+        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
                 .with { add(this) }
     }
 
@@ -276,7 +276,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         // FIXME: null references
         val global = state.allocator[id]
-        return IR.Return(global?.ref ?: Instruction.Ref(0)).list()
+        return IR.Return(global?.ref ?: Instruction.Ref.Null).list()
     }
 
     override fun visit(e: ReturnStatement): List<IR> {
@@ -285,8 +285,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             ret.addAll(it)
             // TODO: non-contiguous vector / non-vector returns
             Instruction.Args(it.last().ret, it.last().ret + 1, it.last().ret + 2)
-        } ?: Instruction.Args(Instruction.Ref(0), Instruction.Ref(0), Instruction.Ref(0))
-        ret.add(IR(Instruction.RETURN(args), Instruction.Ref(0), name = e.toString()))
+        } ?: Instruction.Args()
+        ret.add(IR(Instruction.RETURN(args), name = e.toString()))
         return ret
     }
 

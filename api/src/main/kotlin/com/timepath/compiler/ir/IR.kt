@@ -2,7 +2,7 @@ package com.timepath.compiler.ir
 
 open data class IR(val instr: Instruction? = null,
                    /** Continuation passing */
-                   open val ret: Instruction.Ref = Instruction.Ref(0),
+                   open val ret: Instruction.Ref = Instruction.Ref.Null,
                    val name: String) {
 
     override fun toString() = "$instr /* $name */"
