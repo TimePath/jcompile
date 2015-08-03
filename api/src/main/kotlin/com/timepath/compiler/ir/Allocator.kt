@@ -30,7 +30,6 @@ interface Allocator {
         fun set(name: String, value: Entry)
     }
 
-    val functions: AllocationMap
     val references: AllocationMap
     val constants: AllocationMap
     val strings: AllocationMap

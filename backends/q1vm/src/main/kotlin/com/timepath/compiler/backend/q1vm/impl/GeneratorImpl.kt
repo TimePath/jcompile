@@ -87,7 +87,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
         }
 
-        fun generateFunction(it: IR, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
+        fun generateFunction(it: IR, localOfs: Int, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
             var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args()
             val qinstr = when {
@@ -164,9 +164,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
-                        ProgramData.Statement(QInstruction.STORE_FLOAT, it.i, param.i, 0)
+                        ProgramData.Statement(QInstruction.STORE_FLOAT, it.toGlobal(localOfs), param.toGlobal(localOfs), 0)
                     }
-                    QInstruction.from(QInstruction.CALL0.ordinal() + Math.max(0, Math.min(instr.params.size(), 8)))
+                    QInstruction.from(QInstruction.CALL0.ordinal() + instr.params.size().coerceIn(0, 8))
                 }
                 instr is Instruction.STATE -> QInstruction.STATE
                 instr is Instruction.LABEL -> {
@@ -194,7 +194,16 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.BITOR -> QInstruction.BITOR
                 else -> throw NoWhenBranchMatchedException()
             }
-            statements.add(ProgramData.Statement(qinstr, a.i, b.i, c.i))
+            statements.add(ProgramData.Statement(qinstr, a.toGlobal(localOfs), b.toGlobal(localOfs), c.toGlobal(localOfs)))
+        }
+
+        fun Instruction.Ref.toGlobal(localOfs: Int): Int {
+            val ofs = when (scope) {
+                Instruction.Ref.Scope.Local ->
+                    localOfs
+                else -> 0
+            }
+            return ofs + i
         }
 
         /**
@@ -207,6 +216,10 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     add(ProgramData.Definition(0, idx.toShort(), e.ref.i))
                 }
             }
+            val localOfs = state.opts.userStorageStart +
+                    state.allocator.constants.all.count() +
+                    state.allocator.references.all.count() // FIXME: too many?
+            val numLocals = state.allocator.references.all.count { it.ref.scope == Instruction.Ref.Scope.Local }
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
             val iter = ir.iterator()
@@ -219,7 +232,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     } else {
                         it.function.copy(
                                 firstStatement = firstStatement,
-                                firstLocal = state.opts.userStorageStart
+                                firstLocal = localOfs,
+                                numLocals = numLocals
                         ) with { functions.add(this) }
                     }
                     val jm = JumpManager { statements.size() }
@@ -227,7 +241,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         if (stmt is IR.Return) continue
                         if (stmt is IR.EndFunction) break
                         if (stmt is IR.Declare) continue
-                        generateFunction(stmt, jm, statements)
+                        generateFunction(stmt, localOfs, jm, statements)
                     }
                     jm.fixup(statements)
                     statements.add(ProgramData.Statement(QInstruction.DONE, 0, 0, 0))
@@ -241,11 +255,12 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     val k = it.ref
                     val v = it.value?.any
                     val e = state.allocator.allocateString(it.name)
-                    add(ProgramData.Definition(0, k.i.toShort(), e.ref.i))
+                    val i = k.toGlobal(localOfs)
+                    add(ProgramData.Definition(0, i.toShort(), e.ref.i))
                     when (v) {
-                        is Pointer -> intData.put(k.i, v.int)
-                        is Int -> floatData.put(k.i, v.toFloat())
-                        is Float -> floatData.put(k.i, v)
+                        is Pointer -> intData.put(i, v.int)
+                        is Int -> floatData.put(i, v.toFloat())
+                        is Float -> floatData.put(i, v)
                     }
                 }
                 state.allocator.references.all.forEach(f)
@@ -253,7 +268,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
 
             val globalData = run {
-                val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size()))
+                val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size() + numLocals))
                 assert(globalData.position() < size)
                 globalData.limit(size)
                 globalData.position(0)

@@ -50,7 +50,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         val insideFunc: Boolean
             get() = scope.size() >= 3
 
-        fun allocate(id: String, ref: Instruction.Ref, value: Value?, type: Type): EntryImpl {
+        fun allocate(id: String, ref: Instruction.Ref, type: Type, value: Value? = null): EntryImpl {
             // only consider uninitialized local references for now
             if (opts.scopeFolding && insideFunc && !free.isEmpty() && value == null) {
                 val e = free.pop()
@@ -101,8 +101,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
     }
-
-    override val functions = AllocationMapImpl()
+    private val functions = AllocationMapImpl()
     override val references = AllocationMapImpl()
     override val constants = AllocationMapImpl()
     override val strings = AllocationMapImpl()
@@ -138,11 +137,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         return null
     }
 
-    /**
-     * Return the index to a constant referring to this function
-     */
+    /** Return the index to a constant referring to this function */
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
-        val function = functions.allocate(id, Instruction.Ref(functions.size(), Instruction.Ref.Scope.Global), null, type)
+        val function = functions.allocate(id, Instruction.Ref(functions.size(), Instruction.Ref.Scope.Global), type)
         // Allocate a constant so the function can be called
         return allocateConstant(Value(Pointer(function.ref.i)), type, id) with {
             scope.peek().lookup[id] = this
@@ -150,21 +147,22 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     }
 
     private var refCounter = 0
-
-    /**
-     * Reserve space for this variable and add its name to the current scope
-     */
+    private var localCounter = 0
+    /** Reserve space for this variable and add its name to the current scope */
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
         val name = id ?: "var${refCounter++}"
-        val i = opts.userStorageStart + (references.size() + constants.size())
-        val entry = references.allocate(name, Instruction.Ref(i, scope), value, type)
+        val i = when (scope) {
+            Instruction.Ref.Scope.Local ->
+                localCounter++ // TODO: reset/overlap
+            Instruction.Ref.Scope.Global ->
+                opts.userStorageStart + (references.size() + constants.size()) // FIXME: fragmentation
+        }
+        val entry = references.allocate(name, Instruction.Ref(i, scope), type, value)
         this.scope.peek().lookup[name] = entry
         return entry
     }
 
-    /**
-     * Reserve space for this constant
-     */
+    /** Reserve space for this constant */
     override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
         if (value.any is String) {
             val str = allocateString(value.any)
@@ -178,20 +176,15 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
         val i = opts.userStorageStart + (references.size() + constants.size())
-        return constants.allocate(id, Instruction.Ref(i, Instruction.Ref.Scope.Global), value, type)
+        return constants.allocate(id, Instruction.Ref(i, Instruction.Ref.Scope.Global), type, value)
     }
 
-    private var stringCounter = 0
-
+    private var stringPtr = 0
     override fun allocateString(s: String): Allocator.AllocationMap.Entry {
-        // merge strings
-        val existing = strings[s]
-        if (existing != null) {
-            return existing
-        }
-        val i = stringCounter
-        stringCounter += s.length() + 1
-        return strings.allocate(s, Instruction.Ref(i, Instruction.Ref.Scope.Global), null, string_t)
+        strings[s]?.let { return it } // merge strings
+        val i = stringPtr
+        stringPtr += s.length() + 1 // FIXME: count encoded bytes
+        return strings.allocate(s, Instruction.Ref(i, Instruction.Ref.Scope.Global), string_t)
     }
 
     override fun toString(): String {

@@ -195,9 +195,10 @@ interface Instruction {
          */
         fun OFS_PARAM(n: Int) = Ref(4 + n * 3, Ref.Scope.Global)
 
-        fun OFS_STR(ref: Ref): Any = when (ref.i) {
-            in 1..3 -> "@RETURN(${ref.i - 1})"
-            in 4..27 -> "@PARAM(${(ref.i - 4) / 3}${((ref.i - 4) % 3).let {
+        fun OFS_STR(ref: Ref): Any = when {
+            ref.scope == Ref.Scope.Local -> ref
+            ref.i in 1..3 -> "@RETURN(${ref.i - 1})"
+            ref.i in 4..27 -> "@PARAM(${(ref.i - 4) / 3}${((ref.i - 4) % 3).let {
                 when {
                     it != 0 -> ", $it"
                     else -> ""
