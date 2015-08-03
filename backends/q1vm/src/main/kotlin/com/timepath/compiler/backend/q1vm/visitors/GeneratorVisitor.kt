@@ -113,7 +113,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     ).list()
 
     override fun visit(e: DeclarationExpression): List<IR> {
-        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), scope = Instruction.Ref.Scope.Global) // TODO: local scope
+        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), scope = Instruction.Ref.Scope.Local)
         return IR.Declare(global).list()
     }
 
