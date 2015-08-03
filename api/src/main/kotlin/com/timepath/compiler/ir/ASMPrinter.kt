@@ -71,14 +71,14 @@ class ASMPrinter(val ir: List<IR>) {
                     }
                     else -> throw NoWhenBranchMatchedException()
                 }
-            }.padEnd(maxVarLen)
+            }
         }
         val s = (stmt.instr?.name(f) ?: "")
         +(when (stmt.instr) {
             is Instruction.GOTO, is Instruction.LABEL -> s
             is Instruction.WithArgs -> {
                 val (a, b, c) = stmt.instr.args
-                "${s.padEnd(maxInstrLen)} | ${listOf(a, b, c).map(f).join(" ")}"
+                "${s.padEnd(maxInstrLen)} | ${listOf(a, b, c).map { f(it).padEnd(maxVarLen) }.join(" ")}"
             }
             else -> "${s.padEnd(maxInstrLen)} | ???"
         }).trimEnd()
