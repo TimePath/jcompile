@@ -33,6 +33,8 @@ object Main {
                         define(project.define)
                     }
                     val compiled = compiler.compile()
+                    val out = File("out")
+                    out.mkdir()
                     thread {
                         fun StringBuilder.node(s: String, body: StringBuilder.() -> Unit) {
                             append("\n<$s>")
@@ -54,13 +56,13 @@ object Main {
                                     }
                                 }
                             }
-                        }.let { File("out", "${project.root}.xml").writeText(it.substring(1)) }
+                        }.let {
+                            File(out, "${project.root}.xml").writeText(it.substring(1))
+                        }
                     }
                     thread {
-                        ProgramDataWriter(IOWrapper.File(File("out", project.out) with {
-                            getParentFile().mkdirs()
-                            createNewFile()
-                        }, write = true)).write(compiled.generateProgs())
+                        ProgramDataWriter(IOWrapper.File(File(out, project.out) with { createNewFile() }, write = true))
+                                .write(compiled.generateProgs())
                     }
                 }
             }

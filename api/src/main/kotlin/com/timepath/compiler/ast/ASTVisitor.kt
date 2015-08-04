@@ -88,7 +88,6 @@ interface ASTVisitor<T> {
     fun visit(e: ParameterExpression) = default(e)
     fun visit(e: ReferenceExpression) = default(e)
     fun visit(e: ReturnStatement) = default(e)
-    fun visit(e: StructDeclarationExpression) = default(e)
     fun visit(e: SwitchExpression) = default(e)
     fun visit(e: SwitchExpression.Case) = default(e)
     fun visit(e: UnaryExpression) = default(e)

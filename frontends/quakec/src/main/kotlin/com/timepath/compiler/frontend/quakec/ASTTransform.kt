@@ -149,6 +149,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
+                    params?.let { addAll(it) }
                     val children = visitChildren(ctx.compoundStatement())
                     addAll(children)
                 }
@@ -599,7 +600,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 // FIXME: hides similarly named fields which should probably shadow the vector
                 val vector = vecMatcher.group(1)
                 val component = vecMatcher.group(2)
-                if (state.symbols[vector] != null) {
+                if (state.symbols[vector] != null || ltype.fields[vector] != null) {
                     // This isn't just a `float vec_x`
                     MemberExpression(
                             left = MemberExpression(
@@ -762,7 +763,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 return it.accept(this)
             }
             return listOf(BlockExpression(linkedListOf<Expression>() with {
-                val decl = StructDeclarationExpression("tmp", vector_t)
+                val decl = DeclarationExpression("tmp", vector_t)
                 val vec = decl.ref()
                 add(decl)
                 val x = MemberExpression(vec, MemberReferenceExpression(vector_t, "x"))

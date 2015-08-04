@@ -210,7 +210,6 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
         }
     }
 
-    override fun visit(e: StructDeclarationExpression) = declare(e)
     override fun visit(e: SwitchExpression) = Printer("-- switch")
 
     fun untolua(op: String) = when (op) {

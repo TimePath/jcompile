@@ -3,6 +3,7 @@ package com.timepath.compiler
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
+import com.timepath.with
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
@@ -59,11 +60,12 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
     }
 
     fun includeFrom(progs: File) {
-        progs.readLines().drop(1).map {
+        val files = progs.readLines().drop(1).map {
             val name = it.replaceFirst("//.*".toRegex(), "").trim()
             val file = File(progs.getParent(), name)
-            if (name.isNotEmpty() && file.exists()) Include(file) else null
-        }.filterNotNullTo(includes)
+            if (name.isNotEmpty() && file.exists()) file else null
+        }.filterNotNull()
+        files.forEach { include(it) }
     }
 
 }

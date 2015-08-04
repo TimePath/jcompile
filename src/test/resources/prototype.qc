@@ -1,14 +1,14 @@
 #include "defs.qh"
 
-void func();
+void func(int i);
 
 int glob;
 
 void main() {
-	func();
+	func(1);
 	assert(glob == 1, "Prototype fail");
 }
 
-void func() {
-	glob = 1;
+void func(int g) {
+	glob = g;
 }

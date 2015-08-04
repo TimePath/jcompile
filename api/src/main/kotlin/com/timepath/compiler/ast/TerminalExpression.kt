@@ -44,14 +44,6 @@ public class ParameterExpression(id: String,
 
 }
 
-public class StructDeclarationExpression(id: String,
-                                         val struct: struct_t,
-                                         override val ctx: PRC? = null) : DeclarationExpression(id, struct, null) {
-    override val simpleName = "StructDeclarationExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
-
-}
-
 public class MemoryReference(val ref: Instruction.Ref, val type: Type, override val ctx: PRC? = null) : Expression() {
     override val simpleName = "MemoryReference"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)

@@ -42,9 +42,15 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: MemberExpression) = e.field.type()
+    override fun visit(e: MemberExpression) = (e.field.type() as field_t).type
 
-    override fun visit(e: MemberReferenceExpression) = e.owner.fields[e.id]!!
+    override fun visit(e: MemberReferenceExpression): field_t {
+        val type = e.owner.fields[e.id]
+        if (type == null) {
+            throw NullPointerException("${e.owner}.${e.id} is null")
+        }
+        return field_t(type)
+    }
 
     override fun visit(e: FunctionExpression) = e.type
 
@@ -74,7 +80,6 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     override fun visit(e: DeclarationExpression) = e.type
     override fun visit(e: ParameterExpression) = visit(e as DeclarationExpression)
-    override fun visit(e: StructDeclarationExpression) = visit(e as DeclarationExpression)
 
     override fun visit(e: MemoryReference) = e.type
 

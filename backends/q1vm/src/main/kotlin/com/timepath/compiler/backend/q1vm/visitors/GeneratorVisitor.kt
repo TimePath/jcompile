@@ -15,6 +15,7 @@ import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
+import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.ProgramData
 import com.timepath.with
 import java.util.concurrent.atomic.AtomicInteger
@@ -113,8 +114,19 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     ).list()
 
     override fun visit(e: DeclarationExpression): List<IR> {
-        val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), scope = Instruction.Ref.Scope.Local)
-        return IR.Declare(global).list()
+        val type = e.type
+        if (type is struct_t && type !is class_t) {
+            return type.fields.flatMap {
+                it.value.declare("${e.id}_${it.key}", state = state).flatMap { it.generate() }
+            } with {
+                state.allocator.let {
+                    it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = type)
+                }
+            }
+        } else {
+            val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, type, e.value?.evaluate(state), scope = Instruction.Ref.Scope.Local)
+            return IR.Declare(global).list()
+        }
     }
 
     override fun visit(e: FunctionExpression): List<IR> {
@@ -224,7 +236,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
-            val f = state.allocator["${e.left}_${e.field.id}"]!!
+            val f = state.allocator["${e.left}_${e.field.id}"]
+            if (f == null) {
+                throw NullPointerException("${e.left}_${e.field.id} is null")
+            }
             add(IR.Return(f.ref))
         }
     }
@@ -288,14 +303,6 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         } ?: Instruction.Args()
         ret.add(IR(Instruction.RETURN(args), name = e.toString()))
         return ret
-    }
-
-    override fun visit(e: StructDeclarationExpression) = e.struct.fields.flatMap {
-        it.value.declare("${e.id}_${it.key}", state = state).flatMap { it.generate() }
-    } with {
-        state.allocator.let {
-            it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = e.struct)
-        }
     }
 
     override fun visit(e: SwitchExpression) = e.reduce().generate()

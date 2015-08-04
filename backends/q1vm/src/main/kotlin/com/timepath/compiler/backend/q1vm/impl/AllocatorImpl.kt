@@ -122,8 +122,11 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     init {
         push("<builtin>")
+        // FIXME: should work
         allocateConstant(Value(0), bool_t, "false")
         allocateConstant(Value(1), bool_t, "true")
+        allocateReference("false", bool_t, Value(0), scope = Instruction.Ref.Scope.Global)
+        allocateReference("true", bool_t, Value(1), scope = Instruction.Ref.Scope.Global)
         allocateReference("_", function_t(string_t, listOf(string_t)), scope = Instruction.Ref.Scope.Global) // TODO: not really a function
     }
 
