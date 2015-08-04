@@ -134,9 +134,9 @@ interface Instruction {
         override fun name(f: (Ref) -> String) = "NOT<${type.getSimpleName()}>"
     }
 
-    class CALL(val params: List<Ref>, args: Args) : WithArgs(args) {
+    class CALL(val params: List<Pair<Ref, Class<out Type>>>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(params: List<Ref>) = Factory { CALL(params, it) }
+            fun get(params: List<Pair<Ref, Class<out Type>>>) = Factory { CALL(params, it) }
         }
 
         override fun name(f: (Ref) -> String) = "CALL<${params.size()}>(${params.joinToString(", ")})"

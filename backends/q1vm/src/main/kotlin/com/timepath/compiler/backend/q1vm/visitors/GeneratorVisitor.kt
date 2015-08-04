@@ -258,7 +258,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
-        val params = args.map { it.last().ret }
+        val types = e.args.iterator()
+        val params = args.map { it.last().ret to types.next().type(state).javaClass }
         IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
         IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")

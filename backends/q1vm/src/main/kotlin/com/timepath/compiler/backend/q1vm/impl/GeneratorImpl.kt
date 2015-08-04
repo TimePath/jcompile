@@ -166,7 +166,16 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 instr is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
-                        ProgramData.Statement(QInstruction.STORE_FLOAT, it.toGlobal(localOfs), param.toGlobal(localOfs), 0)
+                        val move = when (it.second) {
+                            javaClass<float_t>() -> QInstruction.STORE_FLOAT
+                            javaClass<vector_t>() -> QInstruction.STORE_VEC
+                            javaClass<string_t>() -> QInstruction.STORE_STR
+                            javaClass<entity_t>() -> QInstruction.STORE_ENT
+                            javaClass<field_t>() -> QInstruction.STORE_FIELD
+                            javaClass<function_t>() -> QInstruction.STORE_FUNC
+                            else -> QInstruction.STORE_FLOAT
+                        }
+                        ProgramData.Statement(move, it.first.toGlobal(localOfs), param.toGlobal(localOfs), 0)
                     }
                     QInstruction.from(QInstruction.CALL0.ordinal() + instr.params.size().coerceIn(0, 8))
                 }
