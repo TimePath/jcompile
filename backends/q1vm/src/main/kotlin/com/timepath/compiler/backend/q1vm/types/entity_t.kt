@@ -16,6 +16,8 @@ abstract class class_t : struct_t() {
             Operation("!", self) to DefaultHandlers.Unary(bool_t, Instruction.NOT[javaClass<entity_t>()])
     )
 
+    override fun sizeOf(): Int = 1
+
     override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
         return listOf(DeclarationExpression(name, this, value))
     }
