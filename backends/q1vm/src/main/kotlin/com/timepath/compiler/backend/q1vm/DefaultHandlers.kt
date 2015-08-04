@@ -3,7 +3,6 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.entity_t
-import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation.Handler
@@ -53,6 +52,7 @@ object DefaultHandlers {
             val rvalue = genR.last()
             add(IR(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         }
+        val typeR = r.type(this)
         linkedListOf<IR>() with {
             when (l) {
                 is IndexExpression -> {
@@ -60,7 +60,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP[javaClass<float_t>()],
+                            x(Instruction.STOREP[typeR.javaClass],
                                     IndexExpression(tmp, l.right),
                                     IndexExpression(tmp, l.right) with {
                                         this.instr = Instruction.ADDRESS
@@ -85,7 +85,7 @@ object DefaultHandlers {
                     when (typeL) {
                         is entity_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
-                            x(Instruction.STOREP[javaClass<float_t>()],
+                            x(Instruction.STOREP[typeR.javaClass],
                                     MemberExpression(tmp, l.field),
                                     MemberExpression(tmp, l.field) with {
                                         this.instr = Instruction.ADDRESS

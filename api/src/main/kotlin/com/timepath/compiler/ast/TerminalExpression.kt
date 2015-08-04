@@ -2,7 +2,6 @@ package com.timepath.compiler.ast
 
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Type
-import com.timepath.compiler.types.defaults.struct_t
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 public fun DeclarationExpression.ref(): ReferenceExpression = ReferenceExpression(this, null)

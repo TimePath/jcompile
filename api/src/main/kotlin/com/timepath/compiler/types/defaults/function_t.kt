@@ -4,7 +4,6 @@ import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConstantExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.types.Operation
-import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 
 public data class function_t(val type: Type, val argTypes: List<Type>, val vararg: Type? = null) : pointer_t() {

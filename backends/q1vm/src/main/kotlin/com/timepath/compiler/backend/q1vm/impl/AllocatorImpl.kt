@@ -101,6 +101,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             }
         }
     }
+
     private val functions = AllocationMapImpl()
     override val references = AllocationMapImpl()
     override val constants = AllocationMapImpl()

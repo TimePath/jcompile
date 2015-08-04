@@ -8,9 +8,11 @@ interface Instruction {
         enum class Scope(val sym: Char) {
             Local('%'), Global('@')
         }
+
         companion object {
             val Null = Ref(0, Scope.Global)
         }
+
         override fun toString() = "${scope.sym}${i}"
 
         fun plus(i: Int) = Ref(this.i + i, this.scope)

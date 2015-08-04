@@ -8,6 +8,7 @@ import com.timepath.compiler.ir.Allocator
 import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.QInstruction
 import com.timepath.q1vm.StringManager
@@ -40,6 +41,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 }
                 state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
             }
+
             // FIXME: shouldn't be any
             override fun visit(e: BinaryExpression) = Unit
         }
@@ -110,7 +112,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.EQ_ENT
                     javaClass<field_t>() -> QInstruction.EQ_FUNC
                     javaClass<function_t>() -> QInstruction.EQ_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.EQ_FLOAT
                 }
                 instr is Instruction.NE -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.NE_FLOAT
@@ -119,7 +121,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.NE_ENT
                     javaClass<field_t>() -> QInstruction.NE_FUNC
                     javaClass<function_t>() -> QInstruction.NE_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.NE_FLOAT
                 }
                 instr is Instruction.LE -> QInstruction.LE
                 instr is Instruction.GE -> QInstruction.GE
@@ -132,7 +134,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.LOAD_ENT
                     javaClass<field_t>() -> QInstruction.LOAD_FIELD
                     javaClass<function_t>() -> QInstruction.LOAD_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.LOAD_FLOAT
                 }
                 instr is Instruction.ADDRESS -> QInstruction.ADDRESS
                 instr is Instruction.STORE -> when (instr.type) {
@@ -142,7 +144,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.STORE_ENT
                     javaClass<field_t>() -> QInstruction.STORE_FIELD
                     javaClass<function_t>() -> QInstruction.STORE_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.STORE_FLOAT
                 }
                 instr is Instruction.STOREP -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.STOREP_FLOAT
@@ -151,7 +153,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.STOREP_ENT
                     javaClass<field_t>() -> QInstruction.STOREP_FIELD
                     javaClass<function_t>() -> QInstruction.STOREP_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.STOREP_FLOAT
                 }
                 instr is Instruction.RETURN -> QInstruction.RETURN
                 instr is Instruction.NOT -> when (instr.type) {
@@ -161,7 +163,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<entity_t>() -> QInstruction.NOT_ENT
                     javaClass<field_t>() -> QInstruction.NOT_FUNC
                     javaClass<function_t>() -> QInstruction.NOT_FUNC
-                    else -> throw NoWhenBranchMatchedException()
+                    else -> QInstruction.NOT_FLOAT
                 }
                 instr is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
@@ -290,7 +292,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
             val version = 6
             val crc = -1 // TODO: CRC16
-            val entityFields = fieldDefs.size()
+            val entityFields = entity_t.fields.values().sumBy { it.sizeOf() } // FIXME: entity classes
 
             val statementsOffset = 60 // Size of header
             val globalDefsOffset = statementsOffset + statements.size() * 8

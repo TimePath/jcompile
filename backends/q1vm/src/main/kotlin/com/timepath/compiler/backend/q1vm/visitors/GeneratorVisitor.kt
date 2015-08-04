@@ -3,10 +3,7 @@ package com.timepath.compiler.backend.q1vm.visitors
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.*
-import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.evaluate
-import com.timepath.compiler.backend.q1vm.reduce
-import com.timepath.compiler.backend.q1vm.type
+import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.class_t
 import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.debug
@@ -225,7 +222,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
     }
 
-    override fun visit(e: MemberExpression) = linkedListOf<IR>() with {
+    override fun visit(e: MemberExpression): List<IR> = linkedListOf<IR>() with {
         if (e.field.owner is class_t) {
             val genL = e.left.generate()
                     .with { addAll(this) }
@@ -236,11 +233,25 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
-            val f = state.allocator["${e.left}_${e.field.id}"]
-            if (f == null) {
-                throw NullPointerException("${e.left}_${e.field.id} is null")
+            if (e.left is MemberExpression) {
+                // FIXME: generalise
+                val obj = e.left.left
+                val innerField = e.left.field
+                val outerField = e.field
+                val index = innerField.owner.offsetOf(innerField.id) + outerField.owner.offsetOf(outerField.id)
+
+                val genL = obj.generate()
+                        .with { addAll(this) }
+                val genR = Pointer(index).expr().generate()
+                        .with { addAll(this) }
+                val out = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
+                val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
+                IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
+            } else {
+                val f = state.allocator["${e.left}_${e.field.id}"]
+                        ?: throw NullPointerException("${e.left}_${e.field.id} is null")
+                add(IR.Return(f.ref))
             }
-            add(IR.Return(f.ref))
         }
     }
 

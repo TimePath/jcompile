@@ -54,7 +54,11 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
         val fields = object : FieldCounter {
             override val map: MutableMap<String, Int> = linkedMapOf()
-            override fun get(type: struct_t, name: String) = Pointer(map.getOrPut(name) { map.size() }).expr()
+            override fun get(type: struct_t, name: String): ConstantExpression {
+                map.getOrPut(name) { map.size() }
+                return Pointer(type.offsetOf(name)).expr()
+            }
+
             override fun size() = map.size()
         }
 

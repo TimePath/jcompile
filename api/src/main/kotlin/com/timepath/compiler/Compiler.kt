@@ -3,7 +3,6 @@ package com.timepath.compiler
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.api.Frontend
-import com.timepath.with
 import org.anarres.cpp.FileLexerSource
 import org.anarres.cpp.LexerSource
 import org.anarres.cpp.Source
