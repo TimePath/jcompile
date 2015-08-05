@@ -3,6 +3,13 @@ package com.timepath.compiler.ast
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 public class SwitchExpression(val test: Expression, add: List<Expression>, override val ctx: PRC? = null) : Expression() {
+    override fun withChildren(children: List<Expression>) = copy(children = children)
+
+    fun copy(
+            test: Expression = this.test,
+            children: List<Expression> = this.children,
+            ctx: PRC? = this.ctx
+    ) = SwitchExpression(test, children, ctx)
 
     init {
         addAll(add)

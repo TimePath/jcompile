@@ -19,10 +19,11 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
                 sizeExpr.generate()
             },
             Operation("[]", this, int_t) to Operation.Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-                if (l !is ReferenceExpression) throw UnsupportedOperationException()
+                if (l !is ReferenceExpression) throw UnsupportedOperationException("cannot index non-reference array")
                 // arr[i] -> arr(i)(false)
                 val s = generateAccessorName(l.refers.id)
-                val resolve = state.symbols[s] ?: throw RuntimeException("Can't resolve $s")
+                val resolve = state.symbols[s]
+                        ?: throw RuntimeException("Can't resolve $s")
                 val accessor = resolve.ref()
                 val indexer = MethodCallExpression(accessor, listOf(r))
                 MethodCallExpression(indexer, listOf(false.expr())).generate()

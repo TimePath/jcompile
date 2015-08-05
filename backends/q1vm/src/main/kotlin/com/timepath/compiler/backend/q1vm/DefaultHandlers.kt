@@ -71,7 +71,7 @@ object DefaultHandlers {
                             val arr = l.left
                             val idx = l.right
                             val set = r
-                            if (arr !is ReferenceExpression) throw UnsupportedOperationException()
+                            if (arr !is ReferenceExpression) throw UnsupportedOperationException("cannot index non-reference array")
                             val s = typeL.generateAccessorName(arr.refers.id)
                             val resolve = symbols[s] ?: throw RuntimeException("Can't resolve $s")
                             val indexer = resolve.ref()

@@ -317,7 +317,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return ret
     }
 
-    override fun visit(e: SwitchExpression) = e.reduce().flatMap { it.generate() }
+    override fun visit(e: SwitchExpression): List<IR> {
+        val reduced = e.reduce(state)
+        return reduced.flatMap { it.generate() }
+    }
 
     override fun visit(e: UnaryExpression) = Types.handle<Q1VM.State, List<IR>>(
             Operation(e.op, e.operand.type(state)))(state, e.operand, null)

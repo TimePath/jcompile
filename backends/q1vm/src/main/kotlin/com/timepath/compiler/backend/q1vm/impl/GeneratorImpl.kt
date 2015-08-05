@@ -24,11 +24,12 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
     }
 
     override fun generate(roots: List<Expression>): Generator.ASM {
-        for (root in roots) {
-            root.transform { it.reduce() }
-        }
+        val block = BlockExpression(roots)
+        val reduced = block.reduce(state).single()
         state.allocator.push("<forward declarations>")
         val allocate = object : ASTVisitor<Unit> {
+            override fun visit(e: BlockExpression) = e.children.forEach { it.accept(this) }
+
             override fun visit(e: FunctionExpression) {
                 if (e.id in state.allocator) {
                     logger.warning { "redeclaring ${e.id}" }
@@ -43,10 +44,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
             }
         }
-        roots.forEach { it.accept(allocate) }
-        return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor)) with {
-            state.allocator.pop()
-        }
+        reduced.accept(allocate)
+        val ir = reduced.accept(state.generatorVisitor)
+        return ASMImpl(ir)
     }
 
     inner class ASMImpl(override val ir: List<IR>) : Generator.ASM {

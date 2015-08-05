@@ -14,6 +14,18 @@ public class FunctionExpression(id: String? = null,
                                 val builtin: Int? = null,
                                 override val ctx: PRC? = null) : DeclarationExpression(id ?: "func", type) {
 
+    override fun withChildren(children: List<Expression>) = copy(children = children)
+
+    fun copy(
+            id: String = this.id,
+            type: function_t = this.type,
+            params: List<ParameterExpression>? = this.params,
+            vararg: Expression? = this.vararg,
+            children: List<Expression>? = this.children,
+            builtin: Int? = this.builtin,
+            ctx: PRC? = this.ctx
+    ) = FunctionExpression(id, type, params, vararg, children, builtin, ctx)
+
     init {
         add?.let { addAll(it) }
     }

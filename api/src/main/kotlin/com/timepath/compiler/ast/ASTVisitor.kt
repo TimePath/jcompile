@@ -36,7 +36,8 @@ fun ASTVisitor<T>.visitReflective<T>(e: Expression): T {
 }
 
 interface ASTVisitor<T> {
-    fun default(e: Expression): T = throw UnsupportedOperationException()
+    val simpleName: String get() = this.javaClass.getSimpleName()
+    fun default(e: Expression): T = throw UnsupportedOperationException("$simpleName: $e")
     fun visit(e: BinaryExpression) = default(e)
     fun visit(e: BinaryExpression.Add) = visit(e as BinaryExpression)
     fun visit(e: BinaryExpression.Add.Assign) = visit(e as BinaryExpression)

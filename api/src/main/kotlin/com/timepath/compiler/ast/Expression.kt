@@ -11,20 +11,10 @@ public abstract class Expression : Named {
 
     abstract fun accept<T>(visitor: ASTVisitor<T>): T
 
-    fun transform(transform: (Expression) -> List<Expression>?): List<Expression> {
-        // TODO: pure
-        val ret = mutableChildren
-        val iter = ret.listIterator()
-        while (iter.hasNext()) {
-            val before = iter.next()
-            val after = transform(before)
-            iter.remove()
-            after?.flatMap { it.transform(transform) }?.forEach { iter.add(it) }
-        }
-        return ret
-    }
-
     private val mutableChildren: MutableList<Expression> = linkedListOf()
+
+    // FIXME: abstract
+    open fun withChildren(children: List<Expression>): Expression = this // throw UnsupportedOperationException("${simpleName}: withChildren()")
 
     val children: List<Expression>
         get() = mutableChildren

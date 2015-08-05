@@ -7,7 +7,7 @@ void main() {
         assert(array[i] == 0, "Initial value");
     }
     int test = 0;
-    int expect = 2;
+    int expect = 1;
     assert((array[test] = expect) == expect, "Result of assignment");
     assert(array[test] == expect, "Read");
 }

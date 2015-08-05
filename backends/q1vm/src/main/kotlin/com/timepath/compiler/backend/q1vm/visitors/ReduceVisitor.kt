@@ -11,20 +11,34 @@ import com.timepath.compiler.types.defaults.function_t
 import com.timepath.with
 import java.util.concurrent.atomic.AtomicInteger
 
-object ReduceVisitor : ASTVisitor<List<Expression>> {
+class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(this@ReduceVisitor)
 
     override fun default(e: Expression) = listOf(e)
 
+    override fun visit(e: BlockExpression) = listOf(e.withChildren(e.children.flatMap { it.reduce() }))
+
+    override fun visit(e: FunctionExpression) = listOf(e.withChildren(e.children.flatMap { it.reduce() }))
+
     val uid = AtomicInteger()
+
+    fun List<Expression>.transform(f: (Expression) -> List<Expression>?) = flatMap { it.transform(f) ?: emptyList() }
+
+    inline fun Expression.transform(
+            @inlineOptions(InlineOption.ONLY_LOCAL_RETURN) f: (Expression) -> List<Expression>?
+    ): List<Expression>? {
+        val transformed = f(this) ?: return null
+        return transformed.map { it.withChildren(it.children.transform { f(it) }) }
+    }
 
     override fun visit(e: SwitchExpression): List<Expression> {
         val jumps = linkedListOf<Expression>()
         val default = linkedListOf<Expression>()
-        val cases = LoopExpression(checkBefore = false, predicate = 0.expr(), body = BlockExpression(e.transform {
+        val cases = LoopExpression(checkBefore = false, predicate = 0.expr(), body = BlockExpression(e.children.transform {
             when (it) {
-                is SwitchExpression -> it.reduce()
+                is SwitchExpression ->
+                    it.reduce()
                 is Case -> {
                     val expr = it.expr
                     fun String.sanitizeLabel(): String = "__switch_${uid.getAndIncrement()}_${replace("[^a-zA-Z_0-9]".toRegex(), "_")}"
@@ -42,7 +56,7 @@ object ReduceVisitor : ASTVisitor<List<Expression>> {
                 else -> listOf(it)
             }
         }))
-        return listOf(BlockExpression(jumps + default + listOf(cases)))
+        return listOf(BlockExpression(jumps + default + cases))
     }
 
     override fun visit(e: DeclarationExpression): List<Expression> {
@@ -50,7 +64,7 @@ object ReduceVisitor : ASTVisitor<List<Expression>> {
         if (type !is array_t) {
             return super.visit(e)
         }
-        val sizeVal = (null as? Q1VM.State)?.let { type.sizeExpr.evaluate(it) }
+        val sizeVal = state.let { type.sizeExpr.evaluate(it) }
         val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
 
         /**
@@ -110,11 +124,19 @@ object ReduceVisitor : ASTVisitor<List<Expression>> {
         }
         return linkedListOf<Expression>() with {
             val name = e.id
-            add(DeclarationExpression(name, type))
-            add(DeclarationExpression("${name}_size", int_t, size.expr()))
-            add(generateAccessor(name))
+            add(DeclarationExpression(name, type) with {
+                state.symbols.declare(this)
+            })
+            add(DeclarationExpression("${name}_size", int_t, size.expr()) with {
+                state.symbols.declare(this)
+            })
+            add(generateAccessor(name) with {
+                state.symbols.declare(this)
+            })
             repeat(size) {
-                addAll(generateComponent(name, it))
+                addAll(generateComponent(name, it) with {
+                    state.symbols.declare(this)
+                })
             }
         }
     }
