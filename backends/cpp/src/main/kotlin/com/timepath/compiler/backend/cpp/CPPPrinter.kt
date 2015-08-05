@@ -90,9 +90,9 @@ object CPPPrinter {
                     }
                     +""
                     +"typedef struct entity_s *entity;"
-                    +"struct entity_s : xon::entity_base ${entity_t.fields.flatMap {
+                    +"struct entity_s : xon::entity_base ${entity_t.fields.map {
                         val (n, t) = it
-                        t.declare(n, state = compiler.state)
+                        t.declare(n, null)
                     }.let { BlockExpression(it).accept(v).terminate(";") }}"
                 }
                 +"}"

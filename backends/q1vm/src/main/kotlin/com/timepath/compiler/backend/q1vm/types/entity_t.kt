@@ -1,8 +1,5 @@
 package com.timepath.compiler.backend.q1vm.types
 
-import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
@@ -17,10 +14,6 @@ abstract class class_t : struct_t() {
     )
 
     override fun sizeOf(): Int = 1
-
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
-        return listOf(DeclarationExpression(name, this, value))
-    }
 
     fun extend(name: String): class_t = object : class_t() {
         override val simpleName = name

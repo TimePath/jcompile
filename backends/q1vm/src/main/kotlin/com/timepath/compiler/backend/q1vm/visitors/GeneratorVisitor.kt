@@ -114,7 +114,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val type = e.type
         if (type is struct_t && type !is class_t) {
             return type.fields.flatMap {
-                it.value.declare("${e.id}_${it.key}", state = state).flatMap { it.generate() }
+                it.value.declare("${e.id}_${it.key}", null).generate()
             } with {
                 state.allocator.let {
                     it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = type)
@@ -317,7 +317,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return ret
     }
 
-    override fun visit(e: SwitchExpression) = e.reduce().generate()
+    override fun visit(e: SwitchExpression) = e.reduce().flatMap { it.generate() }
 
     override fun visit(e: UnaryExpression) = Types.handle<Q1VM.State, List<IR>>(
             Operation(e.op, e.operand.type(state)))(state, e.operand, null)

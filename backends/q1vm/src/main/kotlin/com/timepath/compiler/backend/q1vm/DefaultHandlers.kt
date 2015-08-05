@@ -52,6 +52,7 @@ object DefaultHandlers {
             val rvalue = genR.last()
             add(IR(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         }
+
         val typeR = r.type(this)
         linkedListOf<IR>() with {
             when (l) {

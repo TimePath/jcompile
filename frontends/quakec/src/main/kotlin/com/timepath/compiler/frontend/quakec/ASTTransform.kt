@@ -185,7 +185,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         if (declarations == null) {
             return ctx.enumSpecifier().enumeratorList().enumerator().mapTo(listOf<Expression>()) {
                 val id = it.enumerationConstant().getText()
-                int_t.declare(id, state = state).single().let { state.symbols.declare(it) }
+                int_t.declare(id, null).let { state.symbols.declare(it) }
             }
         }
         val specifiers = ctx.declarationSpecifiers().declarationSpecifier()
@@ -205,7 +205,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val value = initializer.evaluate(state)
                     when (value) {
                         null -> {
-                            type.declare(id, state = state).flatMap {
+                            type.declare(id, null).let {
                                 listOf(it,
                                         BinaryExpression.Assign(
                                                 left = (it as DeclarationExpression).ref(),
@@ -231,7 +231,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                                 val signature = parameterTypeList.functionType(retType!!)!!
                                 FunctionExpression(id, signature, params = params, vararg = vararg, builtin = i, ctx = ctx).let { listOf(it) }
                             } else {
-                                type.declare(id, value.expr(), state = state)
+                                type.declare(id, value.expr()).let { listOf(it) }
                             }
                         }
                     }
@@ -242,7 +242,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                         check((sizeExpr.evaluate(state)!!.any as Number).toInt() >= initializers.size())
                     }
                     // FIXME: pass on initializers
-                    array_t(type, sizeExpr, state = state).declare(id, state = state)
+                    array_t(type, sizeExpr, state = state).declare(id, null).let { listOf(it) }
                 }
                 else -> {
                     val ptl = it.declarator().parameterTypeList()
@@ -271,13 +271,13 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                                 }
                                 emptyList<Expression>()
                             }
-                            else -> type.declare(id, state = state)
+                            else -> type.declare(id, null).let { listOf(it) }
                         }
                         else -> when (signature) {
                         // function prototype
                             is function_t -> FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
                         // function pointer
-                            else -> signature.declare(id, state = state)
+                            else -> signature.declare(id, null).let { listOf(it) }
                         }
                     }
                 }

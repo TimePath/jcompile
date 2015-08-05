@@ -11,6 +11,7 @@ import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.QInstruction
+import com.timepath.q1vm.QType
 import com.timepath.q1vm.StringManager
 import com.timepath.with
 import java.nio.ByteBuffer
@@ -223,7 +224,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val fieldDefs = arrayListOf<ProgramData.Definition>() with {
                 for ((s, idx) in state.fields.map) {
                     val e = state.allocator.allocateString(s)
-                    add(ProgramData.Definition(0, idx.toShort(), e.ref.i))
+                    add(ProgramData.Definition(QType.Float, idx.toShort(), e.ref.i))
                 }
             }
             val localOfs = state.opts.userStorageStart +
@@ -266,7 +267,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     val v = it.value?.any
                     val e = state.allocator.allocateString(it.name)
                     val i = k.toGlobal(localOfs)
-                    add(ProgramData.Definition(0, i.toShort(), e.ref.i))
+                    add(ProgramData.Definition(QType.Float, i.toShort(), e.ref.i))
                     when (v) {
                         is Pointer -> intData.put(i, v.int)
                         is Int -> floatData.put(i, v.toFloat())

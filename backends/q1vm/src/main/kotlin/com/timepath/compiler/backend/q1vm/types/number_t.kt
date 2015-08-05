@@ -1,6 +1,5 @@
 package com.timepath.compiler.backend.q1vm.types
 
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.Pointer
@@ -103,10 +102,6 @@ open class number_t : Type() {
                 Operation(">>=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<float_t>()])
                 { l, r -> l shr r }
         )
-    }
-
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
-        return listOf(DeclarationExpression(name, this, value))
     }
 }
 

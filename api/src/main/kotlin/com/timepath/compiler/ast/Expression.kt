@@ -11,19 +11,15 @@ public abstract class Expression : Named {
 
     abstract fun accept<T>(visitor: ASTVisitor<T>): T
 
-    fun transform(transform: (Expression) -> Expression?): List<Expression> {
+    fun transform(transform: (Expression) -> List<Expression>?): List<Expression> {
         // TODO: pure
         val ret = mutableChildren
-        val it = ret.listIterator()
-        while (it.hasNext()) {
-            val before = it.next()
+        val iter = ret.listIterator()
+        while (iter.hasNext()) {
+            val before = iter.next()
             val after = transform(before)
-            if (after == null) {
-                it.remove()
-            } else {
-                after.transform(transform)
-                it.set(after)
-            }
+            iter.remove()
+            after?.flatMap { it.transform(transform) }?.forEach { iter.add(it) }
         }
         return ret
     }

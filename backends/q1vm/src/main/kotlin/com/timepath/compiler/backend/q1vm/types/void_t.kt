@@ -1,9 +1,6 @@
 package com.timepath.compiler.backend.q1vm.types
 
-import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.ConditionalExpression
-import com.timepath.compiler.ast.ConstantExpression
-import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.ast.expr
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.ir.Instruction
@@ -35,8 +32,4 @@ object void_t : Type() {
             },
             Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<float_t>()])
     )
-
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
-        return listOf(DeclarationExpression(name, this, value))
-    }
 }

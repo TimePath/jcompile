@@ -1,7 +1,8 @@
 package com.timepath.compiler.backend.q1vm.types
 
-import com.timepath.compiler.api.CompileState
-import com.timepath.compiler.ast.*
+import com.timepath.compiler.ast.eq
+import com.timepath.compiler.ast.expr
+import com.timepath.compiler.ast.minus
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.ir.IR
@@ -38,9 +39,5 @@ object bool_t : number_t() {
             return ops[op.copy(right = bool_t)]
         }
         return null
-    }
-
-    override fun declare(name: String, value: ConstantExpression?, state: CompileState): List<DeclarationExpression> {
-        return listOf(DeclarationExpression(name, this, value))
     }
 }

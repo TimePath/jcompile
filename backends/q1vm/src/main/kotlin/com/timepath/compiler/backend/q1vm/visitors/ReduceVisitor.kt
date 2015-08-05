@@ -2,17 +2,24 @@ package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.ast.SwitchExpression.Case
+import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.evaluate
+import com.timepath.compiler.backend.q1vm.types.array_t
+import com.timepath.compiler.backend.q1vm.types.bool_t
+import com.timepath.compiler.backend.q1vm.types.int_t
+import com.timepath.compiler.types.defaults.function_t
+import com.timepath.with
 import java.util.concurrent.atomic.AtomicInteger
 
-object ReduceVisitor : ASTVisitor<Expression> {
+object ReduceVisitor : ASTVisitor<List<Expression>> {
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(this@ReduceVisitor)
 
-    override fun default(e: Expression) = e
+    override fun default(e: Expression) = listOf(e)
 
     val uid = AtomicInteger()
 
-    override fun visit(e: SwitchExpression): Expression {
+    override fun visit(e: SwitchExpression): List<Expression> {
         val jumps = linkedListOf<Expression>()
         val default = linkedListOf<Expression>()
         val cases = LoopExpression(checkBefore = false, predicate = 0.expr(), body = BlockExpression(e.transform {
@@ -30,12 +37,86 @@ object ReduceVisitor : ASTVisitor<Expression> {
                         val jump = ConditionalExpression(test, false, goto)
                         jumps.add(jump)
                     }
-                    LabelExpression(label) // replace with a label so goto will be filled in later
+                    listOf(LabelExpression(label)) // replace with a label so goto will be filled in later
                 }
-                else -> it
+                else -> listOf(it)
             }
         }))
-        return BlockExpression(jumps + default + listOf(cases))
+        return listOf(BlockExpression(jumps + default + listOf(cases)))
+    }
+
+    override fun visit(e: DeclarationExpression): List<Expression> {
+        val type = e.type
+        if (type !is array_t) {
+            return super.visit(e)
+        }
+        val sizeVal = (null as? Q1VM.State)?.let { type.sizeExpr.evaluate(it) }
+        val size = sizeVal?.let { (it.any as Number).toInt() } ?: -1
+
+        /**
+         *  #define ARRAY(name, size)                                                       \
+         *      float name##_size = size;                                                   \
+         *      float(bool, float) name##_access(float index) {                             \
+         *          /*if (index < 0) index += name##_size;                                  \
+         *          if (index > name##_size) return 0;*/                                    \
+         *          float(bool, float) name##_access_this = *(&name##_access + 1 + index);  \
+         *          return name##_access_this;                                              \
+         *      }
+         */
+        fun generateAccessor(id: String): Expression {
+            val accessor = type.generateAccessorName(id)
+            val index = ParameterExpression("index", int_t, 0)
+            val func = FunctionExpression(
+                    accessor,
+                    function_t(function_t(type, listOf(bool_t, type), null), listOf(int_t), null),
+                    listOf(index)
+            )
+            val e = (func.ref().address()
+                    + 1.expr()
+                    + index.ref()
+                    ).deref()
+            func.add(ReturnStatement(e))
+            return func
+        }
+
+        /**
+         *  #define ARRAY_COMPONENT(name, i, v)                         \
+         *      float name##_##i = v;                                   \
+         *      float name##_access_##i(bool mode, float value##i) {    \
+         *          return mode ? name##_##i = value##i : name##_##i;   \
+         *      }
+         */
+        fun generateComponent(id: String, i: Int): List<Expression> {
+            val accessor = "${type.generateAccessorName(id)}_${i}"
+            return linkedListOf<Expression>() with {
+                val field = DeclarationExpression("${accessor}_field", type)
+                add(field)
+                val mode = ParameterExpression("mode", bool_t, 0)
+                val value = ParameterExpression("value", type, 1)
+                add(FunctionExpression(
+                        accessor,
+                        function_t(type, listOf(bool_t, type), null),
+                        listOf(
+                                mode,
+                                value
+                        ),
+                        add = listOf(ReturnStatement(ConditionalExpression(
+                                mode.ref(), true,
+                                field.ref().set(value.ref()),
+                                field.ref()
+                        )))
+                ))
+            }
+        }
+        return linkedListOf<Expression>() with {
+            val name = e.id
+            add(DeclarationExpression(name, type))
+            add(DeclarationExpression("${name}_size", int_t, size.expr()))
+            add(generateAccessor(name))
+            repeat(size) {
+                addAll(generateComponent(name, it))
+            }
+        }
     }
 
     override fun visit(e: UnaryExpression.Cast) = e.operand.reduce()
