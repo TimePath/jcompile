@@ -41,9 +41,6 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 }
                 state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
             }
-
-            // FIXME: shouldn't be any
-            override fun visit(e: BinaryExpression) = Unit
         }
         roots.forEach { it.accept(allocate) }
         return ASMImpl(BlockExpression(roots).accept(state.generatorVisitor)) with {

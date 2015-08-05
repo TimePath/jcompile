@@ -16,6 +16,7 @@ public data class Value(val any: Any) {
             }
             is Int -> when (rhs) {
                 is Int -> return Value(lhs + rhs)
+                is Float -> return Value(lhs + rhs)
             }
         }
         throw UnsupportedOperationException("not supported")
@@ -31,6 +32,7 @@ public data class Value(val any: Any) {
             }
             is Int -> when (rhs) {
                 is Int -> return Value(lhs - rhs)
+                is Float -> return Value(lhs - rhs)
             }
         }
         throw UnsupportedOperationException("not supported")
@@ -46,6 +48,7 @@ public data class Value(val any: Any) {
             }
             is Int -> when (rhs) {
                 is Int -> return Value(lhs * rhs)
+                is Float -> return Value(lhs * rhs)
             }
         }
         throw UnsupportedOperationException("not supported")
@@ -61,6 +64,7 @@ public data class Value(val any: Any) {
             }
             is Int -> when (rhs) {
                 is Int -> return Value(lhs / rhs)
+                is Float -> return Value(lhs / rhs)
             }
         }
         throw UnsupportedOperationException("not supported")
@@ -76,6 +80,7 @@ public data class Value(val any: Any) {
             }
             is Int -> when (rhs) {
                 is Int -> return Value(lhs % rhs)
+                is Float -> return Value(lhs % rhs)
             }
         }
         throw UnsupportedOperationException("not supported")

@@ -197,7 +197,8 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val type = ctx.declarationSpecifiers().type()!!
         return declarations.flatMapTo(listOf<Expression>()) {
             val id = it.declarator().deepest().getText()
-            val initializer = it.initializer()?.accept(this)?.single()
+            val initializers = it.initializer()?.accept(this)
+            val initializer = initializers?.singleOrNull()
             val arraySize = it.declarator().assignmentExpression()
             when {
                 initializer is Expression -> {
@@ -237,6 +238,10 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 }
                 arraySize != null -> {
                     val sizeExpr = arraySize.accept(this).single()
+                    if (initializers != null) {
+                        check((sizeExpr.evaluate(state)!!.any as Number).toInt() >= initializers.size())
+                    }
+                    // FIXME: pass on initializers
                     array_t(type, sizeExpr, state = state).declare(id, state = state)
                 }
                 else -> {
