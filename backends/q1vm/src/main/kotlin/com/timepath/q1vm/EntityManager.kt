@@ -1,6 +1,7 @@
 package com.timepath.q1vm
 
 import com.timepath.q1vm.util.set
+import com.timepath.with
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -9,7 +10,7 @@ import kotlin.properties.Delegates
 
 private class EntityManager(val data: ProgramData) {
 
-    private val entities = ArrayList<Entity?>()
+    private val entities = ArrayList<Entity?>() with { add(Entity()) }
     private val entitySize = data.header.entityFields
 
     inner data class Entity {
@@ -23,15 +24,13 @@ private class EntityManager(val data: ProgramData) {
         }
     }
 
-    fun checkBounds(self: Int, field: Int) {
-        when {
-            self !in (0..entities.size() - 1) -> {
-                throw IndexOutOfBoundsException("Entity is out of bounds")
-            }
-            field !in (0..entitySize - 1) -> {
-                throw IndexOutOfBoundsException("Field is out of bounds")
-            }
-        }
+    fun checkBounds(self: Int, field: Int): Unit = when {
+        self == 0 ->
+            throw IllegalStateException("Assignment to world")
+        self !in (0..entities.size() - 1) ->
+            throw IndexOutOfBoundsException("Entity is out of bounds")
+        field !in (0..entitySize - 1) ->
+            throw IndexOutOfBoundsException("Field is out of bounds")
     }
 
     fun readFloat(self: Int, field: Int): Float {
