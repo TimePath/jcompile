@@ -1,6 +1,8 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.Value
+import com.timepath.compiler.ast.BlockExpression
+import com.timepath.compiler.ast.FunctionExpression
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.types.bool_t
@@ -112,6 +114,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val scope: Deque<Allocator.Scope> = linkedListOf()
 
     override fun push(id: Any) {
+        if(id is FunctionExpression) {
+            localCounter = 0
+        }
         scope.push(Scope(id))
         references.push()
     }
@@ -152,14 +157,15 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     private var refCounter = 0
     private var localCounter = 0
+    private var globalCounter = 0
     /** Reserve space for this variable and add its name to the current scope */
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
         val name = id ?: "var${refCounter++}"
         val i = when (scope) {
             Instruction.Ref.Scope.Local ->
-                localCounter++ // TODO: reset/overlap
+                localCounter++
             Instruction.Ref.Scope.Global ->
-                opts.userStorageStart + (references.size() + constants.size()) // FIXME: fragmentation
+                opts.userStorageStart + globalCounter++
         }
         val entry = references.allocate(name, Instruction.Ref(i, scope), type, value)
         this.scope.peek().lookup[name] = entry
@@ -179,7 +185,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 return it
             }
         }
-        val i = opts.userStorageStart + (references.size() + constants.size())
+        val i = opts.userStorageStart + globalCounter++
         return constants.allocate(id, Instruction.Ref(i, Instruction.Ref.Scope.Global), type, value)
     }
 

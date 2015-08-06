@@ -227,10 +227,18 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     add(ProgramData.Definition(QType.Float, idx.toShort(), e.ref.i))
                 }
             }
-            val localOfs = state.opts.userStorageStart +
-                    state.allocator.constants.all.count() +
-                    state.allocator.references.all.count() // FIXME: too many?
-            val numLocals = state.allocator.references.all.count { it.ref.scope == Instruction.Ref.Scope.Local }
+            val localOfs = state.opts.userStorageStart + run {
+                val find: (Allocator.AllocationMap.Entry) -> Boolean = { it.ref.scope == Instruction.Ref.Scope.Global }
+                val tmp = state.allocator.constants.all.filter(find) + state.allocator.references.all.filter(find)
+                val last = tmp.maxBy { it.ref.i }
+                last!!.ref.i
+            }
+            val numLocals = run {
+                val find: (Allocator.AllocationMap.Entry) -> Boolean = { it.ref.scope == Instruction.Ref.Scope.Local }
+                val tmp = state.allocator.constants.all.filter(find) + state.allocator.references.all.filter(find)
+                val last = tmp.maxBy { it.ref.i }
+                last!!.ref.i
+            }
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
             val iter = ir.iterator()
@@ -279,7 +287,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
 
             val globalData = run {
-                val size = 4 * (state.opts.userStorageStart + (state.allocator.references.size() + state.allocator.constants.size() + numLocals))
+                val size = 4 * (localOfs + numLocals + 1)
                 assert(globalData.position() < size)
                 globalData.limit(size)
                 globalData.position(0)

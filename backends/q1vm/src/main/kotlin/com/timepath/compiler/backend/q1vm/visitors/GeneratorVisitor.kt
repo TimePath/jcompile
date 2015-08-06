@@ -153,7 +153,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genParams = params.flatMap { it.generate() }
         val children = e.children.flatMap { it.wrap { it.generate() } }
         val list = (listOf(
-                IR.Function(global, f.copy(numLocals = 0 ?: state.allocator.references.size()))) // FIXME
+                IR.Function(global, f))
                 + genParams
                 + children
                 + IR.EndFunction(global.ref))
