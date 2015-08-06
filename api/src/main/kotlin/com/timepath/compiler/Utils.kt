@@ -21,6 +21,10 @@ public fun ParserRuleContext.debug(): String {
 }
 
 public fun String.unquote(): String = substring(1, length() - 1)
+        .replace("\\n", "\n")
+        .replace("\\r", "\r")
+        .replace("\\t", "\t")
+        .replace("\\\"", "\"")
 
 public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
     val start = System.currentTimeMillis()
@@ -32,9 +36,9 @@ public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
 public fun String.quote(): String = "\"${StringBuilder {
     for (c in this@quote) {
         when (c) {
-            '\t' -> append("\\t")
             '\n' -> append("\\n")
             '\r' -> append("\\r")
+            '\t' -> append("\\t")
             '"' -> append("\\\"")
             else -> append(c)
         }

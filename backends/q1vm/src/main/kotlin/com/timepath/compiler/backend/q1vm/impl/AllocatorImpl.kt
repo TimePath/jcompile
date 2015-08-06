@@ -1,7 +1,6 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.Value
-import com.timepath.compiler.ast.BlockExpression
 import com.timepath.compiler.ast.FunctionExpression
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
@@ -114,7 +113,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val scope: Deque<Allocator.Scope> = linkedListOf()
 
     override fun push(id: Any) {
-        if(id is FunctionExpression) {
+        if (id is FunctionExpression) {
             localCounter = 0
         }
         scope.push(Scope(id))
@@ -148,7 +147,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     /** Return the index to a constant referring to this function */
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
-        val function = functions.allocate(id, Instruction.Ref(functions.size(), Instruction.Ref.Scope.Global), type)
+        val function = functions.allocate(id, Instruction.Ref(1 + functions.size(), Instruction.Ref.Scope.Global), type)
         // Allocate a constant so the function can be called
         return allocateConstant(Value(Pointer(function.ref.i)), type, id) with {
             scope.peek().lookup[id] = this

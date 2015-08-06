@@ -241,6 +241,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             }
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
+            functions.add(ProgramData.Function(0, 0, 0, 0, 0, 0, 0, byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)))
             val iter = ir.iterator()
             for (it in iter) {
                 if (it is IR.Function) {
