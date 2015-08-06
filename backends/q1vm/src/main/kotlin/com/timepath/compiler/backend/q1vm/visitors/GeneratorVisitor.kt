@@ -248,9 +248,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
                 IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
             } else {
-                val f = state.allocator["${e.left}_${e.field.id}"]
-                        ?: throw NullPointerException("${e.left}_${e.field.id} is null")
-                add(IR.Return(f.ref))
+                val obj = e.left
+                val field = e.field
+                val genL = obj.generate().with { addAll(this) }
+                add(IR.Return(genL.last().ret + field.owner.offsetOf(field.id)))
             }
         }
     }
