@@ -28,7 +28,7 @@ object DefaultHandlers {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
-            add(IR(instr(genLeft.last().ret, out.ref), out.ref, name = "$it"))
+            add(IR(instr(genLeft.last().ret, Instruction.Ref.Null, out.ref), out.ref, name = "$it"))
         }
     }
 

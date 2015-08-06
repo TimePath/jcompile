@@ -14,7 +14,7 @@ enum class QInstruction {
      * Same as RETURN, used for disassembly
      */
     DONE {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.a, ",", it.b, ",", it.c)
+        override fun stringify(it: Statement): Array<Any> = arrayOf("done", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[OFS_PARAM(-1) + 0] = f[it.a + 0]
             f[OFS_PARAM(-1) + 1] = f[it.a + 1]
@@ -308,7 +308,7 @@ enum class QInstruction {
     },
 
     RETURN {
-        override fun stringify(it: Statement): Array<Any> = arrayOf("return", it.a, ",", it.b, ",", it.c)
+        override fun stringify(it: Statement): Array<Any> = arrayOf("return", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[OFS_PARAM(-1) + 0] = f[it.a + 0]
             f[OFS_PARAM(-1) + 1] = f[it.a + 1]
@@ -319,13 +319,13 @@ enum class QInstruction {
     },
 
     NOT_FLOAT {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", "!", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            f[it.b] = (!f[it.a]).toFloat()
+            f[it.c] = (!f[it.a]).toFloat()
         }
     },
     NOT_VEC {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", "!", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!f[it.a + 0]
                     && !f[it.a + 1]
@@ -333,19 +333,19 @@ enum class QInstruction {
         }
     },
     NOT_STR {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", "!", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }
     },
     NOT_ENT {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", "!", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }
     },
     NOT_FUNC {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", "!", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", "!", it.a)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.c] = (!i[it.a]).toFloat()
         }

@@ -108,6 +108,10 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val constants = AllocationMapImpl()
     override val strings = AllocationMapImpl()
 
+    init {
+        allocateString("")
+    }
+
     data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = linkedMapOf()) : Allocator.Scope
 
     override val scope: Deque<Allocator.Scope> = linkedListOf()

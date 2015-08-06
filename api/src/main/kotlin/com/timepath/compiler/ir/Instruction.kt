@@ -10,7 +10,7 @@ interface Instruction {
         }
 
         companion object {
-            val Null = Ref(0, Scope.Global)
+            val Null = Ref(0, Scope.Global) // TODO: -1
         }
 
         override fun toString() = "${scope.sym}${i}"

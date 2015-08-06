@@ -175,7 +175,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                             javaClass<function_t>() -> QInstruction.STORE_FUNC
                             else -> QInstruction.STORE_FLOAT
                         }
-                        ProgramData.Statement(move, it.first.toGlobal(localOfs), param.toGlobal(localOfs), 0)
+                        ProgramData.Statement(move, it.first.toGlobal(localOfs), param.toGlobal(localOfs), -1)
                     }
                     QInstruction.from(QInstruction.CALL0.ordinal() + instr.params.size().coerceIn(0, 8))
                 }
@@ -264,7 +264,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         generateFunction(stmt, localOfs, jm, statements)
                     }
                     jm.fixup(statements)
-                    statements.add(ProgramData.Statement(QInstruction.DONE, 0, 0, 0))
+                    statements.add(ProgramData.Statement(QInstruction.DONE, 0, -1, -1))
                 } else {
                     if (it is IR.Declare) continue
                     throw UnsupportedOperationException("" + it)

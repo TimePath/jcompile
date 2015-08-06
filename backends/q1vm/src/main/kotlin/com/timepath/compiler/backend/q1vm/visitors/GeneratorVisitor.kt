@@ -311,9 +311,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val ret = linkedListOf<IR>()
         val args = e.returnValue?.generate()?.let {
             ret.addAll(it)
-            // TODO: non-contiguous vector / non-vector returns
-            Instruction.Args(it.last().ret, it.last().ret + 1, it.last().ret + 2)
-        } ?: Instruction.Args()
+            Instruction.Args(it.last().ret)
+        } ?: Instruction.Args(Instruction.Ref(0, Instruction.Ref.Scope.Global))
         ret.add(IR(Instruction.RETURN(args), name = e.toString()))
         return ret
     }
