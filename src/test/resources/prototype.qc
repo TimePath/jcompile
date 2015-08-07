@@ -1,5 +1,6 @@
 #include "defs.qh"
 
+void func(int);
 void func(int i);
 
 int glob;

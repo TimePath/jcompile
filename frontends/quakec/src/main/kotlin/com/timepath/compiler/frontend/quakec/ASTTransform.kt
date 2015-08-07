@@ -80,9 +80,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             val type = (it.declarationSpecifiers()?.type() // named
                     ?: it.declarationSpecifiers2()?.type() // anonymous
                     )!!
-            match(it.declarator()) {
-                ParameterExpression(it.getText(), type, i, ctx = it)
-            }
+            ParameterExpression(match(it.declarator()) {
+                it.getText()
+            } ?: "__arg_$i", type, i, ctx = it)
         }.filterNotNull()
     }
 
