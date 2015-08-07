@@ -93,7 +93,6 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val instr = it.instr
             var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args()
             val qinstr = when {
-                it is IR.EndFunction -> QInstruction.DONE
                 instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
                 instr is Instruction.MUL_VEC -> QInstruction.MUL_VEC
                 instr is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
@@ -242,8 +241,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             val statements = arrayListOf<ProgramData.Statement>()
             val functions = arrayListOf<ProgramData.Function>()
             functions.add(ProgramData.Function(0, 0, 0, 0, 0, 0, 0, byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)))
-            val iter = ir.iterator()
-            for (it in iter) {
+            for (it in ir) {
                 if (it is IR.Function) {
                     val firstStatement = statements.size()
                     it.function as ProgramData.Function
@@ -257,14 +255,13 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         ) with { functions.add(this) }
                     }
                     val jm = JumpManager { statements.size() }
-                    for (stmt in iter) {
+                    for (stmt in it.children) {
                         if (stmt is IR.Return) continue
-                        if (stmt is IR.EndFunction) break
                         if (stmt is IR.Declare) continue
                         generateFunction(stmt, localOfs, jm, statements)
                     }
                     jm.fixup(statements)
-                    statements.add(ProgramData.Statement(QInstruction.DONE, 0, -1, -1))
+                    statements.add(ProgramData.Statement(QInstruction.DONE, 0, -1, -1)) // FIXME: -1
                 } else {
                     if (it is IR.Declare) continue
                     throw UnsupportedOperationException("" + it)

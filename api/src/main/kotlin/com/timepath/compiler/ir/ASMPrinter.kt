@@ -5,13 +5,13 @@ import java.util.LinkedList
 
 class ASMPrinter(val ir: List<IR>) {
 
-    override fun toString() = Printer { globals(ir.listIterator()) }.toString()
+    override fun toString() = Printer { globals() }.toString()
 
-    private fun Printer.globals(iter: Iterator<IR>) {
+    private fun Printer.globals() {
         push()
-        loop@for (it in iter) {
+        for (it in ir) {
             when (it) {
-                is IR.Function -> function(it, iter)
+                is IR.Function -> function(it)
                 is IR.Declare -> declare(it)
                 else -> throw NoWhenBranchMatchedException()
             }
@@ -30,23 +30,20 @@ class ASMPrinter(val ir: List<IR>) {
         +".using ${it.name} = ${Instruction.OFS_STR(it.ref)}"
     }
 
-    private fun Printer.function(func: IR.Function, iter: Iterator<IR>) {
+    private fun Printer.function(func: IR.Function) {
         push()
         +".func ${func.e.name} = ${func.e.ref} {"
         +"    " {
-            loop@for (it in iter) {
+            for (it in func.children) {
                 when (it) {
                     is IR.Declare -> declare(it)
-                    is IR.EndFunction -> {
-                        pop()
-                        break@loop
-                    }
                     is IR.Return -> Unit
                     else -> statement(it)
                 }
             }
         }
         +"}"
+        pop()
     }
 
     private fun Printer.statement(stmt: IR) {

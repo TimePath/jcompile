@@ -19,11 +19,8 @@ open data class IR(val instr: Instruction? = null,
         override val ret = e.ref
     }
 
-    class Function(val e: Allocator.AllocationMap.Entry, val function: Any)
+    class Function(val e: Allocator.AllocationMap.Entry, val function: Any, val children: List<IR>)
     : Str("${e.name}: ; $${e.ref}")
-
-    class EndFunction(ret: Instruction.Ref)
-    : IR(ret = ret, name = "endfunction")
 
     class Label(val id: String)
     : IR(Instruction.LABEL(id), name = "label $id")

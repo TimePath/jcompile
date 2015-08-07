@@ -160,13 +160,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         }
         val genParams = params.flatMap { it.generate() }
         val children = e.children.flatMap { it.wrap { it.generate() } }
-        val list = (listOf(
-                IR.Function(global, f))
-                + genParams
-                + children
-                + IR.EndFunction(global.ref))
         state.allocator.pop()
-        return list
+        return listOf(IR.Function(global, f, genParams + children))
     }
 
     /** Filled in by new labels */
@@ -278,8 +273,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate()
                 .with { addAll(this) }
         args.flatMapTo(this) { it }
-        val types = e.args.iterator()
-        val params = args.map { it.last().ret to types.next().type(state).javaClass }
+        val params = args.merge(e.args) { it, other -> it.last().ret to other.type(state).javaClass }
         IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
         IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
