@@ -279,7 +279,15 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                         }
                         else -> when (signature) {
                         // function prototype
-                            is function_t -> FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx).let { listOf(it) }
+                            is function_t -> {
+                                when {
+                                // not needed
+                                    state.symbols[id] != null -> emptyList<Expression>()
+                                    else ->
+                                        FunctionExpression(id, signature, params = params, vararg = vararg, ctx = ctx)
+                                                .let { listOf(it) }
+                                }
+                            }
                         // function pointer
                             else -> signature.declare(id, null).let { listOf(it) }
                         }

@@ -13,3 +13,5 @@ void main() {
 void func(int g) {
 	glob = g;
 }
+
+void func(int);
