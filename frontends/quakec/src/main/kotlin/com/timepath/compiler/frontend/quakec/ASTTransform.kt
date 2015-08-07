@@ -209,6 +209,9 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val value = initializer.evaluate(state)
                     when (value) {
                         null -> {
+                            require(state.symbols.insideFunc) {
+                                "constant expression required"
+                            }
                             type.declare(id, null).let {
                                 listOf(it,
                                         BinaryExpression.Assign(

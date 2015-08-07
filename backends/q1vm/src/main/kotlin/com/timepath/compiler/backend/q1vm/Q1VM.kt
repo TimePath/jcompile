@@ -28,8 +28,8 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
     init {
         state.symbols.push("<builtin>")
-        state.symbols.declare(DeclarationExpression("false", bool_t))
-        state.symbols.declare(DeclarationExpression("true", bool_t))
+        state.symbols.declare(DeclarationExpression("false", bool_t, 0.expr()))
+        state.symbols.declare(DeclarationExpression("true", bool_t, 1.expr()))
         state.symbols.declare(DeclarationExpression("VA_ARGS", function_t(void_t, listOf(int_t))))
         state.symbols.push("<global>")
     }

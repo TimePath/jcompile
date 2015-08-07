@@ -23,8 +23,8 @@ object Main {
 
             val defs = listOf(
                     Project("menu", "MENUQC", "menuprogs.dat")
-                    //                    , Project("client", "CSQC", "csprogs.dat")
-                    //                    , Project("server", "SVQC", "progs.dat")
+                    , Project("client", "CSQC", "csprogs.dat")
+                    // , Project("server", "SVQC", "progs.dat")
             )
             for (project in defs) {
                 time(logger, "Project time") {

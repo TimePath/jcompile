@@ -134,6 +134,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     }
 
     init {
+        // FIXME: redundant
         push("<builtin>")
         allocateConstant(Value(0), bool_t, "false")
         allocateConstant(Value(1), bool_t, "true")

@@ -2,6 +2,7 @@ package com.timepath.compiler.backend.q1vm
 
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.types.array_t
+import com.timepath.compiler.backend.q1vm.types.class_t
 import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
@@ -59,7 +60,7 @@ object DefaultHandlers {
                 is IndexExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
-                        is entity_t -> {
+                        is class_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     IndexExpression(tmp, l.right),
@@ -84,7 +85,7 @@ object DefaultHandlers {
                 is MemberExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
-                        is entity_t -> {
+                        is class_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     MemberExpression(tmp, l.field),
