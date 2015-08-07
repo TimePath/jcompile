@@ -14,15 +14,6 @@ public open class ReferenceExpression(val refers: DeclarationExpression, overrid
 
 }
 
-@deprecated("")
-public open class DynamicReferenceExpression(val id: String, override val ctx: PRC? = null) : Expression() {
-    override val simpleName = "DynamicReferenceExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
-
-    override fun toString() = id
-
-}
-
 public open class DeclarationExpression(val id: String,
                                         open val type: Type,
                                         val value: ConstantExpression? = null,

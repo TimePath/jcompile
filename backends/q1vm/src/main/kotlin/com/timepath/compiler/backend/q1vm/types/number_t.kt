@@ -27,7 +27,7 @@ open class number_t : Type() {
                 Operation("*", this, vector_t) to DefaultHandlers.Binary(vector_t, Instruction.MUL_FLOAT_VEC),
                 Operation("/", this, this) to DefaultHandlers.Binary(this, Instruction.DIV_FLOAT),
                 Operation("%", this, this) to Operation.Handler.Binary(this) { l, r ->
-                    MethodCallExpression(DynamicReferenceExpression("__builtin_mod"), listOf(l, r)).generate()
+                    MethodCallExpression(symbols["__builtin_mod"]!!.ref(), listOf(l, r)).generate()
                 },
 
                 // pre
@@ -73,7 +73,7 @@ open class number_t : Type() {
                 Operation("&", this, this) to DefaultHandlers.Binary(this, Instruction.BITAND),
                 Operation("|", this, this) to DefaultHandlers.Binary(this, Instruction.BITOR),
                 Operation("^", this, this) to Operation.Handler.Binary(this) { left, right ->
-                    MethodCallExpression(DynamicReferenceExpression("__builtin_xor"), listOf(left, right)).generate()
+                    MethodCallExpression(symbols["__builtin_xor"]!!.ref(), listOf(left, right)).generate()
                 },
                 // TODO
                 Operation("<<", this, this) to DefaultHandlers.Binary(int_t, Instruction.BITOR),

@@ -73,11 +73,6 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     override fun visit(e: ReferenceExpression) = e.refers.type
 
-    override fun visit(e: DynamicReferenceExpression): Type {
-        val entry = state.allocator[e.id] ?: throw NullPointerException("Reference ${e.id} not found")
-        return entry.type
-    }
-
     override fun visit(e: DeclarationExpression) = e.type
 
     override fun visit(e: MemoryReference) = e.type

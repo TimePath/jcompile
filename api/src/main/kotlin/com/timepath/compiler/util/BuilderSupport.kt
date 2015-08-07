@@ -22,10 +22,6 @@ fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
     return initChild(DeclarationExpression(name, Types.from(any), any.expr()))
 }
 
-fun BlockExpression.ref(id: String): DynamicReferenceExpression {
-    return DynamicReferenceExpression(id)
-}
-
 fun BlockExpression.func(returnType: function_t, name: String,
                          configure: (BlockExpression.() -> Unit)? = null): FunctionExpression {
     val functionLiteral = initChild(FunctionExpression(name, returnType))

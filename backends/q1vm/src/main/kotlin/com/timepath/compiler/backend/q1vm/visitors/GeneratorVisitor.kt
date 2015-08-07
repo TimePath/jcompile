@@ -305,16 +305,6 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return IR.Return(global.ref).list()
     }
 
-    override fun visit(e: DynamicReferenceExpression): List<IR> {
-        val id = e.id
-        if (id !in state.allocator) {
-            logger.severe { "unknown late bound reference ${id}" }
-        }
-        // FIXME: null references
-        val global = state.allocator[id]
-        return IR.Return(global?.ref ?: Instruction.Ref.Null).list()
-    }
-
     override fun visit(e: ReturnStatement): List<IR> {
         val ret = linkedListOf<IR>()
         val args = e.returnValue?.generate()?.let {

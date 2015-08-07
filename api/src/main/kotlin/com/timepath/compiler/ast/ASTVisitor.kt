@@ -76,7 +76,6 @@ interface ASTVisitor<T> {
     fun visit(e: ConstantExpression) = default(e)
     fun visit(e: ContinueStatement) = default(e)
     fun visit(e: DeclarationExpression) = default(e)
-    fun visit(e: DynamicReferenceExpression) = default(e)
     fun visit(e: FunctionExpression) = default(e)
     fun visit(e: GotoExpression) = default(e)
     fun visit(e: IndexExpression) = visit(e as BinaryExpression)
