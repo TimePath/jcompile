@@ -34,6 +34,12 @@ public open class DeclarationExpression(val id: String,
 
 }
 
+public class AliasExpression(id: String, val alias: DeclarationExpression) : DeclarationExpression(id, alias.type) {
+    override val simpleName = "AliasExpression"
+    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+
+}
+
 public class ParameterExpression(id: String,
                                  type: Type,
                                  val index: Int,

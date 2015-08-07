@@ -143,9 +143,13 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val params = parameterTypeList.functionArgs()
         val vararg = parameterTypeList.functionVararg()
         val id = declarator.deepest().getText()
-        val doChildren = fun FunctionExpression.() {
+        val doChildren = fun FunctionExpression.(prevParams: List<ParameterExpression>?) {
             state.symbols.declare(this)
             state.symbols.scope("params") {
+                val params = when (prevParams) {
+                    null -> params
+                    else -> params?.merge(prevParams) { it, prev -> AliasExpression(it.id, prev) }
+                }
                 params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
@@ -159,7 +163,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         // TODO: check [[accumulate]] and [[last]]
         state.symbols[id]?.let {
             if (it is FunctionExpression) {
-                it.doChildren()
+                it.doChildren(it.params)
                 return listOf()
             }
         }
@@ -169,7 +173,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 params = params,
                 vararg = vararg,
                 ctx = ctx
-        ).with { doChildren() }.let { listOf(it) }
+        ).with { doChildren(null) }.let { listOf(it) }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {

@@ -1,6 +1,7 @@
 package com.timepath.compiler.api
 
 import com.timepath.compiler.Compiler
+import com.timepath.compiler.ast.AliasExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.types.Type
 import java.util.Deque
@@ -36,8 +37,9 @@ public abstract class CompileState {
 
         override fun declare<R>(e: R): R {
             val vars = stack.peek().vars
-            if (e is DeclarationExpression) {
-                vars[e.id] = e
+            when (e) {
+                is AliasExpression -> vars[e.id] = e.alias
+                is DeclarationExpression -> vars[e.id] = e
             }
             return e
         }

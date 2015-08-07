@@ -121,7 +121,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 }
             }
         } else {
-            val global = state.allocator[e.id] ?: state.allocator.allocateReference(e.id, type, e.value?.evaluate(state), scope = Instruction.Ref.Scope.Local)
+            val decl = when (e) {
+                is AliasExpression -> e.alias
+                else -> e
+            }
+            val global = state.allocator[decl.id] ?: state.allocator.allocateReference(decl.id, type, decl.value?.evaluate(state), scope = Instruction.Ref.Scope.Local)
             return IR.Declare(global).list()
         }
     }

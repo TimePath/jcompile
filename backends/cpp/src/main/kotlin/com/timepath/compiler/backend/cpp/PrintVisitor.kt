@@ -187,7 +187,6 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
     override fun visit(e: ContinueStatement) = "continue".p
 
     override fun visit(e: DeclarationExpression) = declare(e)
-    override fun visit(e: ParameterExpression) = declare(e)
 
     override fun visit(e: FunctionExpression) = Printer {
         val pars = e.params?.map { it.print() }
