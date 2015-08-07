@@ -268,11 +268,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         if (e.args.size() > 8) {
             logger.warning { "${e.function} takes ${e.args.size()} parameters" }
         }
+        val genF = e.function.generate().with { addAll(this) }
         val args = e.args.asSequence().take(8).map { it.generate() }.toList()
-        val ret = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
-        val genF = e.function.generate()
-                .with { addAll(this) }
         args.flatMapTo(this) { it }
+        val ret = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
         val params = args.merge(e.args) { it, other -> it.last().ret to other.type(state).javaClass }
         IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }

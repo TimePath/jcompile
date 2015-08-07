@@ -36,6 +36,9 @@ object Main {
                     val out = File("out")
                     out.mkdir()
                     thread {
+                        File(out, "${project.root}.txt").writeText(compiler.state.allocator.toString())
+                    }
+                    thread {
                         fun StringBuilder.node(s: String, body: StringBuilder.() -> Unit) {
                             append("\n<$s>")
                             body()
