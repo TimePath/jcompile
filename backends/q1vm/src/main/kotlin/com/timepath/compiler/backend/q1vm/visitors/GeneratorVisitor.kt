@@ -125,7 +125,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 is AliasExpression -> e.alias
                 else -> e
             }
-            val scope = when (state.allocator.scope.size() > 3) {
+            val scope = when (state.allocator.scope.size() > 4) {
                 true -> Instruction.Ref.Scope.Local
                 else -> Instruction.Ref.Scope.Global
             }

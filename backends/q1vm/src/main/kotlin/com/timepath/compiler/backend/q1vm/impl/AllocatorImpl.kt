@@ -21,11 +21,12 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     inner class AllocationMapImpl : Allocator.AllocationMap {
 
         inner data class EntryImpl(
-                /** Privately set */
-                override var name: String,
                 override val ref: Instruction.Ref,
+                override val type: Type,
                 override val value: Value?,
-                override val type: Type) : Allocator.AllocationMap.Entry {
+                /** Privately set */
+                override var name: String
+        ) : Allocator.AllocationMap.Entry {
 
             val separator = '|'
             val tags = name.split(separator).toMutableSet()
@@ -60,7 +61,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 e.tag(id)
                 return e
             }
-            val e = EntryImpl(id, ref, value, type)
+            val e = EntryImpl(ref, type, value, id)
             pool.add(e)
             if (scope.isNotEmpty() && value == null) {
                 scope.peek().add(e)
@@ -131,12 +132,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     init {
         push("<builtin>")
-        // FIXME: should work
         allocateConstant(Value(0), bool_t, "false")
         allocateConstant(Value(1), bool_t, "true")
-        allocateReference("false", bool_t, Value(0), scope = Instruction.Ref.Scope.Global)
-        allocateReference("true", bool_t, Value(1), scope = Instruction.Ref.Scope.Global)
-        allocateReference("_", function_t(string_t, listOf(string_t)), scope = Instruction.Ref.Scope.Global) // TODO: not really a function
+        push("<global>")
     }
 
     override fun contains(name: String) = scope.firstOrNull { name in it.lookup } != null
@@ -177,19 +175,22 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     /** Reserve space for this constant */
     override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
+        val name = id
         if (value.any is String) {
             val str = allocateString(value.any)
             return allocateConstant(Value(Pointer(str.ref.i)), string_t, str.name)
         }
         if (opts.mergeConstants) {
             constants[value]?.let {
-                constants[id] = it
-                it.tag(id)
+                constants[name] = it
+                it.tag(name)
                 return it
             }
         }
         val i = opts.userStorageStart + globalCounter++
-        return constants.allocate(id, Instruction.Ref(i, Instruction.Ref.Scope.Global), type, value)
+        val entry = constants.allocate(name, Instruction.Ref(i, Instruction.Ref.Scope.Global), type, value)
+        this.scope.peek().lookup[name] = entry
+        return entry
     }
 
     private var stringPtr = 0

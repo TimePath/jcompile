@@ -7,7 +7,7 @@ void test(vector v) {
 }
 
 void main() {
-    vector v = '1 2 3';
+    vector v = [1, 2, 3];
     test(v);
     assert(glob.x == v.x, "glob.x != v.x");
     assert(glob.y == v.y, "glob.y != v.y");

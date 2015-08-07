@@ -36,10 +36,10 @@ public abstract class CompileState {
         }
 
         override fun declare<R>(e: R): R {
-            val vars = stack.peek().vars
+            val top = stack.peek()
             when (e) {
-                is AliasExpression -> vars[e.id] = e.alias
-                is DeclarationExpression -> vars[e.id] = e
+                is AliasExpression -> top.vars[e.id] = e.alias
+                is DeclarationExpression -> top.vars[e.id] = e
             }
             return e
         }

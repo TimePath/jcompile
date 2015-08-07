@@ -18,13 +18,15 @@ import kotlin.test.assertEquals
 
 val resources = File("src/test/resources")
 
-fun compare(what: String, name: String, actual: String) {
-    val saved = File(resources, name)
+fun testTemp(test: File, ext: String) = File(resources, "tmp/${test.nameWithoutExtension}/${test.nameWithoutExtension}.$ext")
+
+fun compare(what: String, test: File, ext: String, actual: String) {
+    val saved = File(resources, "${test.nameWithoutExtension}.$ext")
     if (saved.exists()) {
         val expected = saved.readText()
         assertEquals(expected, actual, "$what differs")
     } else {
-        val temp = File(resources, "tmp/" + name)
+        val temp = testTemp(test, ext)
         temp.getParentFile().mkdirs()
         temp.writeText(actual)
         // fail("Nothing to compare")
@@ -67,22 +69,21 @@ class CompilerSpecs {
                         logger.info { "Parsing $test" }
                         roots = compiler.parse().toList()
                         val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
-                        compare("AST", "${test.name}.xml", actual)
+                        compare("AST", test, "xml", actual)
                     }
                     var prog: Program
                     it("should compile") {
                         logger.info { "Compiling $test" }
                         val asm = compiler.compile(roots.asSequence())
                         ASMPrinter(asm.ir).toString().let { actual ->
-                            compare("ASM", "${test.name}.asm", actual)
+                            compare("ASM", test, "asm", actual)
                         }
                         compiler.state.allocator.toString().let { actual ->
-                            compare("allocation", "${test.name}.txt", actual)
+                            compare("allocation", test, "txt", actual)
                         }
                         val progData = asm.generateProgs()
                         prog = Program(progData)
-                        val tmp = File(resources, "tmp/${test.name}.dat")
-                        ProgramDataWriter(tmp).write(progData)
+                        ProgramDataWriter(testTemp(test, "dat")).write(progData)
                     }
                     if (test.name.endsWith(".qc")) {
                         it("should execute") {
