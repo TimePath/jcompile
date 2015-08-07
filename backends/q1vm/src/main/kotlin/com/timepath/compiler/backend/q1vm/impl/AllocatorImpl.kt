@@ -117,6 +117,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     override val scope: Deque<Allocator.Scope> = linkedListOf()
 
+    val insideFunc: Boolean
+        get() = scope.size() > 4
+
     override fun push(id: Any) {
         if (id is FunctionExpression) {
             localCounter = 0

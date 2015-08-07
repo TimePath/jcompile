@@ -259,7 +259,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                             .toList()
                     when (ptl) {
                         null -> when {
-                            type is field_t && state.symbols.globalScope -> {
+                            type is field_t && !state.symbols.insideFunc -> {
                                 val extends = attribs.asSequence().map {
                                     val classExtender = "class\\((.*)\\)".toPattern()
                                     val matcher = classExtender.matcher(it.getText())

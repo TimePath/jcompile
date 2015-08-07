@@ -27,7 +27,8 @@ public abstract class CompileState {
 
         private val stack: Deque<Scope> = linkedListOf()
 
-        override val globalScope: Boolean get() = stack.size() < 3
+        override val insideFunc: Boolean
+            get() = stack.size() >= 3
 
         override fun push(name: String) = stack.push(Scope(name))
 
