@@ -47,11 +47,7 @@ interface Allocator {
     fun allocateString(s: String): AllocationMap.Entry
     fun allocateFunction(id: String, type: function_t): AllocationMap.Entry
     fun allocateReference(id: String? = null, type: Type, value: Value? = null, scope: Instruction.Ref.Scope): AllocationMap.Entry
-    fun allocateConstant(value: Value, type: Type, id: String = when (value.any) {
-        is Int -> "${value.any}i"
-        is Float -> "${value.any}f"
-        else -> "$value"
-    }): AllocationMap.Entry
+    fun allocateConstant(value: Value, type: Type, id: String? = null): AllocationMap.Entry
 
     fun contains(name: String): Boolean
     fun get(name: String): AllocationMap.Entry?

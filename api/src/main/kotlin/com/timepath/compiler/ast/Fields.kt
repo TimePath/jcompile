@@ -22,7 +22,7 @@ public fun Expression.get(field: MemberReferenceExpression): MemberExpression = 
  * struct.field
  */
 // TODO: structs
-public class MemberExpression(left: Expression, val field: MemberReferenceExpression, ctx: PRC? = null) : BinaryExpression(".", left, field.expr(), ctx) {
+public class MemberExpression(left: Expression, val field: MemberReferenceExpression, ctx: PRC? = null) : BinaryExpression(".", left, field, ctx) {
     override val simpleName = "MemberExpression"
     override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
 

@@ -29,7 +29,7 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
         }
     }
 
-    override fun visit(e: ConstantExpression) = Types.from(e.value.any)
+    override fun visit(e: ConstantExpression) = e.type ?: Types.from(e.value.any)
 
     override fun visit(e: IndexExpression): Type {
         val typeL = e.left.type()

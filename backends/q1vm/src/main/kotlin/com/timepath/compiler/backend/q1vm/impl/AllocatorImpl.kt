@@ -178,11 +178,15 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     }
 
     /** Reserve space for this constant */
-    override fun allocateConstant(value: Value, type: Type, id: String): Allocator.AllocationMap.Entry {
-        val name = id
+    override fun allocateConstant(value: Value, type: Type, id: String?): Allocator.AllocationMap.Entry {
+        val name = id ?: when (value.any) {
+            is Int -> "${value.any}i"
+            is Float -> "${value.any}f"
+            else -> "$value"
+        }
         if (value.any is String) {
             val str = allocateString(value.any)
-            return allocateConstant(Value(Pointer(str.ref.i)), string_t, str.name)
+            return allocateConstant(Value(Pointer(str.ref.i)), string_t, "str(${str.name})")
         }
         if (opts.mergeConstants) {
             constants[value]?.let {

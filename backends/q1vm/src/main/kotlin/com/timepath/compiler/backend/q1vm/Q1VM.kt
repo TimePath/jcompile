@@ -14,6 +14,7 @@ import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.with
 
@@ -35,8 +36,8 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
     }
 
     interface FieldCounter {
-        val map: Map<String, Int>
-        fun get(type: struct_t, name: String): ConstantExpression
+        val map: Map<Pair<String, struct_t>, Int>
+        fun get(owner: struct_t, name: String): Expression
         fun size(): Int
     }
 
@@ -52,10 +53,16 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         val allocator = AllocatorImpl(opts)
 
         val fields = object : FieldCounter {
-            override val map: MutableMap<String, Int> = linkedMapOf()
-            override fun get(type: struct_t, name: String): ConstantExpression {
-                map.getOrPut(name) { map.size() }
-                return Pointer(type.offsetOf(name)).expr()
+            override val map: MutableMap<Pair<String, struct_t>, Int> = linkedMapOf()
+            var counter = 0
+            override fun get(owner: struct_t, name: String): Expression {
+                val type = owner.fields[name]!!
+                map.getOrPut(name to owner) {
+                    val field = counter
+                    counter += type.sizeOf()
+                    field
+                }
+                return Pointer(owner.offsetOf(name)).expr(name, field_t(type))
             }
 
             override fun size() = map.size()

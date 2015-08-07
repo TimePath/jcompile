@@ -1,5 +1,6 @@
 package com.timepath.compiler.util
 
+import com.timepath.compiler.Value
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
@@ -15,11 +16,11 @@ fun BlockExpression.block(configure: (BlockExpression.() -> Unit)? = null): Bloc
 }
 
 fun BlockExpression.const(value: Any): ConstantExpression {
-    return value.expr()
+    return Value(value).expr()
 }
 
 fun BlockExpression.def(name: String, any: Any): DeclarationExpression {
-    return initChild(DeclarationExpression(name, Types.from(any), any.expr()))
+    return initChild(DeclarationExpression(name, Types.from(any), Value(any).expr()))
 }
 
 fun BlockExpression.func(returnType: function_t, name: String,

@@ -3,7 +3,6 @@ package com.timepath.compiler.backend.q1vm
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.types.array_t
 import com.timepath.compiler.backend.q1vm.types.class_t
-import com.timepath.compiler.backend.q1vm.types.entity_t
 import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation.Handler

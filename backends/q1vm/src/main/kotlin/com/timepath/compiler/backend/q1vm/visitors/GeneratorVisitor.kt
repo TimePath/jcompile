@@ -101,7 +101,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return ret
     }
 
-    override fun visit(e: ConstantExpression) = state.allocator.allocateConstant(e.value, type = e.type(state)).let {
+    override fun visit(e: ConstantExpression) = state.allocator.allocateConstant(e.value, e.type(state), e.name).let {
         IR.Return(it.ref).list()
     }
 
@@ -245,7 +245,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
                 val genL = obj.generate()
                         .with { addAll(this) }
-                val genR = Pointer(index).expr().generate()
+                val genR = Pointer(index).expr("${innerField.id}_${outerField.id}", outerField.type(state)).generate()
                         .with { addAll(this) }
                 val out = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
                 val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]

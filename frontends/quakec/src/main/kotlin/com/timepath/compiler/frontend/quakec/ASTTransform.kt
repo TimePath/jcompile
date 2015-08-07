@@ -1,6 +1,7 @@
 package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
+import com.timepath.compiler.Value
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
@@ -338,7 +339,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
         val initializer = state.symbols.declare((ctx.initD ?: ctx.initE)?.accept(this))
         LoopExpression(
                 predicate = when (ctx.predicate) {
-                    null -> ConstantExpression(1, ctx = ctx)
+                    null -> ConstantExpression(Value(1), ctx = ctx)
                     else -> ctx.predicate.accept(this).single()
                 },
                 body = ctx.statement().accept(this).single(),
@@ -745,7 +746,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             matchChar.let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
-                    return ConstantExpression(matcher.group(1)[0], ctx = ctx).let { listOf(it) }
+                    return ConstantExpression(Value(matcher.group(1)[0]), ctx = ctx).let { listOf(it) }
                 }
             }
             matchVec.let {
@@ -754,28 +755,29 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     val c1 = matcher.group(1).toFloat()
                     val c2 = matcher.group(2).toFloat()
                     val c3 = matcher.group(3).toFloat()
-                    return ConstantExpression(Vector(c1, c2, c3), ctx = ctx).let { listOf(it) }
+                    return ConstantExpression(Value(Vector(c1, c2, c3)), ctx = ctx).let { listOf(it) }
                 }
             }
             matchHex.let {
                 val matcher = it.matcher(s)
                 if (matcher.matches()) {
                     val hex = Integer.parseInt(matcher.group(1), 16)
-                    return ConstantExpression(hex.toFloat(), ctx = ctx).let { listOf(it) }
+                    return ConstantExpression(Value(hex.toFloat()), ctx = ctx).let { listOf(it) }
                 }
             }
             if (s.startsWith('#')) {
-                return ConstantExpression(text, ctx = ctx).let { listOf(it) }
+                return ConstantExpression(Value(text), ctx = ctx).let { listOf(it) }
             }
             val f = s.toFloat()
             val i = f.toInt()
-            return (ConstantExpression(when (i.toFloat()) {
-                f -> i
-                else -> f
-            }, ctx = ctx)).let { listOf(it) }
+            val number = when (i.toFloat()) {
+                f -> Value(i)
+                else -> Value(f)
+            }
+            return ConstantExpression(number, ctx = ctx).let { listOf(it) }
         }
         match(ctx.StringLiteral()) {
-            return ConstantExpression(StringBuilder { it.forEach { append(it.getText().unquote()) } }.toString(),
+            return ConstantExpression(Value(StringBuilder { it.forEach { append(it.getText().unquote()) } }.toString()),
                     ctx = ctx).let { listOf(it) }
         }
         match(ctx.expression()) {

@@ -19,7 +19,7 @@ data class CompilerOptions(
         // TODO: types per fold, contiguous for vectors
         , val scopeFolding: Boolean = false
         // TODO: types per fold
-        , val mergeConstants: Boolean = true
+        , val mergeConstants: Boolean = false
         /**
          * Disabling this makes each function use its own set of locals, which leaks a lot of space
          */

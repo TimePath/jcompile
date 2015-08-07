@@ -4,6 +4,7 @@ import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.Q1VM
+import com.timepath.compiler.backend.q1vm.expr
 import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation

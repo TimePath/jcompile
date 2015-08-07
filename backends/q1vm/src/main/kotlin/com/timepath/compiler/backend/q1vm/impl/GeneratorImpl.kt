@@ -92,17 +92,17 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
         fun generateFunction(it: IR, localOfs: Int, jm: JumpManager, statements: MutableList<ProgramData.Statement>) {
             val instr = it.instr
             var (a, b, c) = (instr as? Instruction.WithArgs)?.args ?: Instruction.Args()
-            val qinstr = when {
-                instr is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
-                instr is Instruction.MUL_VEC -> QInstruction.MUL_VEC
-                instr is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
-                instr is Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
-                instr is Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
-                instr is Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
-                instr is Instruction.ADD_VEC -> QInstruction.ADD_VEC
-                instr is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
-                instr is Instruction.SUB_VEC -> QInstruction.SUB_VEC
-                instr is Instruction.EQ -> when (instr.type) {
+            val qinstr = when (instr) {
+                is Instruction.MUL_FLOAT -> QInstruction.MUL_FLOAT
+                is Instruction.MUL_VEC -> QInstruction.MUL_VEC
+                is Instruction.MUL_FLOAT_VEC -> QInstruction.MUL_FLOAT_VEC
+                is Instruction.MUL_VEC_FLOAT -> QInstruction.MUL_VEC_FLOAT
+                is Instruction.DIV_FLOAT -> QInstruction.DIV_FLOAT
+                is Instruction.ADD_FLOAT -> QInstruction.ADD_FLOAT
+                is Instruction.ADD_VEC -> QInstruction.ADD_VEC
+                is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
+                is Instruction.SUB_VEC -> QInstruction.SUB_VEC
+                is Instruction.EQ -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.EQ_FLOAT
                     javaClass<vector_t>() -> QInstruction.EQ_VEC
                     javaClass<string_t>() -> QInstruction.EQ_STR
@@ -111,7 +111,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.EQ_FUNC
                     else -> QInstruction.EQ_FLOAT
                 }
-                instr is Instruction.NE -> when (instr.type) {
+                is Instruction.NE -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.NE_FLOAT
                     javaClass<vector_t>() -> QInstruction.NE_VEC
                     javaClass<string_t>() -> QInstruction.NE_STR
@@ -120,11 +120,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.NE_FUNC
                     else -> QInstruction.NE_FLOAT
                 }
-                instr is Instruction.LE -> QInstruction.LE
-                instr is Instruction.GE -> QInstruction.GE
-                instr is Instruction.LT -> QInstruction.LT
-                instr is Instruction.GT -> QInstruction.GT
-                instr is Instruction.LOAD -> when (instr.type) {
+                is Instruction.LE -> QInstruction.LE
+                is Instruction.GE -> QInstruction.GE
+                is Instruction.LT -> QInstruction.LT
+                is Instruction.GT -> QInstruction.GT
+                is Instruction.LOAD -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.LOAD_FLOAT
                     javaClass<vector_t>() -> QInstruction.LOAD_VEC
                     javaClass<string_t>() -> QInstruction.LOAD_STR
@@ -133,8 +133,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.LOAD_FUNC
                     else -> QInstruction.LOAD_FLOAT
                 }
-                instr is Instruction.ADDRESS -> QInstruction.ADDRESS
-                instr is Instruction.STORE -> when (instr.type) {
+                is Instruction.ADDRESS -> QInstruction.ADDRESS
+                is Instruction.STORE -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.STORE_FLOAT
                     javaClass<vector_t>() -> QInstruction.STORE_VEC
                     javaClass<string_t>() -> QInstruction.STORE_STR
@@ -143,7 +143,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.STORE_FUNC
                     else -> QInstruction.STORE_FLOAT
                 }
-                instr is Instruction.STOREP -> when (instr.type) {
+                is Instruction.STOREP -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.STOREP_FLOAT
                     javaClass<vector_t>() -> QInstruction.STOREP_VEC
                     javaClass<string_t>() -> QInstruction.STOREP_STR
@@ -152,8 +152,8 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.STOREP_FUNC
                     else -> QInstruction.STOREP_FLOAT
                 }
-                instr is Instruction.RETURN -> QInstruction.RETURN
-                instr is Instruction.NOT -> when (instr.type) {
+                is Instruction.RETURN -> QInstruction.RETURN
+                is Instruction.NOT -> when (instr.type) {
                     javaClass<float_t>() -> QInstruction.NOT_FLOAT
                     javaClass<vector_t>() -> QInstruction.NOT_VEC
                     javaClass<string_t>() -> QInstruction.NOT_STR
@@ -162,7 +162,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     javaClass<function_t>() -> QInstruction.NOT_FUNC
                     else -> QInstruction.NOT_FLOAT
                 }
-                instr is Instruction.CALL -> {
+                is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
                         val move = when (it.second) {
@@ -178,12 +178,12 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     }
                     QInstruction.from(QInstruction.CALL0.ordinal() + instr.params.size().coerceIn(0, 8))
                 }
-                instr is Instruction.STATE -> QInstruction.STATE
-                instr is Instruction.LABEL -> {
+                is Instruction.STATE -> QInstruction.STATE
+                is Instruction.LABEL -> {
                     jm.label(instr.id)
                     return
                 }
-                instr is Instruction.GOTO -> {
+                is Instruction.GOTO -> {
                     if (instr is Instruction.GOTO.If) {
                         a = instr.condition
                         jm.goto(instr.id)
@@ -198,10 +198,10 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         QInstruction.GOTO
                     }
                 }
-                instr is Instruction.AND -> QInstruction.AND
-                instr is Instruction.OR -> QInstruction.OR
-                instr is Instruction.BITAND -> QInstruction.BITAND
-                instr is Instruction.BITOR -> QInstruction.BITOR
+                is Instruction.AND -> QInstruction.AND
+                is Instruction.OR -> QInstruction.OR
+                is Instruction.BITAND -> QInstruction.BITAND
+                is Instruction.BITOR -> QInstruction.BITOR
                 else -> throw NoWhenBranchMatchedException()
             }
             statements.add(ProgramData.Statement(qinstr, a.toGlobal(localOfs), b.toGlobal(localOfs), c.toGlobal(localOfs)))
@@ -221,9 +221,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          */
         override fun generateProgs(): ProgramData {
             val fieldDefs = arrayListOf<ProgramData.Definition>() with {
-                for ((s, idx) in state.fields.map) {
+                for ((pair, idx) in state.fields.map) {
+                    val (s, owner) = pair
+                    val type = owner.fields[s]!!
                     val e = state.allocator.allocateString(s)
-                    add(ProgramData.Definition(QType.Float, idx.toShort(), e.ref.i))
+                    add(ProgramData.Definition(QType[type], idx.toShort(), e.ref.i))
                 }
             }
             val localOfs = state.opts.userStorageStart + run {
@@ -273,7 +275,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     val v = it.value?.any
                     val e = state.allocator.allocateString(it.name)
                     val i = k.toGlobal(localOfs)
-                    add(ProgramData.Definition(QType.Float, i.toShort(), e.ref.i))
+                    add(ProgramData.Definition(QType[it.type], i.toShort(), e.ref.i))
                     when (v) {
                         is Pointer -> intData.put(i, v.int)
                         is Int -> floatData.put(i, v.toFloat())
