@@ -135,6 +135,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 }
                 is Instruction.ADDRESS -> QInstruction.ADDRESS
                 is Instruction.STORE -> when (instr.type) {
+                    javaClass<void_t>() -> return
                     javaClass<float_t>() -> QInstruction.STORE_FLOAT
                     javaClass<vector_t>() -> QInstruction.STORE_VEC
                     javaClass<string_t>() -> QInstruction.STORE_STR
@@ -216,6 +217,29 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             return ofs + i
         }
 
+        fun storeFloat(i: Int, f: Float) {
+            // TODO: compare epsilon?
+            floatData.put(i, f)
+        }
+
+        fun storeConstant(localOfs: Int, it: Allocator.AllocationMap.Entry): ProgramData.Definition {
+            val k = it.ref
+            val v = it.value?.any
+            val e = state.allocator.allocateString(it.name)
+            val i = k.toGlobal(localOfs)
+            when (v) {
+                is Pointer -> intData.put(i, v.int)
+                is Int -> storeFloat(i, v.toFloat())
+                is Float -> storeFloat(i, v)
+                is Vector -> {
+                    storeFloat(i + 0, v.x)
+                    storeFloat(i + 1, v.y)
+                    storeFloat(i + 2, v.z)
+                }
+            }
+            return ProgramData.Definition(QType[it.type], i.toShort(), e.ref.i)
+        }
+
         /**
          * FIXME: metadata
          */
@@ -270,25 +294,12 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 }
             }
             val globalDefs = arrayListOf<ProgramData.Definition>() with {
-                val f = fun(it: Allocator.AllocationMap.Entry) {
-                    val k = it.ref
-                    val v = it.value?.any
-                    val e = state.allocator.allocateString(it.name)
-                    val i = k.toGlobal(localOfs)
-                    add(ProgramData.Definition(QType[it.type], i.toShort(), e.ref.i))
-                    when (v) {
-                        is Pointer -> intData.put(i, v.int)
-                        is Int -> floatData.put(i, v.toFloat())
-                        is Float -> floatData.put(i, v)
-                        is Vector -> {
-                            floatData.put(i + 0, v.x)
-                            floatData.put(i + 1, v.y)
-                            floatData.put(i + 2, v.z)
-                        }
-                    }
+                for (it in state.allocator.references.all) {
+                    add(storeConstant(localOfs, it))
                 }
-                state.allocator.references.all.forEach(f)
-                state.allocator.constants.all.forEach(f)
+                for (it in state.allocator.constants.all) {
+                    add(storeConstant(localOfs, it))
+                }
             }
 
             val globalData = run {

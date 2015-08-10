@@ -169,6 +169,9 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     private var globalCounter = 0
     /** Reserve space for this variable and add its name to the current scope */
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
+        if (scope == Instruction.Ref.Scope.Local && value != null) {
+            throw IllegalStateException("local with value")
+        }
         val name = id ?: "var${refCounter++}"
         val i = when (scope) {
             Instruction.Ref.Scope.Local -> {
@@ -193,7 +196,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                         this.scope.peek().lookup[it.name] = it
                     }
         }
-        this.scope.peek().lookup[name] = entry
+        id?.let { this.scope.peek().lookup[it] = entry }
         return entry
     }
 

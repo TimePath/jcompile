@@ -127,12 +127,15 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 is AliasExpression -> e.alias
                 else -> e
             }
-            val scope = when (state.allocator.insideFunc) {
-                true -> Instruction.Ref.Scope.Local
-                else -> Instruction.Ref.Scope.Global
+            if (state.allocator.insideFunc) {
+                val init = decl.value
+                val global = state.allocator[decl.id] ?: state.allocator.allocateReference(decl.id, type, null, scope = Instruction.Ref.Scope.Local)
+                return IR.Declare(global).list() + (init?.let { e.ref().set(it).generate() } ?: emptyList())
+            } else {
+                val const = decl.value?.evaluate(state)
+                val global = state.allocator[decl.id] ?: state.allocator.allocateReference(decl.id, type, const, scope = Instruction.Ref.Scope.Global)
+                return IR.Declare(global).list()
             }
-            val global = state.allocator[decl.id] ?: state.allocator.allocateReference(decl.id, type, decl.value?.evaluate(state), scope = scope)
-            return IR.Declare(global).list()
         }
     }
 
@@ -273,11 +276,12 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate().with { addAll(this) }
         val args = e.args.asSequence().take(8).map { it.generate() }.toList()
         args.flatMapTo(this) { it }
-        val ret = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
+        val returnType = e.type(state)
+        val ret = state.allocator.allocateReference(type = returnType, scope = Instruction.Ref.Scope.Local)
         val params = args.merge(e.args) { it, other -> it.last().ret to other.type(state).javaClass }
         IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
-        IR(Instruction.STORE[javaClass<float_t>()](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
+        IR(Instruction.STORE[returnType.javaClass](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
                 .with { add(this) }
     }
 

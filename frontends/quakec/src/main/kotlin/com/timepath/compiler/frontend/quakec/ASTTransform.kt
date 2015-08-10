@@ -216,7 +216,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                             type.declare(id, null).let {
                                 listOf(it,
                                         BinaryExpression.Assign(
-                                                left = (it as DeclarationExpression).ref(),
+                                                left = it.ref(),
                                                 right = initializer,
                                                 ctx = ctx))
                             }
