@@ -36,9 +36,6 @@ object Main {
                     val out = File("out")
                     out.mkdir()
                     thread {
-                        File(out, "${project.root}.txt").writeText(compiler.state.allocator.toString())
-                    }
-                    thread {
                         fun StringBuilder.node(s: String, body: StringBuilder.() -> Unit) {
                             append("\n<$s>")
                             body()
@@ -66,6 +63,7 @@ object Main {
                     thread {
                         ProgramDataWriter(IOWrapper.File(File(out, project.out) with { createNewFile() }, write = true))
                                 .write(compiled.generateProgs())
+                        File(out, "${project.root}.txt").writeText(compiler.state.allocator.toString())
                     }
                 }
             }

@@ -12,6 +12,9 @@ import com.timepath.with
 object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
     override val simpleName = "vector_t"
     override fun handle(op: Operation) = ops[op]
+    override fun declare(name: String, value: ConstantExpression?)
+            = DeclarationExpression(name, this, value)
+
     val ops = mapOf(
             Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<vector_t>()]),
             Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<vector_t>()]),

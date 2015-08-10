@@ -1,5 +1,7 @@
 package com.timepath.compiler.backend.q1vm.types
 
+import com.timepath.compiler.ast.ConstantExpression
+import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
@@ -12,6 +14,9 @@ abstract class class_t : struct_t() {
             Operation("!=", self, self) to DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<entity_t>()]),
             Operation("!", self) to DefaultHandlers.Unary(bool_t, Instruction.NOT[javaClass<entity_t>()])
     )
+
+    override fun declare(name: String, value: ConstantExpression?)
+            = DeclarationExpression(name, this, value)
 
     override fun sizeOf(): Int = 1
 

@@ -7,8 +7,10 @@ import com.timepath.compiler.types.Type
 public abstract data class struct_t(vararg fields: Pair<String, Type>) : Type() {
     val fields: MutableMap<String, Type> = linkedMapOf(*fields)
     override val simpleName = "struct_t"
-    override fun declare(name: String, value: ConstantExpression?)
-            = DeclarationExpression(name, this)
+    override fun declare(name: String, value: ConstantExpression?): DeclarationExpression {
+        require(value == null, "Constexpr structs not supported")
+        return super.declare(name, value)
+    }
 
     open fun sizeOf(): Int = fields.values().sumBy { it.sizeOf() }
     fun offsetOf(id: String): Int {
