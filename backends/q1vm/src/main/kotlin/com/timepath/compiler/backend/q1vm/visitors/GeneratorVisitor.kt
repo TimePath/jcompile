@@ -2,7 +2,6 @@ package com.timepath.compiler.backend.q1vm.visitors
 
 import com.timepath.Logger
 import com.timepath.compiler.Compiler
-import com.timepath.compiler.Value
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.class_t
@@ -114,17 +113,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
     override fun visit(e: DeclarationExpression): List<IR> {
         val type = e.type
-        if (type is struct_t && type !is class_t) {
-            val value = e.value?.value?.any
-            val components = (if (type is vector_t && value is Vector) {
-                sequenceOf(value.x, value.y, value.z)
-                        .map { ConstantExpression(Value(it), ctx = null) }
-            } else {
-                sequence { null }
-            }).iterator()
+        if (type !is vector_t && type is struct_t && type !is class_t) {
             return type.fields.flatMap {
                 val memberType = it.value
-                memberType.declare("${e.id}_${it.key}", if (components.hasNext()) components.next() else null).generate()
+                memberType.declare("${e.id}_${it.key}", null).generate()
             } with {
                 state.allocator.let {
                     it.scope.peek().lookup[e.id] = it.references[first().ret]!!.copy(name = e.id, type = type)

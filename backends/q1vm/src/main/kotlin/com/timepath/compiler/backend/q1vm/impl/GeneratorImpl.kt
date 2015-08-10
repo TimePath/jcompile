@@ -280,6 +280,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         is Pointer -> intData.put(i, v.int)
                         is Int -> floatData.put(i, v.toFloat())
                         is Float -> floatData.put(i, v)
+                        is Vector -> {
+                            floatData.put(i + 0, v.x)
+                            floatData.put(i + 1, v.y)
+                            floatData.put(i + 2, v.z)
+                        }
                     }
                 }
                 state.allocator.references.all.forEach(f)

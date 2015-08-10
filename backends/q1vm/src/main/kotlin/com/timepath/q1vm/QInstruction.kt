@@ -237,7 +237,7 @@ enum class QInstruction {
         }
     },
     STORE_VEC {
-        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, "=", it.a)
+        override fun stringify(it: Statement): Array<Any> = arrayOf(it.b, it.b + 1, it.b + 2, "=", it.a, it.a + 1, it.a + 2)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
             f[it.b + 0] = f[it.a + 0]
             f[it.b + 1] = f[it.a + 1]

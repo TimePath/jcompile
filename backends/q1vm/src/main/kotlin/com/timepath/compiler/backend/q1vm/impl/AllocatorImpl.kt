@@ -4,12 +4,16 @@ import com.timepath.compiler.Value
 import com.timepath.compiler.ast.FunctionExpression
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
+import com.timepath.compiler.backend.q1vm.Vector
 import com.timepath.compiler.backend.q1vm.types.bool_t
+import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.backend.q1vm.types.string_t
+import com.timepath.compiler.backend.q1vm.types.vector_t
 import com.timepath.compiler.ir.Allocator
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
+import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.with
 import java.util.Deque
 
@@ -167,12 +171,28 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
         val name = id ?: "var${refCounter++}"
         val i = when (scope) {
-            Instruction.Ref.Scope.Local ->
-                localCounter++
-            Instruction.Ref.Scope.Global ->
-                opts.userStorageStart + globalCounter++
+            Instruction.Ref.Scope.Local -> {
+                val it = localCounter
+                localCounter += type.sizeOf()
+                it
+            }
+            Instruction.Ref.Scope.Global -> {
+                val it = opts.userStorageStart + globalCounter
+                globalCounter += type.sizeOf()
+                it
+            }
         }
         val entry = references.allocate(name, Instruction.Ref(i, scope), type, value)
+        if (type is vector_t) {
+            // TODO: move general struct_t case from GeneratorVisitor to here
+            val v = value?.any as? Vector
+            listOf(references.allocate(name + "_x", Instruction.Ref(i + 0, scope), float_t, v?.x?.let { Value(it) }),
+                    references.allocate(name + "_y", Instruction.Ref(i + 1, scope), float_t, v?.y?.let { Value(it) }),
+                    references.allocate(name + "_z", Instruction.Ref(i + 2, scope), float_t, v?.z?.let { Value(it) }))
+                    .forEach {
+                        this.scope.peek().lookup[it.name] = it
+                    }
+        }
         this.scope.peek().lookup[name] = entry
         return entry
     }
@@ -195,7 +215,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 return it
             }
         }
-        val i = opts.userStorageStart + globalCounter++
+        val i = opts.userStorageStart + globalCounter
+        globalCounter += type.sizeOf()
         val entry = constants.allocate(name, Instruction.Ref(i, Instruction.Ref.Scope.Global), type, value)
         this.scope.peek().lookup[name] = entry
         return entry
