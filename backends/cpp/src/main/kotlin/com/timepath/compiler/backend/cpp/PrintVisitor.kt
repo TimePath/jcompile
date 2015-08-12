@@ -3,13 +3,13 @@ package com.timepath.compiler.backend.cpp
 import com.timepath.Printer
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.Vector
 import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.backend.q1vm.visitors.TypeVisitor
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 
-class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisitor<Printer> {
+class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
 
     companion object {
         fun term(e: Expression) = when {
@@ -89,7 +89,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         else -> "${e.left.print()}[${e.right.print()}]"
     }.p
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(state.typeVisitor)
+    suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(TypeVisitor)
     suppress("NOTHING_TO_INLINE") inline fun Expression.print() = accept(this@PrintVisitor)
 
     val typename = mapOf(

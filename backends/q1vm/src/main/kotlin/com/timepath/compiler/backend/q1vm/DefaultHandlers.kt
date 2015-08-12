@@ -53,11 +53,11 @@ object DefaultHandlers {
             add(IR(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         }
 
-        val typeR = r.type(this)
+        val typeR = r.type()
         linkedListOf<IR>() with {
             when (l) {
                 is IndexExpression -> {
-                    val typeL = l.left.type(this@Binary)
+                    val typeL = l.left.type()
                     when (typeL) {
                         is class_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
@@ -82,7 +82,7 @@ object DefaultHandlers {
                     }
                 }
                 is MemberExpression -> {
-                    val typeL = l.left.type(this@Binary)
+                    val typeL = l.left.type()
                     when (typeL) {
                         is class_t -> {
                             val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)

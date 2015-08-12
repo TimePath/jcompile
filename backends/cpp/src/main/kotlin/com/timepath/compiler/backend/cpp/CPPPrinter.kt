@@ -74,7 +74,7 @@ object CPPPrinter {
             it.define(project.define)
             it
         }
-        val v = PrintVisitor(compiler.state, indent)
+        val v = PrintVisitor(indent)
 
         val ast = compiler.parse().toList()
         val projOut = File(out, project.out)

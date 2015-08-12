@@ -34,14 +34,14 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 if (e.id in state.allocator) {
                     logger.warning { "redeclaring ${e.id}" }
                 }
-                state.allocator.allocateFunction(e.id, type = e.type(state) as function_t)
+                state.allocator.allocateFunction(e.id, type = e.type() as function_t)
             }
 
             override fun visit(e: DeclarationExpression) {
                 if (e.id in state.allocator) {
                     logger.warning { "redeclaring ${e.id}" }
                 }
-                state.allocator.allocateReference(e.id, e.type(state), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
+                state.allocator.allocateReference(e.id, e.type(), e.value?.evaluate(state), Instruction.Ref.Scope.Global)
             }
         }
         reduced.accept(allocate)

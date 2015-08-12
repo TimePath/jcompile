@@ -47,7 +47,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: BinaryExpression): List<IR> {
-        val op = Operation(e.op, e.left.type(state), e.right.type(state))
+        val op = Operation(e.op, e.left.type(), e.right.type())
         return Types.handle<Q1VM.State, List<IR>>(op)(state, e.left, e.right)
     }
 
@@ -83,7 +83,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             ret.addAll(genTrue)
             ret.add(IR(Instruction.LABEL(endLabel), name = "end"))
         } else {
-            val temp = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
+            val temp = state.allocator.allocateReference(type = e.type(), scope = Instruction.Ref.Scope.Local)
             IR(Instruction.GOTO.If(falseLabel, genPred.last().ret, false), name = e.test.toString()).let { ret.add(it) }
             // if
             ret.addAll(genTrue)
@@ -102,7 +102,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         return ret
     }
 
-    override fun visit(e: ConstantExpression) = state.allocator.allocateConstant(e.value, e.type(state), e.name).let {
+    override fun visit(e: ConstantExpression) = state.allocator.allocateConstant(e.value, e.type(), e.name).let {
         IR.Return(it.ref).list()
     }
 
@@ -216,14 +216,14 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: IndexExpression): List<IR> {
-        val typeL = e.left.type(state)
+        val typeL = e.left.type()
         if (typeL !is class_t) return visit(e as BinaryExpression)
         return linkedListOf<IR>() with {
             val genL = e.left.generate()
             addAll(genL)
             val genR = e.right.generate()
             addAll(genR)
-            val type = e.type(state)
+            val type = e.type()
             val out = state.allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             add(IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()))
@@ -237,7 +237,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             // check(e.field.owner is entity_t, "Field belongs to different type")
             val genR = state.fields[e.field.owner, e.field.id].generate()
                     .with { addAll(this) }
-            val out = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
+            val out = state.allocator.allocateReference(type = e.type(), scope = Instruction.Ref.Scope.Local)
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
@@ -250,9 +250,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
 
                 val genL = obj.generate()
                         .with { addAll(this) }
-                val genR = Pointer(index).expr("${innerField.id}_${outerField.id}", outerField.type(state)).generate()
+                val genR = Pointer(index).expr("${innerField.id}_${outerField.id}", outerField.type()).generate()
                         .with { addAll(this) }
-                val out = state.allocator.allocateReference(type = e.type(state), scope = Instruction.Ref.Scope.Local)
+                val out = state.allocator.allocateReference(type = e.type(), scope = Instruction.Ref.Scope.Local)
                 val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
                 IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
             } else {
@@ -276,9 +276,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genF = e.function.generate().with { addAll(this) }
         val args = e.args.asSequence().take(8).map { it.generate() }.toList()
         args.flatMapTo(this) { it }
-        val returnType = e.type(state)
+        val returnType = e.type()
         val ret = state.allocator.allocateReference(type = returnType, scope = Instruction.Ref.Scope.Local)
-        val params = args.merge(e.args) { it, other -> it.last().ret to other.type(state).javaClass }
+        val params = args.merge(e.args) { it, other -> it.last().ret to other.type().javaClass }
         IR(Instruction.CALL[params](genF.last().ret), Instruction.OFS_PARAM(-1), "$e")
                 .with { add(this) }
         IR(Instruction.STORE[returnType.javaClass](Instruction.OFS_PARAM(-1), ret.ref), ret.ref, "Save response")
@@ -320,7 +320,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: UnaryExpression) = Types.handle<Q1VM.State, List<IR>>(
-            Operation(e.op, e.operand.type(state)))(state, e.operand, null)
+            Operation(e.op, e.operand.type()))(state, e.operand, null)
 
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()
 

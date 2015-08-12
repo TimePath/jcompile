@@ -609,7 +609,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
      */
     override fun visitPostfixField(ctx: QCParser.PostfixFieldContext): List<Expression> {
         val left = ctx.postfixExpression().accept(this).single()
-        val ltype = left.type(state)
+        val ltype = left.type()
         if (ltype !is struct_t) {
             throw UnsupportedOperationException("Applying field to non-struct type $ltype")
         }

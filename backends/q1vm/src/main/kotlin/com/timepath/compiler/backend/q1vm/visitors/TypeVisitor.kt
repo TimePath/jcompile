@@ -11,7 +11,7 @@ import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 
-class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
+object TypeVisitor : ASTVisitor<Type> {
 
     suppress("NOTHING_TO_INLINE") inline fun Expression.type(): Type = accept(this@TypeVisitor)
 

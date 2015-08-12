@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':api')
+    compile "org.jetbrains.kotlin:kotlin-compiler:${versions.kotlin}"
+}
