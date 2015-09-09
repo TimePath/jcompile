@@ -1,10 +1,12 @@
 package com.timepath.compiler.backend.q1vm
 
+import com.timepath.compiler.ir.Instruction
+
 data class CompilerOptions(
         /**
          * Start allocating from this offset
          */
-        val userStorageStart: Int = 100
+        val userStorageStart: Int = Instruction.OFS_PARAM(8).i
         /**
          * Reuse references from previous deeper scopes, but not between functions as that may not be safe
          *
