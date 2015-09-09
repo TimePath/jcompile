@@ -128,6 +128,20 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     add = state.symbols.scope("block") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
 
+    private val `return` = "return"
+    private val thisfunc = "__FUNC__"
+
+    fun FunctionExpression.init() {
+        string_t.declare(thisfunc, Value(id).expr()).let {
+            state.symbols.declare(it)
+            add(it)
+        }
+        type.declare(`return`, null).let {
+            state.symbols.declare(it)
+            add(it)
+        }
+    }
+
     override fun visitFunctionDefinition(ctx: QCParser.FunctionDefinitionContext): List<Expression> {
         val declarator = ctx.declarator()
         val old = declarator.parameterTypeList() == null
@@ -155,6 +169,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
                     params?.let { addAll(it) }
+                    init()
                     val children = visitChildren(ctx.compoundStatement())
                     addAll(children)
                 }
@@ -174,10 +189,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 params = params,
                 vararg = vararg,
                 ctx = ctx
-        ).with {
-            add(DeclarationExpression("__FUNC__", string_t, Value(id).expr()))
-            doChildren(null)
-        }.let { listOf(it) }
+        ).with { doChildren(null) }.let { listOf(it) }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {
@@ -325,7 +337,8 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
     }
 
     override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext) = ReturnStatement(
-            match(ctx.expression()) { it.accept(this).single() },
+            match(ctx.expression()) { it.accept(this@ASTTransform).single() }
+                    ?: state.symbols[`return`]!!,
             ctx = ctx).let { listOf(it) }
 
     override fun visitBreakStatement(ctx: QCParser.BreakStatementContext) = BreakStatement(
@@ -788,7 +801,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 return it.accept(this)
             }
             return listOf(BlockExpression(linkedListOf<Expression>() with {
-                val decl = DeclarationExpression("tmp", vector_t)
+                val decl = vector_t.declare("tmp", null)
                 val vec = decl.ref()
                 add(decl)
                 val x = MemberExpression(vec, MemberReferenceExpression(vector_t, "x"))
@@ -799,6 +812,10 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 add(z set it[2].accept(this@ASTTransform).single())
                 add(vec)
             }, ctx = ctx))
+        }
+        if (text == "return") {
+            val ret = state.symbols[`return`]!!
+            return ret.let { listOf(it) }
         }
         throw UnsupportedOperationException(ctx.getText())
     }

@@ -171,7 +171,7 @@ argumentExpressionList
     ;
 
 primaryExpression
-    :   Identifier
+    :   Identifier | 'return'
     |   Constant
     |   '[' expression ',' expression ',' expression ']'
     |   StringLiteral+
@@ -405,10 +405,10 @@ typeName
 statement
     :   labeledStatement
     |   compoundStatement
-    |   expressionStatement
     |   selectionStatement
     |   iterationStatement
     |   jumpStatement
+    |   expressionStatement
     ;
 
 labeledStatement
