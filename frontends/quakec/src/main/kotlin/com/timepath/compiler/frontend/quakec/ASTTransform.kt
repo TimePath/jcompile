@@ -174,7 +174,10 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 params = params,
                 vararg = vararg,
                 ctx = ctx
-        ).with { doChildren(null) }.let { listOf(it) }
+        ).with {
+            add(DeclarationExpression("__FUNC__", string_t, Value(id).expr()))
+            doChildren(null)
+        }.let { listOf(it) }
     }
 
     override fun visitDeclaration(ctx: QCParser.DeclarationContext): List<Expression> {

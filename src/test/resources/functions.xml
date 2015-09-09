@@ -1,25 +1,43 @@
 <BlockExpression>
     <FunctionExpression id="test1" type="(float_t) -> float_t"/>
     <FunctionExpression id="test2" type="(float_t) -> float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test2)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
     <DeclarationExpression id="test3" type="(float_t) -> float_t"/>
     <FunctionExpression id="test4" type="(float_t) -> float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test4)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
     <FunctionExpression id="test5" type="(float_t) -> .float_t"/>
     <FunctionExpression id="test6" type="(float_t) -> .float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test6)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
     <FunctionExpression id="test8" type="(float_t) -> .float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test8)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
     <FunctionExpression id="test9" type="(float_t) -> () -> float_t"/>
     <FunctionExpression id="test10" type="(float_t) -> () -> float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test10)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
     <FunctionExpression id="test11" type="(float_t) -> .() -> float_t"/>
     <FunctionExpression id="test12" type="(float_t) -> .() -> float_t">
+        <DeclarationExpression id="__FUNC__" type="string_t">
+            <ConstantExpression value="Value(any=test12)"/>
+        </DeclarationExpression>
         <ParameterExpression id="f" type="float_t"/>
     </FunctionExpression>
 </BlockExpression>
