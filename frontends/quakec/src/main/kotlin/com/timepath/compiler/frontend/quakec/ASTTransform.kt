@@ -418,6 +418,10 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                 QCParser.AndAssign -> BinaryExpression.BitAnd.Assign(left, right, ctx = ctx)
                 QCParser.XorAssign -> BinaryExpression.BitXor.Assign(left, right, ctx = ctx)
                 QCParser.OrAssign -> BinaryExpression.BitOr.Assign(left, right, ctx = ctx)
+                QCParser.AndNotAssign -> when {
+                    state.opts.andNot -> BinaryExpression.BitAnd.Assign(left, !right, ctx = ctx)
+                    else -> throw UnsupportedOperationException("`lvalue &~= rvalue` is disabled")
+                }
                 else -> throw NoWhenBranchMatchedException()
             }.let { listOf(it) }
         }
@@ -784,7 +788,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             if (s.startsWith('#')) {
                 return ConstantExpression(Value(text), ctx = ctx).let { listOf(it) }
             }
-            val f = if ('x' in s || 'X' in s) { s.toInt().toFloat() } else { s.toFloat() }
+            val f = if ('x' in s || 'X' in s) s.toInt().toFloat() else s.toFloat()
             val i = f.toInt()
             val number = when (i.toFloat()) {
                 f -> Value(i)

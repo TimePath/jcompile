@@ -78,6 +78,7 @@ assignmentExpression
         | '&='
         | '^='
         | '|='
+        | '&~='
         )
         assignmentExpression
     ;
@@ -547,6 +548,7 @@ RightShiftAssign : '>>=';
 AndAssign : '&=';
 XorAssign : '^=';
 OrAssign : '|=';
+AndNotAssign : '&~=';
 
 Compare : '<=>';
 Equal : '==';

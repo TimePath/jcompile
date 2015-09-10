@@ -35,6 +35,10 @@ data class CompilerOptions(
          */
         , val ifNot: Boolean = false
         /**
+         * Support `lvalue &~= rvalue`
+         */
+        , val andNot: Boolean = false
+        /**
          * Allows the following without special syntax:
          *
          * .float field;
