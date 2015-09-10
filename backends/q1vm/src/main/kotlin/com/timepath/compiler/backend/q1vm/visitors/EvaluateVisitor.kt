@@ -29,6 +29,8 @@ class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
     override fun visit(e: BinaryExpression.Modulo) = eval(e) { l, r -> l % r }
     override fun visit(e: BinaryExpression.Multiply) = eval(e) { l, r -> l * r }
     override fun visit(e: BinaryExpression.Subtract) = eval(e) { l, r -> l - r }
+    override fun visit(e: BinaryExpression.Lsh) = eval(e) { l, r -> l shl r }
+    override fun visit(e: BinaryExpression.Rsh) = eval(e) { l, r -> l shr r }
 
     inline fun eval(e: UnaryExpression, action: (v: Value) -> Value): Value? {
         val v = e.operand.evaluate()

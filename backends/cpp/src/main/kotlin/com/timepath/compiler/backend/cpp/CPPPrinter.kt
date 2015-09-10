@@ -23,8 +23,8 @@ object CPPPrinter {
 
     val subprojects = listOf(
             Project("menu", "MENUQC", "menuprogs.c")
-            , Project("client", "CSQC", "csprogs.c")
-            , Project("server", "SVQC", "progs.c")
+            // , Project("client", "CSQC", "csprogs.c")
+            // , Project("server", "SVQC", "progs.c")
     )
     val out = File("out")
     val ns = "xon"
@@ -76,7 +76,7 @@ object CPPPrinter {
         }
         val v = PrintVisitor(compiler.state, indent)
 
-        val ast = compiler.parse().toList()
+        val ast = compiler.parse().toList().let { it.subList(1, it.size()) }
         val projOut = File(out, project.out)
         projOut.mkdirs()
         val predef = File(projOut, "progs.h")

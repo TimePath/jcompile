@@ -128,7 +128,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
                     add = state.symbols.scope("block") { visitChildren(ctx) },
                     ctx = ctx).let { listOf(it) }
 
-    private val `return` = "return"
+    private val `return` = "__return"
     private val thisfunc = "__FUNC__"
 
     fun FunctionExpression.init() {
@@ -136,7 +136,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             state.symbols.declare(it)
             add(it)
         }
-        type.declare(`return`, null).let {
+        type.type.declare(`return`, null).let {
             state.symbols.declare(it)
             add(it)
         }
@@ -338,7 +338,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
 
     override fun visitReturnStatement(ctx: QCParser.ReturnStatementContext) = ReturnStatement(
             match(ctx.expression()) { it.accept(this@ASTTransform).single() }
-                    ?: state.symbols[`return`]!!,
+                    ?: state.symbols[`return`]!!.ref(),
             ctx = ctx).let { listOf(it) }
 
     override fun visitBreakStatement(ctx: QCParser.BreakStatementContext) = BreakStatement(
@@ -784,7 +784,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             if (s.startsWith('#')) {
                 return ConstantExpression(Value(text), ctx = ctx).let { listOf(it) }
             }
-            val f = s.toFloat()
+            val f = if ('x' in s || 'X' in s) { s.toInt().toFloat() } else { s.toFloat() }
             val i = f.toInt()
             val number = when (i.toFloat()) {
                 f -> Value(i)
@@ -814,7 +814,7 @@ private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expressio
             }, ctx = ctx))
         }
         if (text == "return") {
-            val ret = state.symbols[`return`]!!
+            val ret = state.symbols[`return`]!!.ref()
             return ret.let { listOf(it) }
         }
         throw UnsupportedOperationException(ctx.getText())

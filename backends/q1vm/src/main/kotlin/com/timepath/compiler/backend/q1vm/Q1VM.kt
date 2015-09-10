@@ -56,7 +56,11 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             override val map: MutableMap<Pair<String, struct_t>, Int> = linkedMapOf()
             var counter = 0
             override fun get(owner: struct_t, name: String): Expression {
-                val type = owner.fields[name]!!
+                val type = owner.fields[name]
+                check(type != null) {
+                    "Can't find field $name in $owner"
+                }
+                type!!
                 map.getOrPut(name to owner) {
                     val field = counter
                     counter += type.sizeOf()

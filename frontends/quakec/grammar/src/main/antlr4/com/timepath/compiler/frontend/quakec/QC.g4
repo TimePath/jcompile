@@ -303,7 +303,7 @@ enumerationConstant
     ;
 
 classSpecifier
-    :   'entityclass' name=Identifier '{' '}' ';'
+    :   'entityclass' name=Identifier (':' parent=Identifier?)? '{' '}' ';'
     ;
 
 typedefName

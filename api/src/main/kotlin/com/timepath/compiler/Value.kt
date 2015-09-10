@@ -4,7 +4,12 @@ import com.timepath.compiler.types.Type
 
 public data class Value(val any: Any) {
 
+    /**
+     * TODO
+     */
     fun toBoolean(): Boolean = false
+
+    // TODO: vectors
 
     fun plus(other: Value): Value {
         val lhs = any
@@ -33,6 +38,38 @@ public data class Value(val any: Any) {
             is Int -> when (rhs) {
                 is Int -> return Value(lhs - rhs)
                 is Float -> return Value(lhs - rhs)
+            }
+        }
+        throw UnsupportedOperationException("not supported")
+    }
+
+    fun shl(other: Value): Value {
+        val lhs = any
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs.toInt() shl rhs.toInt())
+                is Int -> return Value(lhs.toInt() shl rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs shl rhs)
+                is Float -> return Value(lhs shl rhs.toInt())
+            }
+        }
+        throw UnsupportedOperationException("not supported")
+    }
+
+    fun shr(other: Value): Value {
+        val lhs = any
+        val rhs = other.any
+        when (lhs) {
+            is Float -> when (rhs) {
+                is Float -> return Value(lhs.toInt() shr rhs.toInt())
+                is Int -> return Value(lhs.toInt() shr rhs)
+            }
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs shr rhs)
+                is Float -> return Value(lhs shr rhs.toInt())
             }
         }
         throw UnsupportedOperationException("not supported")
