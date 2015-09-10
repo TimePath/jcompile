@@ -6,6 +6,7 @@ import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.backend.q1vm.Vector
 import com.timepath.compiler.backend.q1vm.types.*
+import com.timepath.compiler.quote
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 
@@ -179,7 +180,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
             is Int -> "${it}"
             is Vector -> "vector ( ${it.x}f, ${it.y}f, ${it.z}f )"
             is Char -> "'${it}'"
-            is String -> "\"${it}\""
+            is String -> it.quote()
             else -> throw NoWhenBranchMatchedException()
         }.p
     }
