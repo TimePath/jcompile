@@ -4,7 +4,7 @@ import com.timepath.compiler.unquote
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.misc.Pair
 
-class CustomLexer(input: ANTLRInputStream) : QCLexer(input) {
+class CustomLexer(input: ANTLRInputStream) : NewQCLexer(input) {
 
     private var file = getSourceName()
 
@@ -23,7 +23,7 @@ class CustomLexer(input: ANTLRInputStream) : QCLexer(input) {
 
     override fun emit(): Token {
         val token = super.emit()
-        if (token.getType() == QCLexer.LineDirective) {
+        if (token.getType() == NewQCLexer.LineDirective) {
             val s = token.getText()
             val split = s.splitBy(" ")
             val line = split[1]

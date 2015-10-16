@@ -8,8 +8,8 @@ import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.use
 import org.anarres.cpp.CppReader
 import org.anarres.cpp.Preprocessor
-import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.atn.PredictionMode
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
@@ -49,7 +49,14 @@ public class QCC : Frontend<Q1VM.State, Sequence<List<Expression>>> {
                         val stream = ANTLRInputStream(future.get())
                         stream.name = include.path
                         val lexer = CustomLexer(stream)
-                        val parser = QCParser(lexer.let { CommonTokenStream(it) })
+                        val parser = NewQCParser(lexer.let { CommonTokenStream(it) })
+                        parser.getInterpreter().setPredictionMode(PredictionMode.SLL)
+                        parser.removeErrorListeners()
+                        parser.addErrorListener(object : BaseErrorListener() {
+                            override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
+                                System.err.println("${it.first.name}: line " + line + ":" + charPositionInLine + " " + msg)
+                            }
+                        })
                         parser.compilationUnit()
                     })
                 }
@@ -58,8 +65,7 @@ public class QCC : Frontend<Q1VM.State, Sequence<List<Expression>>> {
             it.asSequence().map {
                 val (include, future) = it
                 logger.info { include.path }
-                val ret = future.get().accept(ASTTransform(state))
-                ret.single().children
+                ASTBuilder(future.get(), state)
             }
         }.let {
             return it

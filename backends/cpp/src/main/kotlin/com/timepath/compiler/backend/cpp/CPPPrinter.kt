@@ -23,8 +23,10 @@ object CPPPrinter {
 
     val subprojects = listOf(
             Project("menu", "MENUQC", "menuprogs.c")
-            // , Project("client", "CSQC", "csprogs.c")
-            // , Project("server", "SVQC", "progs.c")
+            ,
+            Project("client", "CSQC", "csprogs.c")
+            ,
+            Project("server", "SVQC", "progs.c")
     )
     val out = File("out")
     val ns = "xon"
