@@ -17,7 +17,7 @@ public object Types {
 
     val debug = false
 
-    suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     inline fun handle<reified S : CompileState, reified T>(operation: Operation): Operation.Handler<S, T> {
         for (handler in handlers) {
             val it = handler(operation) ?: continue

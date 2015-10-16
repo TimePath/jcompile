@@ -13,7 +13,6 @@ import junit.framework.TestSuite
 import org.junit.runner.RunWith
 import org.junit.runners.AllTests
 import java.io.File
-import kotlin.platform.platformStatic
 import kotlin.test.assertEquals
 
 val resources = File("src/test/resources")
@@ -52,10 +51,10 @@ inline fun TestSuite.on(what: String, assertions: ((String, () -> Unit) -> Unit)
     addTest(it)
 }
 
-RunWith(AllTests::class)
+@RunWith(AllTests::class)
 class CompilerSpecs {
     companion object {
-        platformStatic fun suite() = given("a compiler") {
+        @JvmStatic fun suite() = given("a compiler") {
             val tests = resources.listFiles().filter {
                 !it.isDirectory() && it.name.matches(".+\\.q[ch]$".toRegex())
             }.toSortedListBy { it.name }

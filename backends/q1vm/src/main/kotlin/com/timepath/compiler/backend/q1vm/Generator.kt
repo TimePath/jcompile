@@ -7,7 +7,7 @@ import com.timepath.q1vm.ProgramData
 
 interface Generator {
     companion object {
-        fun invoke(state: Q1VM.State) = GeneratorImpl(state)
+        operator fun invoke(state: Q1VM.State) = GeneratorImpl(state)
     }
 
     interface ASM {

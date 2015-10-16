@@ -24,10 +24,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val logger = Logger()
     }
 
-    suppress("NOTHING_TO_INLINE") inline
+    @Suppress("NOTHING_TO_INLINE") inline
     fun T.list<T>() = listOf(this)
 
-    suppress("NOTHING_TO_INLINE") inline
+    @Suppress("NOTHING_TO_INLINE") inline
     fun Expression.generate(): List<IR> = accept(this@GeneratorVisitor)
 
     inline fun Expression.wrap(body: (Expression) -> List<IR>) = try {
@@ -149,7 +149,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 firstStatement = if (e.builtin == null)
                     0 // to be filled in later
                 else
-                    -e.builtin,
+                    -e.builtin!!,
                 firstLocal = 0,
                 numLocals = 0,
                 profiling = 0,
@@ -231,8 +231,9 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
     }
 
     override fun visit(e: MemberExpression): List<IR> = linkedListOf<IR>() with {
+        val left = e.left
         if (e.field.owner is class_t) {
-            val genL = e.left.generate()
+            val genL = left.generate()
                     .with { addAll(this) }
             // check(e.field.owner is entity_t, "Field belongs to different type")
             val genR = state.fields[e.field.owner, e.field.id].generate()
@@ -241,10 +242,10 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
             IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
         } else {
-            if (e.left is MemberExpression) {
+            if (left is MemberExpression) {
                 // FIXME: generalise
-                val obj = e.left.left
-                val innerField = e.left.field
+                val obj = left.left
+                val innerField = left.field
                 val outerField = e.field
                 val index = innerField.owner.offsetOf(innerField.id) + outerField.owner.offsetOf(outerField.id)
 
@@ -256,7 +257,7 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 val instr = e.instr as? Instruction.Factory ?: Instruction.LOAD[javaClass<float_t>()]
                 IR(instr(genL.last().ret, genR.last().ret, out.ref), out.ref, e.toString()).with { add(this) }
             } else {
-                val obj = e.left
+                val obj = left
                 val field = e.field
                 val genL = obj.generate().with { addAll(this) }
                 add(IR.Return(genL.last().ret + field.owner.offsetOf(field.id)))

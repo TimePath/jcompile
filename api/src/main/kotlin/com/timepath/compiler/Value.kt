@@ -11,7 +11,7 @@ public data class Value(val any: Any) {
 
     // TODO: vectors
 
-    fun plus(other: Value): Value {
+    operator fun plus(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -27,7 +27,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun minus(other: Value): Value {
+    operator fun minus(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -75,7 +75,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun times(other: Value): Value {
+    operator fun times(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -91,7 +91,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun div(other: Value): Value {
+    operator fun div(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -107,7 +107,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun mod(other: Value): Value {
+    operator fun mod(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -135,5 +135,5 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun minus() = Value(0) - this
+    operator fun minus() = Value(0) - this
 }

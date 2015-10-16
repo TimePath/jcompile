@@ -74,10 +74,9 @@ class ProgramDataReader(val raf: IOWrapper) {
 
                     val list: MutableList<String> = arrayListOf()
                     val sb = StringBuilder()
-                    val c: Int
                     loop@
                     while (raf.offset - header.stringData.offset < header.stringData.count) {
-                        c = raf.readByte().toInt()
+                        val c = raf.readByte().toInt()
                         when {
                             c < 0 -> break@loop
                             c == 0 -> {

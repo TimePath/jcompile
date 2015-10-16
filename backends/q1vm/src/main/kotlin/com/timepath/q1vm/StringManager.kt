@@ -33,7 +33,7 @@ class StringManager(list: Collection<String>,
     private val temp: MutableList<String> = arrayListOf()
     private val zone: MutableList<String?> = arrayListOf()
 
-    fun get(index: Int): String {
+    operator fun get(index: Int): String {
         if (index >= 0) {
             if (index < constantSize)
                 return Scanner(constant.substring(index)).with {

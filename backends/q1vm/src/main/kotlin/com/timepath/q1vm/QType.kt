@@ -15,7 +15,7 @@ enum class QType {
     Pointer;
 
     companion object {
-        fun get(it: Type) = when (it) {
+        operator fun get(it: Type) = when (it) {
             string_t -> QType.String
             is number_t -> QType.Float
             is class_t -> QType.Entity

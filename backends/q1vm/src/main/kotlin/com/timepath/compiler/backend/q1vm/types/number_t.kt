@@ -15,7 +15,7 @@ import kotlin.properties.Delegates
 open class number_t : Type() {
     override val simpleName = "number_t"
     override fun handle(op: Operation) = ops[op]
-    private val ops by Delegates.lazy {
+    private val ops by lazy(LazyThreadSafetyMode.NONE) {
         mapOf(
                 Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<float_t>()]),
                 Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),

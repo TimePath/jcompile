@@ -13,7 +13,7 @@ import com.timepath.compiler.types.defaults.function_t
 
 class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.type(): Type = accept(this@TypeVisitor)
+    @Suppress("NOTHING_TO_INLINE") inline fun Expression.type(): Type = accept(this@TypeVisitor)
 
     override fun visit(e: Nop) = void_t
 

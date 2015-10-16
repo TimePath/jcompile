@@ -90,8 +90,8 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         else -> "${e.left.print()}[${e.right.print()}]"
     }.p
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(state.typeVisitor)
-    suppress("NOTHING_TO_INLINE") inline fun Expression.print() = accept(this@PrintVisitor)
+    @Suppress("NOTHING_TO_INLINE") inline fun Expression.type() = accept(state.typeVisitor)
+    @Suppress("NOTHING_TO_INLINE") inline fun Expression.print() = accept(this@PrintVisitor)
 
     val typename = mapOf(
             void_t to "void"
@@ -166,7 +166,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
             }
             else -> Printer {
                 +("if ($pred) ${compound(e.pass, force = true)}" + when {
-                    e.fail != null -> " else ${compound(e.fail)}"
+                    e.fail != null -> " else ${compound(e.fail!!)}"
                     else -> ""
                 })
             }
@@ -223,7 +223,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: ReturnStatement) = when {
         e.returnValue == null -> "return"
-        else -> "return ${e.returnValue.print()}"
+        else -> "return ${e.returnValue!!.print()}"
     }.p
 
     override fun visit(e: SwitchExpression) = Printer {
@@ -232,6 +232,6 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
 
     override fun visit(e: SwitchExpression.Case) = when (e.expr) {
         null -> "default:"
-        else -> "case ${e.expr.print()}:"
+        else -> "case ${e.expr!!.print()}:"
     }.p
 }

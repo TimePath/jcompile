@@ -14,9 +14,9 @@ public abstract class CompileState {
 
         private val types: MutableMap<String, Type> = linkedMapOf()
 
-        override fun get(name: String) = types[name]
+        override operator fun get(name: String) = types[name]
 
-        override fun set(name: String, t: Type) {
+        override operator fun set(name: String, t: Type) {
             types[name] = t
         }
     }
@@ -45,7 +45,7 @@ public abstract class CompileState {
             return e
         }
 
-        override fun get(id: String) = stack.firstOrNull { id in it.vars }?.let { it.vars[id] }
+        override operator fun get(id: String) = stack.firstOrNull { id in it.vars }?.let { it.vars[id] }
     }
 
 }

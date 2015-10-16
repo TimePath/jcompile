@@ -19,15 +19,15 @@ interface Allocator {
 
         fun size(): Int
 
-        fun contains(ref: Instruction.Ref): Boolean
-        fun get(ref: Instruction.Ref): Entry?
+        operator fun contains(ref: Instruction.Ref): Boolean
+        operator fun get(ref: Instruction.Ref): Entry?
 
-        fun contains(value: Value): Boolean
-        fun get(value: Value): Entry?
+        operator fun contains(value: Value): Boolean
+        operator fun get(value: Value): Entry?
 
-        fun contains(name: String): Boolean
-        fun get(name: String): Entry?
-        fun set(name: String, value: Entry)
+        operator fun contains(name: String): Boolean
+        operator fun get(name: String): Entry?
+        operator fun set(name: String, value: Entry)
     }
 
     val references: AllocationMap
@@ -49,6 +49,6 @@ interface Allocator {
     fun allocateReference(id: String? = null, type: Type, value: Value? = null, scope: Instruction.Ref.Scope): AllocationMap.Entry
     fun allocateConstant(value: Value, type: Type, id: String? = null): AllocationMap.Entry
 
-    fun contains(name: String): Boolean
-    fun get(name: String): AllocationMap.Entry?
+    operator fun contains(name: String): Boolean
+    operator fun get(name: String): AllocationMap.Entry?
 }

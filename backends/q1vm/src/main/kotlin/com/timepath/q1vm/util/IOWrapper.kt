@@ -1,6 +1,5 @@
 package com.timepath.q1vm.util
 
-import java.io
 import java.nio.ByteBuffer
 
 interface IOWrapper {
@@ -58,8 +57,8 @@ interface IOWrapper {
         writeByte(0)
     }
 
-    class File(file: io.File, write: Boolean = false) : IOWrapper {
-        val raf = io.RandomAccessFile(file, if (write) "rw" else "r")
+    class File(file: java.io.File, write: Boolean = false) : IOWrapper {
+        val raf = java.io.RandomAccessFile(file, if (write) "rw" else "r")
 
         override fun read(): Int = raf.read()
 

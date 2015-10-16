@@ -13,7 +13,6 @@ import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.time
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.platform.platformStatic
 
 object CPPPrinter {
 
@@ -129,10 +128,10 @@ object CPPPrinter {
         write(v, File(projOut, "all.cpp"), include, accumulate)
     }
 
-    platformStatic fun main(args: Array<String>) {
-        require(args.size() == 1, "qcsrc path required")
+    @JvmStatic fun main(args: Array<String>) {
+        require(args.size() == 1) { "qcsrc path required" }
         val root = File(args[0])
-        require(root.exists(), "qcsrc not found")
+        require(root.exists()) { "qcsrc not found" }
         out.mkdirs()
         time(logger, "Total time") {
             FileOutputStream(File(out, "CMakeLists.txt")).writer().use {

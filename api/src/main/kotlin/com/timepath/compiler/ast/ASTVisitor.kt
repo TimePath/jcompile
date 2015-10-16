@@ -14,12 +14,12 @@ fun main(args: Array<String>) {
             }
 }
 
-@deprecated("", replaceWith = ReplaceWith("e.accept(this)"))
+@Deprecated("", replaceWith = ReplaceWith("e.accept(this)"))
 fun ASTVisitor<T>.visitReflective<T>(e: Expression): T {
     val method = javaClass.getMethod("visit", e.javaClass)
     try {
         val result = method(this, e)
-        @suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST")
         return result as T
     } catch (t: Throwable) {
         val rule: ParserRuleContext? = e.ctx

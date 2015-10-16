@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(this@ReduceVisitor)
+    @Suppress("NOTHING_TO_INLINE") inline fun Expression.reduce() = accept(this@ReduceVisitor)
 
     override fun default(e: Expression) = listOf(e)
 
@@ -25,8 +25,7 @@ class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
 
     fun List<Expression>.transform(f: (Expression) -> List<Expression>?) = flatMap { it.transform(f) ?: emptyList() }
 
-    inline fun Expression.transform(
-            @inlineOptions(InlineOption.ONLY_LOCAL_RETURN) f: (Expression) -> List<Expression>?
+    inline fun Expression.transform(crossinline f: (Expression) -> List<Expression>?
     ): List<Expression>? {
         val transformed = f(this) ?: return null
         return transformed.map { it.withChildren(it.children.transform { f(it) }) }

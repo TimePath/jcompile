@@ -11,7 +11,7 @@ import com.timepath.compiler.backend.q1vm.Q1VM
  */
 class EvaluateVisitor(val state: Q1VM.State) : ASTVisitor<Value?> {
 
-    suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate() = accept(this@EvaluateVisitor)
+    @Suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate() = accept(this@EvaluateVisitor)
 
     override fun default(e: Expression) = null
 

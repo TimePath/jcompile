@@ -18,7 +18,7 @@ import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.compiler.unquote
 import com.timepath.with
 
-private class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
+class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
     companion object {
         val logger = Logger()

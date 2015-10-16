@@ -9,31 +9,29 @@ public data class Operation(val op: String, val left: Type, val right: Type? = n
 
         companion object {
             fun Binary<State : CompileState, T>(type: Type,
-                                                inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
                                                 func: State.(lhs: Expression, rhs: Expression) -> T)
                     = object : Operation.Handler<State, T> {
                 override val type = type
 
-                override fun invoke(state: State, left: Expression, right: Expression?): T {
+                override operator fun invoke(state: State, left: Expression, right: Expression?): T {
                     requireNotNull(right)
                     return state.func(left, right!!)
                 }
             }
 
             fun Unary<State : CompileState, T>(type: Type,
-                                               inlineOptions(InlineOption.ONLY_LOCAL_RETURN)
                                                func: State.(it: Expression) -> T)
                     = object : Operation.Handler<State, T> {
                 override val type = type
 
-                override fun invoke(state: State, left: Expression, right: Expression?): T {
+                override operator fun invoke(state: State, left: Expression, right: Expression?): T {
                     assert(right == null)
                     return state.func(left)
                 }
             }
         }
 
-        fun invoke(state: State, left: Expression, right: Expression? = null): T
+        operator fun invoke(state: State, left: Expression, right: Expression? = null): T
     }
 
 }

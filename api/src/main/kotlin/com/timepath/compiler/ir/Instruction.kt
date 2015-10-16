@@ -15,7 +15,7 @@ interface Instruction {
 
         override fun toString() = "${scope.sym}${i}"
 
-        fun plus(i: Int) = Ref(this.i + i, this.scope)
+        operator fun plus(i: Int) = Ref(this.i + i, this.scope)
     }
 
     data class Args(val a: Ref = Ref.Null, val b: Ref = Ref.Null, val c: Ref = Ref.Null)
@@ -23,7 +23,7 @@ interface Instruction {
     abstract class WithArgs(val args: Args) : Instruction
 
     open class Factory(private val new: (Args) -> Instruction) {
-        fun invoke(a: Ref = Ref.Null, b: Ref = Ref.Null, c: Ref = Ref.Null) = new(Args(a, b, c))
+        operator fun invoke(a: Ref = Ref.Null, b: Ref = Ref.Null, c: Ref = Ref.Null) = new(Args(a, b, c))
     }
 
     fun name(f: (Ref) -> String) = javaClass.getSimpleName()
@@ -66,7 +66,7 @@ interface Instruction {
 
     class EQ(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { EQ(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { EQ(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "EQ<${type.getSimpleName()}>"
@@ -74,7 +74,7 @@ interface Instruction {
 
     class NE(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { NE(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { NE(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "NE<${type.getSimpleName()}>"
@@ -98,7 +98,7 @@ interface Instruction {
 
     class LOAD(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { LOAD(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { LOAD(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "LOAD<${type.getSimpleName()}>"
@@ -110,7 +110,7 @@ interface Instruction {
 
     class STORE(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { STORE(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { STORE(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "STORE<${type.getSimpleName()}>"
@@ -118,7 +118,7 @@ interface Instruction {
 
     class STOREP(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { STOREP(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { STOREP(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "STOREP<${type.getSimpleName()}>"
@@ -130,7 +130,7 @@ interface Instruction {
 
     class NOT(val type: Class<out Type>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(type: Class<out Type>) = Factory { NOT(type, it) }
+            operator fun get(type: Class<out Type>) = Factory { NOT(type, it) }
         }
 
         override fun name(f: (Ref) -> String) = "NOT<${type.getSimpleName()}>"
@@ -138,7 +138,7 @@ interface Instruction {
 
     class CALL(val params: List<Pair<Ref, Class<out Type>>>, args: Args) : WithArgs(args) {
         companion object {
-            fun get(params: List<Pair<Ref, Class<out Type>>>) = Factory { CALL(params, it) }
+            operator fun get(params: List<Pair<Ref, Class<out Type>>>) = Factory { CALL(params, it) }
         }
 
         override fun name(f: (Ref) -> String) = "CALL<${params.size()}>(${params.joinToString(", ")})"

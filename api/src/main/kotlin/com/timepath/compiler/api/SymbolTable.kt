@@ -7,5 +7,5 @@ public interface SymbolTable {
     fun push(name: String)
     fun pop()
     fun declare<R>(e: R): R
-    fun get(id: String): DeclarationExpression?
+    operator fun get(id: String): DeclarationExpression?
 }

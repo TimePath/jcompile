@@ -270,11 +270,11 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             for (it in ir) {
                 if (it is IR.Function) {
                     val firstStatement = statements.size()
-                    it.function as ProgramData.Function
-                    if (it.function.firstStatement < 0) {
-                        functions.add(it.function)
+                    val f = it.function as ProgramData.Function
+                    if (f.firstStatement < 0) {
+                        functions.add(f)
                     } else {
-                        it.function.copy(
+                        f.copy(
                                 firstStatement = firstStatement,
                                 firstLocal = localOfs,
                                 numLocals = numLocals

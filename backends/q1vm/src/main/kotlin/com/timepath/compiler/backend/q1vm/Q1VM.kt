@@ -18,9 +18,9 @@ import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.with
 
-suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
-suppress("NOTHING_TO_INLINE") inline fun Expression.reduce(state: Q1VM.State) = accept(state.reduceVisitor)
-suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
+@Suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
+@Suppress("NOTHING_TO_INLINE") inline fun Expression.reduce(state: Q1VM.State) = accept(state.reduceVisitor)
+@Suppress("NOTHING_TO_INLINE") inline fun Expression.type(state: Q1VM.State) = accept(state.typeVisitor)
 
 public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.State, Sequence<List<Expression>>, Generator.ASM> {
 
@@ -43,7 +43,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
     class State(val opts: CompilerOptions) : CompileState() {
 
-        suppress("NOTHING_TO_INLINE") inline
+        @Suppress("NOTHING_TO_INLINE") inline
         fun Expression.generate() = accept(generatorVisitor)
 
         val evaluateVisitor = EvaluateVisitor(this)

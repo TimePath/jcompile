@@ -113,7 +113,7 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
             if (e.fail != null) {
                 +"else"
                 +indent {
-                    +"${e.fail.print()}"
+                    +"${e.fail!!.print()}"
                 }
             }
             +"end"
@@ -183,7 +183,7 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
                 } else {
                     +"do"
                     +indent {
-                        e.initializer.forEach { +it.print() }
+                        e.initializer!!.forEach { +it.print() }
                         whileloop()
                     }
                     +"end"

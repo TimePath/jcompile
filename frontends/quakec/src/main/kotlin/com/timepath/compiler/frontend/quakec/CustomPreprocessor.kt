@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.EnumSet
 
-private class CustomPreprocessor : Preprocessor() {
+class CustomPreprocessor : Preprocessor() {
 
     init {
         addWarnings(EnumSet.allOf(javaClass<Warning>()))

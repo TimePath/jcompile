@@ -208,7 +208,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             else -> "$value"
         }
         if (value.any is String) {
-            val str = allocateString(value.any)
+            val str = allocateString(value.any as String)
             return allocateConstant(Value(Pointer(str.ref.i)), string_t, "str(${str.name})")
         }
         if (opts.mergeConstants) {
@@ -238,13 +238,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         val functions = functions.all.joinToString("\n")
         val strings = strings.all.joinToString("\n")
         val references = references.all.joinToString("\n")
-        return "constants:\n" + constants +
-                "\n\n" +
-                "functions:\n" + functions +
-                "\n\n" +
-                "strings:\n" + strings +
-                "\n\n" +
-                "references:\n" + references
+        return "constants:\n$constants\n\nfunctions:\n$functions\n\nstrings:\n$strings\n\nreferences:\n$references"
     }
 
 }

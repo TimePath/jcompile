@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import java.io.File
 import java.net.URL
 
-public class Compiler<F, B, State, AST, Out>(val frontend: F, val backend: B) :
+public class Compiler<F, B, State, AST : Any, Out>(val frontend: F, val backend: B) :
         Frontend<State, AST> by frontend,
         Backend<State, AST, Out> by backend
 where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileState, Out : Any {
@@ -35,11 +35,11 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
             val source: Source
     ) {
         companion object {
-            fun invoke(input: String, name: String) = Include(name, name, StringLexerSource(input))
+            operator fun invoke(input: String, name: String) = Include(name, name, StringLexerSource(input))
 
-            fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
+            operator fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
 
-            fun invoke(url: URL): Include {
+            operator fun invoke(url: URL): Include {
                 val name = url.getPath().substringAfterLast('/')
                 val path = url.getPath()
                 return Include(name, path, object : LexerSource(url.openStream().buffered().reader(), true) {

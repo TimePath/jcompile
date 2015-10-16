@@ -15,7 +15,7 @@ public class IndexExpression(left: Expression, right: Expression, ctx: PRC? = nu
     var instr: Any? = null
 }
 
-public fun Expression.get(field: MemberReferenceExpression): MemberExpression = MemberExpression(this, field)
+public operator fun Expression.get(field: MemberReferenceExpression): MemberExpression = MemberExpression(this, field)
 
 /**
  * static:
@@ -29,7 +29,7 @@ public class MemberExpression(left: Expression, val field: MemberReferenceExpres
     var instr: Any? = null
 }
 
-public fun struct_t.get(id: String): MemberReferenceExpression = MemberReferenceExpression(this, id)
+public operator fun struct_t.get(id: String): MemberReferenceExpression = MemberReferenceExpression(this, id)
 
 /**
  * Pointer to member

@@ -8,7 +8,7 @@ import java.nio.IntBuffer
 import java.util.ArrayList
 import kotlin.properties.Delegates
 
-private class EntityManager(val data: ProgramData) {
+class EntityManager(val data: ProgramData) {
 
     private val entities = ArrayList<Entity?>() with { add(Entity()) }
     private val entitySize = data.header.entityFields

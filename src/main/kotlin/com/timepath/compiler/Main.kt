@@ -8,18 +8,17 @@ import com.timepath.q1vm.util.ProgramDataWriter
 import com.timepath.with
 import java.io.File
 import kotlin.concurrent.thread
-import kotlin.platform.platformStatic
 
 object Main {
 
     val logger = Logger()
 
-    platformStatic fun main(args: Array<String>) {
-        require(args.size() == 1, "qcsrc path required")
+    @JvmStatic fun main(args: Array<String>) {
+        require(args.size() == 1) { "qcsrc path required" }
         val root = File(args[0])
-        require(root.exists(), "qcsrc not found")
+        require(root.exists()) { "qcsrc not found" }
         time(logger, "Total time") {
-            @data class Project(val root: String, val define: String, val out: String)
+            data class Project(val root: String, val define: String, val out: String)
 
             val defs = listOf(
                     Project("menu", "MENUQC", "menuprogs.dat")
@@ -42,7 +41,7 @@ object Main {
                             append("</$s>")
                         }
                         StringBuilder {
-                            fun Any.plus() = append(this.toString()
+                            operator fun Any.plus() = append(this.toString()
                                     .replace("&", "&amp;")
                                     .replace("<", "&lt;"))
                             node("errors") {

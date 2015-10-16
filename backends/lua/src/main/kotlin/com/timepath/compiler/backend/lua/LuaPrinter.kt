@@ -11,7 +11,6 @@ import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.compiler.time
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.platform.platformStatic
 
 object LuaPrinter {
 
@@ -62,10 +61,10 @@ object LuaPrinter {
         write(v, File(projOut, "all.lua"), ast.flatMap { it })
     }
 
-    platformStatic fun main(args: Array<String>) {
-        require(args.size() == 1, "qcsrc path required")
+    @JvmStatic fun main(args: Array<String>) {
+        require(args.size() == 1) { "qcsrc path required" }
         val root = File(args[0])
-        require(root.exists(), "qcsrc not found")
+        require(root.exists()) { "qcsrc not found" }
         out.mkdirs()
         time(logger, "Total time") {
             for (project in subprojects) {
