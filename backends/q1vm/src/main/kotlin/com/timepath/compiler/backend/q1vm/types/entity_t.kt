@@ -9,10 +9,10 @@ import com.timepath.compiler.types.defaults.struct_t
 
 abstract class class_t : struct_t() {
     fun ops(self: struct_t) = mapOf(
-            Operation("=", self, self) to DefaultHandlers.Assign(self, Instruction.STORE[javaClass<entity_t>()]),
-            Operation("==", self, self) to DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<entity_t>()]),
-            Operation("!=", self, self) to DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<entity_t>()]),
-            Operation("!", self) to DefaultHandlers.Unary(bool_t, Instruction.NOT[javaClass<entity_t>()])
+            Operation("=", self, self) to DefaultHandlers.Assign(self, Instruction.STORE[entity_t::class.java]),
+            Operation("==", self, self) to DefaultHandlers.Binary(bool_t, Instruction.EQ[entity_t::class.java]),
+            Operation("!=", self, self) to DefaultHandlers.Binary(bool_t, Instruction.NE[entity_t::class.java]),
+            Operation("!", self) to DefaultHandlers.Unary(bool_t, Instruction.NOT[entity_t::class.java])
     )
 
     override fun declare(name: String, value: ConstantExpression?)

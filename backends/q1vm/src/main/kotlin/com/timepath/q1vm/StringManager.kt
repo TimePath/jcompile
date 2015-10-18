@@ -1,7 +1,6 @@
 package com.timepath.q1vm
 
-import com.timepath.with
-import java.util.Scanner
+import java.util.*
 
 class StringManager(list: Collection<String>,
                     expectedSize: Int? = null) {
@@ -25,7 +24,7 @@ class StringManager(list: Collection<String>,
         val stroff = constant.length()
         if (expectedSize != null) {
             val b = expectedSize == stroff
-            assert(b, "String constants size mismatch")
+            assert(b) { "String constants size mismatch" }
         }
         constantSize = stroff
     }
@@ -36,7 +35,7 @@ class StringManager(list: Collection<String>,
     operator fun get(index: Int): String {
         if (index >= 0) {
             if (index < constantSize)
-                return Scanner(constant.substring(index)).with {
+                return Scanner(constant.substring(index)).apply {
                     useDelimiter("\u0000")
                 }.next()
             val zoneIndex = index - constantSize

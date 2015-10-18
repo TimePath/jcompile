@@ -14,8 +14,7 @@ import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.sizeOf
-import com.timepath.with
-import java.util.Deque
+import java.util.*
 
 class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
@@ -159,7 +158,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
         val function = functions.allocate(id, Instruction.Ref(1 + functions.size(), Instruction.Ref.Scope.Global), type)
         // Allocate a constant so the function can be called
-        return allocateConstant(Value(Pointer(function.ref.i)), type, id) with {
+        return allocateConstant(Value(Pointer(function.ref.i)), type, id) apply {
             scope.peek().lookup[id] = this
         }
     }

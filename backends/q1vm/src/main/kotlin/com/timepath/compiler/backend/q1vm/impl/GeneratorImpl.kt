@@ -13,7 +13,6 @@ import com.timepath.q1vm.ProgramData
 import com.timepath.q1vm.QInstruction
 import com.timepath.q1vm.QType
 import com.timepath.q1vm.StringManager
-import com.timepath.with
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -103,21 +102,21 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 is Instruction.SUB_FLOAT -> QInstruction.SUB_FLOAT
                 is Instruction.SUB_VEC -> QInstruction.SUB_VEC
                 is Instruction.EQ -> when (instr.type) {
-                    javaClass<float_t>() -> QInstruction.EQ_FLOAT
-                    javaClass<vector_t>() -> QInstruction.EQ_VEC
-                    javaClass<string_t>() -> QInstruction.EQ_STR
-                    javaClass<entity_t>() -> QInstruction.EQ_ENT
-                    javaClass<field_t>() -> QInstruction.EQ_FUNC
-                    javaClass<function_t>() -> QInstruction.EQ_FUNC
+                    float_t::class.java -> QInstruction.EQ_FLOAT
+                    vector_t::class.java -> QInstruction.EQ_VEC
+                    string_t::class.java -> QInstruction.EQ_STR
+                    entity_t::class.java -> QInstruction.EQ_ENT
+                    field_t::class.java -> QInstruction.EQ_FUNC
+                    function_t::class.java -> QInstruction.EQ_FUNC
                     else -> QInstruction.EQ_FLOAT
                 }
                 is Instruction.NE -> when (instr.type) {
-                    javaClass<float_t>() -> QInstruction.NE_FLOAT
-                    javaClass<vector_t>() -> QInstruction.NE_VEC
-                    javaClass<string_t>() -> QInstruction.NE_STR
-                    javaClass<entity_t>() -> QInstruction.NE_ENT
-                    javaClass<field_t>() -> QInstruction.NE_FUNC
-                    javaClass<function_t>() -> QInstruction.NE_FUNC
+                    float_t::class.java -> QInstruction.NE_FLOAT
+                    vector_t::class.java -> QInstruction.NE_VEC
+                    string_t::class.java -> QInstruction.NE_STR
+                    entity_t::class.java -> QInstruction.NE_ENT
+                    field_t::class.java -> QInstruction.NE_FUNC
+                    function_t::class.java -> QInstruction.NE_FUNC
                     else -> QInstruction.NE_FLOAT
                 }
                 is Instruction.LE -> QInstruction.LE
@@ -125,54 +124,54 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                 is Instruction.LT -> QInstruction.LT
                 is Instruction.GT -> QInstruction.GT
                 is Instruction.LOAD -> when (instr.type) {
-                    javaClass<float_t>() -> QInstruction.LOAD_FLOAT
-                    javaClass<vector_t>() -> QInstruction.LOAD_VEC
-                    javaClass<string_t>() -> QInstruction.LOAD_STR
-                    javaClass<entity_t>() -> QInstruction.LOAD_ENT
-                    javaClass<field_t>() -> QInstruction.LOAD_FIELD
-                    javaClass<function_t>() -> QInstruction.LOAD_FUNC
+                    float_t::class.java -> QInstruction.LOAD_FLOAT
+                    vector_t::class.java -> QInstruction.LOAD_VEC
+                    string_t::class.java -> QInstruction.LOAD_STR
+                    entity_t::class.java -> QInstruction.LOAD_ENT
+                    field_t::class.java -> QInstruction.LOAD_FIELD
+                    function_t::class.java -> QInstruction.LOAD_FUNC
                     else -> QInstruction.LOAD_FLOAT
                 }
                 is Instruction.ADDRESS -> QInstruction.ADDRESS
                 is Instruction.STORE -> when (instr.type) {
-                    javaClass<void_t>() -> return
-                    javaClass<float_t>() -> QInstruction.STORE_FLOAT
-                    javaClass<vector_t>() -> QInstruction.STORE_VEC
-                    javaClass<string_t>() -> QInstruction.STORE_STR
-                    javaClass<entity_t>() -> QInstruction.STORE_ENT
-                    javaClass<field_t>() -> QInstruction.STORE_FIELD
-                    javaClass<function_t>() -> QInstruction.STORE_FUNC
+                    void_t::class.java -> return
+                    float_t::class.java -> QInstruction.STORE_FLOAT
+                    vector_t::class.java -> QInstruction.STORE_VEC
+                    string_t::class.java -> QInstruction.STORE_STR
+                    entity_t::class.java -> QInstruction.STORE_ENT
+                    field_t::class.java -> QInstruction.STORE_FIELD
+                    function_t::class.java -> QInstruction.STORE_FUNC
                     else -> QInstruction.STORE_FLOAT
                 }
                 is Instruction.STOREP -> when (instr.type) {
-                    javaClass<float_t>() -> QInstruction.STOREP_FLOAT
-                    javaClass<vector_t>() -> QInstruction.STOREP_VEC
-                    javaClass<string_t>() -> QInstruction.STOREP_STR
-                    javaClass<entity_t>() -> QInstruction.STOREP_ENT
-                    javaClass<field_t>() -> QInstruction.STOREP_FIELD
-                    javaClass<function_t>() -> QInstruction.STOREP_FUNC
+                    float_t::class.java -> QInstruction.STOREP_FLOAT
+                    vector_t::class.java -> QInstruction.STOREP_VEC
+                    string_t::class.java -> QInstruction.STOREP_STR
+                    entity_t::class.java -> QInstruction.STOREP_ENT
+                    field_t::class.java -> QInstruction.STOREP_FIELD
+                    function_t::class.java -> QInstruction.STOREP_FUNC
                     else -> QInstruction.STOREP_FLOAT
                 }
                 is Instruction.RETURN -> QInstruction.RETURN
                 is Instruction.NOT -> when (instr.type) {
-                    javaClass<float_t>() -> QInstruction.NOT_FLOAT
-                    javaClass<vector_t>() -> QInstruction.NOT_VEC
-                    javaClass<string_t>() -> QInstruction.NOT_STR
-                    javaClass<entity_t>() -> QInstruction.NOT_ENT
-                    javaClass<field_t>() -> QInstruction.NOT_FUNC
-                    javaClass<function_t>() -> QInstruction.NOT_FUNC
+                    float_t::class.java -> QInstruction.NOT_FLOAT
+                    vector_t::class.java -> QInstruction.NOT_VEC
+                    string_t::class.java -> QInstruction.NOT_STR
+                    entity_t::class.java -> QInstruction.NOT_ENT
+                    field_t::class.java -> QInstruction.NOT_FUNC
+                    function_t::class.java -> QInstruction.NOT_FUNC
                     else -> QInstruction.NOT_FLOAT
                 }
                 is Instruction.CALL -> {
                     instr.params.mapIndexedTo(statements) { idx, it ->
                         val param = Instruction.OFS_PARAM(idx)
                         val move = when (it.second) {
-                            javaClass<float_t>() -> QInstruction.STORE_FLOAT
-                            javaClass<vector_t>() -> QInstruction.STORE_VEC
-                            javaClass<string_t>() -> QInstruction.STORE_STR
-                            javaClass<entity_t>() -> QInstruction.STORE_ENT
-                            javaClass<field_t>() -> QInstruction.STORE_FIELD
-                            javaClass<function_t>() -> QInstruction.STORE_FUNC
+                            float_t::class.java -> QInstruction.STORE_FLOAT
+                            vector_t::class.java -> QInstruction.STORE_VEC
+                            string_t::class.java -> QInstruction.STORE_STR
+                            entity_t::class.java -> QInstruction.STORE_ENT
+                            field_t::class.java -> QInstruction.STORE_FIELD
+                            function_t::class.java -> QInstruction.STORE_FUNC
                             else -> QInstruction.STORE_FLOAT
                         }
                         ProgramData.Statement(move, it.first.toGlobal(localOfs), param.toGlobal(localOfs), -1)
@@ -244,7 +243,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          * FIXME: metadata
          */
         override fun generateProgs(): ProgramData {
-            val fieldDefs = arrayListOf<ProgramData.Definition>() with {
+            val fieldDefs = arrayListOf<ProgramData.Definition>() apply {
                 for ((pair, idx) in state.fields.map) {
                     val (s, owner) = pair
                     val type = owner.fields[s]!!
@@ -278,7 +277,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                                 firstStatement = firstStatement,
                                 firstLocal = localOfs,
                                 numLocals = numLocals
-                        ) with { functions.add(this) }
+                        ) apply { functions.add(this) }
                     }
                     val jm = JumpManager { statements.size() }
                     for (stmt in it.children) {
@@ -293,7 +292,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     throw UnsupportedOperationException("" + it)
                 }
             }
-            val globalDefs = arrayListOf<ProgramData.Definition>() with {
+            val globalDefs = arrayListOf<ProgramData.Definition>() apply {
                 for (it in state.allocator.references.all) {
                     add(storeConstant(localOfs, it))
                 }
@@ -342,7 +341,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     functions = functions,
                     globalData = globalData,
                     strings = stringManager
-            ) with {
+            ) apply {
                 logger.severe {
                     StringBuilder {
                         appendln("Program's system-checksum = ${header.crc}")

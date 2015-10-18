@@ -3,7 +3,7 @@ package com.timepath.compiler.ir
 import com.timepath.compiler.Value
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
-import java.util.Deque
+import java.util.*
 
 interface Allocator {
 

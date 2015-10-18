@@ -9,18 +9,18 @@ class Builtin(val name: String,
         fun call(args: List<*>): Any
     }
 
-    fun Program.getFloat(i: Int) = data.globalFloatData[i]
-    fun Program.getString(i: Int) = data.strings[data.globalIntData[i]]
+    fun Program.getFloat(i: Int) = data.globalFloatData.get(i)
+    fun Program.getString(i: Int) = data.strings[data.globalIntData.get(i)]
 
     fun call(ctx: Program, parameterCount: Int): Any {
         var offset = QInstruction.OFS_PARAM(0)
         fun read(it: Any): Any? = when (it) {
-            javaClass<Float>() -> {
+            Float::class.java -> {
                 val i = offset
                 offset += 3
                 ctx.getFloat(i)
             }
-            javaClass<String>() -> {
+            String::class.java -> {
                 val i = offset
                 offset += 3
                 ctx.getString(i)

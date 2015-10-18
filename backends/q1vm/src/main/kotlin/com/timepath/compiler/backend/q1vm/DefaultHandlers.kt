@@ -8,12 +8,11 @@ import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation.Handler
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.with
 
 object DefaultHandlers {
 
     fun Binary(type: Type, instr: Instruction.Factory) = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        linkedListOf<IR>() with {
+        linkedListOf<IR>() apply {
             val genLeft = l.generate()
             addAll(genLeft)
             val genRight = r.generate()
@@ -24,7 +23,7 @@ object DefaultHandlers {
     }
 
     fun Unary(type: Type, instr: Instruction.Factory) = Handler.Unary<Q1VM.State, List<IR>>(type) {
-        linkedListOf<IR>() with {
+        linkedListOf<IR>() apply {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
@@ -54,16 +53,16 @@ object DefaultHandlers {
         }
 
         val typeR = r.type(this)
-        linkedListOf<IR>() with {
+        linkedListOf<IR>() apply {
             when (l) {
                 is IndexExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
                         is class_t -> {
-                            val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
+                            val tmp = MemoryReference(l.left.generate().apply { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     IndexExpression(tmp, l.right),
-                                    IndexExpression(tmp, l.right) with {
+                                    IndexExpression(tmp, l.right) apply {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }
@@ -78,24 +77,24 @@ object DefaultHandlers {
                             val accessor = MethodCallExpression(indexer, listOf(idx))
                             addAll(MethodCallExpression(accessor, listOf(1.expr(), set)).generate())
                         }
-                        else -> throw UnsupportedOperationException("Indexing ${typeL}")
+                        else -> throw UnsupportedOperationException("Indexing $typeL")
                     }
                 }
                 is MemberExpression -> {
                     val typeL = l.left.type(this@Binary)
                     when (typeL) {
                         is class_t -> {
-                            val tmp = MemoryReference(l.left.generate().with { addAll(this) }.last().ret, typeL)
+                            val tmp = MemoryReference(l.left.generate().apply { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     MemberExpression(tmp, l.field),
-                                    MemberExpression(tmp, l.field) with {
+                                    MemberExpression(tmp, l.field) apply {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }
                         is struct_t -> {
                             x(instr, l, l)
                         }
-                        else -> throw UnsupportedOperationException("MemberExpression for type ${typeL}")
+                        else -> throw UnsupportedOperationException("MemberExpression for type $typeL")
                     }
                 }
                 else -> x(instr, l, l)

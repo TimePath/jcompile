@@ -6,10 +6,10 @@ import org.antlr.v4.runtime.misc.Pair
 
 class CustomLexer(input: ANTLRInputStream) : QCLexer(input) {
 
-    private var file = getSourceName()
+    private var file = sourceName
 
     init {
-        setTokenFactory(object : CommonTokenFactory() {
+        tokenFactory = object : CommonTokenFactory() {
             private fun TokenSource.setSourceName(name: String): TokenSource = object : TokenSource by this {
                 override fun getSourceName() = name
             }
@@ -18,14 +18,14 @@ class CustomLexer(input: ANTLRInputStream) : QCLexer(input) {
                                 channel: Int, start: Int, stop: Int, line: Int, charPositionInLine: Int) =
                     super.create(Pair(source.a.setSourceName(file), source.b),
                             type, text, channel, start, stop, line, charPositionInLine)
-        })
+        }
     }
 
     override fun emit(): Token {
         val token = super.emit()
-        if (token.getType() == QCLexer.LineDirective) {
-            val s = token.getText()
-            val split = s.splitBy(" ")
+        if (token.type == QCLexer.LineDirective) {
+            val s = token.text
+            val split = s.split(" ")
             val line = split[1]
             setLine(line.toInt() - 1)
             file = split[2].trim().unquote()

@@ -6,7 +6,6 @@ import com.timepath.q1vm.util.set
 import com.timepath.q1vm.util.toFloat
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import kotlin.properties.Delegates
 
 enum class QInstruction {
 
@@ -440,12 +439,12 @@ enum class QInstruction {
          */
         fun OFS_PARAM(n: Int) = 4 + n * 3
 
-        private val instructions by Delegates.lazy(::values)
+        private val instructions by lazy(LazyThreadSafetyMode.NONE, ::values)
         fun from(i: Int) = instructions[i]
 
     }
 
-    fun invoke(it: Statement, data: ProgramData): Int {
+    operator fun invoke(it: Statement, data: ProgramData): Int {
         val f = data.globalFloatData
         val i = data.globalIntData
         val s = data.strings
@@ -462,8 +461,8 @@ enum class QInstruction {
                     val values = {
                         try {
                             if (data != null) {
-                                val intVal = data.globalIntData[it]
-                                val floatVal = data.globalFloatData[it]
+                                val intVal = data.globalIntData.get(it)
+                                val floatVal = data.globalFloatData.get(it)
                                 "i: $intVal, f: $floatVal"
                             } else null
                         } catch(e: IndexOutOfBoundsException) {

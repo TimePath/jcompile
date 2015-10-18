@@ -2,14 +2,13 @@ package com.timepath.compiler.frontend.quakec
 
 import org.anarres.cpp.*
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.EnumSet
+import java.util.*
 
 class CustomPreprocessor : Preprocessor() {
 
     init {
-        addWarnings(EnumSet.allOf(javaClass<Warning>()))
-        setListener(DefaultPreprocessorListener())
+        addWarnings(EnumSet.allOf(Warning::class.java))
+        listener = DefaultPreprocessorListener()
         val now = Date()
         addMacro("__DATE__", SimpleDateFormat("\"MMM dd yyyy\"").format(now))
         addMacro("__TIME__", SimpleDateFormat("\"hh:mm:ss\"").format(now))
@@ -30,7 +29,7 @@ class CustomPreprocessor : Preprocessor() {
     }
 
     override fun pragma(name: Token, value: MutableList<Token>) {
-        when (name.getText()) {
+        when (name.text) {
             "noref" -> return
             else -> super.pragma(name, value)
         }

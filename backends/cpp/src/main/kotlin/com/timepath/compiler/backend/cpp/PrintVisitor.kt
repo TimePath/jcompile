@@ -177,9 +177,9 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         when (it) {
             is Pointer -> "${it.int}"
             is Float -> "${it}f"
-            is Int -> "${it}"
+            is Int -> "$it"
             is Vector -> "vector ( ${it.x}f, ${it.y}f, ${it.z}f )"
-            is Char -> "'${it}'"
+            is Char -> "'$it'"
             is String -> it.quote()
             else -> throw NoWhenBranchMatchedException()
         }.p

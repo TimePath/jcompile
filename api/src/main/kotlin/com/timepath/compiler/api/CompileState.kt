@@ -4,7 +4,7 @@ import com.timepath.compiler.Compiler
 import com.timepath.compiler.ast.AliasExpression
 import com.timepath.compiler.ast.DeclarationExpression
 import com.timepath.compiler.types.Type
-import java.util.Deque
+import java.util.*
 
 public abstract class CompileState {
 

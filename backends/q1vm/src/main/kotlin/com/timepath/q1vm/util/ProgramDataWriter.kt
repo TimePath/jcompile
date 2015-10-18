@@ -1,7 +1,6 @@
 package com.timepath.q1vm.util
 
 import com.timepath.q1vm.ProgramData
-import com.timepath.with
 import java.io.File
 
 class ProgramDataWriter(val raf: IOWrapper) {
@@ -66,7 +65,7 @@ class ProgramDataWriter(val raf: IOWrapper) {
         raf.writeString("")
 
         raf.offset = ret.header.globalData.offset
-        raf.write(ByteArray(ret.globalData.capacity()) with { ret.globalData.get(this) })
+        raf.write(ByteArray(ret.globalData.capacity()) apply { ret.globalData.get(this) })
     }
 
 }

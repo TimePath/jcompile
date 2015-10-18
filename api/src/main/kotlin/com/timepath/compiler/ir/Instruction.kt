@@ -13,7 +13,7 @@ interface Instruction {
             val Null = Ref(0, Scope.Global) // TODO: -1
         }
 
-        override fun toString() = "${scope.sym}${i}"
+        override fun toString() = "${scope.sym}$i"
 
         operator fun plus(i: Int) = Ref(this.i + i, this.scope)
     }
@@ -26,7 +26,7 @@ interface Instruction {
         operator fun invoke(a: Ref = Ref.Null, b: Ref = Ref.Null, c: Ref = Ref.Null) = new(Args(a, b, c))
     }
 
-    fun name(f: (Ref) -> String) = javaClass.getSimpleName()
+    fun name(f: (Ref) -> String) = javaClass.simpleName
 
     class MUL_FLOAT(args: Args) : WithArgs(args) {
         companion object : Factory({ MUL_FLOAT(it) })
@@ -69,7 +69,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { EQ(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "EQ<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "EQ<${type.simpleName}>"
     }
 
     class NE(val type: Class<out Type>, args: Args) : WithArgs(args) {
@@ -77,7 +77,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { NE(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "NE<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "NE<${type.simpleName}>"
     }
 
     class LE(args: Args) : WithArgs(args) {
@@ -101,7 +101,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { LOAD(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "LOAD<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "LOAD<${type.simpleName}>"
     }
 
     class ADDRESS(args: Args) : WithArgs(args) {
@@ -113,7 +113,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { STORE(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "STORE<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "STORE<${type.simpleName}>"
     }
 
     class STOREP(val type: Class<out Type>, args: Args) : WithArgs(args) {
@@ -121,7 +121,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { STOREP(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "STOREP<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "STOREP<${type.simpleName}>"
     }
 
     class RETURN(args: Args) : WithArgs(args) {
@@ -133,7 +133,7 @@ interface Instruction {
             operator fun get(type: Class<out Type>) = Factory { NOT(type, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "NOT<${type.getSimpleName()}>"
+        override fun name(f: (Ref) -> String) = "NOT<${type.simpleName}>"
     }
 
     class CALL(val params: List<Pair<Ref, Class<out Type>>>, args: Args) : WithArgs(args) {
@@ -149,18 +149,18 @@ interface Instruction {
     }
 
     class LABEL(val id: String) : Instruction {
-        override fun name(f: (Ref) -> String) = "label ${id}:"
+        override fun name(f: (Ref) -> String) = "label $id:"
     }
 
     interface GOTO : Instruction {
         /** Unconditional */
         class Label(val id: String) : GOTO {
-            override fun name(f: (Ref) -> String) = "goto ${id}"
+            override fun name(f: (Ref) -> String) = "goto $id"
         }
 
         /** Conditional */
         class If(val id: String, val condition: Ref, val expect: Boolean = true) : GOTO {
-            override fun name(f: (Ref) -> String) = "if${if (expect) "" else "not"} ${f(condition)}, goto ${id}"
+            override fun name(f: (Ref) -> String) = "if${if (expect) "" else "not"} ${f(condition)}, goto $id"
         }
 
         /** Temporary marker, replaced with unconditional goto */

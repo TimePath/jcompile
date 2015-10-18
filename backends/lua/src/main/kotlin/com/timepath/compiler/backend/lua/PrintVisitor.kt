@@ -123,11 +123,11 @@ class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
     override fun visit(e: ConstantExpression) = e.value.any.let {
         when (it) {
             is Pointer -> "${it.int}"
-            is Float -> "${it}"
-            is Int -> "${it}"
+            is Float -> "$it"
+            is Int -> "$it"
             is Vector -> "vector(${it.x}, ${it.y}, ${it.z})"
-            is Char -> "'${it}'"
-            is String -> "\"${it}\""
+            is Char -> "'$it'"
+            is String -> "\"$it\""
             else -> throw NoWhenBranchMatchedException()
         }.let { Printer(it) }
     }

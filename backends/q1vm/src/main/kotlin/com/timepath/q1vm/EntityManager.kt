@@ -1,25 +1,23 @@
 package com.timepath.q1vm
 
 import com.timepath.q1vm.util.set
-import com.timepath.with
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import java.util.ArrayList
-import kotlin.properties.Delegates
+import java.util.*
 
 class EntityManager(val data: ProgramData) {
 
-    private val entities = ArrayList<Entity?>() with { add(Entity()) }
+    private val entities = ArrayList<Entity?>() apply { add(Entity()) }
     private val entitySize = data.header.entityFields
 
     inner data class Entity {
         val byte: ByteBuffer = ByteBuffer.allocateDirect(4 * entitySize)
 
-        val int: IntBuffer by Delegates.lazy {
+        val int: IntBuffer by lazy(LazyThreadSafetyMode.NONE) {
             byte.asIntBuffer()
         }
-        val float: FloatBuffer by Delegates.lazy {
+        val float: FloatBuffer by lazy(LazyThreadSafetyMode.NONE) {
             byte.asFloatBuffer()
         }
     }
@@ -35,20 +33,20 @@ class EntityManager(val data: ProgramData) {
 
     fun readFloat(self: Int, field: Int): Float {
         checkBounds(self, field)
-        return entities[self]!!.float[field]
+        return entities[self]!!.float.get(field)
     }
 
     fun readVector(self: Int, field: Int): Array<Float> {
         checkBounds(self, field)
-        val x = entities[self]!!.float[field + 0]
-        val y = entities[self]!!.float[field + 1]
-        val z = entities[self]!!.float[field + 2]
+        val x = entities[self]!!.float.get(field + 0)
+        val y = entities[self]!!.float.get(field + 1)
+        val z = entities[self]!!.float.get(field + 2)
         return arrayOf(x, y, z)
     }
 
     fun readInt(self: Int, field: Int): Int {
         checkBounds(self, field)
-        return entities[self]!!.int[field]
+        return entities[self]!!.int.get(field)
     }
 
     fun getAddress(self: Int, field: Int): Int {

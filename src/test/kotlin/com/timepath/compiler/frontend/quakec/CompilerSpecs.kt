@@ -26,7 +26,7 @@ fun compare(what: String, test: File, ext: String, actual: String) {
         assertEquals(expected, actual, "$what differs")
     } else {
         val temp = testTemp(test, ext)
-        temp.getParentFile().mkdirs()
+        temp.parentFile.mkdirs()
         temp.writeText(actual)
         // fail("Nothing to compare")
     }
@@ -56,8 +56,8 @@ class CompilerSpecs {
     companion object {
         @JvmStatic fun suite() = given("a compiler") {
             val tests = resources.listFiles().filter {
-                !it.isDirectory() && it.name.matches(".+\\.q[ch]$".toRegex())
-            }.toSortedListBy { it.name }
+                !it.isDirectory && it.name.matches(".+\\.q[ch]$".toRegex())
+            }.sortedBy { it.name }
             tests.forEach { test ->
                 on(test.name) {
                     val compiler = Compiler(QCC(), Q1VM())

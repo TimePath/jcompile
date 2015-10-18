@@ -4,9 +4,9 @@ import com.timepath.compiler.types.Type
 import org.antlr.v4.runtime.ParserRuleContext as PRC
 
 public fun Expression.inv(): UnaryExpression.BitNot = UnaryExpression.BitNot(this, null)
-public fun Expression.not(): UnaryExpression.Not = UnaryExpression.Not(this, null)
-public fun Expression.minus(): UnaryExpression.Minus = UnaryExpression.Minus(this, null)
-public fun Expression.plus(): UnaryExpression.Plus = UnaryExpression.Plus(this, null)
+public operator fun Expression.not(): UnaryExpression.Not = UnaryExpression.Not(this, null)
+public operator fun Expression.minus(): UnaryExpression.Minus = UnaryExpression.Minus(this, null)
+public operator fun Expression.plus(): UnaryExpression.Plus = UnaryExpression.Plus(this, null)
 public fun Expression.to(type: Type): UnaryExpression.Cast = UnaryExpression.Cast(type, this, null)
 public fun Expression.address(): UnaryExpression.Address = UnaryExpression.Address(this, null)
 public fun Expression.deref(): UnaryExpression.Dereference = UnaryExpression.Dereference(this, null)

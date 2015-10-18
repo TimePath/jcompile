@@ -71,7 +71,7 @@ interface IOWrapper {
         override fun write(b: ByteArray) = raf.write(b)
 
         override var offset: Int
-            get() = raf.getFilePointer().toInt()
+            get() = raf.filePointer.toInt()
             set(value) = raf.seek(value.toLong())
     }
 

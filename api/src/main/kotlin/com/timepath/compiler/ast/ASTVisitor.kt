@@ -5,8 +5,8 @@ import org.antlr.v4.runtime.misc.Interval
 
 fun main(args: Array<String>) {
     org.reflections.Reflections("com.timepath")
-            .getSubTypesOf(javaClass<Expression>())
-            .sortBy { it.getName() }
+            .getSubTypesOf(Expression::class.java)
+            .sortedBy { it.name }
             .forEach {
                 println("fun visit(e: " + it.toString()
                         .replace("$", ".")
@@ -24,19 +24,19 @@ fun ASTVisitor<T>.visitReflective<T>(e: Expression): T {
     } catch (t: Throwable) {
         val rule: ParserRuleContext? = e.ctx
         if (rule != null) {
-            val source = rule.start.getTokenSource()
-            println("e: ${source.getSourceName()}:${source.getLine()}:${source.getCharPositionInLine()}")
-            val charStream = rule.start.getInputStream()
-            val interval = Interval.of(rule.start.getStartIndex(), rule.stop.getStopIndex())
+            val source = rule.start.tokenSource
+            println("e: ${source.sourceName}:${source.line}:${source.charPositionInLine}")
+            val charStream = rule.start.inputStream
+            val interval = Interval.of(rule.start.startIndex, rule.stop.stopIndex)
             val text = charStream.getText(interval)
-            println("e: ${text}")
+            println("e: $text")
         }
         throw t
     }
 }
 
 interface ASTVisitor<T> {
-    val simpleName: String get() = this.javaClass.getSimpleName()
+    val simpleName: String get() = this.javaClass.simpleName
     fun default(e: Expression): T = throw UnsupportedOperationException("$simpleName: $e")
     fun visit(e: AliasExpression) = visit(e as DeclarationExpression)
     fun visit(e: BinaryExpression) = default(e)

@@ -5,7 +5,6 @@ import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
 import com.timepath.q1vm.util.IOWrapper
 import com.timepath.q1vm.util.ProgramDataWriter
-import com.timepath.with
 import java.io.File
 import kotlin.concurrent.thread
 
@@ -27,7 +26,7 @@ object Main {
             )
             for (project in defs) {
                 time(logger, "Project time") {
-                    val compiler = Compiler(QCC(), Q1VM()) with {
+                    val compiler = Compiler(QCC(), Q1VM()) apply {
                         includeFrom(File(root, "${project.root}/progs.src"))
                         define(project.define)
                     }
@@ -60,7 +59,7 @@ object Main {
                         }
                     }
                     thread {
-                        ProgramDataWriter(IOWrapper.File(File(out, project.out) with { createNewFile() }, write = true))
+                        ProgramDataWriter(IOWrapper.File(File(out, project.out) apply { createNewFile() }, write = true))
                                 .write(compiled.generateProgs())
                         File(out, "${project.root}.txt").writeText(compiler.state.allocator.toString())
                     }

@@ -13,7 +13,7 @@ public object Types {
 
     val handlers = linkedListOf<(Operation) -> Operation.Handler<*, *>?>()
 
-    fun Class<*>.typeArguments() = (getGenericSuperclass() as? ParameterizedType)?.getActualTypeArguments()
+    fun Class<*>.typeArguments() = (genericSuperclass as? ParameterizedType)?.actualTypeArguments
 
     val debug = false
 

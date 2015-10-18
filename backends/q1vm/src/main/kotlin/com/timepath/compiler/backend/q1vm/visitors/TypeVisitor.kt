@@ -46,9 +46,7 @@ class TypeVisitor(val state: Q1VM.State) : ASTVisitor<Type> {
 
     override fun visit(e: MemberReferenceExpression): field_t {
         val type = e.owner.fields[e.id]
-        if (type == null) {
-            throw NullPointerException("${e.owner}.${e.id} is null")
-        }
+                ?: throw NullPointerException("${e.owner}.${e.id} is null")
         return field_t(type)
     }
 

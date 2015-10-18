@@ -1,7 +1,7 @@
 package com.timepath.compiler.ir
 
 import com.timepath.Printer
-import java.util.LinkedList
+import java.util.*
 
 class ASMPrinter(val ir: List<IR>) {
 

@@ -25,7 +25,7 @@ data class ProgramData(val header: Header,
 
         var data: ProgramData? = null
 
-        fun invoke(data: ProgramData) = op(this, data)
+        operator fun invoke(data: ProgramData) = op(this, data)
 
         override fun toString() = op.toString(this, data)
 
@@ -89,14 +89,14 @@ data class ProgramData(val header: Header,
             get() = data!!.strings[fileNameOffset]
 
         override fun toString(): String = """Function {
-    firstStatement=${firstStatement},
-    firstLocal=${firstLocal},
-    numLocals=${numLocals},
-    profiling=${profiling},
-    name=${name},
-    fileName=${fileName},
-    numParams=${numParams},
-    sizeof=${sizeof}
+    firstStatement=$firstStatement,
+    firstLocal=$firstLocal,
+    numLocals=$numLocals,
+    profiling=$profiling,
+    name=$name,
+    fileName=$fileName,
+    numParams=$numParams,
+    sizeof=$sizeof
 }"""
     }
 
@@ -108,7 +108,7 @@ data class ProgramData(val header: Header,
         functions.forEach { it.data = this }
     }
 
-    val entities: EntityManager by Delegates.lazy {
+    val entities: EntityManager by lazy(LazyThreadSafetyMode.NONE) {
         EntityManager(this)
     }
 

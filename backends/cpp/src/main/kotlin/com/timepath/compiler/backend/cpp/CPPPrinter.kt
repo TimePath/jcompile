@@ -28,12 +28,12 @@ object CPPPrinter {
     val out = File("out")
     val ns = "xon"
 
-    val PREDEFS = javaClass<CPPPrinter>().getResource("/com/timepath/compiler/backend/cpp/predefs.hpp")
+    val PREDEFS = CPPPrinter::class.java.getResource("/com/timepath/compiler/backend/cpp/predefs.hpp")
 
     val indent = "    "
 
     fun write(visitor: PrintVisitor, file: File, include: List<File>, code: List<Expression>) {
-        val parent = file.getParentFile()
+        val parent = file.parentFile
         parent.mkdirs()
         FileOutputStream(file).writer().buffered().use {
             it.write(Printer {
@@ -98,7 +98,7 @@ object CPPPrinter {
             }.toString())
         }
         val zipped = compiler.includes.map {
-            File(it.path).relativeTo(sourceRoot.getParentFile())
+            File(it.path).relativeTo(sourceRoot.parentFile)
                     .replace(".qc", ".cpp")
                     .replace(".qh", ".hpp")
         }.zip(ast)

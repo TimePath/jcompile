@@ -8,10 +8,10 @@ public object PrintVisitor : ASTVisitor<Pair<Map<String, Any?>, List<Expression>
 
     private fun render(e: Expression, sb: StringBuilder, indent: String = ""): StringBuilder {
         val name = e.simpleName
-        sb.append("${indent}<${name}")
+        sb.append("$indent<$name")
         val (attributes, children) = e.accept(PrintVisitor)
         for ((k, v) in attributes) {
-            sb.append(" ${k}=\"${v.toString()
+            sb.append(" $k=\"${v.toString()
                     .replace("&", "&amp;")
                     .replace("\"", "&quot;")}\"")
         }
@@ -23,7 +23,7 @@ public object PrintVisitor : ASTVisitor<Pair<Map<String, Any?>, List<Expression>
             for (c in children) {
                 render(c, sb, nextIndent)
             }
-            sb.append("${indent}</${name}>\n")
+            sb.append("$indent</$name>\n")
         }
         return sb
     }

@@ -28,7 +28,7 @@ object LuaPrinter {
     val indent = "    "
 
     fun write(visitor: PrintVisitor, file: File, code: List<Expression>) {
-        val parent = file.getParentFile()
+        val parent = file.parentFile
         parent.mkdirs()
         FileOutputStream(file).writer().buffered().use {
             it.write(Printer {

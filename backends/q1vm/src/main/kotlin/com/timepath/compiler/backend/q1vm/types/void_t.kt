@@ -30,6 +30,6 @@ object void_t : Type() {
                                 fail = 0.expr())
                 ).generate()
             },
-            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<float_t>()])
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[float_t::class.java])
     )
 }

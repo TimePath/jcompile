@@ -16,7 +16,6 @@ import com.timepath.compiler.types.Types
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.compiler.types.defaults.struct_t
-import com.timepath.with
 
 @Suppress("NOTHING_TO_INLINE") inline fun Expression.evaluate(state: Q1VM.State) = accept(state.evaluateVisitor)
 @Suppress("NOTHING_TO_INLINE") inline fun Expression.reduce(state: Q1VM.State) = accept(state.reduceVisitor)
@@ -37,7 +36,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
 
     interface FieldCounter {
         val map: Map<Pair<String, struct_t>, Int>
-        fun get(owner: struct_t, name: String): Expression
+        operator fun get(owner: struct_t, name: String): Expression
         fun size(): Int
     }
 
@@ -73,18 +72,18 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
         }
 
         init {
-            Types.types[javaClass<java.lang.Boolean>()] = bool_t
-            Types.types[javaClass<java.lang.Character>()] = int_t
-            Types.types[javaClass<java.lang.Integer>()] = int_t
-            Types.types[javaClass<java.lang.Float>()] = float_t
-            Types.types[javaClass<String>()] = string_t
-            Types.types[javaClass<Vector>()] = vector_t
-            Types.types[javaClass<Pointer>()] = int_t
+            Types.types[@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN") java.lang.Boolean::class.java] = bool_t
+            Types.types[@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN") java.lang.Character::class.java] = int_t
+            Types.types[@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN") java.lang.Integer::class.java] = int_t
+            Types.types[@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN") java.lang.Float::class.java] = float_t
+            Types.types[String::class.java] = string_t
+            Types.types[Vector::class.java] = vector_t
+            Types.types[Pointer::class.java] = int_t
 
             Types.handlers.add {
                 if (it.op != ",") null else
                     Operation.Handler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
-                        linkedListOf<IR>() with {
+                        linkedListOf<IR>() apply {
                             addAll(left.generate())
                             addAll(right.generate())
                         }
@@ -95,13 +94,13 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             function_t.handlers.add {
                 when (it) {
                     Operation("=", this, this) ->
-                        DefaultHandlers.Assign(this, Instruction.STORE[javaClass<function_t>()])
+                        DefaultHandlers.Assign(this, Instruction.STORE[function_t::class.java])
                     Operation("==", this, this) ->
-                        DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<function_t>()])
+                        DefaultHandlers.Binary(bool_t, Instruction.EQ[function_t::class.java])
                     Operation("!=", this, this) ->
-                        DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<function_t>()])
+                        DefaultHandlers.Binary(bool_t, Instruction.NE[function_t::class.java])
                     Operation("!", this) ->
-                        DefaultHandlers.Unary(bool_t, Instruction.NOT[javaClass<function_t>()])
+                        DefaultHandlers.Unary(bool_t, Instruction.NOT[function_t::class.java])
                     Operation("&", this) ->
                         Operation.Handler.Unary<Q1VM.State, List<IR>>(int_t) {
                             val gen = it.generate()

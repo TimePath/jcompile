@@ -9,9 +9,9 @@ object string_t : pointer_t() {
     override val simpleName = "string_t"
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<string_t>()]),
-            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<string_t>()]),
-            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<string_t>()]),
-            Operation("!", this) to DefaultHandlers.Unary(bool_t, Instruction.NOT[javaClass<string_t>()])
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[string_t::class.java]),
+            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[string_t::class.java]),
+            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE[string_t::class.java]),
+            Operation("!", this) to DefaultHandlers.Unary(bool_t, Instruction.NOT[string_t::class.java])
     )
 }

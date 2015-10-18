@@ -21,9 +21,9 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
 
     class Err(val ctx: ParserRuleContext, val reason: String) {
         private val token = ctx.start
-        val file = token.getTokenSource().getSourceName()
-        val line = token.getLine()
-        val col = token.getCharPositionInLine()
+        val file = token.tokenSource.sourceName
+        val line = token.line
+        val col = token.charPositionInLine
         val code = ctx.getTextWS()
     }
 
@@ -40,8 +40,8 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
             operator fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
 
             operator fun invoke(url: URL): Include {
-                val name = url.getPath().substringAfterLast('/')
-                val path = url.getPath()
+                val name = url.path.substringAfterLast('/')
+                val path = url.path
                 return Include(name, path, object : LexerSource(url.openStream().buffered().reader(), true) {
                     override fun getName() = name
                     override fun getPath() = path

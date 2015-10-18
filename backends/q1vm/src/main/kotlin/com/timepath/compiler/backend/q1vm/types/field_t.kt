@@ -14,8 +14,8 @@ data class field_t(val type: Type) : pointer_t() {
 
     override fun handle(op: Operation) = ops[op]
     val ops = mapOf(
-            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[javaClass<field_t>()]),
-            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[javaClass<function_t>()]),
-            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE[javaClass<function_t>()])
+            Operation("=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[field_t::class.java]),
+            Operation("==", this, this) to DefaultHandlers.Binary(bool_t, Instruction.EQ[function_t::class.java]),
+            Operation("!=", this, this) to DefaultHandlers.Binary(bool_t, Instruction.NE[function_t::class.java])
     )
 }

@@ -5,18 +5,18 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Interval
 
 public fun ParserRuleContext.getTextWS(): String {
-    return Interval(start.getStartIndex(), stop.getStopIndex()).let {
-        start.getInputStream().getText(it)
+    return Interval(start.startIndex, stop.stopIndex).let {
+        start.inputStream.getText(it)
     }
 }
 
 public fun ParserRuleContext.debug(): String {
     val token = start
-    val source = token.getTokenSource()
+    val source = token.tokenSource
 
-    val line = token.getLine()
-    val col = token.getCharPositionInLine()
-    val file = source.getSourceName()
+    val line = token.line
+    val col = token.charPositionInLine
+    val file = source.sourceName
     return "$file:$line:$col"
 }
 

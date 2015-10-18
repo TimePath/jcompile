@@ -2,7 +2,7 @@ package com.timepath.q1vm
 
 import com.timepath.Logger
 import com.timepath.q1vm.util.set
-import java.util.Deque
+import java.util.*
 
 public class Program(val data: ProgramData) {
 
@@ -46,7 +46,7 @@ public class Program(val data: ProgramData) {
             when (stmt.op) {
                 QInstruction.CALL0, QInstruction.CALL1, QInstruction.CALL2, QInstruction.CALL3, QInstruction.CALL4,
                 QInstruction.CALL5, QInstruction.CALL6, QInstruction.CALL7, QInstruction.CALL8 -> {
-                    val nextFunc = data.functions[data.globalIntData[stmt.a]]
+                    val nextFunc = data.functions[data.globalIntData.get(stmt.a)]
                     val nextStmt = nextFunc.firstStatement
                     if (nextStmt < 0) {
                         val id = -nextStmt
@@ -58,11 +58,13 @@ public class Program(val data: ProgramData) {
                         var i = nextFunc.firstLocal
                         repeat(nextFunc.numParams) { param ->
                             repeat(nextFunc.sizeof[param].toInt()) { ofs ->
-                                data.globalIntData[i++] = data.globalIntData[QInstruction.OFS_PARAM(param) + ofs]
+                                data.globalIntData[i++] = data.globalIntData.get(QInstruction.OFS_PARAM(param) + ofs)
                             }
                         }
                         stmtIdx = nextStmt
                     }
+                }
+                else -> {
                 }
             }
         }
@@ -90,10 +92,10 @@ public class Program(val data: ProgramData) {
             })
 
     public val builtins: MutableMap<Int, Builtin> = linkedMapOf(
-            1 to KBuiltin("print", varargsType = javaClass<String>()) {
+            1 to KBuiltin("print", varargsType = String::class.java) {
                 logger.info { it.map { it.toString() }.join("") }
             },
-            2 to KBuiltin("ftos", arrayOf(javaClass<Float>())) {
+            2 to KBuiltin("ftos", arrayOf(Float::class.java)) {
                 val f = it[0] as Float
                 f.toString()
             },
@@ -101,7 +103,7 @@ public class Program(val data: ProgramData) {
                 val entityManager = this.data.entities
                 entityManager.spawn()
             },
-            4 to KBuiltin("kill", arrayOf(javaClass<Float>())) {
+            4 to KBuiltin("kill", arrayOf(Float::class.java)) {
                 val e = it[0] as Int
                 val entityManager = this.data.entities
                 entityManager.kill(e)
@@ -110,14 +112,14 @@ public class Program(val data: ProgramData) {
             6 to KBuiltin("error"),
             7 to KBuiltin("vlen"),
             8 to KBuiltin("etos"),
-            9 to KBuiltin("stof", arrayOf(javaClass<String>())) {
+            9 to KBuiltin("stof", arrayOf(String::class.java)) {
                 val s = it[0] as String
                 s.toFloat()
             },
-            10 to KBuiltin("strcat", varargsType = javaClass<String>()) {
+            10 to KBuiltin("strcat", varargsType = String::class.java) {
                 it.map { it.toString() }.join("")
             },
-            11 to KBuiltin("strcmp", arrayOf(javaClass<String>(), javaClass<String>(), javaClass<Float>())) {
+            11 to KBuiltin("strcmp", arrayOf(String::class.java, String::class.java, Float::class.java)) {
                 val first = (it[0] as String).iterator()
                 val second = (it[1] as String).iterator()
                 var size = if (it.size() == 3) it[2] as Int else -1
@@ -131,25 +133,25 @@ public class Program(val data: ProgramData) {
                 ret
             },
             12 to KBuiltin("normalize"),
-            13 to KBuiltin("sqrt", arrayOf(javaClass<Float>())) {
+            13 to KBuiltin("sqrt", arrayOf(Float::class.java)) {
                 val n = it[0] as Float
                 Math.sqrt(n.toDouble()).toFloat()
             },
-            14 to KBuiltin("floor", arrayOf(javaClass<Float>())) {
+            14 to KBuiltin("floor", arrayOf(Float::class.java)) {
                 val n = it[0] as Float
                 Math.floor(n.toDouble()).toFloat()
             },
-            15 to KBuiltin("pow", arrayOf(javaClass<Float>(), javaClass<Float>())) {
+            15 to KBuiltin("pow", arrayOf(Float::class.java, Float::class.java)) {
                 val base = it[0] as Float
                 val exponent = it[1] as Float
                 Math.pow(base.toDouble(), exponent.toDouble()).toFloat()
             },
-            16 to KBuiltin("assert", arrayOf(javaClass<Float>(), javaClass<String>())) {
+            16 to KBuiltin("assert", arrayOf(Float::class.java, String::class.java)) {
                 val assertion = it[0] as Float
                 val message = it[1] as String
                 if (assertion == 0f) throw AssertionError(message)
             },
-            17 to KBuiltin("ftoi", arrayOf(javaClass<Float>())) {
+            17 to KBuiltin("ftoi", arrayOf(Float::class.java)) {
                 val f = it[0] as Float
                 f.toInt()
             }
