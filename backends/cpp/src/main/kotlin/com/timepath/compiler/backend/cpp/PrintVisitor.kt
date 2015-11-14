@@ -4,7 +4,7 @@ import com.timepath.Printer
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Pointer
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.Vector
+import com.timepath.compiler.Vector
 import com.timepath.compiler.backend.q1vm.types.*
 import com.timepath.compiler.quote
 import com.timepath.compiler.types.Type

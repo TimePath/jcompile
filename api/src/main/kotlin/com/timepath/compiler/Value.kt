@@ -2,14 +2,18 @@ package com.timepath.compiler
 
 import com.timepath.compiler.types.Type
 
+// FIXME: violates modularity
+data class Vector(val x: Float, val y: Float, val z: Float)
+
 public data class Value(val any: Any) {
 
-    /**
-     * TODO
-     */
-    fun toBoolean(): Boolean = false
-
-    // TODO: vectors
+    fun toBoolean(): Boolean {
+        (any as? Boolean)?.let { return it }
+        (any as? Int)?.let { return it != 0 }
+        (any as? Float)?.let { return it != 0f }
+        (any as? Vector)?.let { return it.x != 0f && it.y != 0f && it.z != 0f }
+        throw UnsupportedOperationException("not supported")
+    }
 
     operator fun plus(other: Value): Value {
         val lhs = any
@@ -82,10 +86,16 @@ public data class Value(val any: Any) {
             is Float -> when (rhs) {
                 is Float -> return Value(lhs * rhs)
                 is Int -> return Value(lhs * rhs)
+                is Vector -> return Value(Vector(rhs.x * lhs, rhs.y * lhs, rhs.z * lhs))
             }
             is Int -> when (rhs) {
-                is Int -> return Value(lhs * rhs)
                 is Float -> return Value(lhs * rhs)
+                is Int -> return Value(lhs * rhs)
+                is Vector -> return Value(Vector(rhs.x * lhs, rhs.y * lhs, rhs.z * lhs))
+            }
+            is Vector -> when (rhs) {
+                is Float -> return Value(Vector(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs))
+                is Int -> return Value(Vector(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs))
             }
         }
         throw UnsupportedOperationException("not supported")
@@ -136,4 +146,15 @@ public data class Value(val any: Any) {
     }
 
     operator fun minus() = Value(0) - this
+
+    fun or(other: Value): Value {
+        val lhs = any
+        val rhs = other.any
+        when (lhs) {
+            is Int -> when (rhs) {
+                is Int -> return Value(lhs or rhs)
+            }
+        }
+        throw UnsupportedOperationException("not supported")
+    }
 }

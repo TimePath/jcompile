@@ -5,7 +5,7 @@ import com.timepath.compiler.Value
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.backend.q1vm.Vector
+import com.timepath.compiler.Vector
 import com.timepath.compiler.backend.q1vm.evaluate
 import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.backend.q1vm.types.*
@@ -570,7 +570,8 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
 
     override fun visitCastExpression(ctx: QCParser.CastExpressionContext) = when {
         ctx.terminal -> {
-            val type = state.types[ctx.typeName().text]!!
+            val typename = ctx.typeName().text
+            val type = state.types[typename] ?: throw NullPointerException("$typename is undefined")
             val expr = ctx.castExpression().accept(this).single()
             UnaryExpression.Cast(
                     type = type,
@@ -717,6 +718,9 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
     override fun visitPrimaryExpression(ctx: QCParser.PrimaryExpressionContext): List<Expression> {
         val text = ctx.text
         match(ctx.Identifier()) {
+            if (text == "nil") {
+                return 0.expr("nil").let { listOf(it) }
+            }
             // TODO: other types?
             val e = entity_t
             run {
@@ -785,7 +789,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
             if (s.startsWith('#')) {
                 return ConstantExpression(Value(text), ctx = ctx).let { listOf(it) }
             }
-            val f = if ('x' in s || 'X' in s) s.toInt().toFloat() else s.toFloat()
+            val f = if ('x' in s || 'X' in s) Integer.parseInt(s.substring(2), 16).toFloat() else s.toFloat()
             val i = f.toInt()
             val number = when (i.toFloat()) {
                 f -> Value(i)

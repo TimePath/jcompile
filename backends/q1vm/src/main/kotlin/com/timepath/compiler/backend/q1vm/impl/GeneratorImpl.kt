@@ -1,6 +1,7 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.Logger
+import com.timepath.compiler.Vector
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.*
 import com.timepath.compiler.backend.q1vm.types.*

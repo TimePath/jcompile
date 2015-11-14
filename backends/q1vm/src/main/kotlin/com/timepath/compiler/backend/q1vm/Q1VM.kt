@@ -1,5 +1,6 @@
 package com.timepath.compiler.backend.q1vm
 
+import com.timepath.compiler.Vector
 import com.timepath.compiler.api.Backend
 import com.timepath.compiler.api.CompileState
 import com.timepath.compiler.ast.*

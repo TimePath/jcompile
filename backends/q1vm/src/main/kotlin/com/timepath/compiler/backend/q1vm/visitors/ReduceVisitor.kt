@@ -139,5 +139,13 @@ class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
         }
     }
 
+    override fun visit(e: LoopExpression): List<Expression> {
+        // do <expr> while (false)
+        if (e.checkBefore == false && e.predicate.evaluate(state)?.toBoolean() == false) {
+            return e.children
+        }
+        return listOf(e)
+    }
+
     override fun visit(e: UnaryExpression.Cast) = e.operand.reduce()
 }

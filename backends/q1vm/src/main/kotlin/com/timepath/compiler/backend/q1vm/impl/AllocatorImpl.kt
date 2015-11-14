@@ -4,7 +4,7 @@ import com.timepath.compiler.Value
 import com.timepath.compiler.ast.FunctionExpression
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.Vector
+import com.timepath.compiler.Vector
 import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.backend.q1vm.types.string_t
