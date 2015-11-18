@@ -75,7 +75,7 @@ class ASMPrinter(val ir: List<IR>) {
             is Instruction.GOTO, is Instruction.LABEL -> s
             is Instruction.WithArgs -> {
                 val (a, b, c) = stmt.instr.args
-                "${s.padEnd(maxInstrLen)} | ${listOf(a, b, c).map { f(it).padEnd(maxVarLen) }.join(" ")}"
+                "${s.padEnd(maxInstrLen)} | ${listOf(a, b, c).map { f(it).padEnd(maxVarLen) }.joinToString(" ")}"
             }
             else -> "${s.padEnd(maxInstrLen)} | ???"
         }).trimEnd()

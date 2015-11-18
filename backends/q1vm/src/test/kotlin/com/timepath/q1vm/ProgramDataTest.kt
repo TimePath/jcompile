@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class ProgramDataTest {
 
     @Test fun `save should be identical`() {
-        val dir = "${System.getProperties()["user.home"]}/IdeaProjects/xonotic/gmqcc"
+        val dir = System.getProperty("user.home") + "/IdeaProjects/xonotic/gmqcc"
         val input = File(dir, "progs.dat")
         if (input.exists()) {
             val data = ProgramDataReader(input).read()

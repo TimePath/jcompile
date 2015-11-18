@@ -37,7 +37,7 @@ public class QCC : Frontend<Q1VM.State, Sequence<List<Expression>>> {
                 it.map {
                     it to submit(Callable {
                         cpp.addInput(it.source)
-                        CppReader(cpp).useLines { it.join("\n") }
+                        CppReader(cpp).useLines { it.joinToString("\n") }
                     })
                 }
             }

@@ -26,7 +26,7 @@ class ProgramDataWriter(val raf: IOWrapper) {
 
         raf.offset = ret.header.statements.offset
         for (it in ret.statements) {
-            raf.writeShort(it.op.ordinal())
+            raf.writeShort(it.op.ordinal)
             raf.writeShort(it.a)
             raf.writeShort(it.b)
             raf.writeShort(it.c)
@@ -65,7 +65,7 @@ class ProgramDataWriter(val raf: IOWrapper) {
         raf.writeString("")
 
         raf.offset = ret.header.globalData.offset
-        raf.write(ByteArray(ret.globalData.capacity()) apply { ret.globalData.get(this) })
+        raf.write(ByteArray(ret.globalData.capacity()).apply { ret.globalData.get(this) })
     }
 
 }

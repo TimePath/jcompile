@@ -47,7 +47,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun shl(other: Value): Value {
+    infix fun shl(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -63,7 +63,7 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    fun shr(other: Value): Value {
+    infix fun shr(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {
@@ -145,9 +145,9 @@ public data class Value(val any: Any) {
         throw UnsupportedOperationException("not supported")
     }
 
-    operator fun minus() = Value(0) - this
+    operator fun unaryMinus() = Value(0) - this
 
-    fun or(other: Value): Value {
+    infix fun or(other: Value): Value {
         val lhs = any
         val rhs = other.any
         when (lhs) {

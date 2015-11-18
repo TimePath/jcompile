@@ -2,7 +2,7 @@ package com.timepath.compiler.backend.q1vm.types
 
 import com.timepath.compiler.ast.eq
 import com.timepath.compiler.ast.expr
-import com.timepath.compiler.ast.minus
+import com.timepath.compiler.ast.unaryMinus
 import com.timepath.compiler.backend.q1vm.DefaultHandlers
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.ir.IR
@@ -17,7 +17,7 @@ object bool_t : number_t() {
             Operation("!", this) to Operation.Handler.Unary(bool_t) {
                 (0.expr() eq it).generate()
             },
-            Operation("-", this) to Operation.Handler.Unary(this) { (0.expr() - it).generate() },
+            Operation("-", this) to Operation.Handler.Unary(this) { (-it).generate() },
             Operation("+", this, this) to DefaultHandlers.Binary(this, Instruction.ADD_FLOAT),
             Operation("-", this, this) to DefaultHandlers.Binary(this, Instruction.SUB_FLOAT),
             Operation("*", this, float_t) to DefaultHandlers.Binary(float_t, Instruction.MUL_FLOAT),

@@ -13,6 +13,6 @@ public class LoopExpression(val predicate: Expression,
     }
 
     override val simpleName = "LoopExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
 }

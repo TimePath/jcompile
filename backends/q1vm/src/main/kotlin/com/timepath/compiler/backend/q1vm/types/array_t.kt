@@ -8,7 +8,7 @@ import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.pointer_t
 
-data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
+class array_t(val type: Type, val sizeExpr: Expression, val state: CompileState) : pointer_t() {
 
     override val simpleName = "array_t"
     override fun toString() = "$type[$sizeExpr]"
@@ -36,5 +36,28 @@ data class array_t(val type: Type, val sizeExpr: Expression, val state: CompileS
             = DeclarationExpression(name, this)
 
     fun generateAccessorName(id: String) = "__${id}_access"
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other?.javaClass != javaClass) return false
+
+        other as array_t
+
+        if (type != other.type) return false
+        if (sizeExpr != other.sizeExpr) return false
+        if (state != other.state) return false
+        if (simpleName != other.simpleName) return false
+        if (index != other.index) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result += 31 * result + sizeExpr.hashCode()
+        result += 31 * result + state.hashCode()
+        result += 31 * result + simpleName.hashCode()
+        result += 31 * result + index.hashCode()
+        return result
+    }
 
 }

@@ -75,7 +75,7 @@ object CPPPrinter {
         }
         val v = PrintVisitor(compiler.state, indent)
 
-        val ast = compiler.parse().toList().let { it.subList(1, it.size()) }
+        val ast = compiler.parse().toList().let { it.subList(1, it.size) }
         val projOut = File(out, project.out)
         projOut.mkdirs()
         val predef = File(projOut, "progs.h")
@@ -110,7 +110,7 @@ object CPPPrinter {
                 +"add_executable(${project.root}"
                 +indent {
                     +predef.name
-                    map.keySet().forEach {
+                    map.keys.forEach {
                         +it
                     }
                 }
@@ -129,7 +129,7 @@ object CPPPrinter {
     }
 
     @JvmStatic fun main(args: Array<String>) {
-        require(args.size() == 1) { "qcsrc path required" }
+        require(args.size == 1) { "qcsrc path required" }
         val root = File(args[0])
         require(root.exists()) { "qcsrc not found" }
         out.mkdirs()

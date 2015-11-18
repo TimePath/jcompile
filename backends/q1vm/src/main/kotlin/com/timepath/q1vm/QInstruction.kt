@@ -439,7 +439,7 @@ enum class QInstruction {
          */
         fun OFS_PARAM(n: Int) = 4 + n * 3
 
-        private val instructions by lazy(LazyThreadSafetyMode.NONE, ::values)
+        private val instructions by lazy(LazyThreadSafetyMode.NONE, {values})
         fun from(i: Int) = instructions[i]
 
     }
@@ -473,7 +473,7 @@ enum class QInstruction {
                 }
             }
         }
-        return "${this.name()}${" ".repeat(13 - name().length())}\t[${stringified.joinToString(" ")}]"
+        return "${this.name}${" ".repeat(13 - name.length)}\t[${stringified.joinToString(" ")}]"
     }
 
 }

@@ -69,7 +69,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
                 return Pointer(owner.offsetOf(name)).expr(name, field_t(type))
             }
 
-            override fun size() = map.size()
+            override fun size() = map.size
         }
 
         init {
@@ -84,7 +84,7 @@ public class Q1VM(opts: CompilerOptions = CompilerOptions()) : Backend<Q1VM.Stat
             Types.handlers.add {
                 if (it.op != ",") null else
                     Operation.Handler.Binary<Q1VM.State, List<IR>>(it.right!!) { left, right ->
-                        linkedListOf<IR>() apply {
+                        linkedListOf<IR>().apply {
                             addAll(left.generate())
                             addAll(right.generate())
                         }

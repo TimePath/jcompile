@@ -20,20 +20,20 @@ public fun ParserRuleContext.debug(): String {
     return "$file:$line:$col"
 }
 
-public fun String.unquote(): String = substring(1, length() - 1)
+public fun String.unquote(): String = substring(1, length - 1)
         .replace("\\n", "\n")
         .replace("\\r", "\r")
         .replace("\\t", "\t")
         .replace("\\\"", "\"")
 
-public inline fun time<T>(logger: Logger, name: String, action: () -> T): T {
+public inline fun <T> time(logger: Logger, name: String, action: () -> T): T {
     val start = System.currentTimeMillis()
     val ret = action()
     logger.info { "$name: ${(System.currentTimeMillis() - start).toDouble() / 1000} seconds" }
     return ret
 }
 
-public fun String.quote(): String = "\"${StringBuilder {
+public fun String.quote(): String = "\"${buildString {
     for (c in this@quote) {
         when (c) {
             '\n' -> append("\\n")

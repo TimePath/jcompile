@@ -118,7 +118,7 @@ class PrintVisitor(val state: Q1VM.State, val indent: String = "    ") : ASTVisi
         type.declareVar(it, null).let {
             val sig = this.argTypes.map { it.declareVar(null, null).toString() } +
                     (this.vararg?.let { listOf("...") } ?: emptyList())
-            "$it(${sig.join(", ")})"
+            "$it(${sig.joinToString(", ")})"
         }
     }
 

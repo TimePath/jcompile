@@ -11,7 +11,7 @@ public class MethodCallExpression(val function: Expression,
     }
 
     override val simpleName = "MethodCallExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     val args: List<Expression> by lazy(LazyThreadSafetyMode.NONE) {
         children.filterIsInstance<Expression>()

@@ -10,7 +10,7 @@ class ProgramDataReader(val raf: IOWrapper) {
 
     constructor(file: File) : this(IOWrapper.File(file))
 
-    private inline fun iterData<T>(section: ProgramData.Header.Section, action: () -> T): List<T> {
+    private inline fun <T> iterData(section: ProgramData.Header.Section, action: () -> T): List<T> {
         raf.offset = section.offset
         return (0..section.count - 1).map { action() }
     }
@@ -80,7 +80,7 @@ class ProgramDataReader(val raf: IOWrapper) {
                         when {
                             c < 0 -> break@loop
                             c == 0 -> {
-                                list add sb.toString()
+                                list.add(sb.toString())
                                 sb.setLength(0)
                             }
                             else -> sb.append(c.toChar())

@@ -8,9 +8,9 @@ public class ConditionalExpression(val test: Expression,
                                    val fail: Expression? = null,
                                    override val ctx: PRC? = null) : Expression() {
 
-    override fun withChildren(children: List<Expression>) = require(children.size() in 2..3) let {
+    override fun withChildren(children: List<Expression>) = require(children.size in 2..3).let {
         val (test, pass) = children
-        copy(test = test, pass = pass, fail = if (children.size() == 3) children[2] else null)
+        copy(test = test, pass = pass, fail = if (children.size == 3) children[2] else null)
     }
 
     fun copy(test: Expression = this.test,
@@ -27,7 +27,7 @@ public class ConditionalExpression(val test: Expression,
     }
 
     override val simpleName = "ConditionalExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = "($test ? $pass : $fail)"
 

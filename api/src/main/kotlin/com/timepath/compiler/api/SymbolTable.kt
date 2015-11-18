@@ -6,6 +6,6 @@ public interface SymbolTable {
     val insideFunc: Boolean
     fun push(name: String)
     fun pop()
-    fun declare<R>(e: R): R
+    fun <R> declare(e: R): R
     operator fun get(id: String): DeclarationExpression?
 }

@@ -23,11 +23,11 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
         val logger = Logger()
     }
 
-    fun emptyList<T>(): List<T> = arrayListOf()
-    fun listOf<T>(): MutableList<T> = arrayListOf()
-    fun listOf<T>(vararg values: T): List<T> = arrayListOf(*values)
+    fun <T> emptyList(): List<T> = arrayListOf()
+    fun <T> listOf(): MutableList<T> = arrayListOf()
+    fun <T> listOf(vararg values: T): List<T> = arrayListOf(*values)
 
-    inline fun match<T : Any, R>(it: T?, body: (T) -> R) = when (it) {
+    inline fun <T : Any, R> match(it: T?, body: (T) -> R) = when (it) {
         null -> null
         is List<*> -> when {
             it.isEmpty() -> null
@@ -36,7 +36,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
         else -> body(it)
     }
 
-    inline fun SymbolTable.scope<R>(name: String, block: () -> R): R {
+    inline fun <R> SymbolTable.scope(name: String, block: () -> R): R {
         push(name)
         val b = block()
         pop()
@@ -48,7 +48,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
     fun type(list: List<DeclarationSpecifierContext>, old: Boolean = false) = list.lastOrNull { it.typeSpecifier() != null }?.let { type(it, old) }
     fun type(decl: DeclarationSpecifierContext, old: Boolean = false): Type? {
         val typeSpec = decl.typeSpecifier()
-        val indirection = match(typeSpec.pointer()) { it.text.length() } ?: 0
+        val indirection = match(typeSpec.pointer()) { it.text.length } ?: 0
         return when (indirection) {
         // varargs
             3 -> void_t
@@ -58,7 +58,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                 old -> null
                 else -> match(typeSpec.directTypeSpecifier().parameterTypeList()) { it.functionType(direct) }
             } ?: direct
-        }.let { (0..indirection - 1).fold(it) { it, _ -> field_t(it) } }
+        }.let { (0..indirection - 1).fold(it) { it, ignored -> field_t(it) } }
     }
 
     fun ParameterTypeListContext?.functionType(type: Type) = this?.let {
@@ -98,9 +98,9 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
             // 'type ... id'
             val vararg = it.last()
             val specifiers = vararg.declarationSpecifiers2()?.declarationSpecifier() ?: return null
-            check(specifiers.size() <= 2)
+            check(specifiers.size <= 2)
             val type = when {
-                specifiers.size() == 2 -> type(specifiers.first(), false)!!
+                specifiers.size == 2 -> type(specifiers.first(), false)!!
                 else -> void_t
             }
             val id = specifiers.last().typeSpecifier().directTypeSpecifier().typedefName()?.let { it.Identifier().text } ?: return null
@@ -162,7 +162,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
             state.symbols.scope("params") {
                 val params = when (prevParams) {
                     null -> params
-                    else -> params?.merge(prevParams) { it, prev -> AliasExpression(it.id, prev) }
+                    else -> params?.zip(prevParams) { it, prev -> AliasExpression(it.id, prev) }
                 }
                 params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
@@ -259,7 +259,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                 arraySize != null -> {
                     val sizeExpr = arraySize.accept(this).single()
                     if (initializers != null) {
-                        check((sizeExpr.evaluate(state)!!.any as Number).toInt() >= initializers.size())
+                        check((sizeExpr.evaluate(state)!!.any as Number).toInt() >= initializers.size)
                     }
                     // FIXME: pass on initializers
                     array_t(type, sizeExpr, state = state).declare(id, null).let { listOf(it) }
@@ -316,19 +316,19 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
         }
     }
 
-    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext) = listOf<Expression>() apply {
+    override fun visitCustomLabel(ctx: QCParser.CustomLabelContext) = listOf<Expression>().apply {
         val id = ctx.Identifier().text
         add(LabelExpression(id, ctx = ctx))
         match(ctx.blockItem()) { addAll(it.accept(this@ASTTransform)) }
     }
 
-    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext) = listOf<Expression>() apply {
+    override fun visitCaseLabel(ctx: QCParser.CaseLabelContext) = listOf<Expression>().apply {
         val case = ctx.constantExpression().accept(this@ASTTransform).single()
         SwitchExpression.Case(case, ctx = ctx).let { add(it) }
         addAll(ctx.blockItem().accept(this@ASTTransform))
     }
 
-    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext) = listOf<Expression>() apply {
+    override fun visitDefaultLabel(ctx: QCParser.DefaultLabelContext) = listOf<Expression>().apply {
         add(SwitchExpression.Case(null, ctx = ctx))
         addAll(ctx.blockItem().accept(this@ASTTransform))
     }
@@ -372,7 +372,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                 },
                 expression = false,
                 pass = statements[0].accept(this).single(),
-                fail = if (statements.size() == 1) null
+                fail = if (statements.size == 1) null
                 else statements[1].accept(this).single(),
                 ctx = ctx).let { listOf(it) }
     }
@@ -798,14 +798,14 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
             return ConstantExpression(number, ctx = ctx).let { listOf(it) }
         }
         match(ctx.StringLiteral()) {
-            return ConstantExpression(Value(StringBuilder { it.forEach { append(it.text.unquote()) } }.toString()),
+            return ConstantExpression(Value(buildString { it.forEach { append(it.text.unquote()) } }),
                     ctx = ctx).let { listOf(it) }
         }
         match(ctx.expression()) {
             it.singleOrNull()?.let {
                 return it.accept(this)
             }
-            return listOf(BlockExpression(linkedListOf<Expression>() apply {
+            return listOf(BlockExpression(linkedListOf<Expression>().apply {
                 val decl = vector_t.declare("tmp", null)
                 val vec = decl.ref()
                 add(decl)

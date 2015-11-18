@@ -23,12 +23,32 @@ public abstract class CompileState {
 
     val symbols = object : SymbolTable {
 
-        inner data class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = linkedMapOf())
+        inner class Scope(val name: String, val vars: MutableMap<String, DeclarationExpression> = linkedMapOf()) {
+            override fun equals(other: Any?): Boolean{
+                if (this === other) return true
+                if (other?.javaClass != javaClass) return false
+
+                other as Scope
+
+                if (name != other.name) return false
+                if (vars != other.vars) return false
+
+                return true
+            }
+
+            override fun hashCode(): Int{
+                var result = name.hashCode()
+                result += 31 * result + vars.hashCode()
+                return result
+            }
+
+            override fun toString() = throw UnsupportedOperationException("toString")
+        }
 
         private val stack: Deque<Scope> = linkedListOf()
 
         override val insideFunc: Boolean
-            get() = stack.size() >= 3
+            get() = stack.size >= 3
 
         override fun push(name: String) = stack.push(Scope(name))
 
@@ -36,7 +56,7 @@ public abstract class CompileState {
             stack.pop()
         }
 
-        override fun declare<R>(e: R): R {
+        override fun <R> declare(e: R): R {
             val top = stack.peek()
             when (e) {
                 is AliasExpression -> top.vars[e.id] = e.alias

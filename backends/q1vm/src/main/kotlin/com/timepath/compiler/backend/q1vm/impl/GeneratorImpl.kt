@@ -177,7 +177,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         }
                         ProgramData.Statement(move, it.first.toGlobal(localOfs), param.toGlobal(localOfs), -1)
                     }
-                    QInstruction.from(QInstruction.CALL0.ordinal() + instr.params.size().coerceIn(0, 8))
+                    QInstruction.from(QInstruction.CALL0.ordinal + instr.params.size.coerceIn(0, 8))
                 }
                 is Instruction.STATE -> QInstruction.STATE
                 is Instruction.LABEL -> {
@@ -244,7 +244,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
          * FIXME: metadata
          */
         override fun generateProgs(): ProgramData {
-            val fieldDefs = arrayListOf<ProgramData.Definition>() apply {
+            val fieldDefs = arrayListOf<ProgramData.Definition>().apply {
                 for ((pair, idx) in state.fields.map) {
                     val (s, owner) = pair
                     val type = owner.fields[s]!!
@@ -269,7 +269,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
             functions.add(ProgramData.Function(0, 0, 0, 0, 0, 0, 0, byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)))
             for (it in ir) {
                 if (it is IR.Function) {
-                    val firstStatement = statements.size()
+                    val firstStatement = statements.size
                     val f = it.function as ProgramData.Function
                     if (f.firstStatement < 0) {
                         functions.add(f)
@@ -278,9 +278,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                                 firstStatement = firstStatement,
                                 firstLocal = localOfs,
                                 numLocals = numLocals
-                        ) apply { functions.add(this) }
+                        ).apply { functions.add(this) }
                     }
-                    val jm = JumpManager { statements.size() }
+                    val jm = JumpManager { statements.size }
                     for (stmt in it.children) {
                         if (stmt is IR.Return) continue
                         if (stmt is IR.Declare) continue
@@ -293,7 +293,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     throw UnsupportedOperationException("" + it)
                 }
             }
-            val globalDefs = arrayListOf<ProgramData.Definition>() apply {
+            val globalDefs = arrayListOf<ProgramData.Definition>().apply {
                 for (it in state.allocator.references.all) {
                     add(storeConstant(localOfs, it))
                 }
@@ -314,13 +314,13 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
 
             val version = 6
             val crc = -1 // TODO: CRC16
-            val entityFields = entity_t.fields.values().sumBy { it.sizeOf() } // FIXME: entity classes
+            val entityFields = entity_t.fields.values.sumBy { it.sizeOf() } // FIXME: entity classes
 
             val statementsOffset = 60 // Size of header
-            val globalDefsOffset = statementsOffset + statements.size() * 8
-            val fieldDefsOffset = globalDefsOffset + globalDefs.size() * 8
-            val functionsOffset = fieldDefsOffset + fieldDefs.size() * 8
-            val globalDataOffset = functionsOffset + functions.size() * 36
+            val globalDefsOffset = statementsOffset + statements.size * 8
+            val fieldDefsOffset = globalDefsOffset + globalDefs.size * 8
+            val functionsOffset = fieldDefsOffset + fieldDefs.size * 8
+            val globalDataOffset = functionsOffset + functions.size * 36
             // Last for simplicity; strings are not fixed size
             val stringsOffset = globalDataOffset + globalData.capacity()
 
@@ -329,12 +329,12 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                             version = version,
                             crc = crc,
                             entityFields = entityFields,
-                            statements = ProgramData.Header.Section(statementsOffset, statements.size()),
-                            globalDefs = ProgramData.Header.Section(globalDefsOffset, globalDefs.size()),
-                            fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size()),
-                            functions = ProgramData.Header.Section(functionsOffset, functions.size()),
+                            statements = ProgramData.Header.Section(statementsOffset, statements.size),
+                            globalDefs = ProgramData.Header.Section(globalDefsOffset, globalDefs.size),
+                            fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size),
+                            functions = ProgramData.Header.Section(functionsOffset, functions.size),
                             globalData = ProgramData.Header.Section(globalDataOffset, globalData.capacity() / 4),
-                            stringData = ProgramData.Header.Section(stringsOffset, stringManager.constant.length())
+                            stringData = ProgramData.Header.Section(stringsOffset, stringManager.constant.length)
                     ),
                     statements = statements,
                     globalDefs = globalDefs,
@@ -342,9 +342,9 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                     functions = functions,
                     globalData = globalData,
                     strings = stringManager
-            ) apply {
+            ).apply {
                 logger.severe {
-                    StringBuilder {
+                    buildString {
                         appendln("Program's system-checksum = ${header.crc}")
                         appendln("Entity field space: ${header.entityFields}")
                         appendln("Globals: ${header.globalData.count}")
@@ -354,7 +354,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                         appendln("    fields: ${header.fieldDefs.count}")
                         appendln(" functions: ${header.functions.count}")
                         appendln("   strings: ${header.stringData.count}")
-                    }.toString()
+                    }
                 }
             }
         }

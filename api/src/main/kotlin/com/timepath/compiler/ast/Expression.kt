@@ -9,7 +9,7 @@ public abstract class Expression : Named {
 
     abstract val ctx: PRC?
 
-    abstract fun accept<T>(visitor: ASTVisitor<T>): T
+    abstract fun <T> accept(visitor: ASTVisitor<T>): T
 
     private val mutableChildren: MutableList<Expression> = linkedListOf()
 
@@ -19,7 +19,7 @@ public abstract class Expression : Named {
     val children: List<Expression>
         get() = mutableChildren
 
-    fun initChild<T : Expression>(elem: T, configure: (T.() -> Unit)? = null): T {
+    fun <T : Expression> initChild(elem: T, configure: (T.() -> Unit)? = null): T {
         if (configure != null)
             elem.configure()
         add(elem)

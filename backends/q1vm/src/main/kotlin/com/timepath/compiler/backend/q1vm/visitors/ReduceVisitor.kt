@@ -100,7 +100,7 @@ class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
          */
         fun generateComponent(id: String, i: Int): List<Expression> {
             val accessor = "${type.generateAccessorName(id)}_$i"
-            return linkedListOf<Expression>() apply {
+            return linkedListOf<Expression>().apply {
                 val field = DeclarationExpression("${accessor}_field", type)
                 add(field)
                 val mode = ParameterExpression("mode", bool_t, 0)
@@ -120,19 +120,19 @@ class ReduceVisitor(val state: Q1VM.State) : ASTVisitor<List<Expression>> {
                 ))
             }
         }
-        return linkedListOf<Expression>() apply {
+        return linkedListOf<Expression>().apply {
             val name = e.id
-            add(DeclarationExpression(name, type) apply {
+            add(DeclarationExpression(name, type).apply {
                 state.symbols.declare(this)
             })
-            add(DeclarationExpression("${name}_size", int_t, size.expr()) apply {
+            add(DeclarationExpression("${name}_size", int_t, size.expr()).apply {
                 state.symbols.declare(this)
             })
-            add(generateAccessor(name) apply {
+            add(generateAccessor(name).apply {
                 state.symbols.declare(this)
             })
             repeat(size) {
-                addAll(generateComponent(name, it) apply {
+                addAll(generateComponent(name, it).apply {
                     state.symbols.declare(this)
                 })
             }

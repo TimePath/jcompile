@@ -50,7 +50,7 @@ public class Program(val data: ProgramData) {
                     val nextStmt = nextFunc.firstStatement
                     if (nextStmt < 0) {
                         val id = -nextStmt
-                        val paramCount = stmt.op.ordinal() - QInstruction.CALL0.ordinal()
+                        val paramCount = stmt.op.ordinal - QInstruction.CALL0.ordinal
                         invokeBuiltin(id, paramCount)
                     } else {
                         stack.push(Frame(func = nextFunc, comeFrom = stmtIdx))
@@ -93,7 +93,7 @@ public class Program(val data: ProgramData) {
 
     public val builtins: MutableMap<Int, Builtin> = linkedMapOf(
             1 to KBuiltin("print", varargsType = String::class.java) {
-                logger.info { it.map { it.toString() }.join("") }
+                logger.info { it.map { it.toString() }.joinToString("") }
             },
             2 to KBuiltin("ftos", arrayOf(Float::class.java)) {
                 val f = it[0] as Float
@@ -117,12 +117,12 @@ public class Program(val data: ProgramData) {
                 s.toFloat()
             },
             10 to KBuiltin("strcat", varargsType = String::class.java) {
-                it.map { it.toString() }.join("")
+                it.map { it.toString() }.joinToString("")
             },
             11 to KBuiltin("strcmp", arrayOf(String::class.java, String::class.java, Float::class.java)) {
                 val first = (it[0] as String).iterator()
                 val second = (it[1] as String).iterator()
-                var size = if (it.size() == 3) it[2] as Int else -1
+                var size = if (it.size == 3) it[2] as Int else -1
                 var ret = 0
                 while (size-- != 0 && (first.hasNext() || second.hasNext())) {
                     ret = 0

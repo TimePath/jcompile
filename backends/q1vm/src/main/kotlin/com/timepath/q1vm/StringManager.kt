@@ -16,12 +16,12 @@ class StringManager(list: Collection<String>,
     private val constantSize: Int
 
     init {
-        constant = StringBuilder {
+        constant = buildString {
             for (s in list) {
                 append(s + "\u0000")
             }
-        }.toString()
-        val stroff = constant.length()
+        }
+        val stroff = constant.length
         if (expectedSize != null) {
             val b = expectedSize == stroff
             assert(b) { "String constants size mismatch" }
@@ -39,11 +39,11 @@ class StringManager(list: Collection<String>,
                     useDelimiter("\u0000")
                 }.next()
             val zoneIndex = index - constantSize
-            if (zoneIndex < zone.size())
+            if (zoneIndex < zone.size)
                 return zone[zoneIndex]!!
         } else {
             val tempIndex = index.inv()
-            if (tempIndex < temp.size()) {
+            if (tempIndex < temp.size) {
                 return temp[tempIndex]
             }
         }
@@ -58,7 +58,7 @@ class StringManager(list: Collection<String>,
                 return constantSize + i
             }
         }
-        val size = zone.size()
+        val size = zone.size
         zone.add(string)
         return constantSize + size
     }
@@ -66,14 +66,14 @@ class StringManager(list: Collection<String>,
     fun unzone(index: Int): Boolean {
         if (index < constantSize) return false
         val zoneIndex = index - constantSize
-        if (zoneIndex >= zone.size()) return false
+        if (zoneIndex >= zone.size) return false
         if (zone[zoneIndex] == null) return false
         zone[zoneIndex] = null
         return true
     }
 
     fun tempString(string: String): Int {
-        val size = temp.size()
+        val size = temp.size
         temp.add(string)
         return size.inv()
     }

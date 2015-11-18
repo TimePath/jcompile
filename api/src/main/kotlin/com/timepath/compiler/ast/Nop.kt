@@ -7,5 +7,5 @@ import org.antlr.v4.runtime.ParserRuleContext as PRC
  */
 public class Nop(override val ctx: PRC? = null) : Expression() {
     override val simpleName = "Nop"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 }

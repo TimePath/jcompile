@@ -35,7 +35,7 @@ data class ProgramData(val header: Header,
                      val offset: Short,
                      val nameOffset: Int) {
 
-        constructor(type: QType, offset: Short, nameOffset: Int) : this(type.ordinal().toShort(), offset, nameOffset)
+        constructor(type: QType, offset: Short, nameOffset: Int) : this(type.ordinal.toShort(), offset, nameOffset)
 
         var data: ProgramData by Delegates.notNull()
 

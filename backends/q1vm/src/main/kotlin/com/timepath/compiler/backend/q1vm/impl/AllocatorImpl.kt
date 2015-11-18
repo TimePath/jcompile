@@ -1,10 +1,10 @@
 package com.timepath.compiler.backend.q1vm.impl
 
 import com.timepath.compiler.Value
+import com.timepath.compiler.Vector
 import com.timepath.compiler.ast.FunctionExpression
 import com.timepath.compiler.backend.q1vm.CompilerOptions
 import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.Vector
 import com.timepath.compiler.backend.q1vm.types.bool_t
 import com.timepath.compiler.backend.q1vm.types.float_t
 import com.timepath.compiler.backend.q1vm.types.string_t
@@ -23,13 +23,16 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
      */
     inner class AllocationMapImpl : Allocator.AllocationMap {
 
-        inner data class EntryImpl(
+        inner class EntryImpl(
                 override val ref: Instruction.Ref,
                 override val type: Type,
                 override val value: Value?,
                 /** Privately set */
                 override var name: String
         ) : Allocator.AllocationMap.Entry {
+            override fun copy(name: String, ref: Instruction.Ref, value: Value?, type: Type): Allocator.AllocationMap.Entry {
+                return EntryImpl(name = name, ref = ref, value = value, type = type)
+            }
 
             val separator = '|'
             val tags = name.split(separator).toMutableSet()
@@ -40,6 +43,33 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                     name += separator + tag
                 }
             }
+
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other?.javaClass != javaClass) return false
+
+                other as EntryImpl
+
+                if (ref != other.ref) return false
+                if (type != other.type) return false
+                if (value != other.value) return false
+                if (name != other.name) return false
+                if (separator != other.separator) return false
+                if (tags != other.tags) return false
+
+                return true
+            }
+
+            override fun hashCode(): Int {
+                var result = ref.hashCode()
+                result += 31 * result + type.hashCode()
+                result += 31 * result + (value?.hashCode() ?: 0)
+                result += 31 * result + name.hashCode()
+                result += 31 * result + separator.hashCode()
+                result += 31 * result + tags.hashCode()
+                return result
+            }
+
         }
 
         private val free = linkedListOf<EntryImpl>()
@@ -53,7 +83,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
          * Considered inside a function at this depth
          */
         val insideFunc: Boolean
-            get() = scope.size() >= 3
+            get() = scope.size >= 3
 
         fun allocate(id: String, ref: Instruction.Ref, type: Type, value: Value? = null): EntryImpl {
             // only consider uninitialized local references for now
@@ -87,7 +117,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
             names[name] = value
         }
 
-        override fun size() = pool.size()
+        override fun size() = pool.size
 
         private val scope: Deque<MutableList<EntryImpl>> = linkedListOf()
 
@@ -121,7 +151,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val scope: Deque<Allocator.Scope> = linkedListOf()
 
     val insideFunc: Boolean
-        get() = scope.size() > 4
+        get() = scope.size > 4
 
     override fun push(id: Any) {
         if (id is FunctionExpression) {
@@ -158,7 +188,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateFunction(id: String, type: function_t): Allocator.AllocationMap.Entry {
         val function = functions.allocate(id, Instruction.Ref(1 + functions.size(), Instruction.Ref.Scope.Global), type)
         // Allocate a constant so the function can be called
-        return allocateConstant(Value(Pointer(function.ref.i)), type, id) apply {
+        return allocateConstant(Value(Pointer(function.ref.i)), type, id).apply {
             scope.peek().lookup[id] = this
         }
     }
@@ -228,7 +258,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateString(s: String): Allocator.AllocationMap.Entry {
         strings[s]?.let { return it } // merge strings
         val i = stringPtr
-        stringPtr += s.length() + 1 // FIXME: count encoded bytes
+        stringPtr += s.length + 1 // FIXME: count encoded bytes
         return strings.allocate(s, Instruction.Ref(i, Instruction.Ref.Scope.Global), string_t)
     }
 

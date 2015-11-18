@@ -13,7 +13,7 @@ object Main {
     val logger = Logger()
 
     @JvmStatic fun main(args: Array<String>) {
-        require(args.size() == 1) { "qcsrc path required" }
+        require(args.size == 1) { "qcsrc path required" }
         val root = File(args[0])
         require(root.exists()) { "qcsrc not found" }
         time(logger, "Total time") {
@@ -26,7 +26,7 @@ object Main {
             )
             for (project in defs) {
                 time(logger, "Project time") {
-                    val compiler = Compiler(QCC(), Q1VM()) apply {
+                    val compiler = Compiler(QCC(), Q1VM()).apply {
                         includeFrom(File(root, "${project.root}/progs.src"))
                         define(project.define)
                     }
@@ -39,8 +39,8 @@ object Main {
                             body()
                             append("</$s>")
                         }
-                        StringBuilder {
-                            operator fun Any.plus() = append(this.toString()
+                        StringBuilder().apply {
+                            operator fun Any.unaryPlus() = append(this.toString()
                                     .replace("&", "&amp;")
                                     .replace("<", "&lt;"))
                             node("errors") {
@@ -59,7 +59,7 @@ object Main {
                         }
                     }
                     thread {
-                        ProgramDataWriter(IOWrapper.File(File(out, project.out) apply { createNewFile() }, write = true))
+                        ProgramDataWriter(IOWrapper.File(File(out, project.out).apply { createNewFile() }, write = true))
                                 .write(compiled.generateProgs())
                         File(out, "${project.root}.txt").writeText(compiler.state.allocator.toString())
                     }

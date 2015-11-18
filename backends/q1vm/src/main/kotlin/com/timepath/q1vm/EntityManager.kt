@@ -8,10 +8,10 @@ import java.util.*
 
 class EntityManager(val data: ProgramData) {
 
-    private val entities = ArrayList<Entity?>() apply { add(Entity()) }
+    private val entities = ArrayList<Entity?>().apply { add(Entity()) }
     private val entitySize = data.header.entityFields
 
-    inner data class Entity {
+    inner class Entity {
         val byte: ByteBuffer = ByteBuffer.allocateDirect(4 * entitySize)
 
         val int: IntBuffer by lazy(LazyThreadSafetyMode.NONE) {
@@ -20,12 +20,27 @@ class EntityManager(val data: ProgramData) {
         val float: FloatBuffer by lazy(LazyThreadSafetyMode.NONE) {
             byte.asFloatBuffer()
         }
+
+        override fun equals(other: Any?): Boolean{
+            if (this === other) return true
+            if (other?.javaClass != javaClass) return false
+
+            other as Entity
+
+            if (byte != other.byte) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int{
+            return byte.hashCode()
+        }
     }
 
     fun checkBounds(self: Int, field: Int): Unit = when {
         self == 0 ->
             throw IllegalStateException("Assignment to world")
-        self !in (0..entities.size() - 1) ->
+        self !in (0..entities.size - 1) ->
             throw IndexOutOfBoundsException("Entity is out of bounds")
         field !in (0..entitySize - 1) ->
             throw IndexOutOfBoundsException("Field is out of bounds")
@@ -80,7 +95,7 @@ class EntityManager(val data: ProgramData) {
     }
 
     fun spawn(): Int {
-        val s = entities.size()
+        val s = entities.size
         entities.add(Entity())
         return s
     }

@@ -39,7 +39,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             },
             Operation("|=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[vector_t::class.java]) { l, r -> l or r },
             Operation("|", this, this) to Operation.Handler.Binary(this) { l, r ->
-                linkedListOf<IR>() apply {
+                linkedListOf<IR>().apply {
                     val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val genL = l.generate()
                     addAll(genL)
@@ -56,7 +56,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
             },
             Operation("&=", this, this) to DefaultHandlers.Assign(this, Instruction.STORE[vector_t::class.java]) { l, r -> l and r },
             Operation("&", this, this) to Operation.Handler.Binary(this) { l, r ->
-                linkedListOf<IR>() apply {
+                linkedListOf<IR>().apply {
                     val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = l.generate()
                     addAll(gen)
@@ -72,7 +72,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                 }
             },
             Operation("~", this) to Operation.Handler.Unary(this) {
-                linkedListOf<IR>() apply {
+                linkedListOf<IR>().apply {
                     val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = it.generate()
                     addAll(gen)
@@ -84,7 +84,7 @@ object vector_t : struct_t("x" to float_t, "y" to float_t, "z" to float_t) {
                 }
             },
             Operation("-", this) to Operation.Handler.Unary(this) {
-                linkedListOf<IR>() apply {
+                linkedListOf<IR>().apply {
                     val ref = allocator.allocateReference(type = this@vector_t, scope = Instruction.Ref.Scope.Local)
                     val gen = it.generate()
                     addAll(gen)

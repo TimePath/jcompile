@@ -12,7 +12,7 @@ fun Float.expr(name: String? = null) = ConstantExpression(Value(this), name, nul
 public class ConstantExpression(val value: Value, val name: String? = null, val type: Type? = null, override val ctx: PRC?) : Expression() {
 
     override val simpleName = "ConstantExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString(): String = value.toString()
 

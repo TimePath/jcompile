@@ -13,6 +13,11 @@ interface Allocator {
             val ref: Instruction.Ref
             val value: Value?
             val type: Type
+
+            fun copy(name: String = this.name,
+                     ref: Instruction.Ref = this.ref,
+                     value: Value? = this.value,
+                     type: Type = this.type): Entry
         }
 
         val all: List<Entry>

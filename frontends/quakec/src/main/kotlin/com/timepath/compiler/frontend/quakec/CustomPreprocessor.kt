@@ -21,7 +21,7 @@ class CustomPreprocessor : Preprocessor() {
         try {
             return super.token()
         } catch (e: Exception) {
-            if (e.getMessage()?.matches(badRegex) ?: false) {
+            if (e.message?.matches(badRegex) ?: false) {
                 return Token(Token.HASH, -1, -1, "#", null)
             }
             throw e

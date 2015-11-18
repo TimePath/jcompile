@@ -31,7 +31,7 @@ class Builtin(val name: String,
         val args: MutableList<Any?> = arrayListOf()
         parameterTypes.mapTo(args) { read(it) }
         if (varargsType != null)
-            (parameterTypes.size()..parameterCount - 1).mapTo(args) { read(varargsType) }
+            (parameterTypes.size..parameterCount - 1).mapTo(args) { read(varargsType) }
         //        Program.logger.info("""$name(${
         //        args.map({
         //            if (it is String)

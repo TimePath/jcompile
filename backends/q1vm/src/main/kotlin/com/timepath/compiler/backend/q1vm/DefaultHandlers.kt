@@ -12,22 +12,22 @@ import com.timepath.compiler.types.defaults.struct_t
 object DefaultHandlers {
 
     fun Binary(type: Type, instr: Instruction.Factory) = Handler.Binary<Q1VM.State, List<IR>>(type) { l, r ->
-        linkedListOf<IR>() apply {
+        linkedListOf<IR>().apply {
             val genLeft = l.generate()
             addAll(genLeft)
             val genRight = r.generate()
             addAll(genRight)
             val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
-            add(IR(instr(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
+            add(IR.Basic(instr(genLeft.last().ret, genRight.last().ret, out.ref), out.ref, name = "$l $instr $r"))
         }
     }
 
     fun Unary(type: Type, instr: Instruction.Factory) = Handler.Unary<Q1VM.State, List<IR>>(type) {
-        linkedListOf<IR>() apply {
+        linkedListOf<IR>().apply {
             val genLeft = it.generate()
             addAll(genLeft)
             val out = allocator.allocateReference(type = type, scope = Instruction.Ref.Scope.Local)
-            add(IR(instr(genLeft.last().ret, Instruction.Ref.Null, out.ref), out.ref, name = "$it"))
+            add(IR.Basic(instr(genLeft.last().ret, Instruction.Ref.Null, out.ref), out.ref, name = "$it"))
         }
     }
 
@@ -49,11 +49,11 @@ object DefaultHandlers {
 
             val lvalue = genL.last()
             val rvalue = genR.last()
-            add(IR(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
+            add(IR.Basic(realInstr(rvalue.ret, lvalue.ret), rvalue.ret, "$leftL = $right"))
         }
 
         val typeR = r.type(this)
-        linkedListOf<IR>() apply {
+        linkedListOf<IR>().apply {
             when (l) {
                 is IndexExpression -> {
                     val typeL = l.left.type(this@Binary)
@@ -62,7 +62,7 @@ object DefaultHandlers {
                             val tmp = MemoryReference(l.left.generate().apply { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     IndexExpression(tmp, l.right),
-                                    IndexExpression(tmp, l.right) apply {
+                                    IndexExpression(tmp, l.right).apply {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }
@@ -87,7 +87,7 @@ object DefaultHandlers {
                             val tmp = MemoryReference(l.left.generate().apply { addAll(this) }.last().ret, typeL)
                             x(Instruction.STOREP[typeR.javaClass],
                                     MemberExpression(tmp, l.field),
-                                    MemberExpression(tmp, l.field) apply {
+                                    MemberExpression(tmp, l.field).apply {
                                         this.instr = Instruction.ADDRESS
                                     })
                         }

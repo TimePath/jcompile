@@ -8,7 +8,7 @@ public data class Operation(val op: String, val left: Type, val right: Type? = n
         val type: Type
 
         companion object {
-            fun Binary<State : CompileState, T>(type: Type,
+            fun <State : CompileState, T> Binary(type: Type,
                                                 func: State.(lhs: Expression, rhs: Expression) -> T)
                     = object : Operation.Handler<State, T> {
                 override val type = type
@@ -19,7 +19,7 @@ public data class Operation(val op: String, val left: Type, val right: Type? = n
                 }
             }
 
-            fun Unary<State : CompileState, T>(type: Type,
+            fun <State : CompileState, T> Unary(type: Type,
                                                func: State.(it: Expression) -> T)
                     = object : Operation.Handler<State, T> {
                 override val type = type

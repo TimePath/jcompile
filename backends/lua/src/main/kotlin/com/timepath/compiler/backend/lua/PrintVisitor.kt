@@ -3,7 +3,7 @@ package com.timepath.compiler.backend.lua
 import com.timepath.Printer
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Pointer
-import com.timepath.compiler.backend.q1vm.Vector
+import com.timepath.compiler.Vector
 
 class PrintVisitor(val indent: String = "    ") : ASTVisitor<Printer> {
 

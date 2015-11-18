@@ -37,7 +37,7 @@ open class number_t : Type() {
                 // post
                 Operation("++", this, this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
-                    linkedListOf<IR>() apply {
+                    linkedListOf<IR>().apply {
                         val assign = it.set(it + one)
                         // FIXME
                         addAll((assign - one).generate())
@@ -51,7 +51,7 @@ open class number_t : Type() {
                 // post
                 Operation("--", this, this) to Operation.Handler.Unary(this) {
                     val one = 1.expr().to(int_t)
-                    linkedListOf<IR>() apply {
+                    linkedListOf<IR>().apply {
                         val assign = it.set(it - one)
                         // FIXME
                         addAll((assign + one).generate())

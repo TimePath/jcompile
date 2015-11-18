@@ -16,5 +16,5 @@ public class BlockExpression(add: List<Expression>? = null, override val ctx: PR
     }
 
     override val simpleName = "BlockExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 }

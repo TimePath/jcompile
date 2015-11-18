@@ -62,7 +62,7 @@ object LuaPrinter {
     }
 
     @JvmStatic fun main(args: Array<String>) {
-        require(args.size() == 1) { "qcsrc path required" }
+        require(args.size == 1) { "qcsrc path required" }
         val root = File(args[0])
         require(root.exists()) { "qcsrc not found" }
         out.mkdirs()

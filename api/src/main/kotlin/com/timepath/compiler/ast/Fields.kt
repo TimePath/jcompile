@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.ParserRuleContext as PRC
 // TODO: arrays
 public class IndexExpression(left: Expression, right: Expression, ctx: PRC? = null) : BinaryExpression("[]", left, right, ctx) {
     override val simpleName = "IndexExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr: Any? = null
 }
@@ -24,7 +24,7 @@ public operator fun Expression.get(field: MemberReferenceExpression): MemberExpr
 // TODO: structs
 public class MemberExpression(left: Expression, val field: MemberReferenceExpression, ctx: PRC? = null) : BinaryExpression(".", left, field, ctx) {
     override val simpleName = "MemberExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     var instr: Any? = null
 }
@@ -36,7 +36,7 @@ public operator fun struct_t.get(id: String): MemberReferenceExpression = Member
  */
 public open class MemberReferenceExpression(val owner: struct_t, val id: String, override val ctx: PRC? = null) : Expression() {
     override val simpleName = "MemberReferenceExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
     override fun toString() = id
 }

@@ -31,6 +31,6 @@ public class FunctionExpression(id: String? = null,
     }
 
     override val simpleName = "FunctionExpression"
-    override fun accept<T>(visitor: ASTVisitor<T>) = visitor.visit(this)
+    override fun <T> accept(visitor: ASTVisitor<T>) = visitor.visit(this)
 
 }
