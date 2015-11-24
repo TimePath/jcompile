@@ -37,7 +37,7 @@ where F : Frontend<State, AST>, B : Backend<State, AST, Out>, State : CompileSta
         companion object {
             operator fun invoke(input: String, name: String) = Include(name, name, StringLexerSource(input))
 
-            operator fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file))
+            operator fun invoke(file: File) = Include(file.name, file.canonicalPath, FileLexerSource(file, Charsets.UTF_8))
 
             operator fun invoke(url: URL): Include {
                 val name = url.path.substringAfterLast('/')

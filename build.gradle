@@ -3,7 +3,7 @@ buildscript {
             kotlin: '1.0.0-beta-2422',
             junit : '4.12',
             antlr : '4.5',
-            jcpp  : '1.4.8',
+            jcpp  : '1.4.12',
     ]
 
     repositories {

@@ -6,7 +6,6 @@ import com.timepath.compiler.types.Type
 
 public abstract class struct_t(vararg fields: Pair<String, Type>) : Type() {
     val fields: MutableMap<String, Type> = linkedMapOf(*fields)
-    override val simpleName = "struct_t"
     override fun declare(name: String, value: ConstantExpression?): DeclarationExpression {
         require(value == null) { "Constexpr structs not supported" }
         return super.declare(name, value)
@@ -25,16 +24,13 @@ public abstract class struct_t(vararg fields: Pair<String, Type>) : Type() {
 
         other as struct_t
 
-        if (fields != other.fields) return false
         if (simpleName != other.simpleName) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = fields.hashCode()
-        result += 31 * result + simpleName.hashCode()
-        return result
+        return simpleName.hashCode()
     }
 
 }
