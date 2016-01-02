@@ -34,6 +34,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
                 return EntryImpl(name = name, ref = ref, value = value, type = type)
             }
 
+            override fun toString() = _asString()
+
             val separator = '|'
             val tags = name.split(separator).toMutableSet()
 

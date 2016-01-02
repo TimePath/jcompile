@@ -141,7 +141,7 @@ interface Instruction {
             operator fun get(params: List<Pair<Ref, Class<out Type>>>) = Factory { CALL(params, it) }
         }
 
-        override fun name(f: (Ref) -> String) = "CALL<${params.size}>(${params.joinToString(", ")})"
+        override fun name(f: (Ref) -> String) = "CALL<${params.size}>(${params.joinToString(", ") { "(${it.first}, ${it.second.simpleName})" }})"
     }
 
     class STATE(args: Args) : WithArgs(args) {

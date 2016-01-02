@@ -16,12 +16,15 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
     }
 }
 
 plugins {
     id "org.standardout.versioneye" version "1.0.1"
 }
+
+apply plugin: 'com.github.kt3k.coveralls'
 
 apply plugin: 'application'
 
@@ -62,6 +65,8 @@ allprojects { p ->
 
     apply plugin: 'maven-publish'
 
+    apply plugin: 'jacoco'
+
     task sourceJar(type: Jar) { from sourceSets.main.allSource }
 
     publishing.publications {
@@ -99,4 +104,57 @@ dependencies {
     compile project('frontends:quakec')
     compile project('backends:cpp')
     compile project('backends:q1vm')
+}
+
+def jacocoProjects = allprojects
+
+task jacocoRootReport(type: JacocoReport, group: 'Coverage reports') {
+    description = 'Generates an aggregate report from all jacocoProjects'
+    // dependsOn jacocoProjects.test
+
+    additionalSourceDirs = files(jacocoProjects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories = files(jacocoProjects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(jacocoProjects.sourceSets.main.output)
+    // executionData = files(jacocoProjects.jacocoTestReport.executionData) // FIXME
+    executionData = fileTree(project.rootDir.absolutePath).include('**/build/jacoco/*.exec')
+    reports {
+        html.enabled = true
+        xml.enabled = true
+    }
+    doFirst {
+        executionData = files(executionData.findAll { it.exists() })
+    }
+}
+
+project.gradle.taskGraph.whenReady { taskGraph ->
+    def report = taskGraph.allTasks.find { it.name == "jacocoRootReport" }
+    if (report) {
+        def testFailures = 0
+        project.tasks.withType(Test).each { test ->
+            test.ignoreFailures = true
+            test.afterSuite { td, tr ->
+                if (!td.parent) {
+                    testFailures = tr.failedTestCount
+                }
+            }
+        }
+        report.doLast {
+            if (testFailures) {
+                throw new Exception("There were ${testFailures} test failures")
+            }
+        }
+    }
+}
+
+coveralls {
+    sourceDirs = jacocoProjects.sourceSets.main.allSource.srcDirs.flatten()
+    jacocoReportPath = "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+}
+
+tasks.coveralls {
+    group = 'Coverage reports'
+    description = 'Uploads the aggregated coverage report to Coveralls'
+
+    dependsOn jacocoRootReport
+    onlyIf { System.env.'CI' }
 }

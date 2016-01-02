@@ -108,7 +108,7 @@ enum class QInstruction {
     EQ_STR {
         override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", it.a, "==", it.b)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            f[it.c] = (s[it.a] == s[it.b]).toFloat()
+            f[it.c] = (s[i[it.a]] == s[i[it.b]]).toFloat()
         }
     },
     EQ_ENT {
@@ -141,7 +141,7 @@ enum class QInstruction {
     NE_STR {
         override fun stringify(it: Statement): Array<Any> = arrayOf(it.c, "=", it.a, "!=", it.b)
         override fun action(it: Statement, f: FloatBuffer, i: IntBuffer, s: StringManager, e: EntityManager) {
-            f[it.c] = (s[it.a] != s[it.b]).toFloat()
+            f[it.c] = (s[i[it.a]] != s[i[it.b]]).toFloat()
         }
     },
     NE_ENT {

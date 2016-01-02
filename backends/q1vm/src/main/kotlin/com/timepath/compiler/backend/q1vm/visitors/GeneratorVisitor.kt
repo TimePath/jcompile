@@ -13,6 +13,7 @@ import com.timepath.compiler.ir.IR
 import com.timepath.compiler.ir.Instruction
 import com.timepath.compiler.types.Operation
 import com.timepath.compiler.types.Types
+import com.timepath.compiler.types.defaults.sizeOf
 import com.timepath.compiler.types.defaults.struct_t
 import com.timepath.q1vm.ProgramData
 import java.util.concurrent.atomic.AtomicInteger
@@ -128,7 +129,8 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             }
             if (state.allocator.insideFunc) {
                 val init = decl.value
-                val global = state.allocator[decl.id] ?: state.allocator.allocateReference(decl.id, type, null, scope = Instruction.Ref.Scope.Local)
+                fun peek(id: String) = state.allocator.scope.peek().lookup[id]
+                val global = peek(decl.id) ?: state.allocator.allocateReference(decl.id, type, null, scope = Instruction.Ref.Scope.Local)
                 return IR.Declare(global).list() + (init?.let { e.ref().set(it).generate() } ?: emptyList())
             } else {
                 val const = decl.value?.evaluate(state)
@@ -165,7 +167,11 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
         val genParams = params.flatMap { it.generate() }
         val children = e.children.flatMap { it.wrap { it.generate() } }
         state.allocator.pop()
-        return listOf(IR.Function(global, f, genParams + children))
+
+        return listOf(IR.Function(global, f, genParams + children + IR.Basic(
+                // TODO: don't assume __return offset
+                Instruction.RETURN(Instruction.Ref(e.params.orEmpty().sumBy { it.type.sizeOf() } + 1, Instruction.Ref.Scope.Local)), name = "done")
+        ))
     }
 
     /** Filled in by new labels */
@@ -323,5 +329,19 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
             Operation(e.op, e.operand.type(state)))(state, e.operand, null)
 
     override fun visit(e: UnaryExpression.Cast) = e.operand.generate()
+
+    fun post(e: UnaryExpression, f: (Expression) -> Expression) = BlockExpression(linkedListOf<Expression>().apply {
+        val it = e.operand
+        val tmp = it.type(state).declare("tmp", null).let {
+            add(it)
+            it.ref()
+        }
+        add(tmp set it)
+        add(f(it))
+        add(tmp)
+    }).generate()
+
+    override fun visit(e: UnaryExpression.PostIncrement) = post(e) { UnaryExpression.PreIncrement(it, null) }
+    override fun visit(e: UnaryExpression.PostDecrement) = post(e) { UnaryExpression.PreDecrement(it, null) }
 
 }

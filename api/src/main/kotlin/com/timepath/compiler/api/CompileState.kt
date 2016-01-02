@@ -47,8 +47,10 @@ public abstract class CompileState {
 
         private val stack: Deque<Scope> = linkedListOf()
 
+        private val globalScopes = 2
+
         override val insideFunc: Boolean
-            get() = stack.size >= 3
+            get() = stack.size > globalScopes
 
         override fun push(name: String) = stack.push(Scope(name))
 
@@ -66,6 +68,9 @@ public abstract class CompileState {
         }
 
         override operator fun get(id: String) = stack.firstOrNull { id in it.vars }?.let { it.vars[id] }
+
+        override fun isGlobal(id: String) = stack.indexOfFirst { id in it.vars } >= stack.size - globalScopes
+
     }
 
 }

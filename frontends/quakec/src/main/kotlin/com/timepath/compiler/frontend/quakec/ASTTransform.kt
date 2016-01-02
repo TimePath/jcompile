@@ -2,16 +2,14 @@ package com.timepath.compiler.frontend.quakec
 
 import com.timepath.Logger
 import com.timepath.compiler.Value
+import com.timepath.compiler.Vector
 import com.timepath.compiler.api.SymbolTable
 import com.timepath.compiler.ast.*
 import com.timepath.compiler.backend.q1vm.Q1VM
-import com.timepath.compiler.Vector
 import com.timepath.compiler.backend.q1vm.evaluate
 import com.timepath.compiler.backend.q1vm.type
 import com.timepath.compiler.backend.q1vm.types.*
-import com.timepath.compiler.frontend.quakec.QCParser.DeclarationSpecifierContext
-import com.timepath.compiler.frontend.quakec.QCParser.DeclaratorContext
-import com.timepath.compiler.frontend.quakec.QCParser.ParameterTypeListContext
+import com.timepath.compiler.frontend.quakec.QCParser.*
 import com.timepath.compiler.types.Type
 import com.timepath.compiler.types.defaults.function_t
 import com.timepath.compiler.types.defaults.struct_t
@@ -52,7 +50,10 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
         return when (indirection) {
         // varargs
             3 -> void_t
-            else -> state.types[typeSpec.directTypeSpecifier().children[0].text]!!
+            else -> {
+                val typename = typeSpec.directTypeSpecifier().children[0].text
+                state.types[typename] ?: throw NullPointerException("$typename is undefined")
+            }
         }.let { direct ->
             when {
                 old -> null
@@ -167,10 +168,12 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                 params?.forEach { state.symbols.declare(it) }
                 vararg?.let { state.symbols.declare(DeclarationExpression(it.id, int_t, ctx = ctx)) }
                 state.symbols.scope("body") {
+                    //add(BlockExpression(listOf<Expression>().apply {
                     params?.let { addAll(it) }
                     init()
                     val children = visitChildren(ctx.compoundStatement())
                     addAll(children)
+                    //}))
                 }
             }
         }
@@ -639,7 +642,7 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                 // FIXME: hides similarly named fields which should probably shadow the vector
                 val vector = vecMatcher.group(1)
                 val component = vecMatcher.group(2)
-                if (state.symbols[vector] != null || ltype.fields[vector] != null) {
+                if (state.symbols[vector] != null || ltype.fields[vector] is vector_t) {
                     // This isn't just a `float vec_x`
                     MemberExpression(
                             left = MemberExpression(
@@ -753,7 +756,6 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
                                 field = MemberReferenceExpression(vector_t, component, ctx = ctx),
                                 ctx = ctx).let { listOf(it) }
                     state.opts.legacyFieldNamespace
-                            && member != null
                             && member is vector_t ->
                         // Pointer to member of member is illegal, must use a union of the member and its members
                         return MemberReferenceExpression(e, text, ctx = ctx).let { listOf(it) }
@@ -789,7 +791,20 @@ class ASTTransform(val state: Q1VM.State) : QCBaseVisitor<List<Expression>>() {
             if (s.startsWith('#')) {
                 return ConstantExpression(Value(text), ctx = ctx).let { listOf(it) }
             }
-            val f = if ('x' in s || 'X' in s) Integer.parseInt(s.substring(2), 16).toFloat() else s.toFloat()
+            val f = when {
+                'x' in s || 'X' in s -> Integer.parseInt(s.substring(2), 16).toFloat()
+                "'" in s -> when (s) {
+                    "'\\n'" -> '\n'
+                    "'\\r'" -> '\r'
+                    else -> {
+                        check(s.length == 3) {
+                            "unknown escape sequence: $s"
+                        }
+                        s[1]
+                    }
+                }.toFloat()
+                else -> s.toFloat()
+            }
             val i = f.toInt()
             val number = when (i.toFloat()) {
                 f -> Value(i)

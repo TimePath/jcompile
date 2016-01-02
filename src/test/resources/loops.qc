@@ -41,4 +41,12 @@ void main() {
         }
         assert(test == 10, "Expected 10 loops");
     }
+    {
+        for (float i = 0; i < 1; )
+        {
+            ++i;
+            float expect = i;
+            assert(i == expect, "loop counter was const folded");
+        }
+    }
 }

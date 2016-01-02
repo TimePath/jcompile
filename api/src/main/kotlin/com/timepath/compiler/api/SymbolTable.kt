@@ -8,4 +8,6 @@ public interface SymbolTable {
     fun pop()
     fun <R> declare(e: R): R
     operator fun get(id: String): DeclarationExpression?
+    /** TODO: replace with isConst */
+    fun isGlobal(id: String): Boolean
 }

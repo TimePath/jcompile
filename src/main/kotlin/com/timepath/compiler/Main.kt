@@ -3,6 +3,7 @@ package com.timepath.compiler
 import com.timepath.Logger
 import com.timepath.compiler.backend.q1vm.Q1VM
 import com.timepath.compiler.frontend.quakec.QCC
+import com.timepath.compiler.ir.ASMPrinter
 import com.timepath.q1vm.util.IOWrapper
 import com.timepath.q1vm.util.ProgramDataWriter
 import java.io.File
@@ -27,12 +28,15 @@ object Main {
             for (project in defs) {
                 time(logger, "Project time") {
                     val compiler = Compiler(QCC(), Q1VM()).apply {
-                        includeFrom(File(root, "${project.root}/progs.src"))
+                        include(File(root, "tmp/${project.root}.qc"))
                         define(project.define)
                     }
                     val compiled = compiler.compile()
                     val out = File("out")
                     out.mkdir()
+                    thread {
+                        File(out, "${project.root}.asm").writeText(ASMPrinter(compiled.ir).toString())
+                    }
                     thread {
                         fun StringBuilder.node(s: String, body: StringBuilder.() -> Unit) {
                             append("\n<$s>")

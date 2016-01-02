@@ -18,6 +18,7 @@ interface Allocator {
                      ref: Instruction.Ref = this.ref,
                      value: Value? = this.value,
                      type: Type = this.type): Entry
+            fun _asString() = "Entry(name=$name, ref=$ref, value=$value, type=$type)"
         }
 
         val all: List<Entry>

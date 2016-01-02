@@ -14,7 +14,7 @@ class Builtin(val name: String,
 
     fun call(ctx: Program, parameterCount: Int): Any {
         var offset = QInstruction.OFS_PARAM(0)
-        fun read(it: Any): Any? = when (it) {
+        fun read(it: Any): Any = when (it) {
             Float::class.java -> {
                 val i = offset
                 offset += 3
@@ -25,10 +25,10 @@ class Builtin(val name: String,
                 offset += 3
                 ctx.getString(i)
             }
-            else -> it
+            else -> throw NoWhenBranchMatchedException()
         }
 
-        val args: MutableList<Any?> = arrayListOf()
+        val args: MutableList<Any> = arrayListOf()
         parameterTypes.mapTo(args) { read(it) }
         if (varargsType != null)
             (parameterTypes.size..parameterCount - 1).mapTo(args) { read(varargsType) }
