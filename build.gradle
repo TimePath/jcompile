@@ -39,7 +39,7 @@ def scripts = [
 ]
 mainClassName = scripts['compile']
 scripts.each { scriptName, className ->
-    tasks.create(name: 'run-' + scriptName, type: JavaExec, dependsOn: 'classes') {
+    tasks.create(name: 'run-' + scriptName, type: JavaExec, dependsOn: 'classes', group: 'application') {
         main = className
         classpath = sourceSets.main.runtimeClasspath
         System.getProperty("exec.args")?.with {
@@ -59,9 +59,9 @@ scripts.each { scriptName, className ->
     createAllStartScripts.dependsOn(t)
 }
 
-task jarSelf(type: Jar) { from sourceSets.main.output }
+task jarSelf(type: Jar, group: 'build') { from sourceSets.main.output }
 
-task jar(type: Jar, overwrite: true) {
+task jar(type: Jar, overwrite: true, group: 'build') {
     manifest {
         attributes 'Main-Class': mainClassName
     }
@@ -181,4 +181,6 @@ tasks.coveralls {
 
 versioneye { dependencies = declared }
 evaluationDependsOnChildren()
-dependencies { compile subprojects.configurations.compile.dependencies }
+dependencies {
+    compile subprojects.configurations.compile.dependencies
+}
