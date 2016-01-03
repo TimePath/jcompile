@@ -1,8 +1,8 @@
 buildscript {
     ext.versions = [
-            kotlin: '1.0.0-beta-2422',
+            kotlin: '1.0.0-beta-3595',
             junit : '4.12',
-            antlr : '4.5',
+            antlr : '4.5.1-1',
             jcpp  : '1.4.12',
     ]
 
@@ -15,16 +15,19 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
     }
 }
 
 plugins {
-    id "org.standardout.versioneye" version "1.0.1"
+    id "org.standardout.versioneye" version "1.1.0"
+    id "com.github.kt3k.coveralls" version "2.4.0x"
+    id "me.champeau.gradle.antlr4" version "0.1"
+    id "com.ullink.ikvm" version "2.3"
 }
 
-apply plugin: 'com.github.kt3k.coveralls'
+dependencies {
+    antlr4 "org.antlr:antlr4:${versions.antlr}"
+}
 
 apply plugin: 'application'
 
@@ -56,6 +59,22 @@ scripts.each { scriptName, className ->
     createAllStartScripts.dependsOn(t)
 }
 
+task jarSelf(type: Jar) { from sourceSets.main.output }
+
+task jar(type: Jar, overwrite: true) {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jarSelf
+}
+
+ikvm {
+    debug = false
+    target = 'exe'
+}
+
 allprojects { p ->
 
     group = 'com.timepath'
@@ -66,6 +85,7 @@ allprojects { p ->
     apply plugin: 'maven-publish'
 
     apply plugin: 'jacoco'
+    jacoco { toolVersion = '0.7.5.201505241946' }
 
     task sourceJar(type: Jar) { from sourceSets.main.allSource }
 
@@ -158,3 +178,7 @@ tasks.coveralls {
     dependsOn jacocoRootReport
     onlyIf { System.env.'CI' }
 }
+
+versioneye { dependencies = declared }
+evaluationDependsOnChildren()
+dependencies { compile subprojects.configurations.compile.dependencies }

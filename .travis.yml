@@ -19,4 +19,4 @@ addons:
     branch_pattern: coverity_scan
 
 after_script:
- - ./gradlew jacocoRootReport coveralls
+ - ./gradlew jacocoRootReport coveralls versioneye-update

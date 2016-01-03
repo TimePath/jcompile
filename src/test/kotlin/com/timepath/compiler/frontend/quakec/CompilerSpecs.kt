@@ -63,17 +63,17 @@ class CompilerSpecs {
                     val compiler = Compiler(QCC(), Q1VM())
                     compiler.include(test)
 
-                    var roots: List<List<Expression>>
+                    var roots: List<List<Expression>>? = null
                     it("should parse") {
                         logger.info { "Parsing $test" }
                         roots = compiler.parse().toList()
-                        val actual = PrintVisitor.render(BlockExpression(roots.last(), null))
+                        val actual = PrintVisitor.render(BlockExpression(roots!!.last(), null))
                         compare("AST", test, "xml", actual)
                     }
-                    var prog: Program
+                    var prog: Program? = null
                     it("should compile") {
                         logger.info { "Compiling $test" }
-                        val asm = compiler.compile(roots.asSequence())
+                        val asm = compiler.compile(roots!!.asSequence())
                         ASMPrinter(asm.ir).toString().let { actual ->
                             compare("ASM", test, "asm", actual)
                         }
@@ -87,7 +87,7 @@ class CompilerSpecs {
                     if (test.name.endsWith(".qc")) {
                         it("should execute") {
                             logger.info { "Executing $test" }
-                            prog.exec()
+                            prog!!.exec()
                         }
                     }
                 }
