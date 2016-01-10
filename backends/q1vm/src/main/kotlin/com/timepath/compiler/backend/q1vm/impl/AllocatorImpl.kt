@@ -144,10 +144,6 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override val constants = AllocationMapImpl()
     override val strings = AllocationMapImpl()
 
-    init {
-        allocateString("")
-    }
-
     data class Scope(override val id: Any, override val lookup: MutableMap<String, Allocator.AllocationMap.Entry> = linkedMapOf()) : Allocator.Scope
 
     override val scope: Deque<Allocator.Scope> = linkedListOf()
@@ -260,7 +256,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
         return entry
     }
 
-    private var stringPtr = 0
+    private var stringPtr = 1
+    init { allocateString("") }
     override fun allocateString(s: String): Allocator.AllocationMap.Entry {
         strings[s]?.let { return it } // merge strings
         val i = stringPtr
