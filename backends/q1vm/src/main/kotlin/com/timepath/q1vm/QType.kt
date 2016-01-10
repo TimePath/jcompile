@@ -16,13 +16,14 @@ enum class QType {
 
     companion object {
         operator fun get(it: Type) = when (it) {
-            string_t -> QType.String
+            is string_t -> QType.String
             is number_t -> QType.Float
+            is vector_t -> QType.Vector
             is class_t -> QType.Entity
             is field_t -> QType.Field
             is function_t -> QType.Function
             is array_t -> QType.Function
-            else -> QType.Float
+            else -> QType.Pointer
         }
     }
 }

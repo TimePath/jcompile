@@ -12,7 +12,7 @@ class StringManager(list: Collection<String>,
 
     init {
         constant = buildString {
-            append(0)
+            append(0.toChar())
             for (s in list) {
                 append(s)
                 append(0.toChar())
