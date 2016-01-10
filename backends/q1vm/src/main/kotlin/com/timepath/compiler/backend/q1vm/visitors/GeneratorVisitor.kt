@@ -156,8 +156,16 @@ class GeneratorVisitor(val state: Q1VM.State) : ASTVisitor<List<IR>> {
                 profiling = 0,
                 nameOffset = state.allocator.allocateString(e.id).ref.i,
                 fileNameOffset = 0,
-                numParams = 0,
-                sizeof = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
+                numParams = e.params.orEmpty().size,
+                sizeof = ByteArray(8).apply {
+                    e.params.orEmpty()
+                            .asSequence()
+                            .take(size)
+                            .map { it.type.sizeOf() }
+                            .forEachIndexed { i, size ->
+                                this[i] = size.toByte()
+                            }
+                }
         )
         state.allocator.push(e)
         val params = linkedListOf<Expression>().apply {
