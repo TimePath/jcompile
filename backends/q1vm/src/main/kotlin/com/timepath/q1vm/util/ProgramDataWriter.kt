@@ -2,6 +2,7 @@ package com.timepath.q1vm.util
 
 import com.timepath.q1vm.ProgramData
 import java.io.File
+import kotlin.test.assertEquals
 
 class ProgramDataWriter(val raf: IOWrapper) {
 
@@ -59,10 +60,11 @@ class ProgramDataWriter(val raf: IOWrapper) {
         }
 
         raf.offset = ret.header.stringData.offset
-        raf.writeString(ret.strings.constant)
+        raf.write(ret.strings.constant)
+        assertEquals(ret.header.stringData.let { it.offset + it.count }, raf.offset)
         // Ensure termination
-        raf.writeString("")
-        raf.writeString("")
+        raf.writeByte(0)
+        raf.writeByte(0)
 
         raf.offset = ret.header.globalData.offset
         raf.write(ByteArray(ret.globalData.capacity()).apply { ret.globalData.get(this) })

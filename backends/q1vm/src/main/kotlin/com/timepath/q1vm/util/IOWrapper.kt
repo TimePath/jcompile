@@ -52,11 +52,6 @@ interface IOWrapper {
 
     fun writeInt(v: Int) = _write(4, v)
 
-    fun writeString(s: String) {
-        write(s.toByteArray(Charsets.US_ASCII)) // FIXME/TODO: count the size of UTF8 characters
-        writeByte(0)
-    }
-
     class File(file: java.io.File, write: Boolean = false) : IOWrapper {
         val raf = java.io.RandomAccessFile(file, if (write) "rw" else "r")
 

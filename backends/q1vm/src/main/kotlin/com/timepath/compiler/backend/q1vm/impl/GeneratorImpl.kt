@@ -334,7 +334,7 @@ class GeneratorImpl(val state: Q1VM.State) : Generator {
                             fieldDefs = ProgramData.Header.Section(fieldDefsOffset, fieldDefs.size),
                             functions = ProgramData.Header.Section(functionsOffset, functions.size),
                             globalData = ProgramData.Header.Section(globalDataOffset, globalData.capacity() / 4),
-                            stringData = ProgramData.Header.Section(stringsOffset, stringManager.constant.length)
+                            stringData = ProgramData.Header.Section(stringsOffset, stringManager.constant.size)
                     ),
                     statements = statements,
                     globalDefs = globalDefs,

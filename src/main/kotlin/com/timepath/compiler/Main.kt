@@ -28,7 +28,7 @@ object Main {
             for (project in defs) {
                 time(logger, "Project time") {
                     val compiler = Compiler(QCC(), Q1VM()).apply {
-                        include(File(root, "tmp/${project.root}.qc"))
+                        include(File(root, "../.tmp/${project.root}.qc"))
                         define(project.define)
                     }
                     val compiled = compiler.compile()

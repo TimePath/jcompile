@@ -200,7 +200,7 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     private var globalCounter = 0
     /** Reserve space for this variable and add its name to the current scope */
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
-        (value?.any as? String)?.let {
+        if (scope == Instruction.Ref.Scope.Global) (value?.any as? String)?.let {
             val str = allocateString(it)
             return allocateReference(id ?: "str(${str.name})", type, Value(Pointer(str.ref.i)), scope)
         }
@@ -264,7 +264,8 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     override fun allocateString(s: String): Allocator.AllocationMap.Entry {
         strings[s]?.let { return it } // merge strings
         val i = stringPtr
-        stringPtr += s.length + 1 // FIXME: count encoded bytes
+        val len = s.toByteArray(Charsets.US_ASCII).size
+        stringPtr += len + 1
         return strings.allocate(s, Instruction.Ref(i, Instruction.Ref.Scope.Global), string_t)
     }
 

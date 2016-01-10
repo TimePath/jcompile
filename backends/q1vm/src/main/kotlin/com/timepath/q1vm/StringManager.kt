@@ -6,27 +6,21 @@ class StringManager(list: Collection<String>,
                     expectedSize: Int? = null) {
 
     /**
-     * Giant string
+     * String buffer
      */
-    val constant: String
-
-    /**
-     * The largest constant key + the length of its value
-     */
-    private val constantSize: Int
+    val constant: ByteArray
 
     init {
         constant = buildString {
             for (s in list) {
-                append(s + "\u0000")
+                append(s)
+                append(0.toChar())
             }
-        }
-        val stroff = constant.length
+        }.toByteArray(Charsets.US_ASCII)
         if (expectedSize != null) {
-            val b = expectedSize == stroff
+            val b = expectedSize == constant.size
             assert(b) { "String constants size mismatch" }
         }
-        constantSize = stroff
     }
 
     private val temp: MutableList<String> = arrayListOf()
@@ -34,11 +28,11 @@ class StringManager(list: Collection<String>,
 
     operator fun get(index: Int): String {
         if (index >= 0) {
-            if (index < constantSize)
-                return Scanner(constant.substring(index)).apply {
+            if (index < constant.size)
+                return Scanner(String(constant).substring(index)).apply {
                     useDelimiter("\u0000")
                 }.next()
-            val zoneIndex = index - constantSize
+            val zoneIndex = index - constant.size
             if (zoneIndex < zone.size)
                 return zone[zoneIndex]!!
         } else {
@@ -55,17 +49,17 @@ class StringManager(list: Collection<String>,
         zone.forEachIndexed { i, it ->
             if (it == null) {
                 zone[i] = string
-                return constantSize + i
+                return constant.size + i
             }
         }
         val size = zone.size
         zone.add(string)
-        return constantSize + size
+        return constant.size + size
     }
 
     fun unzone(index: Int): Boolean {
-        if (index < constantSize) return false
-        val zoneIndex = index - constantSize
+        if (index < constant.size) return false
+        val zoneIndex = index - constant.size
         if (zoneIndex >= zone.size) return false
         if (zone[zoneIndex] == null) return false
         zone[zoneIndex] = null
