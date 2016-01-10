@@ -200,6 +200,10 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
     private var globalCounter = 0
     /** Reserve space for this variable and add its name to the current scope */
     override fun allocateReference(id: String?, type: Type, value: Value?, scope: Instruction.Ref.Scope): Allocator.AllocationMap.Entry {
+        (value?.any as? String)?.let {
+            val str = allocateString(it)
+            return allocateReference(id ?: "str(${str.name})", type, Value(Pointer(str.ref.i)), scope)
+        }
         if (scope == Instruction.Ref.Scope.Local && value != null) {
             throw IllegalStateException("local with value")
         }
@@ -233,14 +237,14 @@ class AllocatorImpl(val opts: CompilerOptions) : Allocator {
 
     /** Reserve space for this constant */
     override fun allocateConstant(value: Value, type: Type, id: String?): Allocator.AllocationMap.Entry {
+        (value.any as? String)?.let {
+            val str = allocateString(it)
+            return allocateConstant(Value(Pointer(str.ref.i)), string_t, "str(${str.name})")
+        }
         val name = id ?: when (value.any) {
             is Int -> "${value.any}i"
             is Float -> "${value.any}f"
             else -> "$value"
-        }
-        if (value.any is String) {
-            val str = allocateString(value.any as String)
-            return allocateConstant(Value(Pointer(str.ref.i)), string_t, "str(${str.name})")
         }
         if (opts.mergeConstants) {
             constants[value]?.let {

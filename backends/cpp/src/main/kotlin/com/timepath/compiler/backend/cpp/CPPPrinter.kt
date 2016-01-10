@@ -84,7 +84,7 @@ object CPPPrinter {
                 +"#pragma once"
                 +"namespace $ns {"
                 +indent {
-                    PREDEFS.openStream().reader().buffered().lines().forEach {
+                    PREDEFS.openStream().reader().buffered().lineSequence().forEach {
                         +it
                     }
                     +""
